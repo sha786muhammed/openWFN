@@ -46,3 +46,66 @@ def parse_fchk_scalars(lines):
 
     return data
 
+import re
+
+
+def parse_fchk_arrays(lines):
+    """
+    Parse selected array fields from fchk lines.
+    Returns atomic numbers and Cartesian coordinates.
+    """
+    atomic_numbers = []
+    coordinates = []
+
+    i = 0
+    n_lines = len(lines)
+
+    while i < n_lines:
+        line = lines[i].rstrip()
+
+        # ---------- Atomic numbers ----------
+        if line.startswith("Atomic numbers"):
+            match = re.search(r"N\s*=\s*(\d+)", line)
+            if not match:
+                raise ValueError("Could not parse N for Atomic numbers")
+
+            n = int(match.group(1))
+            values = []
+
+            i += 1
+            while i < n_lines and len(values) < n:
+                for tok in lines[i].split():
+                    if tok.isdigit():
+                        values.append(int(tok))
+                i += 1
+
+            atomic_numbers = values[:n]
+            continue
+
+        # ---------- Cartesian coordinates ----------
+        if line.startswith("Current cartesian coordinates"):
+            match = re.search(r"N\s*=\s*(\d+)", line)
+            if not match:
+                raise ValueError("Could not parse N for Cartesian coordinates")
+
+            n = int(match.group(1))
+            values = []
+
+            i += 1
+            while i < n_lines and len(values) < n:
+                for tok in lines[i].split():
+                    try:
+                        values.append(float(tok))
+                    except ValueError:
+                        pass
+                i += 1
+
+            coords = values[:n]
+            coordinates = [
+                tuple(coords[j:j + 3]) for j in range(0, len(coords), 3)
+            ]
+            continue
+
+        i += 1
+
+    return atomic_numbers, coordinates
