@@ -1,5 +1,22 @@
+# Python cache & build artifacts
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
+
+# Virtual environments
 .env
 .venv
-*.egg-info/
+venv/
+
+# Gaussian / quantum chemistry files
+*.chk
+*.fchk
+*.log
+*.out
+
+# Generated geometry / visualization files
+*.xyz
+
+# OS junk
+.DS_Store
