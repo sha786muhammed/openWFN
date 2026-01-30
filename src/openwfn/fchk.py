@@ -1,3 +1,16 @@
+# Minimal periodic table (extend later)
+Z_TO_SYMBOL = {
+    1: "H",
+    6: "C",
+    7: "N",
+    8: "O",
+    9: "F",
+    15: "P",
+    16: "S",
+    17: "Cl",
+}
+
+
 def read_fchk(filepath):
     """
     Read a Gaussian formatted checkpoint (.fchk) file
@@ -109,3 +122,15 @@ def parse_fchk_arrays(lines):
         i += 1
 
     return atomic_numbers, coordinates
+
+def print_atom_table(atomic_numbers, coordinates):
+    """
+    Print atom index table with element symbols and coordinates.
+    """
+    print("Atom index table")
+    print("----------------")
+
+    for i, (Z, (x, y, z)) in enumerate(zip(atomic_numbers, coordinates), start=1):
+        symbol = Z_TO_SYMBOL.get(Z, f"Z{Z}")
+        print(f"{i:3d}  {symbol:2s}  {x:12.6f}  {y:12.6f}  {z:12.6f}")
+
