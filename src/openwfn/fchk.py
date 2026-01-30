@@ -134,3 +134,25 @@ def print_atom_table(atomic_numbers, coordinates):
         symbol = Z_TO_SYMBOL.get(Z, f"Z{Z}")
         print(f"{i:3d}  {symbol:2s}  {x:12.6f}  {y:12.6f}  {z:12.6f}")
 
+import math
+
+
+def distance(atom_i, atom_j, coordinates):
+    """
+    Compute distance between atom_i and atom_j (1-based indices).
+    Returns distance in Angstrom.
+    """
+    # Convert to 0-based indices
+    i = atom_i - 1
+    j = atom_j - 1
+
+    xi, yi, zi = coordinates[i]
+    xj, yj, zj = coordinates[j]
+
+    dx = xi - xj
+    dy = yi - yj
+    dz = zi - zj
+
+    return math.sqrt(dx*dx + dy*dy + dz*dz)
+
+
