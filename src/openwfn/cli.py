@@ -6,6 +6,7 @@ from openwfn.fchk import (
     print_atom_table,
     distance,
     angle,
+    dihedral,
 )
 
 
@@ -41,6 +42,18 @@ def main():
         ang = angle(i, j, k, coordinates)
         print(f"Angle ({i}-{j}-{k}): {ang:.3f} degrees")
         return
+    
+        # Dihedral mode
+    if len(sys.argv) == 7 and sys.argv[2] == "--dihedral":
+        i = int(sys.argv[3])
+        j = int(sys.argv[4])
+        k = int(sys.argv[5])
+        l = int(sys.argv[6])
+
+        dih = dihedral(i, j, k, l, coordinates)
+        print(f"Dihedral ({i}-{j}-{k}-{l}): {dih:.3f} degrees")
+        return
+
 
 
     # Default: print atom table
