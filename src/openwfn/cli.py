@@ -5,6 +5,7 @@ from openwfn.fchk import (
     parse_fchk_arrays,
     print_atom_table,
     distance,
+    angle,
 )
 
 
@@ -30,6 +31,17 @@ def main():
 
         print(f"Distance between atom {i} and atom {j}: {d:.6f} Å")
         return
+    
+        # Angle mode
+    if len(sys.argv) == 6 and sys.argv[2] == "--angle":
+        i = int(sys.argv[3])
+        j = int(sys.argv[4])
+        k = int(sys.argv[5])
+
+        ang = angle(i, j, k, coordinates)
+        print(f"Angle ({i}-{j}-{k}): {ang:.3f} degrees")
+        return
+
 
     # Default: print atom table
     print(f"File: {fchk_file}")

@@ -155,4 +155,33 @@ def distance(atom_i, atom_j, coordinates):
 
     return math.sqrt(dx*dx + dy*dy + dz*dz)
 
+def angle(atom_i, atom_j, atom_k, coordinates):
+    """
+    Compute bond angle i–j–k (in degrees).
+    Atom indices are 1-based.
+    """
+    import math
+
+    i = atom_i - 1
+    j = atom_j - 1
+    k = atom_k - 1
+
+    xi, yi, zi = coordinates[i]
+    xj, yj, zj = coordinates[j]
+    xk, yk, zk = coordinates[k]
+
+    v1 = (xi - xj, yi - yj, zi - zj)
+    v2 = (xk - xj, yk - yj, zk - zj)
+
+    dot = sum(a*b for a, b in zip(v1, v2))
+    norm1 = math.sqrt(sum(a*a for a in v1))
+    norm2 = math.sqrt(sum(a*a for a in v2))
+
+    cos_theta = dot / (norm1 * norm2)
+    cos_theta = max(-1.0, min(1.0, cos_theta))  # numerical safety
+
+    theta = math.degrees(math.acos(cos_theta))
+    return theta
+
+
 
