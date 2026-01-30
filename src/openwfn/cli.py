@@ -7,6 +7,7 @@ from openwfn.fchk import (
     distance,
     angle,
     dihedral,
+    write_xyz,
 )
 
 
@@ -53,6 +54,14 @@ def main():
         dih = dihedral(i, j, k, l, coordinates)
         print(f"Dihedral ({i}-{j}-{k}-{l}): {dih:.3f} degrees")
         return
+    
+        # XYZ export
+    if len(sys.argv) == 4 and sys.argv[2] == "--xyz":
+        out = sys.argv[3]
+        write_xyz(out, atomic_numbers, coordinates)
+        print(f"XYZ file written to {out}")
+        return
+
 
 
 
