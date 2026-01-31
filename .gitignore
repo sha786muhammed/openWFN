@@ -1,22 +1,36 @@
+# =========================
 # Python cache & build artifacts
+# =========================
 __pycache__/
 *.pyc
 *.pyo
 *.egg-info/
+build/
+dist/
 
+# =========================
 # Virtual environments
+# =========================
 .env
 .venv
 venv/
 
+# =========================
 # Gaussian / quantum chemistry files
+# =========================
 *.chk
-*.fchk
 *.log
 *.out
 
-# Generated geometry / visualization files
+# Ignore fchk and xyz by default
+*.fchk
 *.xyz
 
+# BUT keep example files (important!)
+!examples/**/*.fchk
+!examples/**/*.xyz
+
+# =========================
 # OS junk
+# =========================
 .DS_Store
