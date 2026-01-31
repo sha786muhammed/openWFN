@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use openWFN in your research, please cite it."
+title: "openWFN: Geometry analysis from Gaussian wavefunction files"
+version: 0.1
+date-released: 2026-01-30
+authors:
+  - family-names: Shaji
+    given-names: Muhammed Shah
+license: MIT
+repository-code: "https://github.com/sha786muhammed/openWFN"
+keywords:
+  - computational chemistry
+  - wavefunction analysis
+  - Gaussian
+  - molecular geometry
+
