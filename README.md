@@ -109,19 +109,6 @@ openwfn molecule.fchk --xyz molecule.xyz
 
 ---
 
-## 🧪 Example Workflow
-
-```bash
-# Run Gaussian
-g16 < input.gjf > output.log
-
-# Convert checkpoint
-formchk output.chk output.fchk
-
-# Analyze geometry
-openwfn output.fchk
-```
-
 ## 📄 License
 
 This project is licensed under the **MIT License** — free to use, modify, and
