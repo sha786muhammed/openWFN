@@ -1,0 +1,13 @@
+%chk=ammonia.chk
+%nprocshared=4
+%mem=1GB
+# HF/3-21G Opt
+
+Ammonia molecule - openWFN example
+
+0 1
+N   0.000000   0.000000   0.000000
+H   0.000000   0.937700   0.381600
+H   0.812100  -0.468850   0.381600
+H  -0.812100  -0.468850   0.381600
+
