@@ -2,45 +2,54 @@
 
 **openWFN** — *open WaveFunction Network* — is an open-source, lightweight
 post-processing toolkit for quantum chemistry wavefunction files, focused on
-molecular geometry analysis.
+**molecular geometry analysis**.
 
-It reads Gaussian formatted checkpoint (`.fchk`) files and provides useful
-structural information directly from the command line.
+It reads Gaussian formatted checkpoint files (`.fchk`) and provides essential
+structural information directly from the command line or through an interactive
+menu, without requiring heavy GUIs or complex post-processing software.
 
-This project is designed for researchers, students, and developers who work
-with quantum chemistry data and want a simple but powerful geometry analysis
-tool without the complexity of large multi-purpose software packages.
+openWFN is designed for **researchers, students, and developers** who want a
+simple, transparent, and scriptable alternative to large multi-purpose tools.
 
 ---
 
-## 🚀 Features (v0.1)
+## 🚀 Features (v0.2)
 
-The first release of openWFN includes:
+Current capabilities include:
 
-- 📁 **`.fchk` file parsing** — robust extraction of molecular information  
-- 🧍‍♂️ **Atom index table** — clear element symbols and 3D coordinates  
-- 📏 **Distance calculation** between any two atoms  
-- 📐 **Bond angle (i–j–k)** computation  
-- 🔄 **Dihedral / torsion angle (i–j–k–l)** computation  
-- 📌 **Export geometry to XYZ format** for visualization  
-- 🖥 **Simple CLI interface** for quick and scriptable workflows  
+- 📁 **Gaussian `.fchk` file parsing**
+- 🔄 **Automatic `.chk → .fchk` conversion** (via `formchk`)
+- 🧍 **Atom index table** with element symbols and Cartesian coordinates
+- 📏 **Distance calculation** between any two atoms
+- 📐 **Bond angle calculation** (i–j–k)
+- 🔁 **Dihedral / torsion angle calculation** (i–j–k–l)
+- 📌 **XYZ export** for visualization in VMD, Avogadro, PyMOL, etc.
+- 🖥 **Dual interface**
+  - Command-line (scriptable)
+  - Interactive menu (beginner-friendly)
 
 ---
 
 ## 🧠 Background
 
-In computational chemistry, wavefunction data from quantum chemistry
-calculations often contain rich structural information. Gaussian produces
-binary checkpoint (`.chk`) files, which can be converted to formatted
-checkpoint (`.fchk`) files for analysis.
+Quantum chemistry calculations (DFT, HF, post-HF) contain rich structural
+information inside checkpoint files. While many tools focus on visualization
+or electronic analysis, simple **geometry extraction and inspection** often
+requires heavy software or manual parsing.
 
-openWFN fills a gap by offering a focused, lightweight toolkit for
-geometry analysis directly from `.fchk` files, without requiring heavy GUIs
-or complex post-processing environments.
+openWFN focuses on **clarity and correctness**:
+- Explicit atom indexing
+- No hidden assumptions
+- Results traceable directly to wavefunction output
 
 ---
 
-## 📥 Installation
+## 📦 Installation
+
+### Requirements
+
+- Python ≥ 3.9
+- Gaussian installed (for `formchk`, optional if `.fchk` already exists)
 
 ### Install from GitHub (recommended)
 
@@ -49,17 +58,56 @@ git clone https://github.com/sha786muhammed/openWFN.git
 cd openWFN
 pip install -e .
 
-# Convert Gaussian checkpoint (.chk) to formatted checkpoint (.fchk)
-formchk molecule.chk molecule.fchk
-
-# Inspect molecular geometry
+🔧 Usage
+1️⃣ Interactive mode (recommended)
 openwfn molecule.fchk
 
-# Geometry analysis
+
+or directly from a Gaussian checkpoint:
+
+openwfn molecule.chk
+
+
+This opens an interactive menu:
+
+1. Molecular information
+2. Atom index table
+3. Distance between two atoms
+4. Bond angle (i–j–k)
+5. Dihedral angle (i–j–k–l)
+6. Export XYZ
+0. Exit
+
+2️⃣ Command-line (scriptable) mode
+# Distance
 openwfn molecule.fchk --dist 1 5
+
+# Bond angle
 openwfn molecule.fchk --angle 1 2 3
+
+# Dihedral angle
 openwfn molecule.fchk --dihedral 1 2 3 4
 
-# Export to XYZ for visualization
+# Export XYZ
 openwfn molecule.fchk --xyz molecule.xyz
 
+🧪 Example Workflow
+# Gaussian output
+g16 < input.gjf > output.log
+
+# Convert checkpoint
+formchk output.chk output.fchk
+
+# Analyze geometry
+openwfn output.fchk
+
+📄 License
+
+This project is licensed under the MIT License — free to use, modify, and
+distribute with attribution.
+
+👤 Author
+
+Muhammed Shah Shaji
+PhD Researcher | Computational Chemistry
+GitHub: https://github.com/sha786muhammed
