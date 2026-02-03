@@ -1,5 +1,9 @@
 # openWFN
 
+![Tests](https://github.com/sha786muhammed/openWFN/actions/workflows/tests.yml/badge.svg)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Python](https://img.shields.io/badge/python-3.10+-blue)
+
 **openWFN** — *open WaveFunction Network* — is an open-source, lightweight
 post-processing toolkit for **quantum chemistry wavefunction files**, focused on
 **molecular geometry analysis**.
