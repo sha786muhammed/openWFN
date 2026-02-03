@@ -1,5 +1,11 @@
 # Tests for openWFN
+Run the test suite with:
 
-Unit tests for geometry and file parsing will be added here
-in future versions.
+```bash
+pytest
+```
 
+Install test dependencies with:
+
+```bash
+pip install -e .[test]

@@ -2,18 +2,32 @@
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
+
 [project]
 name = "openwfn"
-version = "0.1.0"
-description = "openWFN: classical wavefunction analysis toolkit"
+version = "0.2.0"
+description = "openWFN: lightweight wavefunction geometry analysis toolkit"
 requires-python = ">=3.10"
+readme = "README.md"
+authors = [{ name = "Muhammed Shah Shaji" }]
+dependencies = []
+
 
 [project.scripts]
 openwfn = "openwfn.cli:main"
 
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+
 [tool.setuptools]
 package-dir = {"" = "src"}
+
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
