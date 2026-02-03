@@ -116,6 +116,20 @@ distribute with attribution.
 
 ---
 
+## 🧭 Future improvement ideas
+
+If you want to contribute, these are the most valuable next steps (priority
+order):
+
+1. ✅ **Automated testing** (unit tests for parsing and geometry)
+2. 🧩 **Connectivity / bond detection** (covalent radii + distance thresholds)
+3. 📈 **Spectral/IR analysis tools** (frequency/intensity parsing)
+4. 🤖 **ML/AI-assisted molecular fingerprints** (after data/model scaffolding)
+5. 🧪 **Expanded element support** (full periodic table + metadata)
+6. 🛠 **Better CLI ergonomics** (argparse, richer help, input validation)
+
+---
+
 ## 👤 Author
 
 **Muhammed Shah Shaji**
