@@ -37,14 +37,17 @@ def ensure_fchk(input_file):
 
 
 def main():
-    if len(sys.argv) < 2:
+    
+    if len(sys.argv) < 2 or "--help" in sys.argv or "-h" in sys.argv:
         print("Usage:")
         print("  openwfn <file.chk|file.fchk>")
         print("  openwfn <file.fchk> --dist i j")
         print("  openwfn <file.fchk> --angle i j k")
         print("  openwfn <file.fchk> --dihedral i j k l")
         print("  openwfn <file.fchk> --xyz out.xyz")
-        sys.exit(1)
+        print("  openwfn <file.fchk> --no-interactive")
+        return
+
 
     input_file = sys.argv[1]
     fchk_file = ensure_fchk(input_file)
@@ -76,6 +79,10 @@ def main():
         out = sys.argv[-1]
         write_xyz(out, atomic_numbers, coordinates)
         print(f"XYZ file written to {out}")
+        return
+    # ---------- NON-INTERACTIVE (for testing) ----------
+    if "--no-interactive" in sys.argv:
+        print_atom_table(atomic_numbers, coordinates)
         return
 
     # ---------- DEFAULT: INTERACTIVE MODE ----------

@@ -7,6 +7,7 @@ __pycache__/
 *.egg-info/
 build/
 dist/
+.coverage
 
 # =========================
 # Virtual environments
@@ -21,8 +22,6 @@ venv/
 *.chk
 *.log
 *.out
-
-# Ignore fchk and xyz by default
 *.fchk
 *.xyz
 
