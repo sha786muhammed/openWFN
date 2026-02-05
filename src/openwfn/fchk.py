@@ -4,14 +4,9 @@ import re
 
 # Minimal periodic table (extend later)
 Z_TO_SYMBOL = {
-    1: "H",
-    6: "C",
-    7: "N",
-    8: "O",
-    9: "F",
-    15: "P",
-    16: "S",
-    17: "Cl",
+    1:"H", 6:"C", 7:"N", 8:"O", 9:"F",
+    11:"Na", 12:"Mg", 14:"Si", 15:"P",
+    16:"S", 17:"Cl", 19:"K", 20:"Ca"
 }
 
 

@@ -5,49 +5,54 @@ import os
 import subprocess
 import shutil
 
-from openwfn.fchk import (
-    read_fchk,
-    parse_fchk_scalars,
-    parse_fchk_arrays,
-    print_atom_table,
+from openwfn.fchk import read_fchk, parse_fchk_scalars, parse_fchk_arrays, print_atom_table
+from openwfn.geometry import (
+    distance, angle, dihedral,
+    molecular_formula, center_of_mass
 )
-from openwfn.geometry import distance, angle, dihedral
 from openwfn.xyz import write_xyz
 from openwfn.interactive import run_interactive
 
+def print_help():
+    print("""
+openWFN – Wavefunction Geometry Toolkit
 
-def ensure_fchk(input_file):
-    """Handle .chk → .fchk conversion if needed."""
-    if input_file.endswith(".fchk"):
-        return input_file
+Usage:
+  openwfn file.fchk
+  openwfn file.fchk --info
+  openwfn file.fchk --dist i j
+  openwfn file.fchk --angle i j k
+  openwfn file.fchk --dihedral i j k l
+  openwfn file.fchk --xyz out.xyz
+  openwfn file.fchk --no-interactive
+""")
 
-    if input_file.endswith(".chk"):
+
+def ensure_fchk(file):
+    if file.endswith(".fchk"):
+        return file
+
+    if file.endswith(".chk"):
         if not shutil.which("formchk"):
-            sys.exit("Error: 'formchk' not found in PATH.")
+            sys.exit("Error: formchk not found.")
 
-        fchk = input_file.replace(".chk", ".fchk")
+        out = file.replace(".chk", ".fchk")
+        if not os.path.exists(out):
+            subprocess.run(["formchk", file, out], check=True)
+        return out
 
-        if not os.path.exists(fchk):
-            print(f"Converting {input_file} → {fchk}")
-            subprocess.run(["formchk", input_file, fchk], check=True)
+    sys.exit("Error: input must be .chk or .fchk")
 
-        return fchk
 
-    sys.exit("Error: input file must be .chk or .fchk")
-
+# -------------------------------------------------
+# Main
+# -------------------------------------------------
 
 def main():
-    
-    if len(sys.argv) < 2 or "--help" in sys.argv or "-h" in sys.argv:
-        print("Usage:")
-        print("  openwfn <file.chk|file.fchk>")
-        print("  openwfn <file.fchk> --dist i j")
-        print("  openwfn <file.fchk> --angle i j k")
-        print("  openwfn <file.fchk> --dihedral i j k l")
-        print("  openwfn <file.fchk> --xyz out.xyz")
-        print("  openwfn <file.fchk> --no-interactive")
-        return
 
+    if len(sys.argv) < 2 or "--help" in sys.argv or "-h" in sys.argv:
+        print_help()
+        return 0
 
     input_file = sys.argv[1]
     fchk_file = ensure_fchk(input_file)
@@ -56,38 +61,49 @@ def main():
     scalars = parse_fchk_scalars(lines)
     atomic_numbers, coordinates = parse_fchk_arrays(lines)
 
-    # ---------- CLI modes ----------
+    # ---------- info ----------
+    if "--info" in sys.argv:
+        formula = molecular_formula(atomic_numbers)
+        com = center_of_mass(atomic_numbers, coordinates)
+
+        print("Molecular Information")
+        print("---------------------")
+        print(f"Atoms: {len(atomic_numbers)}")
+        print(f"Formula: {formula}")
+        print(f"Charge: {scalars.get('Charge')}")
+        print(f"Multiplicity: {scalars.get('Multiplicity')}")
+        print(f"Center of mass: ({com[0]:.3f}, {com[1]:.3f}, {com[2]:.3f})")
+        return 0
+
+    # ---------- geometry ----------
     if "--dist" in sys.argv:
         i, j = map(int, sys.argv[-2:])
-        d = distance(i, j, coordinates)
-        print(f"Distance between atom {i} and atom {j}: {d:.6f} Å")
-        return
+        print(distance(i, j, coordinates))
+        return 0
 
     if "--angle" in sys.argv:
         i, j, k = map(int, sys.argv[-3:])
-        a = angle(i, j, k, coordinates)
-        print(f"Angle ({i}-{j}-{k}): {a:.3f}°")
-        return
+        print(angle(i, j, k, coordinates))
+        return 0
 
     if "--dihedral" in sys.argv:
         i, j, k, l = map(int, sys.argv[-4:])
-        d = dihedral(i, j, k, l, coordinates)
-        print(f"Dihedral ({i}-{j}-{k}-{l}): {d:.3f}°")
-        return
+        print(dihedral(i, j, k, l, coordinates))
+        return 0
 
     if "--xyz" in sys.argv:
-        out = sys.argv[-1]
-        write_xyz(out, atomic_numbers, coordinates)
-        print(f"XYZ file written to {out}")
-        return
-    # ---------- NON-INTERACTIVE (for testing) ----------
+        write_xyz(sys.argv[-1], atomic_numbers, coordinates)
+        return 0
+
+    # ---------- testing mode ----------
     if "--no-interactive" in sys.argv:
         print_atom_table(atomic_numbers, coordinates)
-        return
+        return 0
 
-    # ---------- DEFAULT: INTERACTIVE MODE ----------
+    # ---------- interactive ----------
     run_interactive(lines, fchk_file)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
