@@ -4,29 +4,23 @@ import math
 from collections import Counter
 from openwfn.constants import ATOMIC_MASS, Z_TO_SYMBOL, COVALENT_RADII
 
-# -------------------------------------------------
-# Geometry calculations
-# -------------------------------------------------
 
-def distance(atom_i, atom_j, coordinates):
-    i, j = atom_i - 1, atom_j - 1
+def distance(i, j, coordinates):
+    i -= 1
+    j -= 1
 
     xi, yi, zi = coordinates[i]
     xj, yj, zj = coordinates[j]
 
-    dx, dy, dz = xi-xj, yi-yj, zi-zj
+    dx, dy, dz = xi - xj, yi - yj, zi - zj
     return math.sqrt(dx*dx + dy*dy + dz*dz)
 
 
-def angle(atom_i, atom_j, atom_k, coordinates):
-    i, j, k = atom_i-1, atom_j-1, atom_k-1
+def angle(i, j, k, coordinates):
+    i, j, k = i-1, j-1, k-1
 
-    xi, yi, zi = coordinates[i]
-    xj, yj, zj = coordinates[j]
-    xk, yk, zk = coordinates[k]
-
-    v1 = (xi-xj, yi-yj, zi-zj)
-    v2 = (xk-xj, yk-yj, zk-zj)
+    v1 = [coordinates[i][d] - coordinates[j][d] for d in range(3)]
+    v2 = [coordinates[k][d] - coordinates[j][d] for d in range(3)]
 
     dot = sum(a*b for a, b in zip(v1, v2))
     n1 = math.sqrt(sum(a*a for a in v1))
@@ -69,59 +63,64 @@ def dihedral(i, j, k, l, coordinates):
 def molecular_formula(atomic_numbers):
     counts = Counter(atomic_numbers)
 
-    parts = []
+    # Hill system ordering: C, H, then alphabetical
+    elements = []
+    if 6 in counts:
+        elements.append(6)
+    if 1 in counts:
+        elements.append(1)
+
     for Z in sorted(counts):
+        if Z not in elements:
+            elements.append(Z)
+
+    formula = ""
+    for Z in elements:
         sym = Z_TO_SYMBOL.get(Z, f"Z{Z}")
         n = counts[Z]
-        parts.append(f"{sym}{n if n>1 else ''}")
+        formula += f"{sym}{n if n>1 else ''}"
 
-    return "".join(parts)
+    return formula
 
 
 def center_of_mass(atomic_numbers, coordinates):
-    total = 0.0
+    total_mass = 0.0
     cx = cy = cz = 0.0
 
     for Z, (x, y, z) in zip(atomic_numbers, coordinates):
         m = ATOMIC_MASS.get(Z, 12.0)
-        total += m
-        cx += m*x
-        cy += m*y
-        cz += m*z
+        total_mass += m
+        cx += m * x
+        cy += m * y
+        cz += m * z
 
-    return cx/total, cy/total, cz/total
+    return cx/total_mass, cy/total_mass, cz/total_mass
+
 
 def detect_bonds(atomic_numbers, coordinates, scale=1.2):
-    """
-    Detect bonds using covalent radii.
-    Returns list of (i, j, distance).
-    """
     bonds = []
     n = len(atomic_numbers)
 
     for i in range(n):
         Zi = atomic_numbers[i]
-        si = Z_TO_SYMBOL.get(Zi)
-        ri = COVALENT_RADII.get(si)
+        sym_i = Z_TO_SYMBOL.get(Zi)
+        ri = COVALENT_RADII.get(sym_i)
 
         if ri is None:
             continue
 
-        for j in range(i + 1, n):
+        for j in range(i+1, n):
             Zj = atomic_numbers[j]
-            sj = Z_TO_SYMBOL.get(Zj)
-            rj = COVALENT_RADII.get(sj)
+            sym_j = Z_TO_SYMBOL.get(Zj)
+            rj = COVALENT_RADII.get(sym_j)
 
             if rj is None:
                 continue
 
-            dx = coordinates[i][0] - coordinates[j][0]
-            dy = coordinates[i][1] - coordinates[j][1]
-            dz = coordinates[i][2] - coordinates[j][2]
-            dist = (dx*dx + dy*dy + dz*dz) ** 0.5
-
+            d = distance(i+1, j+1, coordinates)
             cutoff = scale * (ri + rj)
-            if dist <= cutoff:
-                bonds.append((i + 1, j + 1, dist))
+
+            if d <= cutoff:
+                bonds.append((i+1, j+1, d))
 
     return bonds

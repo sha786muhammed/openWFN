@@ -1,16 +1,15 @@
 # src/openwfn/fchk.py
 
 import re
-from openwfn.constants import Z_TO_SYMBOL
+from openwfn.constants import Z_TO_SYMBOL, BOHR_TO_ANGSTROM
+
 
 def read_fchk(filepath):
-    """Read Gaussian formatted checkpoint (.fchk) file."""
     with open(filepath, "r") as f:
         return f.readlines()
 
 
 def parse_fchk_scalars(lines):
-    """Parse selected scalar values from fchk."""
     wanted = {
         "Charge",
         "Multiplicity",
@@ -40,7 +39,6 @@ def parse_fchk_scalars(lines):
 
 
 def parse_fchk_arrays(lines):
-    """Parse atomic numbers and Cartesian coordinates."""
     atomic_numbers = []
     coordinates = []
 
@@ -48,7 +46,6 @@ def parse_fchk_arrays(lines):
     while i < len(lines):
         line = lines[i].rstrip()
 
-        # Atomic numbers
         if line.startswith("Atomic numbers"):
             n = int(re.search(r"N\s*=\s*(\d+)", line).group(1))
             values = []
@@ -59,7 +56,6 @@ def parse_fchk_arrays(lines):
             atomic_numbers = values[:n]
             continue
 
-        # Cartesian coordinates
         if line.startswith("Current cartesian coordinates"):
             n = int(re.search(r"N\s*=\s*(\d+)", line).group(1))
             values = []
@@ -72,9 +68,15 @@ def parse_fchk_arrays(lines):
                         pass
                 i += 1
 
-            coords = values[:n]
+            coords = values[:n]     
+
             coordinates = [
-                tuple(coords[j:j+3]) for j in range(0, len(coords), 3)
+                (
+                    coords[j]   * BOHR_TO_ANGSTROM,
+                    coords[j+1] * BOHR_TO_ANGSTROM,
+                    coords[j+2] * BOHR_TO_ANGSTROM
+                )
+                for j in range(0, len(coords), 3)
             ]
             continue
 
@@ -84,7 +86,6 @@ def parse_fchk_arrays(lines):
 
 
 def print_atom_table(atomic_numbers, coordinates):
-    """Print atom index table."""
     print("Atom index table")
     print("----------------")
 

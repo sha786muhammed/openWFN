@@ -4,84 +4,86 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Python](https://img.shields.io/badge/python-3.10+-blue)
 
-**openWFN** — *open WaveFunction Network* — is an open-source, lightweight
+**openWFN** — *open WaveFunction Network* — is a lightweight, open-source
 post-processing toolkit for **quantum chemistry wavefunction files**, focused on
-**molecular geometry analysis**.
+accurate and transparent **molecular geometry analysis**.
 
 It reads Gaussian formatted checkpoint files (`.fchk`) and provides essential
 structural information directly from the command line or through an interactive
-menu — without requiring heavy GUIs or complex post-processing software.
+interface — without requiring heavy GUIs or complex visualization software.
 
-openWFN is designed for **researchers, students, and developers** who want a
-simple, transparent, and scriptable alternative to large multi-purpose tools.
-
----
-
-## 🚀 Features (v0.2)
-
-Current capabilities include:
-
-- 📁 **Gaussian `.fchk` file parsing**
-- 🔄 **Automatic `.chk → .fchk` conversion** (via `formchk`)
-- 🧍 **Atom index table** with element symbols and Cartesian coordinates
-- 📏 **Distance calculation** between any two atoms
-- 📐 **Bond angle calculation** *(i–j–k)*
-- 🔁 **Dihedral / torsion angle calculation** *(i–j–k–l)*
-- 📌 **XYZ export** for visualization (VMD, Avogadro, PyMOL, etc.)
-- 🖥 **Dual interface**
-  - Command-line mode (scriptable, batch-friendly)
-  - Interactive menu (beginner-friendly)
+openWFN is designed for **researchers, graduate students, and developers**
+who want a scriptable and scientifically consistent geometry analysis tool.
 
 ---
 
-## 🧠 Background
+## 🚀 Features (v0.3)
 
-Quantum chemistry calculations (DFT, HF, post-HF) contain rich structural
-information inside checkpoint files. While many tools focus on visualization
-or electronic analysis, **simple geometry extraction and inspection** often
-requires heavy software or manual parsing.
+### 📂 File Handling
+- Gaussian `.fchk` parsing
+- Automatic `.chk → .fchk` conversion (via `formchk`)
+- Internal unit conversion (Bohr → Å)
 
-openWFN focuses on **clarity and correctness**:
+### 🧍 Molecular Information
+- Atom index table (element symbols + coordinates)
+- Molecular formula detection
+- Center of mass calculation
+- Charge and multiplicity extraction
 
-- Explicit atom indexing (no ambiguity)
-- No hidden assumptions
-- Results traceable directly to wavefunction output
-- Minimal dependencies, maximum transparency
+### 📐 Geometry Calculations
+- Distance between atoms
+- Bond angle (i–j–k)
+- Dihedral / torsion angle (i–j–k–l)
+- Automatic bond detection (covalent radii based)
+
+### 📦 Export
+- XYZ export for visualization (VMD, Avogadro, PyMOL, etc.)
+
+### 🖥 Interface Modes
+- Command-line mode (scriptable, batch processing)
+- Interactive menu mode (beginner-friendly)
+
+---
+
+## 🧠 Design Philosophy
+
+openWFN focuses on:
+
+- Unit consistency (Bohr → Å conversion handled internally)
+- Transparent atom indexing
+- Minimal dependencies
+- Explicit, reproducible calculations
+- Clean and readable source code
+
+It is intentionally small, modular, and extensible.
 
 ---
 
 ## 📦 Installation
 
 ### Requirements
+- Python ≥ 3.10
+- Gaussian installed (optional, only required for `.chk` → `.fchk` conversion)
 
-- Python ≥ 3.9
-- Gaussian installed *(for `formchk`, optional if `.fchk` already exists)*
-
-### Install from GitHub (recommended)
+### Install from GitHub
 
 ```bash
 git clone https://github.com/sha786muhammed/openWFN.git
 cd openWFN
 pip install -e .
-````
+```
 
 ---
 
 ## 🔧 Usage
 
-### 1️⃣ Interactive mode (recommended)
+### Interactive Mode
 
 ```bash
 openwfn molecule.fchk
 ```
 
-or directly from a Gaussian checkpoint:
-
-```bash
-openwfn molecule.chk
-```
-
-This opens an interactive menu:
+Menu:
 
 ```
 1. Molecular information
@@ -90,22 +92,29 @@ This opens an interactive menu:
 4. Bond angle (i–j–k)
 5. Dihedral angle (i–j–k–l)
 6. Export XYZ
+7. Detect bonds
 0. Exit
 ```
 
 ---
 
-### 2️⃣ Command-line (scriptable) mode
+### Command-Line Mode
 
 ```bash
+# Molecular information
+openwfn molecule.fchk --info
+
 # Distance
 openwfn molecule.fchk --dist 1 5
 
-# Bond angle
+# Angle
 openwfn molecule.fchk --angle 1 2 3
 
-# Dihedral angle
+# Dihedral
 openwfn molecule.fchk --dihedral 1 2 3 4
+
+# Bond detection
+openwfn molecule.fchk --bonds
 
 # Export XYZ
 openwfn molecule.fchk --xyz molecule.xyz
@@ -115,14 +124,13 @@ openwfn molecule.fchk --xyz molecule.xyz
 
 ## 📄 License
 
-This project is licensed under the **MIT License** — free to use, modify, and
-distribute with attribution.
+MIT License.
 
 ---
 
 ## 👤 Author
 
-**Muhammed Shah Shaji**
-PhD Researcher — Computational Chemistry
+**Muhammed Shah Shaji**  
+PhD Researcher — Computational Chemistry  
 
-GitHub: [https://github.com/sha786muhammed](https://github.com/sha786muhammed)
+GitHub: https://github.com/sha786muhammed

@@ -100,10 +100,16 @@ def run_interactive(lines, filename):
         elif choice == "7":
             from openwfn.geometry import detect_bonds
             bonds = detect_bonds(atomic_numbers, coordinates)
+
             print("\nDetected bonds (Å)")
-            for i, j, d in bonds:
-                print(f"{i}-{j}: {d:.3f}")
-            print()
+            print("------------------")
+
+            if not bonds:
+                print("No bonds detected.\n")
+            else:
+                for i, j, d in bonds:
+                    print(f"{i:2d}-{j:2d}  {d:6.3f}")
+                print()
 
         # ---------- XYZ export ----------
         elif choice == "6":

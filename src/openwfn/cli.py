@@ -100,11 +100,14 @@ def main():
         bonds = detect_bonds(atomic_numbers, coordinates)
         print("Detected bonds (Å)")
         print("------------------")
-        for i, j, d in bonds:
-            si = atomic_numbers[i-1]
-            sj = atomic_numbers[j-1]
-            print(f"{i:2d}-{j:2d}  {d:6.3f}")
+
+        if not bonds:
+            print("No bonds detected.")
+        else:
+            for i, j, d in bonds:
+                print(f"{i:2d}-{j:2d}  {d:6.3f}")
         return 0
+
 
     # ---------- testing mode ----------
     if "--no-interactive" in sys.argv:
