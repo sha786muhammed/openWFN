@@ -1,14 +1,7 @@
 # src/openwfn/fchk.py
 
 import re
-
-# Minimal periodic table (extend later)
-Z_TO_SYMBOL = {
-    1:"H", 6:"C", 7:"N", 8:"O", 9:"F",
-    11:"Na", 12:"Mg", 14:"Si", 15:"P",
-    16:"S", 17:"Cl", 19:"K", 20:"Ca"
-}
-
+from openwfn.constants import Z_TO_SYMBOL
 
 def read_fchk(filepath):
     """Read Gaussian formatted checkpoint (.fchk) file."""

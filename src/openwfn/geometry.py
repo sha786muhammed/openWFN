@@ -2,6 +2,7 @@
 
 import math
 from collections import Counter
+from openwfn.constants import ATOMIC_MASS, Z_TO_SYMBOL, COVALENT_RADII
 
 # -------------------------------------------------
 # Geometry calculations
@@ -64,16 +65,6 @@ def dihedral(i, j, k, l, coordinates):
 
     return math.degrees(math.atan2(y, x))
 
-ATOMIC_MASS = {
-    1: 1.008, 6: 12.011, 7: 14.007, 8: 15.999,
-    9: 18.998, 15: 30.974, 16: 32.06, 17: 35.45
-}
-
-Z_TO_SYMBOL = {
-    1:"H", 6:"C", 7:"N", 8:"O", 9:"F",
-    15:"P", 16:"S", 17:"Cl"
-}
-
 
 def molecular_formula(atomic_numbers):
     counts = Counter(atomic_numbers)
@@ -99,3 +90,38 @@ def center_of_mass(atomic_numbers, coordinates):
         cz += m*z
 
     return cx/total, cy/total, cz/total
+
+def detect_bonds(atomic_numbers, coordinates, scale=1.2):
+    """
+    Detect bonds using covalent radii.
+    Returns list of (i, j, distance).
+    """
+    bonds = []
+    n = len(atomic_numbers)
+
+    for i in range(n):
+        Zi = atomic_numbers[i]
+        si = Z_TO_SYMBOL.get(Zi)
+        ri = COVALENT_RADII.get(si)
+
+        if ri is None:
+            continue
+
+        for j in range(i + 1, n):
+            Zj = atomic_numbers[j]
+            sj = Z_TO_SYMBOL.get(Zj)
+            rj = COVALENT_RADII.get(sj)
+
+            if rj is None:
+                continue
+
+            dx = coordinates[i][0] - coordinates[j][0]
+            dy = coordinates[i][1] - coordinates[j][1]
+            dz = coordinates[i][2] - coordinates[j][2]
+            dist = (dx*dx + dy*dy + dz*dz) ** 0.5
+
+            cutoff = scale * (ri + rj)
+            if dist <= cutoff:
+                bonds.append((i + 1, j + 1, dist))
+
+    return bonds

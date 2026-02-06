@@ -35,6 +35,7 @@ def run_interactive(lines, filename):
         print("4. Bond angle (i–j–k)")
         print("5. Dihedral angle (i–j–k–l)")
         print("6. Export XYZ")
+        print("7. Detect bonds")
         print("0. Exit")
 
         choice = input("\nEnter choice: ").strip()
@@ -94,6 +95,15 @@ def run_interactive(lines, filename):
 
             dih = dihedral(i, j, k, l, coordinates)
             print(f"\nDihedral angle ({i}-{j}-{k}-{l}): {dih:.3f}°\n")
+
+        # ---------- Bond detection ----------
+        elif choice == "7":
+            from openwfn.geometry import detect_bonds
+            bonds = detect_bonds(atomic_numbers, coordinates)
+            print("\nDetected bonds (Å)")
+            for i, j, d in bonds:
+                print(f"{i}-{j}: {d:.3f}")
+            print()
 
         # ---------- XYZ export ----------
         elif choice == "6":

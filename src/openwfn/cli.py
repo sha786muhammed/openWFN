@@ -8,7 +8,7 @@ import shutil
 from openwfn.fchk import read_fchk, parse_fchk_scalars, parse_fchk_arrays, print_atom_table
 from openwfn.geometry import (
     distance, angle, dihedral,
-    molecular_formula, center_of_mass
+    molecular_formula, center_of_mass, detect_bonds
 )
 from openwfn.xyz import write_xyz
 from openwfn.interactive import run_interactive
@@ -25,6 +25,7 @@ Usage:
   openwfn file.fchk --dihedral i j k l
   openwfn file.fchk --xyz out.xyz
   openwfn file.fchk --no-interactive
+  openwfn file.chk --bonds
 """)
 
 
@@ -93,6 +94,16 @@ def main():
 
     if "--xyz" in sys.argv:
         write_xyz(sys.argv[-1], atomic_numbers, coordinates)
+        return 0
+    
+    if "--bonds" in sys.argv:
+        bonds = detect_bonds(atomic_numbers, coordinates)
+        print("Detected bonds (Å)")
+        print("------------------")
+        for i, j, d in bonds:
+            si = atomic_numbers[i-1]
+            sj = atomic_numbers[j-1]
+            print(f"{i:2d}-{j:2d}  {d:6.3f}")
         return 0
 
     # ---------- testing mode ----------
