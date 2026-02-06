@@ -1,4 +1,8 @@
+import pytest
 from openwfn.fchk import parse_fchk_arrays, parse_fchk_scalars
+
+
+BOHR = 0.52917721092
 
 
 def test_parse_fchk_scalars():
@@ -25,9 +29,9 @@ def test_parse_fchk_arrays():
         "0.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 0.0\n",
     ]
     atomic_numbers, coordinates = parse_fchk_arrays(lines)
+
     assert atomic_numbers == [1, 6, 8]
-    assert coordinates == [
-        (0.0, 0.0, 0.0),
-        (1.0, 0.0, 0.0),
-        (0.0, 1.0, 0.0),
-    ]
+
+    assert coordinates[0] == pytest.approx((0.0, 0.0, 0.0))
+    assert coordinates[1] == pytest.approx((1.0 * BOHR, 0.0, 0.0))
+    assert coordinates[2] == pytest.approx((0.0, 1.0 * BOHR, 0.0))
