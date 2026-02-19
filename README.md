@@ -102,22 +102,22 @@ Menu:
 
 ```bash
 # Molecular information
-openwfn molecule.fchk --info
+openwfn molecule.fchk info
 
 # Distance
-openwfn molecule.fchk --dist 1 5
+openwfn molecule.fchk dist 1 5
 
 # Angle
-openwfn molecule.fchk --angle 1 2 3
+openwfn molecule.fchk angle 1 2 3
 
 # Dihedral
-openwfn molecule.fchk --dihedral 1 2 3 4
+openwfn molecule.fchk dihedral 1 2 3 4
 
 # Bond detection
-openwfn molecule.fchk --bonds
+openwfn molecule.fchk bonds
 
 # Export XYZ
-openwfn molecule.fchk --xyz molecule.xyz
+openwfn molecule.fchk xyz molecule.xyz
 ```
 
 ---

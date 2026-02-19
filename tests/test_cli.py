@@ -1,20 +1,20 @@
 import subprocess
+import sys
 
 
 def test_cli_help():
     result = subprocess.run(
-        ["openwfn", "--help"],
+        [sys.executable, "-m", "openwfn.cli", "--help"],
         capture_output=True,
         text=True
     )
 
-    # help should succeed
     assert result.returncode == 0
-    assert "Usage" in result.stdout
+    assert "usage:" in result.stdout.lower()
 
 
 def test_cli_basic_run(tmp_path):
-    # create minimal fake fchk file for testing
+    # create minimal fake fchk file
     f = tmp_path / "mini.fchk"
 
     f.write_text("""Charge I 0
@@ -26,12 +26,11 @@ Current cartesian coordinates R N= 3
 0.0 0.0 0.0
 """)
 
-    # IMPORTANT: disable interactive
     result = subprocess.run(
-        ["openwfn", str(f), "--no-interactive"],
+        [sys.executable, "-m", "openwfn.cli", str(f), "info"],
         capture_output=True,
         text=True
     )
 
     assert result.returncode == 0
-    assert "Atom index table" in result.stdout
+    assert "Atoms:" in result.stdout

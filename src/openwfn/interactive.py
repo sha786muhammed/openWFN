@@ -5,7 +5,7 @@ from openwfn.fchk import (
     parse_fchk_arrays,
     print_atom_table,
 )
-from openwfn.geometry import distance, angle, dihedral
+from openwfn.geometry import distance, angle, dihedral, detect_bonds
 from openwfn.xyz import write_xyz
 
 
@@ -98,7 +98,6 @@ def run_interactive(lines, filename):
 
         # ---------- Bond detection ----------
         elif choice == "7":
-            from openwfn.geometry import detect_bonds
             bonds = detect_bonds(atomic_numbers, coordinates)
 
             print("\nDetected bonds (Å)")

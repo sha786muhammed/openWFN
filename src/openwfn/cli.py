@@ -1,121 +1,138 @@
 # src/openwfn/cli.py
 
-import sys
+import argparse
 import os
 import subprocess
 import shutil
+import sys
 
 from openwfn.fchk import read_fchk, parse_fchk_scalars, parse_fchk_arrays, print_atom_table
 from openwfn.geometry import (
-    distance, angle, dihedral,
-    molecular_formula, center_of_mass, detect_bonds
+    distance,
+    angle,
+    dihedral,
+    molecular_formula,
+    center_of_mass,
+    detect_bonds,
 )
+import openwfn.commands as cmd
 from openwfn.xyz import write_xyz
 from openwfn.interactive import run_interactive
 
-def print_help():
-    print("""
-openWFN – Wavefunction Geometry Toolkit
 
-Usage:
-  openwfn file.fchk
-  openwfn file.fchk --info
-  openwfn file.fchk --dist i j
-  openwfn file.fchk --angle i j k
-  openwfn file.fchk --dihedral i j k l
-  openwfn file.fchk --xyz out.xyz
-  openwfn file.fchk --no-interactive
-  openwfn file.chk --bonds
-""")
-
+# -------------------------------------------------
+# Utilities
+# -------------------------------------------------
 
 def ensure_fchk(file):
+    """Convert .chk → .fchk if necessary."""
     if file.endswith(".fchk"):
         return file
 
     if file.endswith(".chk"):
         if not shutil.which("formchk"):
-            sys.exit("Error: formchk not found.")
+            sys.exit("Error: 'formchk' not found in PATH.")
 
         out = file.replace(".chk", ".fchk")
+
         if not os.path.exists(out):
+            print(f"Converting {file} → {out}")
             subprocess.run(["formchk", file, out], check=True)
+
         return out
 
     sys.exit("Error: input must be .chk or .fchk")
 
 
+def load_data(filename):
+    fchk_file = ensure_fchk(filename)
+    lines = read_fchk(fchk_file)
+    scalars = parse_fchk_scalars(lines)
+    atomic_numbers, coordinates = parse_fchk_arrays(lines)
+    return fchk_file, scalars, atomic_numbers, coordinates
+
+
 # -------------------------------------------------
-# Main
+# Main CLI
 # -------------------------------------------------
 
 def main():
 
-    if len(sys.argv) < 2 or "--help" in sys.argv or "-h" in sys.argv:
-        print_help()
-        return 0
+    parser = argparse.ArgumentParser(
+        prog="openwfn",
+        description="openWFN — Lightweight Wavefunction Geometry Toolkit"
+    )
 
-    input_file = sys.argv[1]
-    fchk_file = ensure_fchk(input_file)
+    parser.add_argument("file", help="Gaussian .chk or .fchk file")
 
-    lines = read_fchk(fchk_file)
-    scalars = parse_fchk_scalars(lines)
-    atomic_numbers, coordinates = parse_fchk_arrays(lines)
+    subparsers = parser.add_subparsers(dest="command")
 
-    # ---------- info ----------
-    if "--info" in sys.argv:
-        formula = molecular_formula(atomic_numbers)
-        com = center_of_mass(atomic_numbers, coordinates)
+    # info
+    subparsers.add_parser("info", help="Show molecular information")
 
-        print("Molecular Information")
-        print("---------------------")
-        print(f"Atoms: {len(atomic_numbers)}")
-        print(f"Formula: {formula}")
-        print(f"Charge: {scalars.get('Charge')}")
-        print(f"Multiplicity: {scalars.get('Multiplicity')}")
-        print(f"Center of mass: ({com[0]:.3f}, {com[1]:.3f}, {com[2]:.3f})")
-        return 0
+    # distance
+    p_dist = subparsers.add_parser("dist", help="Distance between two atoms")
+    p_dist.add_argument("i", type=int)
+    p_dist.add_argument("j", type=int)
 
-    # ---------- geometry ----------
-    if "--dist" in sys.argv:
-        i, j = map(int, sys.argv[-2:])
-        print(distance(i, j, coordinates))
-        return 0
+    # angle
+    p_angle = subparsers.add_parser("angle", help="Bond angle i-j-k")
+    p_angle.add_argument("i", type=int)
+    p_angle.add_argument("j", type=int)
+    p_angle.add_argument("k", type=int)
 
-    if "--angle" in sys.argv:
-        i, j, k = map(int, sys.argv[-3:])
-        print(angle(i, j, k, coordinates))
-        return 0
+    # dihedral
+    p_dih = subparsers.add_parser("dihedral", help="Dihedral i-j-k-l")
+    p_dih.add_argument("i", type=int)
+    p_dih.add_argument("j", type=int)
+    p_dih.add_argument("k", type=int)
+    p_dih.add_argument("l", type=int)
 
-    if "--dihedral" in sys.argv:
-        i, j, k, l = map(int, sys.argv[-4:])
-        print(dihedral(i, j, k, l, coordinates))
-        return 0
+    # bonds
+    subparsers.add_parser("bonds", help="Detect covalent bonds")
 
-    if "--xyz" in sys.argv:
-        write_xyz(sys.argv[-1], atomic_numbers, coordinates)
-        return 0
-    
-    if "--bonds" in sys.argv:
-        bonds = detect_bonds(atomic_numbers, coordinates)
-        print("Detected bonds (Å)")
-        print("------------------")
+    # xyz
+    p_xyz = subparsers.add_parser("xyz", help="Export XYZ file")
+    p_xyz.add_argument("output", help="Output XYZ filename")
 
-        if not bonds:
-            print("No bonds detected.")
-        else:
-            for i, j, d in bonds:
-                print(f"{i:2d}-{j:2d}  {d:6.3f}")
-        return 0
+    # interactive
+    subparsers.add_parser("interactive", help="Launch interactive mode")
 
+    args = parser.parse_args()
 
-    # ---------- testing mode ----------
-    if "--no-interactive" in sys.argv:
-        print_atom_table(atomic_numbers, coordinates)
-        return 0
+    # If no subcommand → default to interactive
+    if args.command is None:
+        args.command = "interactive"
 
-    # ---------- interactive ----------
-    run_interactive(lines, fchk_file)
+    filename = args.file
+    fchk_file, scalars, atomic_numbers, coordinates = load_data(filename)
+
+    # -----------------------------
+    # Commands
+    # -----------------------------
+
+    if args.command == "info":
+        cmd.cmd_info(scalars, atomic_numbers, coordinates)
+
+    elif args.command == "dist":
+        cmd.cmd_dist(args.i, args.j, coordinates)
+
+    elif args.command == "angle":
+        cmd.cmd_angle(args.i, args.j, args.k, coordinates)
+
+    elif args.command == "dihedral":
+        cmd.cmd_dihedral(args.i, args.j, args.k, args.l, coordinates)
+
+    elif args.command == "bonds":
+        cmd.cmd_bonds(atomic_numbers, coordinates)
+
+    elif args.command == "xyz":
+        cmd.cmd_xyz(args.output, atomic_numbers, coordinates)
+
+    elif args.command == "interactive":
+        lines = read_fchk(fchk_file)
+        run_interactive(lines, fchk_file)
+
     return 0
 
 

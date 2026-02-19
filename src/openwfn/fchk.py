@@ -1,15 +1,18 @@
 # src/openwfn/fchk.py
 
 import re
+from typing import List, Dict, Tuple, Any
 from openwfn.constants import Z_TO_SYMBOL, BOHR_TO_ANGSTROM
 
 
-def read_fchk(filepath):
+def read_fchk(filepath: str) -> List[str]:
+    """Read .fchk file and return lines."""
     with open(filepath, "r") as f:
         return f.readlines()
 
 
-def parse_fchk_scalars(lines):
+def parse_fchk_scalars(lines: List[str]) -> Dict[str, int]:
+    """Parse scalar integer values from FCHK lines."""
     wanted = {
         "Charge",
         "Multiplicity",
@@ -38,7 +41,11 @@ def parse_fchk_scalars(lines):
     return data
 
 
-def parse_fchk_arrays(lines):
+def parse_fchk_arrays(lines: List[str]) -> Tuple[List[int], List[Tuple[float, float, float]]]:
+    """
+    Parse atomic numbers and coordinates from FCHK lines.
+    Coordinates are converted from Bohr to Angstroms.
+    """
     atomic_numbers = []
     coordinates = []
 
@@ -47,7 +54,12 @@ def parse_fchk_arrays(lines):
         line = lines[i].rstrip()
 
         if line.startswith("Atomic numbers"):
-            n = int(re.search(r"N\s*=\s*(\d+)", line).group(1))
+            match = re.search(r"N\s*=\s*(\d+)", line)
+            if not match:
+                i += 1
+                continue
+                
+            n = int(match.group(1))
             values = []
             i += 1
             while len(values) < n:
@@ -57,7 +69,12 @@ def parse_fchk_arrays(lines):
             continue
 
         if line.startswith("Current cartesian coordinates"):
-            n = int(re.search(r"N\s*=\s*(\d+)", line).group(1))
+            match = re.search(r"N\s*=\s*(\d+)", line)
+            if not match:
+                i += 1
+                continue
+                
+            n = int(match.group(1))
             values = []
             i += 1
             while len(values) < n:
@@ -85,7 +102,8 @@ def parse_fchk_arrays(lines):
     return atomic_numbers, coordinates
 
 
-def print_atom_table(atomic_numbers, coordinates):
+def print_atom_table(atomic_numbers: List[int], coordinates: List[Tuple[float, float, float]]) -> None:
+    """Print a formatted table of atomic coordinates."""
     print("Atom index table")
     print("----------------")
 
