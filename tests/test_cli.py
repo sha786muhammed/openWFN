@@ -27,7 +27,7 @@ Current cartesian coordinates R N= 3
 """)
 
     result = subprocess.run(
-        [sys.executable, "-m", "openwfn.cli", str(f), "info"],
+        [sys.executable, "-m", "openwfn.cli", str(f), "summary"],
         capture_output=True,
         text=True
     )

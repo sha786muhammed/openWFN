@@ -17,7 +17,7 @@ who want a scriptable and scientifically consistent geometry analysis tool.
 
 ---
 
-## 🚀 Features (v0.3)
+## 🚀 Features (v0.4.0)
 
 ### 📂 File Handling
 - Gaussian `.fchk` parsing
@@ -25,6 +25,7 @@ who want a scriptable and scientifically consistent geometry analysis tool.
 - Internal unit conversion (Bohr → Å)
 
 ### 🧍 Molecular Information
+- **[PRO] New `summary` command**: One-page molecular overview.
 - Atom index table (element symbols + coordinates)
 - Molecular formula detection
 - Center of mass calculation
@@ -35,11 +36,13 @@ who want a scriptable and scientifically consistent geometry analysis tool.
 - Bond angle (i–j–k)
 - Dihedral / torsion angle (i–j–k–l)
 - Automatic bond detection (covalent radii based)
+- **[PRO] Molecular graph components**: Fragment detection.
 
 ### 📦 Export
 - XYZ export for visualization (VMD, Avogadro, PyMOL, etc.)
 
 ### 🖥 Interface Modes
+- **[PRO] Rich Terminal UI**: High-contrast, colored output for better readability.
 - Command-line mode (scriptable, batch processing)
 - Interactive menu mode (beginner-friendly)
 
@@ -86,13 +89,14 @@ openwfn molecule.fchk
 Menu:
 
 ```
-1. Molecular information
+s. Molecular summary (Quick view)
+1. Detailed metadata
 2. Atom index table
 3. Distance between two atoms
 4. Bond angle (i–j–k)
 5. Dihedral angle (i–j–k–l)
 6. Export XYZ
-7. Detect bonds
+7. Detect bonds / fragments
 0. Exit
 ```
 
@@ -101,7 +105,10 @@ Menu:
 ### Command-Line Mode
 
 ```bash
-# Molecular information
+# Professional Summary (Default)
+openwfn molecule.fchk
+
+# Detailed Metadata
 openwfn molecule.fchk info
 
 # Distance
@@ -115,6 +122,9 @@ openwfn molecule.fchk dihedral 1 2 3 4
 
 # Bond detection
 openwfn molecule.fchk bonds
+
+# Molecular Graph / Fragments
+openwfn molecule.fchk graph
 
 # Export XYZ
 openwfn molecule.fchk xyz molecule.xyz

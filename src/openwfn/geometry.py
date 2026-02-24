@@ -2,8 +2,8 @@
 
 import math
 from collections import Counter
-from typing import List, Tuple, Optional
-from openwfn.constants import ATOMIC_MASS, Z_TO_SYMBOL, COVALENT_RADII
+from typing import List, Tuple, Optional, Dict
+from .constants import ATOMIC_MASS, Z_TO_SYMBOL, COVALENT_RADII  # type: ignore
 
 
 def distance(i: int, j: int, coordinates: List[Tuple[float, float, float]]) -> float:
@@ -67,16 +67,18 @@ def dihedral(i: int, j: int, k: int, l: int, coordinates: List[Tuple[float, floa
 
 def molecular_formula(atomic_numbers: List[int]) -> str:
     """Generate Hill system molecular formula."""
-    counts = Counter(atomic_numbers)
+    counts: Dict[int, int] = {}
+    for z in atomic_numbers:
+        counts[z] = counts.get(z, 0) + 1
 
     # Hill system ordering: C, H, then alphabetical
-    elements = []
+    elements: List[int] = []
     if 6 in counts:
         elements.append(6)
     if 1 in counts:
         elements.append(1)
 
-    for Z in sorted(counts):
+    for Z in sorted(counts.keys()):
         if Z not in elements:
             elements.append(Z)
 
@@ -116,11 +118,11 @@ def detect_bonds(atomic_numbers: List[int], coordinates: List[Tuple[float, float
     Detect covalent bonds based on interatomic distances.
     Returns list of (atom_i, atom_j, distance).
     """
-    bonds = []
+    bonds: List[Tuple[int, int, float]] = []
     n = len(atomic_numbers)
 
     for i in range(n):
-        Zi = atomic_numbers[i]
+        Zi = atomic_numbers[i]  # type: ignore
         sym_i = Z_TO_SYMBOL.get(Zi)
         ri = COVALENT_RADII.get(sym_i)
 
@@ -128,7 +130,7 @@ def detect_bonds(atomic_numbers: List[int], coordinates: List[Tuple[float, float
             continue
 
         for j in range(i+1, n):
-            Zj = atomic_numbers[j]
+            Zj = atomic_numbers[j]  # type: ignore
             sym_j = Z_TO_SYMBOL.get(Zj)
             rj = COVALENT_RADII.get(sym_j)
 

@@ -1,5 +1,5 @@
-import pytest
-from openwfn.fchk import parse_fchk_arrays, parse_fchk_scalars
+import pytest  # type: ignore
+from openwfn.fchk import parse_fchk_arrays, parse_fchk_scalars  # type: ignore
 
 
 BOHR = 0.52917721092

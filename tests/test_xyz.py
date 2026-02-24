@@ -1,4 +1,4 @@
-from openwfn.xyz import write_xyz
+from openwfn.xyz import write_xyz  # type: ignore
 
 def test_write_xyz(tmp_path):
     atoms = [1, 8]  # H, O

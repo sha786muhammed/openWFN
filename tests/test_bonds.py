@@ -1,4 +1,4 @@
-from openwfn.geometry import detect_bonds
+from openwfn.geometry import detect_bonds  # type: ignore
 
 def test_water_bonds():
     atomic_numbers = [8, 1, 1]

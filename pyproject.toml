@@ -5,12 +5,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openwfn"
-version = "0.3.0"
+version = "0.4.0"
 description = "openWFN: lightweight wavefunction geometry analysis toolkit"
 requires-python = ">=3.10"
 readme = "README.md"
 authors = [{ name = "Muhammed Shah Shaji" }]
-dependencies = []
+dependencies = [
+    "numpy>=1.20.0"
+]
 
 
 [project.scripts]

@@ -6,8 +6,8 @@ import subprocess
 import shutil
 import sys
 
-from openwfn.fchk import read_fchk, parse_fchk_scalars, parse_fchk_arrays, print_atom_table
-from openwfn.geometry import (
+from .fchk import read_fchk, parse_fchk_scalars, parse_fchk_arrays, print_atom_table  # type: ignore
+from .geometry import (  # type: ignore
     distance,
     angle,
     dihedral,
@@ -15,9 +15,9 @@ from openwfn.geometry import (
     center_of_mass,
     detect_bonds,
 )
-import openwfn.commands as cmd
-from openwfn.xyz import write_xyz
-from openwfn.interactive import run_interactive
+from . import commands as cmd  # type: ignore
+from .xyz import write_xyz  # type: ignore
+from .interactive import run_interactive  # type: ignore
 
 
 # -------------------------------------------------
@@ -67,9 +67,13 @@ def main():
 
     subparsers = parser.add_subparsers(dest="command")
 
-    # info
-    subparsers.add_parser("info", help="Show molecular information")
+    # summary (now the default view)
+    subparsers.add_parser("summary", help="Show professional molecular summary")
 
+    # info
+    subparsers.add_parser("info", help="Show detailed FCHK metadata")
+
+    # ... [rest of parsers remain same] ...
     # distance
     p_dist = subparsers.add_parser("dist", help="Distance between two atoms")
     p_dist.add_argument("i", type=int)
@@ -96,41 +100,75 @@ def main():
     p_xyz.add_argument("output", help="Output XYZ filename")
 
     # interactive
-    subparsers.add_parser("interactive", help="Launch interactive mode")
+    subparsers.add_parser("interactive", help="Launch interactive menu mode")
+
+    # graph
+    subparsers.add_parser("graph", help="Show molecular graph components")
+
+    # density
+    p_dens = subparsers.add_parser("density", help="Compute electron density on a grid")
+    p_dens.add_argument("--grid-size", default="40x40x40", help="Grid sizes (unused, uses spacing currently)")
+    p_dens.add_argument("--export", required=True, help="Output VTK file path")
+
+    # mo
+    p_mo = subparsers.add_parser("mo", help="Compute MO on a grid")
+    p_mo.add_argument("index", type=int, help="MO index")
+    p_mo.add_argument("--export", required=True, help="Output VTK file path")
 
     args = parser.parse_args()
 
-    # If no subcommand → default to interactive
-    if args.command is None:
-        args.command = "interactive"
+    # If no subcommand → default to interactive if it's a TTY, else summary
+    if getattr(args, "command", None) is None:
+        if sys.stdin.isatty():
+            args.command = "interactive"  # type: ignore
+        else:
+            args.command = "summary"  # type: ignore
 
     filename = args.file
-    fchk_file, scalars, atomic_numbers, coordinates = load_data(filename)
+    try:
+        fchk_file, scalars, atomic_numbers, coordinates = load_data(filename)
+    except Exception as e:
+        from . import utils  # type: ignore
+        utils.print_error(str(e))
+        return 1
+
+    lines = read_fchk(fchk_file)
 
     # -----------------------------
     # Commands
     # -----------------------------
 
-    if args.command == "info":
+    if args.command == "summary": # type: ignore
+        cmd.cmd_summary(scalars, atomic_numbers, coordinates)
+
+    elif args.command == "info": # type: ignore
         cmd.cmd_info(scalars, atomic_numbers, coordinates)
 
-    elif args.command == "dist":
+    elif args.command == "dist": # type: ignore
         cmd.cmd_dist(args.i, args.j, coordinates)
 
-    elif args.command == "angle":
+    elif args.command == "angle": # type: ignore
         cmd.cmd_angle(args.i, args.j, args.k, coordinates)
 
-    elif args.command == "dihedral":
+    elif args.command == "dihedral": # type: ignore
         cmd.cmd_dihedral(args.i, args.j, args.k, args.l, coordinates)
 
-    elif args.command == "bonds":
+    elif args.command == "bonds": # type: ignore
         cmd.cmd_bonds(atomic_numbers, coordinates)
 
-    elif args.command == "xyz":
+    elif args.command == "graph": # type: ignore
+        cmd.cmd_graph(atomic_numbers, coordinates)
+
+    elif args.command == "density": # type: ignore
+        cmd.cmd_density(filename, args.grid_size, args.export, lines, coordinates)
+
+    elif args.command == "mo": # type: ignore
+        cmd.cmd_mo(filename, args.index, args.export, lines, coordinates)
+
+    elif args.command == "xyz": # type: ignore
         cmd.cmd_xyz(args.output, atomic_numbers, coordinates)
 
-    elif args.command == "interactive":
-        lines = read_fchk(fchk_file)
+    elif args.command == "interactive": # type: ignore
         run_interactive(lines, fchk_file)
 
     return 0

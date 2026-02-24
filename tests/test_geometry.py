@@ -1,6 +1,6 @@
 import math
 
-from openwfn.geometry import angle, dihedral, distance
+from openwfn.geometry import angle, dihedral, distance  # type: ignore
 
 
 def test_distance():

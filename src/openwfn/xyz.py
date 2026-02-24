@@ -1,6 +1,6 @@
 # src/openwfn/xyz.py
 
-from .fchk import Z_TO_SYMBOL
+from .constants import Z_TO_SYMBOL  # type: ignore
 
 
 def write_xyz(filename, atomic_numbers, coordinates):

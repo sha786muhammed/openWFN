@@ -1,20 +1,17 @@
-# src/openwfn/interactive.py
-
-from openwfn.fchk import (
-    parse_fchk_scalars,
-    parse_fchk_arrays,
-    print_atom_table,
-)
-from openwfn.geometry import distance, angle, dihedral, detect_bonds
-from openwfn.xyz import write_xyz
+from . import commands as cmd  # type: ignore
+from . import utils  # type: ignore
+from .fchk import parse_fchk_scalars, parse_fchk_arrays # type: ignore
 
 
 def safe_int(prompt):
     """Safely read an integer from user input."""
     try:
-        return int(input(prompt))
+        val = input(prompt).strip()
+        if not val:
+            return None
+        return int(val)
     except ValueError:
-        print("Invalid input. Please enter an integer.\n")
+        utils.print_error("Invalid input. Please enter an integer.\n")
         return None
 
 
@@ -23,63 +20,51 @@ def run_interactive(lines, filename):
     atomic_numbers, coordinates = parse_fchk_arrays(lines)
     natoms = len(atomic_numbers)
 
-    print("\nopenWFN Interactive Mode")
-    print("------------------------")
-    print(f"File: {filename}\n")
+    utils.print_header(f"openWFN Interactive Mode — {filename}")
 
     while True:
-        print("Select an option:")
-        print("1. Molecular information")
+        print("\033[1mMain Menu:\033[0m")
+        print("s. Molecular summary (Quick view)")
+        print("1. Detailed metadata")
         print("2. Atom index table")
         print("3. Distance between two atoms")
         print("4. Bond angle (i–j–k)")
         print("5. Dihedral angle (i–j–k–l)")
         print("6. Export XYZ")
-        print("7. Detect bonds")
+        print("7. Detect bonds / fragments")
         print("0. Exit")
 
-        choice = input("\nEnter choice: ").strip()
+        choice = input(f"\n{utils.highlight('openwfn')} > ").strip().lower()
 
-        # ---------- Molecular info ----------
-        if choice == "1":
-            print("\nMolecular information")
-            print("---------------------")
-            for k, v in scalars.items():
-                print(f"{k}: {v}")
-            print()
+        # ---------- Summary ----------
+        if choice == "s":
+            cmd.cmd_summary(scalars, atomic_numbers, coordinates)
+
+        # ---------- Detailed info ----------
+        elif choice == "1":
+            cmd.cmd_info(scalars, atomic_numbers, coordinates)
 
         # ---------- Atom table ----------
         elif choice == "2":
-            print()
+            from .fchk import print_atom_table  # type: ignore
+            utils.print_header("Coordinate Table")
             print_atom_table(atomic_numbers, coordinates)
             print()
 
         # ---------- Distance ----------
         elif choice == "3":
-            i = safe_int("Enter atom i: ")
-            j = safe_int("Enter atom j: ")
-            if i is None or j is None:
-                continue
-            if not (1 <= i <= natoms and 1 <= j <= natoms):
-                print("Atom index out of range.\n")
-                continue
-
-            d = distance(i, j, coordinates)
-            print(f"\nDistance between atom {i} and atom {j}: {d:.6f} Å\n")
+            i = safe_int("Enter first atom index: ")
+            j = safe_int("Enter second atom index: ")
+            if i is not None and j is not None:
+                cmd.cmd_dist(i, j, coordinates)
 
         # ---------- Angle ----------
         elif choice == "4":
             i = safe_int("Enter atom i: ")
             j = safe_int("Enter atom j: ")
             k = safe_int("Enter atom k: ")
-            if None in (i, j, k):
-                continue
-            if not all(1 <= x <= natoms for x in (i, j, k)):
-                print("Atom index out of range.\n")
-                continue
-
-            ang = angle(i, j, k, coordinates)
-            print(f"\nBond angle ({i}-{j}-{k}): {ang:.3f}°\n")
+            if all(v is not None for v in (i, j, k)):
+                cmd.cmd_angle(i, j, k, coordinates) # type: ignore
 
         # ---------- Dihedral ----------
         elif choice == "5":
@@ -87,43 +72,25 @@ def run_interactive(lines, filename):
             j = safe_int("Enter atom j: ")
             k = safe_int("Enter atom k: ")
             l = safe_int("Enter atom l: ")
-            if None in (i, j, k, l):
-                continue
-            if not all(1 <= x <= natoms for x in (i, j, k, l)):
-                print("Atom index out of range.\n")
-                continue
-
-            dih = dihedral(i, j, k, l, coordinates)
-            print(f"\nDihedral angle ({i}-{j}-{k}-{l}): {dih:.3f}°\n")
+            if all(v is not None for v in (i, j, k, l)):
+                cmd.cmd_dihedral(i, j, k, l, coordinates) # type: ignore
 
         # ---------- Bond detection ----------
         elif choice == "7":
-            bonds = detect_bonds(atomic_numbers, coordinates)
-
-            print("\nDetected bonds (Å)")
-            print("------------------")
-
-            if not bonds:
-                print("No bonds detected.\n")
-            else:
-                for i, j, d in bonds:
-                    print(f"{i:2d}-{j:2d}  {d:6.3f}")
-                print()
+            cmd.cmd_graph(atomic_numbers, coordinates)
 
         # ---------- XYZ export ----------
         elif choice == "6":
             out = input("Enter output XYZ filename: ").strip()
-            if not out:
-                print("Filename cannot be empty.\n")
-                continue
-
-            write_xyz(out, atomic_numbers, coordinates)
-            print(f"\nXYZ file written to {out}\n")
+            if out:
+                cmd.cmd_xyz(out, atomic_numbers, coordinates)
+            else:
+                utils.print_error("Filename cannot be empty.")
 
         # ---------- Exit ----------
-        elif choice == "0":
+        elif choice == "0" or choice == "q":
             print("\nExiting openWFN.")
             break
 
         else:
-            print("Invalid option. Please try again.\n")
+            utils.print_error("Invalid option. Please try again.")

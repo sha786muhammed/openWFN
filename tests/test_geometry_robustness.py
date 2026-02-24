@@ -1,8 +1,8 @@
 # tests/test_geometry_robustness.py
 
-import pytest
-from openwfn.geometry import center_of_mass, detect_bonds
-from openwfn.constants import ATOMIC_MASS
+import pytest  # type: ignore
+from openwfn.geometry import center_of_mass, detect_bonds  # type: ignore
+from openwfn.constants import ATOMIC_MASS  # type: ignore
 
 def test_center_of_mass_unknown_element():
     # Z=999 doesn't exist
