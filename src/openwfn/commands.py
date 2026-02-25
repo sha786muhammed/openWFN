@@ -62,8 +62,8 @@ def cmd_dist(i: int, j: int, coordinates: List[Tuple[float, float, float]]) -> N
         d = distance(i, j, coordinates)
         utils.print_header("Distance Calculation")
         print(f"Distance ({i} - {j}): {utils.highlight(f'{d:.6f}')} Å")
-    except IndexError:
-        utils.print_error(f"Atom index out of range (1 to {len(coordinates)})")
+    except (IndexError, ValueError) as e:
+        utils.print_error(str(e))
 
 
 def cmd_angle(i: int, j: int, k: int, coordinates: List[Tuple[float, float, float]]) -> None:
@@ -72,8 +72,8 @@ def cmd_angle(i: int, j: int, k: int, coordinates: List[Tuple[float, float, floa
         a = angle(i, j, k, coordinates)
         utils.print_header("Angle Calculation")
         print(f"Angle ({i}-{j}-{k}): {utils.highlight(f'{a:.3f}')}°")
-    except IndexError:
-        utils.print_error(f"Atom index out of range")
+    except (IndexError, ValueError) as e:
+        utils.print_error(str(e))
 
 
 def cmd_dihedral(i: int, j: int, k: int, l: int, coordinates: List[Tuple[float, float, float]]) -> None:
@@ -82,8 +82,8 @@ def cmd_dihedral(i: int, j: int, k: int, l: int, coordinates: List[Tuple[float, 
         d = dihedral(i, j, k, l, coordinates)
         utils.print_header("Dihedral Calculation")
         print(f"Dihedral ({i}-{j}-{k}-{l}): {utils.highlight(f'{d:.3f}')}°")
-    except IndexError:
-        utils.print_error(f"Atom index out of range")
+    except (IndexError, ValueError) as e:
+        utils.print_error(str(e))
 
 
 def cmd_bonds(atomic_numbers: List[int], coordinates: List[Tuple[float, float, float]]) -> None:
@@ -135,7 +135,11 @@ def cmd_density(filename: str, grid_size: str, output: str, lines: List[str], co
     
     # Simple grid sizing parsing (e.g., 40x40x40 parsing stub or use spacing)
     points, shape = make_bounding_box_grid(coordinates, margin=3.0, spacing=0.2)
-    rho = compute_density(points, np.array(P_mu_nu))
+    try:
+        rho = compute_density(points, np.array(P_mu_nu))
+    except NotImplementedError as e:
+        utils.print_error(str(e))
+        return
     
     export_vtk(output, points, shape, rho, data_name="SCF_Density")
     utils.print_success(f"Grid exported: {points.shape[0]} points captured in {output}")

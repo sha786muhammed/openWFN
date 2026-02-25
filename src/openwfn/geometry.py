@@ -6,10 +6,18 @@ from typing import List, Tuple, Optional, Dict
 from .constants import ATOMIC_MASS, Z_TO_SYMBOL, COVALENT_RADII  # type: ignore
 
 
+def _validate_atom_index(idx_1based: int, n_atoms: int) -> int:
+    """Validate 1-based atom index and return 0-based index."""
+    if idx_1based < 1 or idx_1based > n_atoms:
+        raise ValueError(f"Atom index out of range: {idx_1based} (valid range: 1..{n_atoms})")
+    return idx_1based - 1
+
+
 def distance(i: int, j: int, coordinates: List[Tuple[float, float, float]]) -> float:
     """Calculate Euclidean distance between atom i and j (1-indexed)."""
-    i -= 1
-    j -= 1
+    n_atoms = len(coordinates)
+    i = _validate_atom_index(i, n_atoms)
+    j = _validate_atom_index(j, n_atoms)
 
     xi, yi, zi = coordinates[i]
     xj, yj, zj = coordinates[j]
@@ -20,7 +28,10 @@ def distance(i: int, j: int, coordinates: List[Tuple[float, float, float]]) -> f
 
 def angle(i: int, j: int, k: int, coordinates: List[Tuple[float, float, float]]) -> float:
     """Calculate bond angle i-j-k in degrees."""
-    i, j, k = i-1, j-1, k-1
+    n_atoms = len(coordinates)
+    i = _validate_atom_index(i, n_atoms)
+    j = _validate_atom_index(j, n_atoms)
+    k = _validate_atom_index(k, n_atoms)
 
     v1 = [coordinates[i][d] - coordinates[j][d] for d in range(3)]
     v2 = [coordinates[k][d] - coordinates[j][d] for d in range(3)]
@@ -28,6 +39,8 @@ def angle(i: int, j: int, k: int, coordinates: List[Tuple[float, float, float]])
     dot = sum(a*b for a, b in zip(v1, v2))
     n1 = math.sqrt(sum(a*a for a in v1))
     n2 = math.sqrt(sum(a*a for a in v2))
+    if n1 == 0.0 or n2 == 0.0:
+        raise ValueError("Cannot compute angle for zero-length bond vector.")
 
     # Clamp cos_t to [-1, 1] to avoid domain errors
     cos_t = max(-1.0, min(1.0, dot/(n1*n2)))
@@ -36,7 +49,11 @@ def angle(i: int, j: int, k: int, coordinates: List[Tuple[float, float, float]])
 
 def dihedral(i: int, j: int, k: int, l: int, coordinates: List[Tuple[float, float, float]]) -> float:
     """Calculate dihedral angle i-j-k-l in degrees."""
-    i, j, k, l = i-1, j-1, k-1, l-1
+    n_atoms = len(coordinates)
+    i = _validate_atom_index(i, n_atoms)
+    j = _validate_atom_index(j, n_atoms)
+    k = _validate_atom_index(k, n_atoms)
+    l = _validate_atom_index(l, n_atoms)
 
     def vec(a, b):
         return [b[d] - a[d] for d in range(3)]
@@ -58,9 +75,12 @@ def dihedral(i: int, j: int, k: int, l: int, coordinates: List[Tuple[float, floa
     n1 = cross(b1, b2)
     n2 = cross(b2, b3)
     m1 = cross(n1, b2)
+    b2_norm = math.sqrt(dot(b2, b2))
+    if b2_norm == 0.0:
+        raise ValueError("Cannot compute dihedral for zero-length central bond vector.")
 
     x = dot(n1, n2)
-    y = dot(m1, n2) / math.sqrt(dot(b2, b2))
+    y = dot(m1, n2) / b2_norm
 
     return math.degrees(math.atan2(y, x))
 

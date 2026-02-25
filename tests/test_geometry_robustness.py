@@ -1,7 +1,7 @@
 # tests/test_geometry_robustness.py
 
 import pytest  # type: ignore
-from openwfn.geometry import center_of_mass, detect_bonds  # type: ignore
+from openwfn.geometry import center_of_mass, detect_bonds, distance, angle, dihedral  # type: ignore
 from openwfn.constants import ATOMIC_MASS  # type: ignore
 
 def test_center_of_mass_unknown_element():
@@ -36,3 +36,23 @@ def test_detect_bonds_missing_radius():
     # Should not crash, just find no bonds because 150 has no radius
     bonds = detect_bonds(atomic_numbers, coordinates)
     assert len(bonds) == 0
+
+
+def test_distance_rejects_out_of_range_index():
+    coordinates = [(0.0, 0.0, 0.0), (1.0, 0.0, 0.0)]
+    with pytest.raises(ValueError, match="out of range"):
+        distance(-1, 2, coordinates)
+
+
+def test_angle_rejects_zero_length_vector():
+    # Atom 1 and 2 overlap, so one vector length is zero.
+    coordinates = [(0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (1.0, 0.0, 0.0)]
+    with pytest.raises(ValueError, match="zero-length bond vector"):
+        angle(1, 2, 3, coordinates)
+
+
+def test_dihedral_rejects_zero_length_central_bond():
+    # Atom 2 and 3 overlap, central bond vector is zero.
+    coordinates = [(0.0, 0.0, 0.0), (1.0, 0.0, 0.0), (1.0, 0.0, 0.0), (2.0, 0.0, 0.0)]
+    with pytest.raises(ValueError, match="zero-length central bond vector"):
+        dihedral(1, 2, 3, 4, coordinates)

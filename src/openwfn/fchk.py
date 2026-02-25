@@ -99,6 +99,11 @@ def parse_fchk_arrays(lines: List[str]) -> Tuple[List[int], List[Tuple[float, fl
     """
     atomic_numbers = _get_array(lines, "Atomic numbers", int)
     raw_coords = _get_array(lines, "Current cartesian coordinates", float)
+    if raw_coords and len(raw_coords) % 3 != 0:
+        raise ValueError(
+            "Malformed FCHK coordinates: expected a multiple of 3 values "
+            f"(got {len(raw_coords)})."
+        )
 
     coordinates = []
     if raw_coords:

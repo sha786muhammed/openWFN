@@ -35,3 +35,14 @@ def test_parse_fchk_arrays():
     assert coordinates[0] == pytest.approx((0.0, 0.0, 0.0))
     assert coordinates[1] == pytest.approx((1.0 * BOHR, 0.0, 0.0))
     assert coordinates[2] == pytest.approx((0.0, 1.0 * BOHR, 0.0))
+
+
+def test_parse_fchk_arrays_rejects_malformed_coordinate_count():
+    lines = [
+        "Atomic numbers                 I   N= 1\n",
+        "1\n",
+        "Current cartesian coordinates  R   N= 4\n",
+        "0.0 0.0 0.0 1.0\n",
+    ]
+    with pytest.raises(ValueError, match="multiple of 3"):
+        parse_fchk_arrays(lines)

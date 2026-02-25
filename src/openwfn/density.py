@@ -19,8 +19,7 @@ def compute_density(
     Returns:
         (N,) array of electron density at each point.
     """
-    N_points = r_points.shape[0]
-    rho = np.zeros(N_points)
-    
-    # Needs full iteration over mu, nu density matrix elements.
-    return rho
+    raise NotImplementedError(
+        "Electron density evaluation is not implemented yet. "
+        "Basis-function evaluation and matrix contraction are required."
+    )

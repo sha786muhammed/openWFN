@@ -17,6 +17,12 @@ def export_vtk(filename: str, grid_points: np.ndarray, grid_shape: Tuple[int, in
         data_name: Name of the scalar field.
     """
     nx, ny, nz = grid_shape
+    if nx <= 0 or ny <= 0 or nz <= 0:
+        raise ValueError("grid_shape must have positive dimensions.")
+    if grid_points.shape[0] != nx * ny * nz:
+        raise ValueError("grid_points size does not match grid_shape.")
+    if len(data) != nx * ny * nz:
+        raise ValueError("data size does not match grid_shape.")
     
     with open(filename, 'w') as f:
         f.write("# vtk DataFile Version 3.0\n")
@@ -31,11 +37,11 @@ def export_vtk(filename: str, grid_points: np.ndarray, grid_shape: Tuple[int, in
         origin = grid_points[0]
         f.write(f"ORIGIN {origin[0]} {origin[1]} {origin[2]}\n")
         
-        # Spacing (assume uniform based on index 1 and 0 in x dimension if nx > 1)
-        # Note: This requires extracting the actual spacing used when generating the grid. 
-        # For simplicity, using a naive spacing calc; a robust version should pass spacing explicitly.
-        spacing_x = grid_points[nx*ny*nz - 1][0] - grid_points[0][0] if nx > 1 else 1.0
-        f.write(f"SPACING 0.2 0.2 0.2\n") # Hardcoded default for stub
+        # Infer spacing from neighboring points in flattened ijk-order grid.
+        spacing_x = (grid_points[ny * nz][0] - grid_points[0][0]) if nx > 1 else 1.0
+        spacing_y = (grid_points[nz][1] - grid_points[0][1]) if ny > 1 else 1.0
+        spacing_z = (grid_points[1][2] - grid_points[0][2]) if nz > 1 else 1.0
+        f.write(f"SPACING {spacing_x} {spacing_y} {spacing_z}\n")
         
         f.write(f"\nPOINT_DATA {len(data)}\n")
         f.write(f"SCALARS {data_name} float 1\n")

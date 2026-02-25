@@ -4,143 +4,160 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Python](https://img.shields.io/badge/python-3.10+-blue)
 
-**openWFN** — *open WaveFunction Network* — is a lightweight, open-source
-post-processing toolkit for **quantum chemistry wavefunction files**, focused on
-accurate and transparent **molecular geometry analysis**.
+openWFN (open WaveFunction Network) is a lightweight toolkit for molecular geometry post-processing from Gaussian checkpoint data.
 
-It reads Gaussian formatted checkpoint files (`.fchk`) and provides essential
-structural information directly from the command line or through an interactive
-interface — without requiring heavy GUIs or complex visualization software.
+It is built for users who want:
+- fast command-line geometry analysis from `.fchk` files
+- reproducible atom-index-based calculations
+- a minimal, script-friendly toolchain with low dependencies
 
-openWFN is designed for **researchers, graduate students, and developers**
-who want a scriptable and scientifically consistent geometry analysis tool.
+## Key Capabilities
+- Read Gaussian `.fchk` files
+- Convert `.chk` to `.fchk` automatically when `formchk` is available
+- Convert coordinate units from Bohr to Angstrom internally
+- Calculate distance, angle, and dihedral from atom indices
+- Detect covalent bonds using tabulated covalent radii
+- Build molecular fragments (connected components)
+- Export coordinates to XYZ format
+- Run in command mode or interactive terminal menu mode
 
----
+## Requirements
+- Python 3.10+
+- `numpy`
+- Gaussian `formchk` only if you provide `.chk` files
 
-## 🚀 Features (v0.4.0)
-
-### 📂 File Handling
-- Gaussian `.fchk` parsing
-- Automatic `.chk → .fchk` conversion (via `formchk`)
-- Internal unit conversion (Bohr → Å)
-
-### 🧍 Molecular Information
-- **[PRO] New `summary` command**: One-page molecular overview.
-- Atom index table (element symbols + coordinates)
-- Molecular formula detection
-- Center of mass calculation
-- Charge and multiplicity extraction
-
-### 📐 Geometry Calculations
-- Distance between atoms
-- Bond angle (i–j–k)
-- Dihedral / torsion angle (i–j–k–l)
-- Automatic bond detection (covalent radii based)
-- **[PRO] Molecular graph components**: Fragment detection.
-
-### 📦 Export
-- XYZ export for visualization (VMD, Avogadro, PyMOL, etc.)
-
-### 🖥 Interface Modes
-- **[PRO] Rich Terminal UI**: High-contrast, colored output for better readability.
-- Command-line mode (scriptable, batch processing)
-- Interactive menu mode (beginner-friendly)
-
----
-
-## 🧠 Design Philosophy
-
-openWFN focuses on:
-
-- Unit consistency (Bohr → Å conversion handled internally)
-- Transparent atom indexing
-- Minimal dependencies
-- Explicit, reproducible calculations
-- Clean and readable source code
-
-It is intentionally small, modular, and extensible.
-
----
-
-## 📦 Installation
-
-### Requirements
-- Python ≥ 3.10
-- Gaussian installed (optional, only required for `.chk` → `.fchk` conversion)
-
-### Install from GitHub
-
+## Installation
 ```bash
 git clone https://github.com/sha786muhammed/openWFN.git
 cd openWFN
 pip install -e .
 ```
 
----
-
-## 🔧 Usage
-
-### Interactive Mode
-
+## Quick Start
+Use one of the included examples:
 ```bash
-openwfn molecule.fchk
+openwfn examples/water/water.fchk summary
+openwfn examples/ammonia/ammonia.fchk dist 1 2
+openwfn examples/methane/methane.fchk graph
+openwfn examples/water/water.fchk xyz water.xyz
 ```
 
-Menu:
+If no subcommand is provided:
+- in a TTY terminal, openWFN starts interactive mode
+- in non-interactive contexts, openWFN runs `summary`
 
+## Command Reference
+General form:
+```bash
+openwfn <file.chk|file.fchk> <command> [arguments]
 ```
+
+Available commands:
+- `summary`: one-page molecular overview (formula, atom count, charge, multiplicity, center of mass, energy if present, bonds, fragments)
+- `info`: print parsed scalar metadata from FCHK
+- `dist i j`: distance in Angstrom between atom `i` and atom `j`
+- `angle i j k`: bond angle (i-j-k) in degrees
+- `dihedral i j k l`: torsion angle (i-j-k-l) in degrees
+- `bonds`: print detected covalent bonds and distances
+- `graph`: print molecular fragments (connected components)
+- `xyz output.xyz`: export Cartesian coordinates to XYZ file
+- `interactive`: force interactive menu mode
+- `density --export out.vtk [--grid-size NxNxN]`: density export pathway (see status section)
+- `mo <index> --export out.vtk`: molecular orbital pathway (see status section)
+
+Get CLI help:
+```bash
+openwfn --help
+```
+
+## Interactive Mode Guide
+Start:
+```bash
+openwfn examples/water/water.fchk
+```
+
+Main menu options:
+```text
 s. Molecular summary (Quick view)
 1. Detailed metadata
 2. Atom index table
 3. Distance between two atoms
-4. Bond angle (i–j–k)
-5. Dihedral angle (i–j–k–l)
+4. Bond angle (i-j-k)
+5. Dihedral angle (i-j-k-l)
 6. Export XYZ
 7. Detect bonds / fragments
 0. Exit
 ```
 
----
+Typical interactive workflow:
+1. Press `2` to print atom indices and coordinates.
+2. Use those indices in `3`, `4`, or `5` for geometry calculations.
+3. Press `7` to inspect fragments in multi-component systems.
+4. Press `6` to export an XYZ file for external visualization.
+5. Press `0` to exit.
 
-### Command-Line Mode
+Input behavior:
+- atom indices are 1-based
+- invalid indices are reported as errors
+- malformed numeric input is rejected and reprompted
 
+## Example Sessions
+Distance and angle:
 ```bash
-# Professional Summary (Default)
-openwfn molecule.fchk
-
-# Detailed Metadata
-openwfn molecule.fchk info
-
-# Distance
-openwfn molecule.fchk dist 1 5
-
-# Angle
-openwfn molecule.fchk angle 1 2 3
-
-# Dihedral
-openwfn molecule.fchk dihedral 1 2 3 4
-
-# Bond detection
-openwfn molecule.fchk bonds
-
-# Molecular Graph / Fragments
-openwfn molecule.fchk graph
-
-# Export XYZ
-openwfn molecule.fchk xyz molecule.xyz
+openwfn examples/water/water.fchk dist 2 1
+openwfn examples/water/water.fchk angle 2 1 3
 ```
 
----
+Molecular summary:
+```bash
+openwfn examples/ammonia/ammonia.fchk summary
+```
 
-## 📄 License
+Fragment detection:
+```bash
+openwfn examples/methane/methane.fchk graph
+```
 
-MIT License.
+XYZ export:
+```bash
+openwfn examples/water/water.fchk xyz outputs/water.xyz
+```
 
----
+## File and Data Notes
+- Atomic coordinates in Gaussian FCHK are read in Bohr and converted to Angstrom.
+- Geometry commands assume coordinates are present in `Current cartesian coordinates`.
+- Bond detection uses element covalent radii with a fixed scaling factor (currently `1.2` in code).
 
-## 👤 Author
+## Current Implementation Status
+Fully supported and tested:
+- parsing of essential scalar and coordinate data
+- geometry calculations (`dist`, `angle`, `dihedral`)
+- bond detection and graph fragments
+- XYZ export
 
-**Muhammed Shah Shaji**  
-PhD Researcher — Computational Chemistry  
+Partially implemented:
+- `density` command interface exists, but electron-density evaluation backend is not fully implemented yet.
+- `mo` command interface exists, but molecular-orbital grid evaluation is currently a stub.
 
+Use these two commands only if you are extending the codebase.
+
+## Development
+Run tests:
+```bash
+pytest -q
+```
+
+Project layout:
+```text
+src/openwfn/        core library and CLI
+tests/              unit tests
+examples/           sample molecules and input files
+```
+
+## License
+MIT License. See [LICENSE](LICENSE).
+
+## Author
+Muhammed Shah Shaji  
+PhD Researcher, Computational Chemistry  
 GitHub: https://github.com/sha786muhammed
