@@ -1,6 +1,6 @@
 import math
 
-from openwfn.geometry import angle, dihedral, distance  # type: ignore
+from openwfn.geometry import angle, dihedral, distance, molecular_formula  # type: ignore
 
 
 def test_distance():
@@ -25,3 +25,7 @@ def test_dihedral():
         (1.0, 1.0, 1.0),
     ]
     assert math.isclose(abs(dihedral(1, 2, 3, 4, coordinates)), 90.0)
+
+
+def test_molecular_formula_uses_hill_order_without_carbon():
+    assert molecular_formula([1, 17]) == "ClH"

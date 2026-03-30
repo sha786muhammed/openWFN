@@ -12,4 +12,4 @@ trigonal pyramidal molecule.
 
 ```bash
 openwfn ammonia.fchk
-
+```

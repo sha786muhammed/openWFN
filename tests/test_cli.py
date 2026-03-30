@@ -1,6 +1,8 @@
 import subprocess
 import sys
 
+from openwfn import __version__  # type: ignore
+
 
 def test_cli_help():
     result = subprocess.run(
@@ -34,3 +36,18 @@ Current cartesian coordinates R N= 3
 
     assert result.returncode == 0
     assert "Atoms:" in result.stdout
+
+
+def test_cli_invalid_geometry_returns_nonzero():
+    result = subprocess.run(
+        [sys.executable, "-m", "openwfn.cli", "examples/water/water.fchk", "dist", "0", "1"],
+        capture_output=True,
+        text=True
+    )
+
+    assert result.returncode == 1
+    assert "Atom index out of range" in result.stderr
+
+
+def test_runtime_version_matches_project_version():
+    assert __version__ == "0.4.0"

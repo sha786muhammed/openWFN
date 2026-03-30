@@ -1,9 +1,15 @@
 # src/openwfn/xyz.py
 
+from pathlib import Path
+
 from .constants import Z_TO_SYMBOL  # type: ignore
 
 
-def write_xyz(filename, atomic_numbers, coordinates):
+def write_xyz(
+    filename: str | Path,
+    atomic_numbers: list[int],
+    coordinates: list[tuple[float, float, float]],
+) -> None:
     symbols = [Z_TO_SYMBOL.get(Z, "X") for Z in atomic_numbers]
 
     with open(filename, "w") as f:

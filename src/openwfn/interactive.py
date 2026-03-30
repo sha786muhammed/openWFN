@@ -1,96 +1,258 @@
+from pathlib import Path
+from typing import Callable
+
 from . import commands as cmd  # type: ignore
 from . import utils  # type: ignore
-from .fchk import parse_fchk_scalars, parse_fchk_arrays # type: ignore
+from .fchk import parse_fchk_arrays, parse_fchk_scalars, print_atom_table  # type: ignore
+from .geometry import molecular_formula  # type: ignore
+
+OPENWFN_ASCII = [
+    "  ___   ____   _____  _   _ __        __ _____  _   _ ",
+    " / _ \\ |  _ \\ | ____|| \\ | |\\ \\      / /|  ___|| \\ | |",
+    "| | | || |_) ||  _|  |  \\| | \\ \\ /\\ / / | |_   |  \\| |",
+    "| |_| ||  __/ | |___ | |\\  |  \\ V  V /  |  _|  | |\\  |",
+    " \\___/ |_|    |_____||_| \\_|   \\_/\\_/   |_|    |_| \\_|",
+]
+
+PRODUCT_NAME = "openWFN"
+PRODUCT_EXPANSION = "Open WaveFunction Network"
 
 
-def safe_int(prompt):
-    """Safely read an integer from user input."""
-    try:
-        val = input(prompt).strip()
-        if not val:
+FEATURE_ALIASES = {
+    "1": "summary",
+    "summary": "summary",
+    "2": "info",
+    "info": "info",
+    "3": "table",
+    "table": "table",
+    "atoms": "table",
+    "4": "dist",
+    "dist": "dist",
+    "distance": "dist",
+    "5": "angle",
+    "angle": "angle",
+    "6": "dihedral",
+    "dihedral": "dihedral",
+    "7": "xyz",
+    "xyz": "xyz",
+    "export": "xyz",
+    "8": "bonds",
+    "bonds": "bonds",
+    "9": "graph",
+    "graph": "graph",
+    "fragments": "graph",
+    "0": "exit",
+    "exit": "exit",
+    "quit": "exit",
+}
+
+
+def prompt_int(prompt: str) -> int | None:
+    """Prompt until a valid integer is entered or the user leaves it blank."""
+    while True:
+        try:
+            value = input(prompt).strip()
+        except EOFError:
             return None
-        return int(val)
-    except ValueError:
-        utils.print_error("Invalid input. Please enter an integer.\n")
+
+        if not value:
+            return None
+
+        try:
+            return int(value)
+        except ValueError:
+            utils.print_error("Please enter a whole-number atom index, or press Enter to cancel.")
+
+
+def prompt_indices(labels: tuple[str, ...]) -> list[int] | None:
+    """Read a fixed number of 1-based atom indices."""
+    values: list[int] = []
+    for label in labels:
+        value = prompt_int(f"Enter atom {label} (1-based index, blank to cancel): ")
+        if value is None:
+            utils.print_warning("Action cancelled.")
+            return None
+        values.append(value)
+    return values
+
+
+def prompt_output_filename(source_filename: str) -> str | None:
+    """Prompt for an output path, suggesting a sensible default."""
+    default_name = f"{Path(source_filename).stem}.xyz"
+    try:
+        raw_value = input(f"Enter output XYZ filename [{default_name}]: ").strip()
+    except EOFError:
         return None
+
+    return raw_value or default_name
+
+
+def print_landing_page(filename: str, atomic_numbers: list[int], scalars: dict[str, object]) -> None:
+    """Display the interactive landing page."""
+    print()
+    for line in OPENWFN_ASCII:
+        print(utils.highlight(line))
+    utils.print_panel(
+        PRODUCT_EXPANSION,
+        [
+            "A lightweight terminal toolkit for Gaussian .fchk geometry analysis.",
+            "",
+            f"File      : {filename}",
+            f"Formula   : {molecular_formula(atomic_numbers)}",
+            f"Atoms     : {len(atomic_numbers)}",
+            f"Charge    : {scalars.get('Charge', 'N/A')}",
+            f"Spin Mult : {scalars.get('Multiplicity', 'N/A')}",
+        ],
+    )
+    utils.print_menu_section(
+        "Stable Features",
+        [
+            ("1", "Molecular summary"),
+            ("2", "Detailed metadata"),
+            ("3", "Atom index table"),
+            ("4", "Distance between two atoms"),
+            ("5", "Bond angle (i-j-k)"),
+            ("6", "Dihedral angle (i-j-k-l)"),
+            ("7", "Export XYZ coordinates"),
+            ("8", "List detected covalent bonds"),
+            ("9", "Show fragments / connectivity"),
+        ],
+    )
+    utils.print_menu_section(
+        "Session",
+        [
+            ("0", "Exit"),
+        ],
+    )
+    print(
+        f"\n{utils.highlight('Tip:')} choose a feature to open its page. "
+        "Every page supports `back` and `exit`. You can also type feature names like "
+        "`graph`, `dist`, `summary`, or `xyz`."
+    )
+    print()
+
+
+def print_feature_page(title: str, description: str) -> None:
+    """Print a feature page header."""
+    utils.print_header(title)
+    print(description)
+    print(f"\n{utils.highlight('Navigation:')} type `back` to return to the landing page or `exit` to quit.\n")
+
+
+def prompt_page_navigation(prompt_label: str) -> str:
+    """Read page navigation input."""
+    while True:
+        try:
+            choice = input(f"{utils.highlight(prompt_label)} > ").strip().lower()
+        except EOFError:
+            print("\n")
+            return "exit"
+
+        if choice in {"back", "b", "0"}:
+            return "back"
+        if choice in {"exit", "quit", "x"}:
+            return "exit"
+        utils.print_error("Type `back` to return or `exit` to quit.")
+
+
+def run_static_page(title: str, description: str, render: Callable[[], None]) -> str:
+    """Render a feature page that does not require extra user input."""
+    print_feature_page(title, description)
+    render()
+    print()
+    return prompt_page_navigation(title)
+
+
+def run_input_page(title: str, description: str, action: Callable[[], None]) -> str:
+    """Render a feature page that prompts for additional input."""
+    while True:
+        print_feature_page(title, description)
+        action()
+        print()
+        nav = prompt_page_navigation(title)
+        if nav in {"back", "exit"}:
+            return nav
 
 
 def run_interactive(lines, filename):
     scalars = parse_fchk_scalars(lines)
     atomic_numbers, coordinates = parse_fchk_arrays(lines)
-    natoms = len(atomic_numbers)
+    menu_filename = str(Path(filename).name)
 
-    utils.print_header(f"openWFN Interactive Mode — {filename}")
+    def show_summary() -> None:
+        cmd.cmd_summary(scalars, atomic_numbers, coordinates)
+
+    def show_info() -> None:
+        cmd.cmd_info(scalars, atomic_numbers, coordinates)
+
+    def show_table() -> None:
+        utils.print_header("Coordinate Table")
+        print_atom_table(atomic_numbers, coordinates)
+
+    def run_distance() -> None:
+        indices = prompt_indices(("i", "j"))
+        if indices is not None:
+            cmd.cmd_dist(indices[0], indices[1], coordinates)
+
+    def run_angle() -> None:
+        indices = prompt_indices(("i", "j", "k"))
+        if indices is not None:
+            cmd.cmd_angle(indices[0], indices[1], indices[2], coordinates)
+
+    def run_dihedral() -> None:
+        indices = prompt_indices(("i", "j", "k", "l"))
+        if indices is not None:
+            cmd.cmd_dihedral(indices[0], indices[1], indices[2], indices[3], coordinates)
+
+    def export_xyz() -> None:
+        out = prompt_output_filename(filename)
+        if out:
+            cmd.cmd_xyz(out, atomic_numbers, coordinates)
+        else:
+            utils.print_warning("Export cancelled.")
+
+    def show_bonds() -> None:
+        cmd.cmd_bonds(atomic_numbers, coordinates)
+
+    def show_graph() -> None:
+        cmd.cmd_graph(atomic_numbers, coordinates)
 
     while True:
-        print("\033[1mMain Menu:\033[0m")
-        print("s. Molecular summary (Quick view)")
-        print("1. Detailed metadata")
-        print("2. Atom index table")
-        print("3. Distance between two atoms")
-        print("4. Bond angle (i–j–k)")
-        print("5. Dihedral angle (i–j–k–l)")
-        print("6. Export XYZ")
-        print("7. Detect bonds / fragments")
-        print("0. Exit")
+        print_landing_page(menu_filename, atomic_numbers, scalars)
 
-        choice = input(f"\n{utils.highlight('openwfn')} > ").strip().lower()
-
-        # ---------- Summary ----------
-        if choice == "s":
-            cmd.cmd_summary(scalars, atomic_numbers, coordinates)
-
-        # ---------- Detailed info ----------
-        elif choice == "1":
-            cmd.cmd_info(scalars, atomic_numbers, coordinates)
-
-        # ---------- Atom table ----------
-        elif choice == "2":
-            from .fchk import print_atom_table  # type: ignore
-            utils.print_header("Coordinate Table")
-            print_atom_table(atomic_numbers, coordinates)
-            print()
-
-        # ---------- Distance ----------
-        elif choice == "3":
-            i = safe_int("Enter first atom index: ")
-            j = safe_int("Enter second atom index: ")
-            if i is not None and j is not None:
-                cmd.cmd_dist(i, j, coordinates)
-
-        # ---------- Angle ----------
-        elif choice == "4":
-            i = safe_int("Enter atom i: ")
-            j = safe_int("Enter atom j: ")
-            k = safe_int("Enter atom k: ")
-            if all(v is not None for v in (i, j, k)):
-                cmd.cmd_angle(i, j, k, coordinates) # type: ignore
-
-        # ---------- Dihedral ----------
-        elif choice == "5":
-            i = safe_int("Enter atom i: ")
-            j = safe_int("Enter atom j: ")
-            k = safe_int("Enter atom k: ")
-            l = safe_int("Enter atom l: ")
-            if all(v is not None for v in (i, j, k, l)):
-                cmd.cmd_dihedral(i, j, k, l, coordinates) # type: ignore
-
-        # ---------- Bond detection ----------
-        elif choice == "7":
-            cmd.cmd_graph(atomic_numbers, coordinates)
-
-        # ---------- XYZ export ----------
-        elif choice == "6":
-            out = input("Enter output XYZ filename: ").strip()
-            if out:
-                cmd.cmd_xyz(out, atomic_numbers, coordinates)
-            else:
-                utils.print_error("Filename cannot be empty.")
-
-        # ---------- Exit ----------
-        elif choice == "0" or choice == "q":
+        try:
+            raw_choice = input(f"{utils.highlight(PRODUCT_NAME)} > ").strip().lower()
+        except EOFError:
             print("\nExiting openWFN.")
             break
 
+        action = FEATURE_ALIASES.get(raw_choice, "")
+
+        if action == "summary":
+            nav = run_static_page("Molecular Summary", "A one-page overview of the current molecule.", show_summary)
+        elif action == "info":
+            nav = run_static_page("Detailed Metadata", "Full scalar metadata parsed from the FCHK file.", show_info)
+        elif action == "table":
+            nav = run_static_page("Atom Index Table", "Atom labels and Cartesian coordinates for reference.", show_table)
+        elif action == "dist":
+            nav = run_input_page("Distance", "Measure the distance between two atoms.", run_distance)
+        elif action == "angle":
+            nav = run_input_page("Bond Angle", "Measure an i-j-k bond angle in degrees.", run_angle)
+        elif action == "dihedral":
+            nav = run_input_page("Dihedral Angle", "Measure an i-j-k-l torsion angle in degrees.", run_dihedral)
+        elif action == "xyz":
+            nav = run_input_page("Export XYZ", "Write the current coordinates to an XYZ file.", export_xyz)
+        elif action == "bonds":
+            nav = run_static_page("Detected Bonds", "List covalent bonds using tabulated covalent radii.", show_bonds)
+        elif action == "graph":
+            nav = run_static_page("Fragments", "Show molecular connectivity and fragment membership.", show_graph)
+        elif action == "exit":
+            print("\nExiting openWFN.")
+            break
         else:
-            utils.print_error("Invalid option. Please try again.")
+            utils.print_error("Unknown feature. Choose a feature number or type `exit`.")
+            continue
+
+        if nav == "exit":
+            print("\nExiting openWFN.")
+            break

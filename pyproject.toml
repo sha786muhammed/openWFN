@@ -9,10 +9,36 @@ version = "0.4.0"
 description = "openWFN: lightweight wavefunction geometry analysis toolkit"
 requires-python = ">=3.10"
 readme = "README.md"
+license = { text = "MIT" }
 authors = [{ name = "Muhammed Shah Shaji" }]
+keywords = [
+    "computational chemistry",
+    "gaussian",
+    "geometry",
+    "molecular modeling",
+    "quantum chemistry",
+    "wavefunction",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Physics",
+]
 dependencies = [
     "numpy>=1.20.0"
 ]
+
+[project.urls]
+Homepage = "https://github.com/sha786muhammed/openWFN"
+Repository = "https://github.com/sha786muhammed/openWFN"
+Issues = "https://github.com/sha786muhammed/openWFN/issues"
 
 
 [project.scripts]

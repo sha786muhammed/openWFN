@@ -1,19 +1,26 @@
 # src/openwfn/commands.py
 
-from typing import List, Tuple, Dict, Any, Optional
+from typing import Any
+
+import numpy as np  # type: ignore
+
 from .geometry import (  # type: ignore
-    distance,
     angle,
-    dihedral,
-    molecular_formula,
     center_of_mass,
     detect_bonds,
+    dihedral,
+    distance,
+    molecular_formula,
 )
 from .xyz import write_xyz  # type: ignore
 from . import utils  # type: ignore
 
 
-def cmd_summary(scalars: Dict[str, Any], atomic_numbers: List[int], coordinates: List[Tuple[float, float, float]]) -> None:
+def cmd_summary(
+    scalars: dict[str, Any],
+    atomic_numbers: list[int],
+    coordinates: list[tuple[float, float, float]],
+) -> int:
     """Print a professional molecular summary."""
     utils.print_header("Molecular Summary")
     
@@ -40,53 +47,66 @@ def cmd_summary(scalars: Dict[str, Any], atomic_numbers: List[int], coordinates:
     print(f"{utils.highlight('Bonds:')}      {len(bonds)}")
     print(f"{utils.highlight('Fragments:')}  {len(comps)}")
     print()
+    return 0
 
 
-def cmd_info(scalars: Dict[str, Any], atomic_numbers: List[int], coordinates: List[Tuple[float, float, float]]) -> None:
+def cmd_info(
+    scalars: dict[str, Any],
+    atomic_numbers: list[int],
+    coordinates: list[tuple[float, float, float]],
+) -> int:
     """Print detailed molecular metadata."""
+    del atomic_numbers, coordinates
     utils.print_header("FCHK Metadata")
     
     if not scalars:
         print("No metadata found.")
-        return
+        return 0
 
     # Filter out empty or common keys to make it cleaner
     for key, value in scalars.items():
         print(f"{key:<30}: {value}")
     print()
+    return 0
 
 
-def cmd_dist(i: int, j: int, coordinates: List[Tuple[float, float, float]]) -> None:
+def cmd_dist(i: int, j: int, coordinates: list[tuple[float, float, float]]) -> int:
     """Calculate and print distance between two atoms."""
     try:
         d = distance(i, j, coordinates)
         utils.print_header("Distance Calculation")
         print(f"Distance ({i} - {j}): {utils.highlight(f'{d:.6f}')} Å")
+        return 0
     except (IndexError, ValueError) as e:
         utils.print_error(str(e))
+        return 1
 
 
-def cmd_angle(i: int, j: int, k: int, coordinates: List[Tuple[float, float, float]]) -> None:
+def cmd_angle(i: int, j: int, k: int, coordinates: list[tuple[float, float, float]]) -> int:
     """Calculate and print bond angle."""
     try:
         a = angle(i, j, k, coordinates)
         utils.print_header("Angle Calculation")
         print(f"Angle ({i}-{j}-{k}): {utils.highlight(f'{a:.3f}')}°")
+        return 0
     except (IndexError, ValueError) as e:
         utils.print_error(str(e))
+        return 1
 
 
-def cmd_dihedral(i: int, j: int, k: int, l: int, coordinates: List[Tuple[float, float, float]]) -> None:
+def cmd_dihedral(i: int, j: int, k: int, l: int, coordinates: list[tuple[float, float, float]]) -> int:
     """Calculate and print dihedral angle."""
     try:
         d = dihedral(i, j, k, l, coordinates)
         utils.print_header("Dihedral Calculation")
         print(f"Dihedral ({i}-{j}-{k}-{l}): {utils.highlight(f'{d:.3f}')}°")
+        return 0
     except (IndexError, ValueError) as e:
         utils.print_error(str(e))
+        return 1
 
 
-def cmd_bonds(atomic_numbers: List[int], coordinates: List[Tuple[float, float, float]]) -> None:
+def cmd_bonds(atomic_numbers: list[int], coordinates: list[tuple[float, float, float]]) -> int:
     """Detect and print covalent bonds with formatting."""
     from .constants import Z_TO_SYMBOL  # type: ignore
     
@@ -95,7 +115,7 @@ def cmd_bonds(atomic_numbers: List[int], coordinates: List[Tuple[float, float, f
     
     if not bonds:
         print("No bonds detected within standard covalent radii.")
-        return
+        return 0
 
     utils.print_table_header([("Atom I", 10), ("Atom J", 10), ("Dist (Å)", 10)])
     for i, j, dist in bonds:
@@ -107,26 +127,34 @@ def cmd_bonds(atomic_numbers: List[int], coordinates: List[Tuple[float, float, f
             (f"{dist:.4f}", 10)
         ])
     print(f"\nTotal: {utils.highlight(str(len(bonds)))} bonds detected.")
+    return 0
 
 
-def cmd_xyz(output_filename: str, atomic_numbers: List[int], coordinates: List[Tuple[float, float, float]]) -> None:
+def cmd_xyz(output_filename: str, atomic_numbers: list[int], coordinates: list[tuple[float, float, float]]) -> int:
     """Export coordinates to an XYZ file."""
     write_xyz(output_filename, atomic_numbers, coordinates)
     utils.print_success(f"XYZ file successfully exported to: {output_filename}")
+    return 0
 
 
-def cmd_density(filename: str, grid_size: str, output: str, lines: List[str], coordinates: List[Tuple[float, float, float]]) -> None:
+def cmd_density(
+    filename: str,
+    grid_size: str,
+    output: str,
+    lines: list[str],
+    coordinates: list[tuple[float, float, float]],
+) -> int:
     """Calculate electron density on a grid and export to VTK."""
+    del filename, grid_size
     from .fchk import parse_fchk_density  # type: ignore
     from .grid import make_bounding_box_grid  # type: ignore
     from .density import compute_density  # type: ignore
     from .export import export_vtk  # type: ignore
-    import numpy as np
-    
+
     density_data = parse_fchk_density(lines)
     if not density_data or "total_scf_density" not in density_data:
         utils.print_error("Total SCF Density not found in FCHK.")
-        return
+        return 1
         
     P_mu_nu = density_data["total_scf_density"]
     
@@ -139,24 +167,33 @@ def cmd_density(filename: str, grid_size: str, output: str, lines: List[str], co
         rho = compute_density(points, np.array(P_mu_nu))
     except NotImplementedError as e:
         utils.print_error(str(e))
-        return
+        return 1
     
     export_vtk(output, points, shape, rho, data_name="SCF_Density")
     utils.print_success(f"Grid exported: {points.shape[0]} points captured in {output}")
+    return 0
 
 
-def cmd_mo(filename: str, index: int, output: str, lines: List[str], coordinates: List[Tuple[float, float, float]]) -> None:
+def cmd_mo(
+    filename: str,
+    index: int,
+    output: str,
+    lines: list[str],
+    coordinates: list[tuple[float, float, float]],
+) -> int:
     """Evaluate a specific molecular orbital on a grid."""
-    utils.print_header("MO Evaluation")
-    utils.print_warning("Molecular Orbital evaluation is currently a stub.")
+    del filename, index, output, lines, coordinates
+    utils.print_error(
+        "Molecular orbital grid evaluation is not implemented yet. "
+        "The 'mo' command is currently unavailable."
+    )
+    return 1
 
 
-def cmd_graph(atomic_numbers: List[int], coordinates: List[Tuple[float, float, float]]) -> None:
+def cmd_graph(atomic_numbers: list[int], coordinates: list[tuple[float, float, float]]) -> int:
     """Build and display molecular graph fragments."""
     from .graph import build_graph  # type: ignore
-    from .geometry import detect_bonds  # type: ignore
-    from .constants import Z_TO_SYMBOL  # type: ignore
-    
+
     bonds = detect_bonds(atomic_numbers, coordinates)
     g = build_graph(len(atomic_numbers), bonds)
     comps = g.connected_components()
@@ -171,3 +208,4 @@ def cmd_graph(atomic_numbers: List[int], coordinates: List[Tuple[float, float, f
         print(f"Fragment {i}: {utils.highlight(formula)}")
         print(f"  Atoms ({len(nodes)}): {', '.join(map(str, nodes))}")
     print()
+    return 0

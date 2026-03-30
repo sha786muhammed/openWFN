@@ -12,4 +12,4 @@ using openWFN.
 
 ```bash
 openwfn methane.fchk
-
+```

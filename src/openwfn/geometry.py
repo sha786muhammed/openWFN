@@ -1,8 +1,7 @@
 # src/openwfn/geometry.py
 
 import math
-from collections import Counter
-from typing import List, Tuple, Optional, Dict
+
 from .constants import ATOMIC_MASS, Z_TO_SYMBOL, COVALENT_RADII  # type: ignore
 
 
@@ -13,7 +12,7 @@ def _validate_atom_index(idx_1based: int, n_atoms: int) -> int:
     return idx_1based - 1
 
 
-def distance(i: int, j: int, coordinates: List[Tuple[float, float, float]]) -> float:
+def distance(i: int, j: int, coordinates: list[tuple[float, float, float]]) -> float:
     """Calculate Euclidean distance between atom i and j (1-indexed)."""
     n_atoms = len(coordinates)
     i = _validate_atom_index(i, n_atoms)
@@ -26,7 +25,7 @@ def distance(i: int, j: int, coordinates: List[Tuple[float, float, float]]) -> f
     return math.sqrt(dx*dx + dy*dy + dz*dz)
 
 
-def angle(i: int, j: int, k: int, coordinates: List[Tuple[float, float, float]]) -> float:
+def angle(i: int, j: int, k: int, coordinates: list[tuple[float, float, float]]) -> float:
     """Calculate bond angle i-j-k in degrees."""
     n_atoms = len(coordinates)
     i = _validate_atom_index(i, n_atoms)
@@ -47,7 +46,7 @@ def angle(i: int, j: int, k: int, coordinates: List[Tuple[float, float, float]])
     return math.degrees(math.acos(cos_t))
 
 
-def dihedral(i: int, j: int, k: int, l: int, coordinates: List[Tuple[float, float, float]]) -> float:
+def dihedral(i: int, j: int, k: int, l: int, coordinates: list[tuple[float, float, float]]) -> float:
     """Calculate dihedral angle i-j-k-l in degrees."""
     n_atoms = len(coordinates)
     i = _validate_atom_index(i, n_atoms)
@@ -85,22 +84,25 @@ def dihedral(i: int, j: int, k: int, l: int, coordinates: List[Tuple[float, floa
     return math.degrees(math.atan2(y, x))
 
 
-def molecular_formula(atomic_numbers: List[int]) -> str:
+def molecular_formula(atomic_numbers: list[int]) -> str:
     """Generate Hill system molecular formula."""
-    counts: Dict[int, int] = {}
+    counts: dict[int, int] = {}
     for z in atomic_numbers:
         counts[z] = counts.get(z, 0) + 1
 
-    # Hill system ordering: C, H, then alphabetical
-    elements: List[int] = []
+    # Hill ordering:
+    # - carbon-containing compounds: C, H, then remaining elements alphabetically
+    # - compounds without carbon: all elements alphabetically
     if 6 in counts:
-        elements.append(6)
-    if 1 in counts:
-        elements.append(1)
-
-    for Z in sorted(counts.keys()):
-        if Z not in elements:
-            elements.append(Z)
+        elements: list[int] = [6]
+        if 1 in counts:
+            elements.append(1)
+        elements.extend(
+            Z for Z in sorted(counts.keys(), key=lambda z: Z_TO_SYMBOL.get(z, f"Z{z}"))
+            if Z not in elements
+        )
+    else:
+        elements = sorted(counts.keys(), key=lambda z: Z_TO_SYMBOL.get(z, f"Z{z}"))
 
     formula = ""
     for Z in elements:
@@ -111,7 +113,10 @@ def molecular_formula(atomic_numbers: List[int]) -> str:
     return formula
 
 
-def center_of_mass(atomic_numbers: List[int], coordinates: List[Tuple[float, float, float]]) -> Tuple[float, float, float]:
+def center_of_mass(
+    atomic_numbers: list[int],
+    coordinates: list[tuple[float, float, float]],
+) -> tuple[float, float, float]:
     """Calculate center of mass."""
     total_mass = 0.0
     cx = cy = cz = 0.0
@@ -133,16 +138,20 @@ def center_of_mass(atomic_numbers: List[int], coordinates: List[Tuple[float, flo
     return cx/total_mass, cy/total_mass, cz/total_mass
 
 
-def detect_bonds(atomic_numbers: List[int], coordinates: List[Tuple[float, float, float]], scale: float = 1.2) -> List[Tuple[int, int, float]]:
+def detect_bonds(
+    atomic_numbers: list[int],
+    coordinates: list[tuple[float, float, float]],
+    scale: float = 1.2,
+) -> list[tuple[int, int, float]]:
     """
     Detect covalent bonds based on interatomic distances.
     Returns list of (atom_i, atom_j, distance).
     """
-    bonds: List[Tuple[int, int, float]] = []
+    bonds: list[tuple[int, int, float]] = []
     n = len(atomic_numbers)
 
     for i in range(n):
-        Zi = atomic_numbers[i]  # type: ignore
+        Zi = atomic_numbers[i]
         sym_i = Z_TO_SYMBOL.get(Zi)
         ri = COVALENT_RADII.get(sym_i)
 
@@ -150,7 +159,7 @@ def detect_bonds(atomic_numbers: List[int], coordinates: List[Tuple[float, float
             continue
 
         for j in range(i+1, n):
-            Zj = atomic_numbers[j]  # type: ignore
+            Zj = atomic_numbers[j]
             sym_j = Z_TO_SYMBOL.get(Zj)
             rj = COVALENT_RADII.get(sym_j)
 

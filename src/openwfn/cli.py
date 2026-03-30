@@ -2,29 +2,22 @@
 
 import argparse
 import os
-import subprocess
 import shutil
+import subprocess
 import sys
+from typing import Any
 
-from .fchk import read_fchk, parse_fchk_scalars, parse_fchk_arrays, print_atom_table  # type: ignore
-from .geometry import (  # type: ignore
-    distance,
-    angle,
-    dihedral,
-    molecular_formula,
-    center_of_mass,
-    detect_bonds,
-)
+from .fchk import parse_fchk_arrays, parse_fchk_scalars, read_fchk  # type: ignore
 from . import commands as cmd  # type: ignore
-from .xyz import write_xyz  # type: ignore
 from .interactive import run_interactive  # type: ignore
+from . import utils  # type: ignore
 
 
 # -------------------------------------------------
 # Utilities
 # -------------------------------------------------
 
-def ensure_fchk(file):
+def ensure_fchk(file: str) -> str:
     """Convert .chk → .fchk if necessary."""
     if file.endswith(".fchk"):
         return file
@@ -44,7 +37,7 @@ def ensure_fchk(file):
     sys.exit("Error: input must be .chk or .fchk")
 
 
-def load_data(filename):
+def load_data(filename: str) -> tuple[str, dict[str, Any], list[int], list[tuple[float, float, float]]]:
     fchk_file = ensure_fchk(filename)
     lines = read_fchk(fchk_file)
     scalars = parse_fchk_scalars(lines)
@@ -56,11 +49,14 @@ def load_data(filename):
 # Main CLI
 # -------------------------------------------------
 
-def main():
-
+def main() -> int:
     parser = argparse.ArgumentParser(
         prog="openwfn",
-        description="openWFN — Lightweight Wavefunction Geometry Toolkit"
+        description=(
+            "openWFN — Lightweight Wavefunction Geometry Toolkit. "
+            "Geometry analysis commands are stable; 'density' and 'mo' are experimental "
+            "and currently unavailable for production use."
+        )
     )
 
     parser.add_argument("file", help="Gaussian .chk or .fchk file")
@@ -106,12 +102,22 @@ def main():
     subparsers.add_parser("graph", help="Show molecular graph components")
 
     # density
-    p_dens = subparsers.add_parser("density", help="Compute electron density on a grid")
-    p_dens.add_argument("--grid-size", default="40x40x40", help="Grid sizes (unused, uses spacing currently)")
+    p_dens = subparsers.add_parser(
+        "density",
+        help="Experimental: electron-density export pathway (currently unavailable)"
+    )
+    p_dens.add_argument(
+        "--grid-size",
+        default="40x40x40",
+        help="Requested grid size placeholder (currently ignored; spacing-based grid is used)"
+    )
     p_dens.add_argument("--export", required=True, help="Output VTK file path")
 
     # mo
-    p_mo = subparsers.add_parser("mo", help="Compute MO on a grid")
+    p_mo = subparsers.add_parser(
+        "mo",
+        help="Experimental: molecular-orbital export pathway (currently unavailable)"
+    )
     p_mo.add_argument("index", type=int, help="MO index")
     p_mo.add_argument("--export", required=True, help="Output VTK file path")
 
@@ -128,7 +134,6 @@ def main():
     try:
         fchk_file, scalars, atomic_numbers, coordinates = load_data(filename)
     except Exception as e:
-        from . import utils  # type: ignore
         utils.print_error(str(e))
         return 1
 
@@ -138,40 +143,45 @@ def main():
     # Commands
     # -----------------------------
 
-    if args.command == "summary": # type: ignore
-        cmd.cmd_summary(scalars, atomic_numbers, coordinates)
+    try:
+        if args.command == "summary": # type: ignore
+            return cmd.cmd_summary(scalars, atomic_numbers, coordinates)
 
-    elif args.command == "info": # type: ignore
-        cmd.cmd_info(scalars, atomic_numbers, coordinates)
+        if args.command == "info": # type: ignore
+            return cmd.cmd_info(scalars, atomic_numbers, coordinates)
 
-    elif args.command == "dist": # type: ignore
-        cmd.cmd_dist(args.i, args.j, coordinates)
+        if args.command == "dist": # type: ignore
+            return cmd.cmd_dist(args.i, args.j, coordinates)
 
-    elif args.command == "angle": # type: ignore
-        cmd.cmd_angle(args.i, args.j, args.k, coordinates)
+        if args.command == "angle": # type: ignore
+            return cmd.cmd_angle(args.i, args.j, args.k, coordinates)
 
-    elif args.command == "dihedral": # type: ignore
-        cmd.cmd_dihedral(args.i, args.j, args.k, args.l, coordinates)
+        if args.command == "dihedral": # type: ignore
+            return cmd.cmd_dihedral(args.i, args.j, args.k, args.l, coordinates)
 
-    elif args.command == "bonds": # type: ignore
-        cmd.cmd_bonds(atomic_numbers, coordinates)
+        if args.command == "bonds": # type: ignore
+            return cmd.cmd_bonds(atomic_numbers, coordinates)
 
-    elif args.command == "graph": # type: ignore
-        cmd.cmd_graph(atomic_numbers, coordinates)
+        if args.command == "graph": # type: ignore
+            return cmd.cmd_graph(atomic_numbers, coordinates)
 
-    elif args.command == "density": # type: ignore
-        cmd.cmd_density(filename, args.grid_size, args.export, lines, coordinates)
+        if args.command == "density": # type: ignore
+            return cmd.cmd_density(filename, args.grid_size, args.export, lines, coordinates)
 
-    elif args.command == "mo": # type: ignore
-        cmd.cmd_mo(filename, args.index, args.export, lines, coordinates)
+        if args.command == "mo": # type: ignore
+            return cmd.cmd_mo(filename, args.index, args.export, lines, coordinates)
 
-    elif args.command == "xyz": # type: ignore
-        cmd.cmd_xyz(args.output, atomic_numbers, coordinates)
+        if args.command == "xyz": # type: ignore
+            return cmd.cmd_xyz(args.output, atomic_numbers, coordinates)
 
-    elif args.command == "interactive": # type: ignore
-        run_interactive(lines, fchk_file)
+        if args.command == "interactive": # type: ignore
+            run_interactive(lines, fchk_file)
+            return 0
+    except Exception as e:
+        utils.print_error(str(e))
+        return 1
 
-    return 0
+    return 1
 
 
 if __name__ == "__main__":
