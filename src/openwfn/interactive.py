@@ -36,9 +36,12 @@ FEATURE_ALIASES = {
     "7": "xyz",
     "xyz": "xyz",
     "export": "xyz",
-    "8": "bonds",
+    "8": "view",
+    "view": "view",
+    "viewer": "view",
+    "9": "bonds",
     "bonds": "bonds",
-    "9": "graph",
+    "10": "graph",
     "graph": "graph",
     "fragments": "graph",
     "0": "exit",
@@ -114,8 +117,9 @@ def print_landing_page(filename: str, atomic_numbers: list[int], scalars: dict[s
             ("5", "Bond angle (i-j-k)"),
             ("6", "Dihedral angle (i-j-k-l)"),
             ("7", "Export XYZ coordinates"),
-            ("8", "List detected covalent bonds"),
-            ("9", "Show fragments / connectivity"),
+            ("8", "Open molecule viewer"),
+            ("9", "List detected covalent bonds"),
+            ("10", "Show fragments / connectivity"),
         ],
     )
     utils.print_menu_section(
@@ -127,7 +131,7 @@ def print_landing_page(filename: str, atomic_numbers: list[int], scalars: dict[s
     print(
         f"\n{utils.highlight('Tip:')} choose a feature to open its page. "
         "Every page supports `back` and `exit`. You can also type feature names like "
-        "`graph`, `dist`, `summary`, or `xyz`."
+        "`graph`, `dist`, `summary`, `xyz`, or `view`."
     )
     print()
 
@@ -211,6 +215,9 @@ def run_interactive(lines, filename):
         else:
             utils.print_warning("Export cancelled.")
 
+    def open_viewer() -> None:
+        cmd.cmd_view(None, atomic_numbers, coordinates)
+
     def show_bonds() -> None:
         cmd.cmd_bonds(atomic_numbers, coordinates)
 
@@ -242,6 +249,8 @@ def run_interactive(lines, filename):
             nav = run_input_page("Dihedral Angle", "Measure an i-j-k-l torsion angle in degrees.", run_dihedral)
         elif action == "xyz":
             nav = run_input_page("Export XYZ", "Write the current coordinates to an XYZ file.", export_xyz)
+        elif action == "view":
+            nav = run_static_page("Molecule Viewer", "Open the current molecule in a browser-based viewer.", open_viewer)
         elif action == "bonds":
             nav = run_static_page("Detected Bonds", "List covalent bonds using tabulated covalent radii.", show_bonds)
         elif action == "graph":

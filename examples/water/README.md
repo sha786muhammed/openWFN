@@ -12,4 +12,5 @@ for a small molecule.
 
 ```bash
 openwfn water.fchk
+openwfn water.fchk view
 ```

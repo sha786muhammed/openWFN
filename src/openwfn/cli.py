@@ -95,6 +95,18 @@ def main() -> int:
     p_xyz = subparsers.add_parser("xyz", help="Export XYZ file")
     p_xyz.add_argument("output", help="Output XYZ filename")
 
+    # view
+    p_view = subparsers.add_parser("view", help="Open local browser-based molecule viewer with atom labels")
+    p_view.add_argument("--save", help="Optional HTML output path")
+    p_view.add_argument("--no-open", action="store_true", help="Only write the HTML viewer file; do not open a browser")
+    p_view.add_argument("--no-labels", action="store_true", help="Hide atom labels in the viewer")
+    p_view.add_argument(
+        "--style",
+        choices=["ballstick", "stick"],
+        default="ballstick",
+        help="Viewer rendering style",
+    )
+
     # interactive
     subparsers.add_parser("interactive", help="Launch interactive menu mode")
 
@@ -173,6 +185,16 @@ def main() -> int:
 
         if args.command == "xyz": # type: ignore
             return cmd.cmd_xyz(args.output, atomic_numbers, coordinates)
+
+        if args.command == "view": # type: ignore
+            return cmd.cmd_view(
+                args.save,
+                atomic_numbers,
+                coordinates,
+                open_browser=not args.no_open,
+                show_labels=not args.no_labels,
+                style=args.style,
+            )
 
         if args.command == "interactive": # type: ignore
             run_interactive(lines, fchk_file)

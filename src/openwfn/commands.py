@@ -1,9 +1,13 @@
 # src/openwfn/commands.py
 
 from typing import Any
+import tempfile
+import webbrowser
+from pathlib import Path
 
 import numpy as np  # type: ignore
 
+from .export import export_molecule_viewer  # type: ignore
 from .geometry import (  # type: ignore
     angle,
     center_of_mass,
@@ -134,6 +138,38 @@ def cmd_xyz(output_filename: str, atomic_numbers: list[int], coordinates: list[t
     """Export coordinates to an XYZ file."""
     write_xyz(output_filename, atomic_numbers, coordinates)
     utils.print_success(f"XYZ file successfully exported to: {output_filename}")
+    return 0
+
+
+def cmd_view(
+    output_filename: str | None,
+    atomic_numbers: list[int],
+    coordinates: list[tuple[float, float, float]],
+    open_browser: bool = True,
+    show_labels: bool = True,
+    style: str = "ballstick",
+) -> int:
+    """Export and optionally open a browser-based molecule viewer."""
+    if output_filename is None:
+        with tempfile.NamedTemporaryFile(prefix="openwfn_view_", suffix=".html", delete=False) as tmp:
+            output_path = Path(tmp.name)
+    else:
+        output_path = Path(output_filename)
+
+    export_molecule_viewer(
+        output_path,
+        atomic_numbers,
+        coordinates,
+        show_labels=show_labels,
+        style=style,
+    )
+    utils.print_success(f"Molecule viewer successfully exported to: {output_path}")
+    if open_browser:
+        opened = webbrowser.open(output_path.resolve().as_uri())
+        if opened:
+            utils.print_success("Viewer opened in your default browser.")
+        else:
+            utils.print_warning("Viewer file was created, but automatic browser opening was not available.")
     return 0
 
 

@@ -50,4 +50,28 @@ def test_cli_invalid_geometry_returns_nonzero():
 
 
 def test_runtime_version_matches_project_version():
-    assert __version__ == "0.4.0"
+    assert __version__ == "0.5.0"
+
+
+def test_cli_view_export_no_open(tmp_path):
+    f = tmp_path / "mini.fchk"
+    out = tmp_path / "viewer.html"
+
+    f.write_text("""Charge I 0
+Multiplicity I 1
+Number of atoms I 1
+Atomic numbers I N= 1
+1
+Current cartesian coordinates R N= 3
+0.0 0.0 0.0
+""")
+
+    result = subprocess.run(
+        [sys.executable, "-m", "openwfn.cli", str(f), "view", "--save", str(out), "--no-open"],
+        capture_output=True,
+        text=True
+    )
+
+    assert result.returncode == 0
+    assert out.exists()
+    assert "successfully exported" in result.stdout.lower()

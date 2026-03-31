@@ -1,7 +1,7 @@
 import numpy as np  # type: ignore
 import pytest  # type: ignore
 
-from openwfn.export import export_vtk  # type: ignore
+from openwfn.export import export_molecule_viewer, export_vtk  # type: ignore
 
 
 def test_export_vtk_writes_actual_spacing(tmp_path):
@@ -29,3 +29,28 @@ def test_export_vtk_rejects_size_mismatch(tmp_path):
     data = np.array([0.0, 1.0])
     with pytest.raises(ValueError, match="data size does not match"):
         export_vtk(str(tmp_path / "bad.vtk"), points, (1, 1, 1), data)
+
+
+def test_export_molecule_viewer_writes_inline_viewer(tmp_path):
+    out = tmp_path / "viewer.html"
+    export_molecule_viewer(
+        out,
+        [8, 1, 1],
+        [(0.0, 0.0, 0.0), (0.75, 0.0, 0.5), (-0.75, 0.0, 0.5)],
+    )
+
+    content = out.read_text()
+    assert "3Dmol" in content
+    assert "1:O" in content
+    assert "2:H" in content
+    assert "addModel(xyzData, \"xyz\")" in content
+    assert "Local 3Dmol.js viewer exported by openWFN" in content
+    assert "Ball & Stick" in content
+    assert "labels-toggle" in content
+    assert "Formula" in content
+    assert 'data-download="xyz"' in content
+    assert 'data-download="pdb"' in content
+    assert 'data-download="sdf"' in content
+    assert 'data-download="png"' in content
+    assert 'data-download="jpeg"' in content
+    assert 'data-download="svg"' in content

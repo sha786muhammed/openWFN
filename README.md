@@ -30,6 +30,7 @@ openwfn molecule.fchk summary
 openwfn molecule.fchk dist 1 2
 openwfn molecule.fchk graph
 openwfn molecule.fchk xyz molecule.xyz
+openwfn molecule.fchk view
 ```
 
 If no subcommand is provided:
@@ -45,6 +46,11 @@ Stable commands:
 - `bonds`
 - `graph`
 - `xyz output.xyz`
+- `view`
+
+`view` exports a fully local HTML molecule viewer powered by bundled `3Dmol.js`.
+It supports atom labels, style toggles, and built-in downloads for `XYZ`, `PDB`,
+`SDF`, `PNG`, `JPEG`, and `SVG`.
 
 ## Example Sessions
 
@@ -53,7 +59,14 @@ openwfn examples/water/water.fchk summary
 openwfn examples/water/water.fchk dist 2 1
 openwfn examples/water/water.fchk angle 2 1 3
 openwfn examples/methane/methane.fchk graph
+openwfn examples/water/water.fchk view
 openwfn examples/water/water.fchk
+```
+
+To save a standalone viewer file:
+
+```bash
+openwfn examples/water/water.fchk view --save viewer.html --no-open
 ```
 
 ## Release

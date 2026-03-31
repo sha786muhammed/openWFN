@@ -10,7 +10,8 @@ def test_interactive_aliases_cover_feature_navigation():
     assert FEATURE_ALIASES["1"] == "summary"
     assert FEATURE_ALIASES["4"] == "dist"
     assert FEATURE_ALIASES["7"] == "xyz"
-    assert FEATURE_ALIASES["9"] == "graph"
+    assert FEATURE_ALIASES["8"] == "view"
+    assert FEATURE_ALIASES["10"] == "graph"
     assert FEATURE_ALIASES["exit"] == "exit"
 
 
@@ -28,6 +29,7 @@ def test_print_landing_page_shows_intro_and_features(capsys):
     assert "A lightweight terminal toolkit" in output
     assert "Stable Features" in output
     assert "Molecular summary" in output
+    assert "Open molecule viewer" in output
     assert "Show fragments / connectivity" in output
     assert "Every page supports `back` and `exit`" in output
     assert "graph" in output
