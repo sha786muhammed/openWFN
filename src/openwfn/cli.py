@@ -5,6 +5,7 @@ import os
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 from typing import Any
 
 from .fchk import parse_fchk_arrays, parse_fchk_scalars, read_fchk  # type: ignore
@@ -17,24 +18,41 @@ from . import utils  # type: ignore
 # Utilities
 # -------------------------------------------------
 
+def convert_chk_to_fchk(file: str, output: str | None = None, *, quiet: bool = False) -> str:
+    """Convert a Gaussian .chk file into a .fchk file."""
+    if not file.endswith(".chk"):
+        raise ValueError("Checkpoint conversion requires a Gaussian `.chk` input file.")
+
+    if not shutil.which("formchk"):
+        raise RuntimeError(
+            "Gaussian checkpoint conversion requires `formchk`, but it was not found in your PATH. "
+            "Add Gaussian utilities to PATH or convert the file manually with "
+            "`formchk input.chk output.fchk`."
+        )
+
+    output_path = output or str(Path(file).with_suffix(".fchk"))
+
+    if not os.path.exists(output_path):
+        if not quiet:
+            print(f"Converting Gaussian checkpoint: {file} -> {output_path}")
+        subprocess.run(["formchk", file, output_path], check=True)
+        if not quiet:
+            utils.print_success(f"Formatted checkpoint written beside the input file: {output_path}")
+    elif not quiet:
+        utils.print_success(f"Reusing existing formatted checkpoint: {output_path}")
+
+    return output_path
+
+
 def ensure_fchk(file: str) -> str:
-    """Convert .chk → .fchk if necessary."""
+    """Convert .chk -> .fchk if necessary."""
     if file.endswith(".fchk"):
         return file
 
     if file.endswith(".chk"):
-        if not shutil.which("formchk"):
-            sys.exit("Error: 'formchk' not found in PATH.")
+        return convert_chk_to_fchk(file)
 
-        out = file.replace(".chk", ".fchk")
-
-        if not os.path.exists(out):
-            print(f"Converting {file} → {out}")
-            subprocess.run(["formchk", file, out], check=True)
-
-        return out
-
-    sys.exit("Error: input must be .chk or .fchk")
+    sys.exit("Input must be a Gaussian `.chk` or `.fchk` file.")
 
 
 def load_data(filename: str) -> tuple[str, dict[str, Any], list[int], list[tuple[float, float, float]]]:
@@ -61,7 +79,10 @@ def main() -> int:
 
     parser.add_argument("file", help="Gaussian .chk or .fchk file")
 
-    subparsers = parser.add_subparsers(dest="command")
+    subparsers = parser.add_subparsers(
+        dest="command",
+        metavar="{summary,info,dist,angle,dihedral,bonds,xyz,formchk,view,interactive,graph}",
+    )
 
     # summary (now the default view)
     subparsers.add_parser("summary", help="Show professional molecular summary")
@@ -95,10 +116,22 @@ def main() -> int:
     p_xyz = subparsers.add_parser("xyz", help="Export XYZ file")
     p_xyz.add_argument("output", help="Output XYZ filename")
 
+    # formchk
+    p_formchk = subparsers.add_parser(
+        "formchk",
+        help="Convert a Gaussian checkpoint (.chk) file into a formatted checkpoint (.fchk)",
+    )
+    p_formchk.add_argument(
+        "output",
+        nargs="?",
+        help="Optional output .fchk path (defaults to the input name with .fchk)",
+    )
+
     # view
-    p_view = subparsers.add_parser("view", help="Open local browser-based molecule viewer with atom labels")
+    p_view = subparsers.add_parser("view", help="Export a standalone local HTML molecule viewer with atom labels")
     p_view.add_argument("--save", help="Optional HTML output path")
-    p_view.add_argument("--no-open", action="store_true", help="Only write the HTML viewer file; do not open a browser")
+    p_view.add_argument("--open", action="store_true", help="Open the exported viewer in your default browser")
+    p_view.add_argument("--no-open", action="store_true", help=argparse.SUPPRESS)
     p_view.add_argument("--no-labels", action="store_true", help="Hide atom labels in the viewer")
     p_view.add_argument(
         "--style",
@@ -116,7 +149,8 @@ def main() -> int:
     # density
     p_dens = subparsers.add_parser(
         "density",
-        help="Experimental: electron-density export pathway (currently unavailable)"
+        help=argparse.SUPPRESS,
+        description="Experimental developer preview: electron-density export pathway.",
     )
     p_dens.add_argument(
         "--grid-size",
@@ -128,12 +162,30 @@ def main() -> int:
     # mo
     p_mo = subparsers.add_parser(
         "mo",
-        help="Experimental: molecular-orbital export pathway (currently unavailable)"
+        help=argparse.SUPPRESS,
+        description="Experimental developer preview: molecular-orbital export pathway.",
     )
     p_mo.add_argument("index", type=int, help="MO index")
     p_mo.add_argument("--export", required=True, help="Output VTK file path")
 
+    # Keep experimental developer commands callable without presenting them as
+    # public end-user features in `--help`.
+    subparsers._choices_actions = [  # type: ignore[attr-defined]
+        action
+        for action in subparsers._choices_actions  # type: ignore[attr-defined]
+        if action.dest not in {"density", "mo"}
+    ]
+
     args = parser.parse_args()
+
+    if getattr(args, "command", None) == "formchk":
+        try:
+            output_path = convert_chk_to_fchk(args.file, args.output)
+        except Exception as e:
+            utils.print_error(str(e))
+            return 1
+        utils.print_success(f"Formatted checkpoint ready: {output_path}")
+        return 0
 
     # If no subcommand → default to interactive if it's a TTY, else summary
     if getattr(args, "command", None) is None:
@@ -187,11 +239,12 @@ def main() -> int:
             return cmd.cmd_xyz(args.output, atomic_numbers, coordinates)
 
         if args.command == "view": # type: ignore
+            output_path = args.save or f"{Path(filename).stem}_viewer.html"
             return cmd.cmd_view(
-                args.save,
+                output_path,
                 atomic_numbers,
                 coordinates,
-                open_browser=not args.no_open,
+                open_browser=bool(args.open and not args.no_open),
                 show_labels=not args.no_labels,
                 style=args.style,
             )

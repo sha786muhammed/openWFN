@@ -31,6 +31,8 @@ openwfn molecule.fchk dist 1 2
 openwfn molecule.fchk graph
 openwfn molecule.fchk xyz molecule.xyz
 openwfn molecule.fchk view
+openwfn molecule.fchk view --open
+openwfn molecule.chk formchk
 ```
 
 If no subcommand is provided:
@@ -47,10 +49,22 @@ Stable commands:
 - `graph`
 - `xyz output.xyz`
 - `view`
+- `formchk [output.fchk]`
 
-`view` exports a fully local HTML molecule viewer powered by bundled `3Dmol.js`.
-It supports atom labels, style toggles, and built-in downloads for `XYZ`, `PDB`,
-`SDF`, `PNG`, `JPEG`, and `SVG`.
+`openwfn` accepts both `.fchk` and `.chk` inputs. When a `.chk` file is provided for
+analysis, openWFN will use Gaussian's `formchk` utility automatically if it is
+available in your `PATH`. You can also run conversion explicitly:
+
+```bash
+openwfn molecule.chk formchk
+openwfn molecule.chk formchk molecule.fchk
+```
+
+`view` exports a fully local standalone HTML molecule viewer powered by bundled
+`3Dmol.js`. By default it writes a shareable `.html` file in the current working
+directory and does not open a browser unless `--open` is requested. The exported
+viewer supports atom labels, style toggles, and built-in downloads for `XYZ`,
+`PDB`, `SDF`, `PNG`, `JPEG`, and `SVG`.
 
 ## Example Sessions
 
@@ -60,13 +74,14 @@ openwfn examples/water/water.fchk dist 2 1
 openwfn examples/water/water.fchk angle 2 1 3
 openwfn examples/methane/methane.fchk graph
 openwfn examples/water/water.fchk view
+openwfn examples/water/water.fchk view --open
 openwfn examples/water/water.fchk
 ```
 
 To save a standalone viewer file:
 
 ```bash
-openwfn examples/water/water.fchk view --save viewer.html --no-open
+openwfn examples/water/water.fchk view --save viewer.html
 ```
 
 ## Release

@@ -1,7 +1,6 @@
 # src/openwfn/commands.py
 
 from typing import Any
-import tempfile
 import webbrowser
 from pathlib import Path
 
@@ -145,16 +144,12 @@ def cmd_view(
     output_filename: str | None,
     atomic_numbers: list[int],
     coordinates: list[tuple[float, float, float]],
-    open_browser: bool = True,
+    open_browser: bool = False,
     show_labels: bool = True,
     style: str = "ballstick",
 ) -> int:
-    """Export and optionally open a browser-based molecule viewer."""
-    if output_filename is None:
-        with tempfile.NamedTemporaryFile(prefix="openwfn_view_", suffix=".html", delete=False) as tmp:
-            output_path = Path(tmp.name)
-    else:
-        output_path = Path(output_filename)
+    """Export and optionally open a standalone browser-based molecule viewer."""
+    output_path = Path(output_filename) if output_filename is not None else Path("openwfn_viewer.html")
 
     export_molecule_viewer(
         output_path,
@@ -163,13 +158,15 @@ def cmd_view(
         show_labels=show_labels,
         style=style,
     )
-    utils.print_success(f"Molecule viewer successfully exported to: {output_path}")
+    utils.print_success(f"Standalone molecule viewer exported to: {output_path}")
     if open_browser:
         opened = webbrowser.open(output_path.resolve().as_uri())
         if opened:
             utils.print_success("Viewer opened in your default browser.")
         else:
             utils.print_warning("Viewer file was created, but automatic browser opening was not available.")
+    else:
+        print("Use this HTML file directly or share it for download; no extra viewer assets are required.")
     return 0
 
 
