@@ -6,14 +6,15 @@
 [![Tests](https://github.com/sha786muhammed/openWFN/actions/workflows/tests.yml/badge.svg)](https://github.com/sha786muhammed/openWFN/actions/workflows/tests.yml)
 
 ```text
-  ___   ____   _____  _   _ __        __ _____  _   _
- / _ \ |  _ \ | ____|| \ | |\ \      / /|  ___|| \ | |
-| | | || |_) ||  _|  |  \| | \ \ /\ / / | |_   |  \| |
-| |_| ||  __/ | |___ | |\  |  \ V  V /  |  _|  | |\  |
- \___/ |_|    |_____||_| \_|   \_/\_/   |_|    |_| \_|
+██████╗ ██████╗ ███████╗███╗   ██╗██╗    ██╗███████╗███╗   ██╗
+██╔══██╗██╔══██╗██╔════╝████╗  ██║██║    ██║██╔════╝████╗  ██║
+██║  ██║██████╔╝█████╗  ██╔██╗ ██║██║ █╗ ██║█████╗  ██╔██╗ ██║
+██║  ██║██╔═══╝ ██╔══╝  ██║╚██╗██║██║███╗██║██╔══╝  ██║╚██╗██║
+██████╔╝██║     ███████╗██║ ╚████║╚███╔███╔╝██║     ██║ ╚████║
+╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝ ╚══╝╚══╝ ╚═╝     ╚═╝  ╚═══╝
 ```
 
-openWFN is a lightweight command-line toolkit for molecular geometry analysis from Gaussian checkpoint data. It is designed for fast, script-friendly workflows around `.fchk` files.
+**openWFN** is a command-line toolkit for molecular geometry, connectivity, and structure exploration from Gaussian checkpoint data. It is designed for fast terminal workflows around formatted checkpoint files, with a built-in local molecule viewer for lightweight inspection and sharing.
 
 ## Installation
 
@@ -21,9 +22,9 @@ openWFN is a lightweight command-line toolkit for molecular geometry analysis fr
 pip install openwfn
 ```
 
-## Start
+## Quick Start
 
-Run openWFN on a formatted checkpoint file:
+Run openWFN on a Gaussian formatted checkpoint file:
 
 ```bash
 openwfn molecule.fchk summary
@@ -31,40 +32,60 @@ openwfn molecule.fchk dist 1 2
 openwfn molecule.fchk graph
 openwfn molecule.fchk xyz molecule.xyz
 openwfn molecule.fchk view
-openwfn molecule.fchk view --open
-openwfn molecule.chk formchk
 ```
 
-If no subcommand is provided:
-- in a TTY terminal, `openwfn` starts interactive mode
-- in non-interactive contexts, `openwfn` runs `summary`
+If no subcommand is given:
+- in a TTY terminal, `openwfn` launches interactive mode
+- in non-interactive use, `openwfn` runs `summary`
 
-Stable commands:
-- `summary`
-- `info`
-- `dist i j`
-- `angle i j k`
-- `dihedral i j k l`
-- `bonds`
-- `graph`
-- `xyz output.xyz`
-- `view`
-- `formchk [output.fchk]`
+## Supported Input
 
-`openwfn` accepts both `.fchk` and `.chk` inputs. When a `.chk` file is provided for
-analysis, openWFN will use Gaussian's `formchk` utility automatically if it is
-available in your `PATH`. You can also run conversion explicitly:
+openWFN accepts both Gaussian `.fchk` and `.chk` files.
+
+- `.fchk` files are read directly
+- `.chk` files are converted to `.fchk` automatically when Gaussian's `formchk` utility is available in your `PATH`
+
+You can also run checkpoint conversion explicitly:
 
 ```bash
 openwfn molecule.chk formchk
 openwfn molecule.chk formchk molecule.fchk
 ```
 
-`view` exports a fully local standalone HTML molecule viewer powered by bundled
-`3Dmol.js`. By default it writes a shareable `.html` file in the current working
-directory and does not open a browser unless `--open` is requested. The exported
-viewer supports atom labels, style toggles, and built-in downloads for `XYZ`,
-`PDB`, `SDF`, `PNG`, `JPEG`, and `SVG`.
+## Stable Commands
+
+- `summary` — molecular system summary
+- `info` — formatted checkpoint metadata
+- `dist i j` — interatomic distance
+- `angle i j k` — three-atom bond angle
+- `dihedral i j k l` — four-atom dihedral
+- `bonds` — detected covalent bond network
+- `graph` — fragment and connectivity graph
+- `xyz output.xyz` — export Cartesian coordinates
+- `view` — export a standalone local HTML molecule viewer
+- `formchk [output.fchk]` — convert a Gaussian checkpoint into a formatted checkpoint
+
+## Viewer
+
+`view` exports a fully local standalone HTML viewer powered by bundled `3Dmol.js`.
+
+By default it:
+- writes a shareable `.html` file in the current working directory
+- keeps the viewer self-contained in a single file
+- does not open the browser unless you request it
+
+The exported viewer supports:
+- atom labels
+- local 3D rendering styles
+- built-in downloads for `XYZ`, `PDB`, `SDF`, `PNG`, `JPEG`, and `SVG`
+
+Examples:
+
+```bash
+openwfn molecule.fchk view
+openwfn molecule.fchk view --open
+openwfn molecule.fchk view --save viewer.html
+```
 
 ## Example Sessions
 
@@ -73,31 +94,19 @@ openwfn examples/water/water.fchk summary
 openwfn examples/water/water.fchk dist 2 1
 openwfn examples/water/water.fchk angle 2 1 3
 openwfn examples/methane/methane.fchk graph
-openwfn examples/water/water.fchk view
-openwfn examples/water/water.fchk view --open
+openwfn examples/water/water.fchk view --save water_viewer.html
 openwfn examples/water/water.fchk
 ```
 
-To save a standalone viewer file:
+## Project Scope
 
-```bash
-openwfn examples/water/water.fchk view --save viewer.html
-```
+The stable surface of openWFN is focused on:
+- geometry analysis
+- molecular connectivity and fragment inspection
+- coordinate export
+- local browser-based structure viewing
 
-## Release
-
-Build and validate:
-
-```bash
-python -m build --no-isolation
-python -m twine check dist/*
-```
-
-Upload to PyPI:
-
-```bash
-python -m twine upload dist/*
-```
+Experimental modules may exist in the codebase, but they are not presented as production-ready features.
 
 ## License
 
