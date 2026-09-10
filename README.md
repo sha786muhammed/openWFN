@@ -43,7 +43,10 @@ If no subcommand is given:
 openWFN accepts both Gaussian `.fchk` and `.chk` files.
 
 - `.fchk` files are read directly
-- `.chk` files are converted to `.fchk` automatically when Gaussian's `formchk` utility is available in your `PATH`
+- Gaussian `.chk` files are proprietary binary files. openWFN does not decode
+  them directly; it calls Gaussian's `formchk` utility when that executable is
+  available in your `PATH`. Users without Gaussian should supply a formatted
+  `.fchk` file.
 
 You can also run checkpoint conversion explicitly:
 

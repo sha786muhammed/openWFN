@@ -3,7 +3,12 @@ openWFN - open WaveFunction Network
 A lightweight toolkit for wavefunction geometry and spatial property analysis.
 """
 
-__version__ = "0.5.0"
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("openwfn")
+except PackageNotFoundError:
+    __version__ = "0+unknown"
 
 from .fchk import read_fchk, parse_fchk_arrays, parse_fchk_scalars, parse_fchk_density, parse_fchk_basis, parse_fchk_mos  # type: ignore
 from .geometry import distance, angle, dihedral, detect_bonds  # type: ignore

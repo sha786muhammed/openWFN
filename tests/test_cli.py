@@ -3,7 +3,6 @@ import sys
 import os
 from pathlib import Path
 
-from openwfn import __version__  # type: ignore
 from openwfn.cli import convert_chk_to_fchk  # type: ignore
 
 
@@ -55,10 +54,6 @@ def test_cli_invalid_geometry_returns_nonzero():
 
     assert result.returncode == 1
     assert "Atom index out of range" in result.stderr
-
-
-def test_runtime_version_matches_project_version():
-    assert __version__ == "0.5.0"
 
 
 def test_cli_view_export_no_open(tmp_path):
