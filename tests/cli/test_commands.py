@@ -40,6 +40,20 @@ def test_nested_geometry_distance_supports_json_output() -> None:
     assert payload["units"]["value"] == "angstrom"
 
 
+def test_nested_geometry_angle_runs_without_legacy_retranslation() -> None:
+    result = run_cli(str(WATER), "geometry", "angle", "2", "1", "3")
+
+    assert result.returncode == 0
+    assert "107.693231" in result.stdout
+
+
+def test_nested_geometry_dihedral_runs_without_legacy_retranslation() -> None:
+    result = run_cli(str(WATER), "geometry", "dihedral", "1", "2", "3", "1")
+
+    assert result.returncode != 2
+    assert "invalid choice: 'geometry'" not in result.stderr
+
+
 def test_legacy_and_nested_distance_report_same_value() -> None:
     legacy = run_cli(str(WATER), "dist", "1", "2")
     nested = run_cli(str(WATER), "geometry", "distance", "1", "2")
@@ -156,6 +170,26 @@ def test_report_build_exports_self_contained_html(tmp_path: Path) -> None:
     assert "Research Report" in result.stdout
     assert WATER.read_bytes()
     assert "openWFN Research Report" in output.read_text(encoding="utf-8")
+
+
+def test_convert_mol_includes_inferred_connectivity(tmp_path: Path) -> None:
+    output = tmp_path / "water.mol"
+    result = run_cli(str(WATER), "convert", "--to", "mol", "--output", str(output))
+
+    assert result.returncode == 0
+    lines = output.read_text(encoding="utf-8").splitlines()
+    assert lines[3].split()[:2] == ["3", "2"]
+    assert len(lines[7:9]) == 2
+
+
+def test_convert_sdf_includes_inferred_connectivity(tmp_path: Path) -> None:
+    output = tmp_path / "water.sdf"
+    result = run_cli(str(WATER), "convert", "--to", "sdf", "--output", str(output))
+
+    assert result.returncode == 0
+    lines = output.read_text(encoding="utf-8").splitlines()
+    assert lines[3].split()[:2] == ["3", "2"]
+    assert lines[-1] == "$$$$"
 
 
 def test_workbench_command_exports_offline_application(tmp_path: Path) -> None:
