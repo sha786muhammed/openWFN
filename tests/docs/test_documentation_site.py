@@ -112,7 +112,7 @@ def test_homepage_uses_compact_product_components() -> None:
 def test_material_icon_library_and_brand_identity_are_configured() -> None:
     config = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
 
-    assert "logo: assets/images/openwfn-wordmark.png" in config
+    assert "logo: assets/images/openwfn-header.png" in config
     assert "pymdownx.emoji" in config
     assert "material.extensions.emoji.twemoji" in config
     assert "material.extensions.emoji.to_svg" in config
@@ -140,7 +140,7 @@ def test_molecular_signal_wordmark_is_used_consistently() -> None:
     assert "𝕠𝕡𝕖𝕟𝕎𝔽ℕ" not in readme
     assert 'class="ow-brand-lockup"' in home
     assert 'alt="openWFN — Wavefunction Analysis"' in home
-    assert "logo: assets/images/openwfn-wordmark.png" in config
+    assert "logo: assets/images/openwfn-header.png" in config
     assert ".md-header__button.md-logo img" in styles
     assert 'content: "Wavefunction Analysis"' not in styles
 
@@ -170,6 +170,22 @@ def test_homepage_has_compact_responsive_branding_and_hero() -> None:
     assert "max-width: min(100%, 17rem)" in styles
     assert "@media (max-width: 44rem)" in styles
     assert "font-size: clamp(1.9rem, 9vw, 2.3rem)" in styles
+
+
+def test_header_uses_compact_asset_and_keeps_mobile_drawer_available() -> None:
+    config = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
+    styles = (ROOT / "docs" / "stylesheets" / "extra.css").read_text(
+        encoding="utf-8"
+    )
+    header_logo = ROOT / "docs" / "assets" / "images" / "openwfn-header.png"
+
+    assert "logo: assets/images/openwfn-header.png" in config
+    assert header_logo.exists()
+    desktop_media = styles.index("@media (min-width: 60.01rem)")
+    drawer_rule = styles.index(
+        ".md-main:has(.ow-home) .md-sidebar--primary { display: none; }"
+    )
+    assert drawer_rule > desktop_media
 
 
 def test_python_workflow_uses_real_calculation_accessors() -> None:

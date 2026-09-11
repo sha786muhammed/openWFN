@@ -122,7 +122,6 @@
 }
 
 .md-main:has(.ow-home) .md-grid { max-width: 76rem; }
-.md-main:has(.ow-home) .md-sidebar--primary { display: none; }
 .md-content__inner:has(.ow-home) { max-width: 76rem; }
 .md-content__inner:has(.ow-home) > h1 { display: none; }
 .ow-home h1 { display: none; }
@@ -356,6 +355,10 @@
   .ow-hero { grid-template-columns: 1fr; }
   .ow-hero__visual img { max-height: 20rem; width: min(100%, 30rem); }
   .ow-feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 60.01rem) {
+  .md-main:has(.ow-home) .md-sidebar--primary { display: none; }
 }
 
 @media (max-width: 44rem) {
