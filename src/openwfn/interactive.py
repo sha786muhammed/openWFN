@@ -1,11 +1,14 @@
 from pathlib import Path
 from typing import Callable
 
-from . import __version__  # type: ignore
+from . import (
+    __version__,  # type: ignore
+    utils,  # type: ignore
+)
 from . import commands as cmd  # type: ignore
-from . import utils  # type: ignore
 from .fchk import parse_fchk_arrays, parse_fchk_scalars, print_atom_table  # type: ignore
 from .geometry import molecular_formula  # type: ignore
+from .palette import prompt_workflow
 
 OPENWFN_ASCII = [
     "██████╗ ██████╗ ███████╗███╗   ██╗██╗    ██╗███████╗███╗   ██╗",
@@ -124,71 +127,28 @@ def prompt_open_in_browser() -> bool:
 def print_landing_page(filename: str, atomic_numbers: list[int], scalars: dict[str, object]) -> None:
     """Display the interactive landing page."""
     formula = molecular_formula(atomic_numbers)
-    banner_width = max(len(line) for line in OPENWFN_ASCII)
-    print()
-    for line in OPENWFN_ASCII:
-        print(utils.highlight(line))
-    print(PRODUCT_EXPANSION.center(banner_width))
-    print(PRODUCT_TAGLINE.center(banner_width))
-    print()
-    utils.print_plain_card(
-        [
-            f"Project      : {PRODUCT_NAME}",
-            f"Loaded File  : {filename}",
-            f"Formula      : {formula}",
-            f"Atom Count   : {len(atomic_numbers)}",
-            f"Charge       : {scalars.get('Charge', 'N/A')}",
-            f"Multiplicity : {scalars.get('Multiplicity', 'N/A')}",
-            f"Author       : {AUTHOR_CREDIT}",
-            f"Affiliation  : {AUTHOR_AFFILIATION}",
-        ],
-    )
-    print()
-    utils.print_section_title("Core Analysis")
-    utils.print_plain_card(
-        [
-            "  1  Molecular System Summary",
-            "  2  Formatted Checkpoint Metadata",
-            "  3  Atomic Index and Element Table",
-            "  4  Interatomic Distance Measurement",
-            "  5  Three-Atom Bond Angle Analysis",
-            "  6  Four-Atom Dihedral Analysis",
-        ],
-    )
-    print()
-    utils.print_section_title("Structure & Connectivity")
-    utils.print_plain_card(
-        [
-            "  7  Detected Covalent Bond Network",
-            "  8  Fragment and Connectivity Graph",
-        ],
-    )
-    print()
-    utils.print_section_title("Export & Viewer")
-    utils.print_plain_card(
-        [
-            "  9  Export Cartesian Coordinates (XYZ)",
-            " 10  Launch Local 3D Molecule Viewer",
-        ],
-    )
-    print()
-    utils.print_section_title("Session")
-    utils.print_plain_card(
-        [
-            "  0  Exit",
-        ],
-    )
-    print()
-    utils.print_section_title("Citation")
-    utils.print_plain_card(
-        [
-            f"Cite: repository + exact software version (e.g., {PRODUCT_NAME} v{__version__})",
-        ],
-    )
+    multiplicity = scalars.get("Multiplicity", "N/A")
+    spin_label = "singlet" if multiplicity == 1 else f"multiplicity {multiplicity}"
+    print(f"\n{PRODUCT_NAME} {__version__}  /  {filename}\n")
     print(
-        f"\n{utils.highlight('Input:')} number or command name (`back`, `exit`)"
+        f"{formula}  ·  {len(atomic_numbers)} atoms  ·  "
+        f"charge {scalars.get('Charge', 'N/A')}  ·  {spin_label}"
     )
-    print()
+    print("● Ready\n")
+    print("Select a workflow\n")
+    for label in (
+        "Inspect molecular structure",
+        "Analyze geometry",
+        "Explore bonds and fragments",
+        "Analyze molecular orbitals",
+        "Calculate density and ESP",
+        "Open 3D workbench",
+        "Export or convert data",
+        "Create research report",
+        "Validate calculation",
+    ):
+        print(f"  {label}")
+    print("\n↑↓ navigate   enter select   / search   q quit\n")
 
 
 def print_feature_page(title: str, description: str) -> None:
@@ -288,43 +248,45 @@ def run_interactive(lines, filename):
     while True:
         print_landing_page(menu_filename, atomic_numbers, scalars)
 
-        try:
-            raw_choice = input(f"{utils.highlight(f'{PRODUCT_NAME}/main')} > ").strip().lower()
-        except EOFError:
-            print("\nExiting openWFN.")
-            break
-
-        action = FEATURE_ALIASES.get(raw_choice, "")
+        raw_choice = prompt_workflow()
+        action = FEATURE_ALIASES.get(raw_choice, raw_choice)
 
         if action == "summary":
             nav = run_static_page("Molecular Summary", "A one-page overview of the current molecule.", show_summary)
-        elif action == "info":
-            nav = run_static_page("Detailed Metadata", "Full scalar metadata parsed from the FCHK file.", show_info)
-        elif action == "table":
-            nav = run_static_page("Atom Index Table", "Atom labels and Cartesian coordinates for reference.", show_table)
-        elif action == "dist":
-            nav = run_input_page("Distance", "Measure the distance between two atoms.", run_distance)
-        elif action == "angle":
-            nav = run_input_page("Bond Angle", "Measure an i-j-k bond angle in degrees.", run_angle)
-        elif action == "dihedral":
-            nav = run_input_page("Dihedral Angle", "Measure an i-j-k-l torsion angle in degrees.", run_dihedral)
-        elif action == "xyz":
+        elif action == "geometry":
+            try:
+                geometry_choice = input("Geometry command [distance/angle/dihedral/back]: ").strip().casefold()
+            except EOFError:
+                geometry_choice = "back"
+            if geometry_choice in {"distance", "dist"}:
+                nav = run_input_page("Distance", "Measure the distance between two atoms.", run_distance)
+            elif geometry_choice == "angle":
+                nav = run_input_page("Bond Angle", "Measure an i-j-k bond angle in degrees.", run_angle)
+            elif geometry_choice == "dihedral":
+                nav = run_input_page("Dihedral Angle", "Measure an i-j-k-l torsion angle in degrees.", run_dihedral)
+            else:
+                continue
+        elif action == "export":
             nav = run_input_page("Export XYZ", "Write the current coordinates to an XYZ file.", export_xyz)
-        elif action == "view":
+        elif action == "workbench":
             nav = run_input_page(
-                "Molecule Viewer",
-                "Export the current molecule to a standalone local HTML 3D viewer.",
+                "3D Workbench",
+                "Export the current molecule to a standalone local HTML workbench.",
                 open_viewer,
             )
         elif action == "bonds":
             nav = run_static_page("Detected Bonds", "List covalent bonds using tabulated covalent radii.", show_bonds)
-        elif action == "graph":
-            nav = run_static_page("Fragments", "Show molecular connectivity and fragment membership.", show_graph)
-        elif action == "exit":
+        elif action in {"orbitals", "density", "report", "validate"}:
+            nav = run_static_page(
+                action.title(),
+                "This workflow requires the corresponding scientific data and analysis service.",
+                lambda: utils.print_warning("No calculation was run from this guided screen."),
+            )
+        elif action in {"exit", "q"}:
             print("\nExiting openWFN.")
             break
         else:
-            utils.print_error("Unknown command. Choose a menu number or enter a supported command name.")
+            utils.print_error("Unknown workflow. Enter a displayed command name or `q` to quit.")
             continue
 
         if nav == "exit":

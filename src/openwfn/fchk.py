@@ -1,9 +1,9 @@
 # src/openwfn/fchk.py
 
-import re
 from typing import Any
 
-from .constants import Z_TO_SYMBOL, BOHR_TO_ANGSTROM  # type: ignore
+from .constants import BOHR_TO_ANGSTROM, Z_TO_SYMBOL  # type: ignore
+from .parsers.gaussian.fchk import FCHKDocument
 
 
 def read_fchk(filepath: str) -> list[str]:
@@ -14,30 +14,8 @@ def read_fchk(filepath: str) -> list[str]:
 
 def parse_fchk_scalars(lines: list[str]) -> dict[str, Any]:
     """Parse scalar integer and real values from FCHK lines."""
-    data: dict[str, Any] = {}
-
-    for line in lines:
-        # FCHK defines scalars as "Key  Type  Value"
-        # Type is usually 'I' (integer) or 'R' (real)
-        # We use regex to match the pattern: Key <whitespace> Type <whitespace> Value
-        match = re.search(r"^(.*?)\s+([IR])\s+(.*)$", line)
-        if match:
-            key = match.group(1).strip()
-            type_char = match.group(2)
-            value = match.group(3).strip()
-            
-            if type_char == "I":
-                try:
-                    data[key] = int(value)
-                except ValueError:
-                    pass
-            elif type_char == "R":
-                try:
-                    data[key] = float(value)
-                except ValueError:
-                    pass
-
-    return data
+    document = FCHKDocument.from_lines(lines)
+    return {name: value for name, value in document.records.items() if not isinstance(value, tuple)}
 
 
 def _get_array(lines: list[str], keyword: str, dtype: type = float) -> list[Any]:
@@ -45,35 +23,10 @@ def _get_array(lines: list[str], keyword: str, dtype: type = float) -> list[Any]
     Helper to find and parse an array from FCHK lines.
     Returns an empty list if not found.
     """
-    data: list[Any] = []
-    idx = 0
-    
-    # Simple linear scan suitable for small files. 
-    # For very large files, a single pass parser structure would be better.
-    while idx < len(lines):
-        line = lines[idx].rstrip()
-        if line.startswith(keyword):
-            # Parse N=...
-            match = re.search(r"N\s*=\s*(\d+)", line)
-            if match:
-                n = int(match.group(1))
-                idx += 1
-
-                while len(data) < n and idx < len(lines):
-                    # FCHK arrays are space-separated, sometimes fixed width
-                    # Splitting by whitespace usually works for standard files
-                    row_vals = lines[idx].split()
-                    for x in row_vals:
-                        try:
-                            data.append(dtype(x))
-                        except ValueError:
-                            pass
-                    idx += 1
-
-                return data
-        idx += 1
-
-    return data
+    value = FCHKDocument.from_lines(lines).records.get(keyword)
+    if not isinstance(value, tuple):
+        return []
+    return [dtype(item) for item in value]
 
 
 def parse_fchk_arrays(lines: list[str]) -> tuple[list[int], list[tuple[float, float, float]]]:

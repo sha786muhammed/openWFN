@@ -1,0 +1,131 @@
+{
+  "results": [
+    {
+      "absolute_error": 0.0,
+      "case": "water",
+      "expected": -75.58595974892307,
+      "metric": "energy_hartree",
+      "observed": -75.58595974892307,
+      "relative_error": 0.0,
+      "status": "passed",
+      "tolerance": 1e-10
+    },
+    {
+      "absolute_error": 3.830948003269441e-09,
+      "case": "water",
+      "expected": 10.0,
+      "metric": "electron_count",
+      "observed": 9.999999996169052,
+      "relative_error": 3.830948003269441e-10,
+      "status": "passed",
+      "tolerance": 1e-06
+    },
+    {
+      "absolute_error": 0.0,
+      "case": "water",
+      "expected": 20.09080138868305,
+      "metric": "gap_ev",
+      "observed": 20.09080138868305,
+      "relative_error": 0.0,
+      "status": "passed",
+      "tolerance": 1e-08
+    },
+    {
+      "absolute_error": 0.0,
+      "case": "methane",
+      "expected": -39.97687654112752,
+      "metric": "energy_hartree",
+      "observed": -39.97687654112752,
+      "relative_error": 0.0,
+      "status": "passed",
+      "tolerance": 1e-10
+    },
+    {
+      "absolute_error": 4.103865691718056e-09,
+      "case": "methane",
+      "expected": 10.0,
+      "metric": "electron_count",
+      "observed": 10.000000004103866,
+      "relative_error": 4.103865691718056e-10,
+      "status": "passed",
+      "tolerance": 1e-06
+    },
+    {
+      "absolute_error": 0.0,
+      "case": "methane",
+      "expected": 22.90755875648417,
+      "metric": "gap_ev",
+      "observed": 22.90755875648417,
+      "relative_error": 0.0,
+      "status": "passed",
+      "tolerance": 1e-08
+    },
+    {
+      "absolute_error": 0.0,
+      "case": "ammonia",
+      "expected": -55.87220344538076,
+      "metric": "energy_hartree",
+      "observed": -55.87220344538076,
+      "relative_error": 0.0,
+      "status": "passed",
+      "tolerance": 1e-10
+    },
+    {
+      "absolute_error": 5.103363065472877e-09,
+      "case": "ammonia",
+      "expected": 10.0,
+      "metric": "electron_count",
+      "observed": 10.000000005103363,
+      "relative_error": 5.103363065472877e-10,
+      "status": "passed",
+      "tolerance": 1e-06
+    },
+    {
+      "absolute_error": 0.0,
+      "case": "ammonia",
+      "expected": 18.07513215685563,
+      "metric": "gap_ev",
+      "observed": 18.07513215685563,
+      "relative_error": 0.0,
+      "status": "passed",
+      "tolerance": 1e-08
+    },
+    {
+      "case": "carbon-dioxide",
+      "reason": "A provenance-complete redistribution-safe reference is not yet available",
+      "status": "pending"
+    },
+    {
+      "case": "oxygen",
+      "reason": "An independently documented unrestricted reference is not yet available",
+      "status": "pending"
+    },
+    {
+      "case": "ethanol",
+      "reason": "A provenance-complete redistribution-safe reference is not yet available",
+      "status": "pending"
+    },
+    {
+      "case": "water-dimer",
+      "reason": "A provenance-complete redistribution-safe reference is not yet available",
+      "status": "pending"
+    },
+    {
+      "case": "benzene",
+      "reason": "A provenance-complete redistribution-safe reference is not yet available",
+      "status": "pending"
+    },
+    {
+      "case": "polarization",
+      "reason": "A documented pure d/f reference fixture is not yet available",
+      "status": "pending"
+    },
+    {
+      "case": "transition-metal",
+      "reason": "A redistribution-safe ECP/transition-metal limitation fixture is not yet available",
+      "status": "pending"
+    }
+  ],
+  "schema_version": "1.0",
+  "status": "passed"
+}

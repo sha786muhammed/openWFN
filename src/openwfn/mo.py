@@ -1,7 +1,9 @@
 # src/openwfn/mo.py
 
+from typing import Any, Dict, List
+
 import numpy as np  # type: ignore
-from typing import Dict, List, Any
+
 
 def get_homo_lumo_indices(n_alpha_electrons: int, n_beta_electrons: int) -> Dict[str, int]:
     """

@@ -1,72 +1,73 @@
-name: tests
-
+name: Tests and quality
 on:
   push:
-    branches: ["main"]
+    branches: [main]
   pull_request:
-    branches: ["main"]
-
+    branches: [main]
 permissions:
   contents: read
-
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e ".[test]"
+      - run: ruff check src tests scripts
   pytest:
-    name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Install package + test dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[test]"
-
-      - name: Run pytest
-        run: pytest -v
-
-  wheel-smoke:
-    name: Built wheel smoke test
-    runs-on: ubuntu-latest
-
+          cache: pip
+      - run: python -m pip install -e ".[test]"
+      - run: python -m pytest --strict-markers
+  platform-smoke:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e ".[test]"
+      - run: python -m pytest --strict-markers tests/cli tests/integration
+  scientific-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install .
+      - run: python scripts/run_validation.py
+  wheel-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
         with:
           python-version: "3.13"
-
-      - name: Install build tools
-        run: python -m pip install --upgrade pip build twine
-
-      - name: Build distributions
-        run: python -m build
-
-      - name: Check distribution metadata
-        run: python -m twine check dist/*
-
-      - name: Install wheel in a clean environment
-        run: |
-          python -m venv wheel-test
-          wheel-test/bin/python -m pip install dist/*.whl
-
-      - name: Verify installed package
-        run: wheel-test/bin/python -c "import openwfn; assert openwfn.__version__ == '0.6.1'"
-
-      - name: Verify console entry point
-        run: wheel-test/bin/openwfn --help
-
-      - name: Verify packaged CLI workflow
-        run: wheel-test/bin/openwfn examples/water/water.fchk summary
+          cache: pip
+      - run: python -m pip install build twine
+      - run: python -m build
+      - run: python -m twine check dist/*
+      - run: python -m venv wheel-test
+      - run: wheel-test/bin/python -m pip install dist/*.whl
+      - run: wheel-test/bin/openwfn --version
+      - run: wheel-test/bin/openwfn examples/water/water.fchk summary
+      - run: wheel-test/bin/openwfn examples/water/water.fchk orbitals frontier

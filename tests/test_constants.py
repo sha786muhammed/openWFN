@@ -1,7 +1,8 @@
 # tests/test_constants.py
 
 import pytest  # type: ignore
-from openwfn.constants import Z_TO_SYMBOL, ATOMIC_MASS, COVALENT_RADII  # type: ignore
+
+from openwfn.constants import ATOMIC_MASS, COVALENT_RADII, Z_TO_SYMBOL  # type: ignore
 
 
 def test_periodic_table_completeness():

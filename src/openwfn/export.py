@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+
 import numpy as np  # type: ignore
 
 from .constants import Z_TO_SYMBOL  # type: ignore

@@ -1,11 +1,12 @@
 # src/openwfn/commands.py
 
-from typing import Any
 import webbrowser
 from pathlib import Path
+from typing import Any
 
 import numpy as np  # type: ignore
 
+from . import utils  # type: ignore
 from .export import export_molecule_viewer  # type: ignore
 from .geometry import (  # type: ignore
     angle,
@@ -16,7 +17,6 @@ from .geometry import (  # type: ignore
     molecular_formula,
 )
 from .xyz import write_xyz  # type: ignore
-from . import utils  # type: ignore
 
 
 def cmd_summary(
@@ -179,10 +179,10 @@ def cmd_density(
 ) -> int:
     """Calculate electron density on a grid and export to VTK."""
     del filename, grid_size
-    from .fchk import parse_fchk_density  # type: ignore
-    from .grid import make_bounding_box_grid  # type: ignore
     from .density import compute_density  # type: ignore
     from .export import export_vtk  # type: ignore
+    from .fchk import parse_fchk_density  # type: ignore
+    from .grid import make_bounding_box_grid  # type: ignore
 
     density_data = parse_fchk_density(lines)
     if not density_data or "total_scf_density" not in density_data:

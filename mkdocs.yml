@@ -1,0 +1,58 @@
+site_name: openWFN Documentation
+site_description: Research-grade Gaussian wavefunction analysis from the CLI, Python, and an offline workbench
+site_url: https://sha786muhammed.github.io/openWFN/
+repo_url: https://github.com/sha786muhammed/openWFN
+repo_name: sha786muhammed/openWFN
+theme:
+  name: material
+  language: en
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue grey
+      accent: cyan
+      toggle:
+        icon: material/weather-night
+        name: Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue grey
+      accent: cyan
+      toggle:
+        icon: material/weather-sunny
+        name: Light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - content.code.copy
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
+plugins:
+  - search
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Quick start: quick-start.md
+  - User guide:
+      - CLI reference: cli.md
+      - Python API: python-api.md
+      - Workbench: workbench.md
+      - File formats: formats.md
+  - Scientific reference:
+      - Methods: methods.md
+      - Validation: validation.md
+      - Limitations: limitations.md
+  - Tutorials:
+      - Geometry: tutorials/geometry.md
+      - Orbitals and density: tutorials/orbitals-density.md
+      - Reports: tutorials/reports.md
+  - Citation: citation.md
+  - Releases:
+      - Version 0.7.0: releases/0.7.0.md

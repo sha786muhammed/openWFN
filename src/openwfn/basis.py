@@ -2,6 +2,7 @@
 
 import numpy as np  # type: ignore
 
+
 def eval_s_type_gto(r_points: np.ndarray, center: np.ndarray, alpha: np.ndarray, d: np.ndarray) -> np.ndarray:
     """
     Vectorized evaluation of an s-type Contracted Gaussian Type Orbital over N points.

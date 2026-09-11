@@ -2,6 +2,7 @@
 
 import numpy as np  # type: ignore
 
+
 def compute_density(
     r_points: np.ndarray,
     density_matrix: np.ndarray,

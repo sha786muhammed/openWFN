@@ -1,6 +1,6 @@
 # Releasing openWFN
 
-This procedure prevents source, citation, GitHub, and PyPI versions from diverging. For the current repair release, every version-facing file and artifact must identify openWFN 0.6.1.
+This procedure prevents source, citation, GitHub, and PyPI versions from diverging. Every version-facing file and artifact for this release must identify openWFN 0.7.0.
 
 ## Release gates
 
@@ -10,7 +10,7 @@ This procedure prevents source, citation, GitHub, and PyPI versions from divergi
    git status --short
    ```
 
-2. Confirm that `[project].version` in `pyproject.toml` is `0.6.1`.
+2. Confirm that `[project].version` in `pyproject.toml` is `0.7.0`.
 
 3. Verify citation metadata without modifying it:
 
@@ -36,13 +36,13 @@ This procedure prevents source, citation, GitHub, and PyPI versions from divergi
    ```bash
    release_smoke="$(mktemp -d)"
    python -m venv "$release_smoke/venv"
-   "$release_smoke/venv/bin/python" -m pip install dist/openwfn-0.6.1-py3-none-any.whl
+   "$release_smoke/venv/bin/python" -m pip install dist/openwfn-0.7.0-py3-none-any.whl
    ```
 
 7. Verify the installed version, console entry point, and reference workflow:
 
    ```bash
-   "$release_smoke/venv/bin/python" -c "import openwfn; assert openwfn.__version__ == '0.6.1'"
+   "$release_smoke/venv/bin/python" -c "import openwfn; assert openwfn.__version__ == '0.7.0'"
    "$release_smoke/venv/bin/openwfn" --help
    "$release_smoke/venv/bin/openwfn" examples/water/water.fchk summary
    ```
@@ -50,7 +50,7 @@ This procedure prevents source, citation, GitHub, and PyPI versions from divergi
 8. Inspect the wheel and confirm that it contains all Python modules, `assets/3Dmol-min.js`, package metadata, the license, and the console entry point:
 
    ```bash
-   unzip -l dist/openwfn-0.6.1-py3-none-any.whl
+   unzip -l dist/openwfn-0.7.0-py3-none-any.whl
    ```
 
 9. Commit the verified release state. Generated `dist/` and `build/` files remain untracked.
@@ -58,7 +58,7 @@ This procedure prevents source, citation, GitHub, and PyPI versions from divergi
 10. Create the annotated release tag:
 
     ```bash
-    git tag -a v0.6.1 -m "openWFN 0.6.1"
+    git tag -a v0.7.0 -m "openWFN 0.7.0"
     ```
 
 11. Push the reviewed branch and tag only after explicit repository-owner approval.
@@ -68,8 +68,8 @@ This procedure prevents source, citation, GitHub, and PyPI versions from divergi
 13. Verify PyPI from another clean environment:
 
     ```bash
-    python -m pip install --no-cache-dir openwfn==0.6.1
-    python -c "import openwfn; assert openwfn.__version__ == '0.6.1'"
+    python -m pip install --no-cache-dir openwfn==0.7.0
+    python -c "import openwfn; assert openwfn.__version__ == '0.7.0'"
     ```
 
 14. Create or verify the GitHub release notes, confirm the public tag points to the reviewed commit, and add the approved repository topics through GitHub settings or the GitHub API.

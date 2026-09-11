@@ -1,7 +1,9 @@
 # src/openwfn/grid.py
 
-import numpy as np  # type: ignore
 from typing import Tuple
+
+import numpy as np  # type: ignore
+
 
 def make_bounding_box_grid(
     coordinates: list[Tuple[float, float, float]],

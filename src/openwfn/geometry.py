@@ -2,7 +2,7 @@
 
 import math
 
-from .constants import ATOMIC_MASS, Z_TO_SYMBOL, COVALENT_RADII  # type: ignore
+from .constants import ATOMIC_MASS, COVALENT_RADII, Z_TO_SYMBOL  # type: ignore
 
 
 def _validate_atom_index(idx_1based: int, n_atoms: int) -> int:
