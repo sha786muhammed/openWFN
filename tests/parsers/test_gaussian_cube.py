@@ -34,6 +34,25 @@ def test_cube_parser_validates_shape_and_converts_axes(tmp_path: Path) -> None:
     assert grid.values == tuple(float(value) for value in range(8))
 
 
+def test_cube_parser_preserves_angstrom_coordinates_from_negative_axis_counts(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "angstrom.cube"
+    source.write_text(
+        _cube("0 1 2 3 4 5 6 7")
+        .replace("1 0.0 0.0 0.0", "1 1.0 2.0 3.0", 1)
+        .replace("2 0.5 0.0 0.0", "-2 0.5 0.0 0.0")
+        .replace("2 0.0 0.5 0.0", "-2 0.0 0.5 0.0")
+        .replace("2 0.0 0.0 0.5", "-2 0.0 0.0 0.5"),
+        encoding="utf-8",
+    )
+
+    grid = parse_cube(source)
+
+    assert grid.origin == pytest.approx((1.0, 2.0, 3.0))
+    assert grid.axes[0][0] == pytest.approx(0.5)
+
+
 def test_cube_parser_reads_negative_atom_orbital_header(tmp_path: Path) -> None:
     source = tmp_path / "orbital.cube"
     source.write_text(_cube("0 1 2 3 4 5 6 7", atom_count=-1, orbital_line="1 5\n"), encoding="utf-8")

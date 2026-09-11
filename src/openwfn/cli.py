@@ -388,7 +388,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "report":
         context = CommandContext(
-            input_path=Path(args.file), output_path=args.report_output,
+            input_path=Path(args.file), output_path=args.output,
             format="plain" if args.plain else args.format,
             color=not args.no_color and args.format == "table", quiet=args.quiet,
             verbose=args.verbose, debug=args.debug, compact=args.compact,
@@ -409,7 +409,7 @@ def main(argv: list[str] | None = None) -> int:
         calculation = load_calculation(Path(args.file))
         output = args.workbench_output or Path(f"{Path(args.file).stem}-workbench.html")
         context = CommandContext(
-            input_path=Path(args.file), output_path=output,
+            input_path=Path(args.file), output_path=args.output,
             format="plain" if args.plain else args.format,
             color=not args.no_color and args.format == "table", quiet=args.quiet,
             verbose=args.verbose, debug=args.debug, compact=args.compact,

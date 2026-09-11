@@ -14,6 +14,7 @@ def test_interactive_aliases_cover_feature_navigation():
     assert FEATURE_ALIASES["7"] == "bonds"
     assert FEATURE_ALIASES["8"] == "graph"
     assert FEATURE_ALIASES["9"] == "xyz"
+    assert FEATURE_ALIASES["export"] == "export"
     assert FEATURE_ALIASES["10"] == "view"
     assert FEATURE_ALIASES["exit"] == "exit"
 

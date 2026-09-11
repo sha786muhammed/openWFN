@@ -8,7 +8,12 @@ from ..errors import ParseError
 from ..model import Atom, Bond, CalculationData, CalculationMetadata, Molecule, Provenance
 
 
-def parse_mol_text(text: str, path: Path, parser_name: str = "mol") -> CalculationData:
+def parse_mol_text(
+    text: str,
+    path: Path,
+    parser_name: str = "mol",
+    provenance_bytes: bytes | None = None,
+) -> CalculationData:
     lines = text.splitlines()
     if len(lines) < 4 or "V2000" not in lines[3]:
         raise ParseError("Only MDL V2000 MOL/SDF records are supported.")
@@ -37,7 +42,7 @@ def parse_mol_text(text: str, path: Path, parser_name: str = "mol") -> Calculati
             bonds.append(Bond(int(line[0:3]) - 1, int(line[3:6]) - 1, int(line[6:9])))
         except ValueError as exc:
             raise ParseError(f"Malformed V2000 bond at line {offset}.") from exc
-    raw = text.encode("utf-8")
+    raw = provenance_bytes if provenance_bytes is not None else text.encode("utf-8")
     molecule = Molecule(
         tuple(atoms),
         0,
