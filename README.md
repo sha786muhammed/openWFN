@@ -1,131 +1,114 @@
 # openWFN
 
-[![PyPI version](https://img.shields.io/pypi/v/openwfn)](https://pypi.org/project/openwfn/)
-[![Python versions](https://img.shields.io/pypi/pyversions/openwfn)](https://pypi.org/project/openwfn/)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+**From checkpoint data to defensible molecular insight.**
+
+[![PyPI](https://img.shields.io/pypi/v/openwfn?label=PyPI&color=b56a3b)](https://pypi.org/project/openwfn/)
+[![Python](https://img.shields.io/pypi/pyversions/openwfn)](https://pypi.org/project/openwfn/)
 [![Tests](https://github.com/sha786muhammed/openWFN/actions/workflows/tests.yml/badge.svg)](https://github.com/sha786muhammed/openWFN/actions/workflows/tests.yml)
+[![Documentation](https://github.com/sha786muhammed/openWFN/actions/workflows/docs.yml/badge.svg)](https://sha786muhammed.github.io/openWFN/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-31515d)](LICENSE)
 
-```text
-██████╗ ██████╗ ███████╗███╗   ██╗██╗    ██╗███████╗███╗   ██╗
-██╔══██╗██╔══██╗██╔════╝████╗  ██║██║    ██║██╔════╝████╗  ██║
-██║  ██║██████╔╝█████╗  ██╔██╗ ██║██║ █╗ ██║█████╗  ██╔██╗ ██║
-██║  ██║██╔═══╝ ██╔══╝  ██║╚██╗██║██║███╗██║██╔══╝  ██║╚██╗██║
-██████╔╝██║     ███████╗██║ ╚████║╚███╔███╔╝██║     ██║ ╚████║
-╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝ ╚══╝╚══╝ ╚═╝     ╚═╝  ╚═══╝
-```
+openWFN is a local, research-oriented Python and command-line workbench for Gaussian formatted-checkpoint analysis. It connects molecular geometry, topology, orbitals, electron density, population analysis, electrostatic potential, reproducible reports, and portable offline visualization through one typed calculation model.
 
-**openWFN 0.7** is a reproducible command-line and Python workbench for Gaussian
-formatted-checkpoint analysis. It combines molecular geometry, orbitals, electron
-density, population analysis, electrostatic potential, reports, and a portable
-offline 3D workbench behind one typed calculation model.
+> **New to openWFN?** Begin with the [complete handbook](https://sha786muhammed.github.io/openWFN/)—written for researchers, students, and developers from first principles through validation and reproducible use.
 
-[Read the complete documentation](https://sha786muhammed.github.io/openWFN/)
+## Why openWFN
 
-## Installation
+- **Inspect** molecular state, FCHK metadata, geometry, bonds, and fragments.
+- **Analyze** frontier orbitals, density, Mulliken and Löwdin populations, and ESP.
+- **Automate** with structured JSON/CSV output, a Python API, and batch manifests.
+- **Communicate** through self-contained reports, figures, cube files, and an offline workbench.
+- **Evaluate trust** with explicit Stable, Validated, Experimental, and Unsupported labels.
+- **Keep data local**: core analysis does not require an openWFN account or upload service.
+
+## Install
+
+openWFN supports Python 3.10–3.13.
 
 ```bash
-pip install openwfn
+python -m pip install openwfn
+openwfn --version
 ```
 
-## Quick Start
-
-Run openWFN on a Gaussian formatted checkpoint file:
+## First analysis
 
 ```bash
 openwfn molecule.fchk summary
+openwfn molecule.fchk doctor
 openwfn molecule.fchk geometry distance 1 2
+openwfn molecule.fchk geometry angle 2 1 3
 openwfn molecule.fchk orbitals frontier
 openwfn molecule.fchk population mulliken
-openwfn molecule.fchk density integrate
-openwfn molecule.fchk workbench molecule-workbench.html
 ```
 
-If no subcommand is given:
-- in a TTY terminal, `openwfn` launches interactive mode
-- in non-interactive use, `openwfn` runs `summary`
-
-## Supported Input
-
-openWFN accepts both Gaussian `.fchk` and `.chk` files.
-
-- `.fchk` files are read directly
-- Gaussian `.chk` files are proprietary binary files. openWFN does not decode
-  them directly; it calls Gaussian's `formchk` utility when that executable is
-  available in your `PATH`. Users without Gaussian should supply a formatted
-  `.fchk` file.
-
-You can also run checkpoint conversion explicitly:
+Generate a portable local workbench:
 
 ```bash
-openwfn molecule.chk formchk
-openwfn molecule.chk formchk molecule.fchk
+openwfn molecule.fchk workbench molecule-workbench.html --open
 ```
 
-## Analysis commands
-
-- `summary` — molecular system summary
-- `info` — formatted checkpoint metadata
-- `geometry distance|angle|dihedral` — typed geometry analysis
-- `bonds` — detected covalent bond network
-- `graph` — fragment and connectivity graph
-- `orbitals frontier` — HOMO, LUMO, and energy gap
-- `population mulliken|lowdin` — atomic populations and charges
-- `density integrate|cube` — numerical density integration and cube export
-- `esp point` — nuclear, atomic-charge, or grid-based potential at a point
-- `report build` — reproducible HTML or Markdown research report
-- `workbench` — self-contained offline analysis and visualization workspace
-- `xyz output.xyz` — export Cartesian coordinates
-- `view` — export a standalone local HTML molecule viewer
-- `formchk [output.fchk]` — convert a Gaussian checkpoint into a formatted checkpoint
-
-## Viewer
-
-`view` exports a fully local standalone HTML viewer powered by bundled `3Dmol.js`.
-
-By default it:
-- writes a shareable `.html` file in the current working directory
-- keeps the viewer self-contained in a single file
-- does not open the browser unless you request it
-
-The exported viewer supports:
-- atom labels
-- local 3D rendering styles
-- built-in downloads for `XYZ`, `PDB`, `SDF`, `PNG`, `JPEG`, and `SVG`
-
-Examples:
+Or request machine-readable output:
 
 ```bash
-openwfn molecule.fchk view
-openwfn molecule.fchk view --open
-openwfn molecule.fchk view --save viewer.html
+openwfn --format json --output summary.json molecule.fchk summary
 ```
 
-## Example Sessions
+## Capability map
+
+| Area | What v0.7 provides | Status |
+|---|---|---|
+| Parsing and structure | FCHK records, molecular state, geometry, topology | Stable |
+| Orbitals | alpha/beta frontier energies and HOMO–LUMO gap | Stable |
+| Population | Mulliken and symmetric Löwdin populations/charges | Stable |
+| Density | total/alpha/beta/spin integration and cube export | Validated for active fixtures |
+| Electrostatic potential | nuclear and charge-model point ESP | Stable |
+| Grid electronic/total ESP | numerical Coulomb evaluation | Experimental |
+| Research output | HTML/Markdown reports, tables, figures, batch manifests | Stable |
+| Visualization | standalone viewer and offline workbench | Stable |
+
+“Validated” is deliberately scoped: current provenance-backed cases are water, methane, and ammonia. Read the [validation evidence](https://sha786muhammed.github.io/openWFN/science/validation-status/) and [limitations](https://sha786muhammed.github.io/openWFN/limitations/) before research use.
+
+## Input and output
+
+`.fchk` is the primary input. Gaussian `.chk` files use a proprietary binary format; openWFN calls Gaussian's separately installed `formchk` utility and does not decode that binary format itself.
 
 ```bash
-openwfn examples/water/water.fchk summary
-openwfn examples/water/water.fchk dist 2 1
-openwfn examples/water/water.fchk angle 2 1 3
-openwfn examples/methane/methane.fchk graph
-openwfn examples/water/water.fchk view --save water_viewer.html
-openwfn examples/water/water.fchk
+openwfn calculation.chk formchk calculation.fchk
+openwfn calculation.fchk convert --to sdf --output molecule.sdf
+openwfn calculation.fchk density cube density.cube
+openwfn calculation.fchk report build report.html
 ```
 
-## Capability status
+Structure exports include XYZ, PDB, MOL, and SDF. Scientific records can be rendered as tables, plain text, JSON, or CSV.
 
-openWFN labels scientific capabilities explicitly:
+## Documentation paths
 
-- **Stable:** parsing, geometry, topology, frontier orbitals, population analysis,
-  nuclear/atomic-charge ESP, reports, exports, and the Python API.
-- **Validated:** total-density grid integration and cube export for the active
-  provenance-backed validation set.
-- **Experimental:** electronic and total ESP obtained from numerical density grids.
-- **Unsupported:** analyses whose required records or scientific validation are absent.
+- [Learn the concepts](https://sha786muhammed.github.io/openWFN/learn/wavefunction-analysis/)
+- [Follow a CLI workflow](https://sha786muhammed.github.io/openWFN/guides/cli-workflows/)
+- [Look up every public command](https://sha786muhammed.github.io/openWFN/reference/cli/)
+- [Study equations and assumptions](https://sha786muhammed.github.io/openWFN/science/geometry-topology/)
+- [Use the Python API](https://sha786muhammed.github.io/openWFN/reference/python-api/)
+- [Troubleshoot an analysis](https://sha786muhammed.github.io/openWFN/guides/troubleshooting/)
 
-See the [validation matrix](https://sha786muhammed.github.io/openWFN/validation/)
-and [documented limitations](https://sha786muhammed.github.io/openWFN/limitations/)
-before using results in research.
+## Security and privacy
 
-## License
+Computations are local, but input and generated artifacts can contain unpublished research. Never post private checkpoint files, credentials, personal filesystem paths, or license details in public issues. Read the [security and data-privacy guide](https://sha786muhammed.github.io/openWFN/project/security/).
 
-MIT License. See [LICENSE](LICENSE).
+## Development
+
+```bash
+python -m pip install -e ".[test,docs]"
+python -m pytest
+python -m ruff check .
+python scripts/run_validation.py
+python scripts/check_docs.py --root .
+python -m mkdocs build --strict
+```
+
+Contributions should include tests, documented units and assumptions, and validation evidence appropriate to the claim. See [Contributing](https://sha786muhammed.github.io/openWFN/project/contributing/).
+
+## Citation and license
+
+Cite the exact version used and the project repository; see the [citation guide](https://sha786muhammed.github.io/openWFN/citation/). openWFN is released under the [MIT License](LICENSE).
+
+**Author:** Muhammed Shah Shaji, University of Louisville

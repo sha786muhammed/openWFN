@@ -1,0 +1,6 @@
+assets:
+  openwfn-orbital-hero.webp:
+    source: Generated specifically for the openWFN documentation redesign
+    license: MIT project asset
+    transformation: Generated from the approved Scholarly Handbook direction, reviewed, resized, converted to WebP, and stripped of metadata
+    alt: Translucent red-orange and blue molecular orbital lobes surrounding a small ball-and-stick molecule

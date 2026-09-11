@@ -24,6 +24,7 @@ jobs:
           cache: pip
       - run: python -m pip install --upgrade pip
       - run: python -m pip install .[docs]
+      - run: python scripts/check_docs.py --root .
       - run: mkdocs build --strict
       - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
         if: github.event_name == 'push'
