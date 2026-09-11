@@ -10,10 +10,12 @@ from typing import TypeAlias
 
 from ...constants import BOHR_TO_ANGSTROM
 from ...errors import ParseError
+from ...geometry import detect_bonds
 from ...model import (
     Atom,
     BasisSet,
     BasisShell,
+    Bond,
     CalculationData,
     CalculationMetadata,
     DensityMatrix,
@@ -255,6 +257,7 @@ def _density_from_document(
             index += 1
     return DensityMatrix(tuple(tuple(row) for row in matrix), kind=kind)  # type: ignore[arg-type]
 
+
 def parse_fchk(path: Path) -> CalculationData:
     """Parse an FCHK file into the unified typed domain model."""
 
@@ -300,12 +303,18 @@ def parse_fchk(path: Path) -> CalculationData:
         )
         for index in range(atom_count)
     )
+    coordinates = [atom.coordinates for atom in atoms]
+    inferred_bonds = tuple(
+        Bond(atom1=i - 1, atom2=j - 1, order=1)
+        for i, j, _distance in detect_bonds(list(atomic_numbers), coordinates)
+    )
     molecule = Molecule(
         atoms=atoms,
         charge=int(document.scalar("Charge")),
         multiplicity=int(document.scalar("Multiplicity")),
         metadata=metadata,
         provenance=provenance,
+        bonds=inferred_bonds,
     )
     alpha_orbitals, beta_orbitals = _orbitals_from_document(document)
     total_density = _density_from_document(document, "Total SCF Density", "total")
