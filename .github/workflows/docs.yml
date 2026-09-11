@@ -44,4 +44,4 @@ jobs:
     steps:
       - name: Deploy documentation
         id: deployment
-        uses: actions/deploy-pages@decdde0ac072f6dd0b8b959f29d5f2c2c9135362
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e

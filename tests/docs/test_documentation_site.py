@@ -38,3 +38,4 @@ def test_pages_workflow_uses_least_privilege_and_main_only() -> None:
     assert "contents: read" in workflow
     assert "cancel-in-progress: true" in workflow
     assert "mkdocs build --strict" in workflow
+    assert "actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e" in workflow
