@@ -6,9 +6,15 @@ from . import (
     utils,  # type: ignore
 )
 from . import commands as cmd  # type: ignore
+from .app import CommandContext
 from .fchk import parse_fchk_arrays, parse_fchk_scalars, print_atom_table  # type: ignore
 from .geometry import molecular_formula  # type: ignore
 from .palette import prompt_workflow
+from .parsers.registry import load as load_calculation
+from .presentation import render
+from .reporting import build_report_record
+from .services import density_integration, orbital_frontier
+from .workbench.export import export_workbench_record
 
 OPENWFN_ASCII = [
     "██████╗ ██████╗ ███████╗███╗   ██╗██╗    ██╗███████╗███╗   ██╗",
@@ -48,7 +54,7 @@ FEATURE_ALIASES = {
     "fragments": "graph",
     "9": "xyz",
     "xyz": "xyz",
-    "export": "xyz",
+    "export": "export",
     "10": "view",
     "view": "view",
     "viewer": "view",
@@ -198,6 +204,10 @@ def run_interactive(lines, filename):
     scalars = parse_fchk_scalars(lines)
     atomic_numbers, coordinates = parse_fchk_arrays(lines)
     menu_filename = str(Path(filename).name)
+    calculation = load_calculation(Path(filename))
+
+    def show_result(result) -> None:
+        print(render(result, CommandContext(input_path=Path(filename), format="plain")), end="")
 
     def show_summary() -> None:
         cmd.cmd_summary(scalars, atomic_numbers, coordinates)
@@ -232,12 +242,40 @@ def run_interactive(lines, filename):
             utils.print_warning("Export cancelled.")
 
     def open_viewer() -> None:
-        out = prompt_viewer_filename(filename)
+        default_name = f"{Path(filename).stem}-workbench.html"
+        try:
+            out = input(f"Enter output HTML workbench filename [{default_name}]: ").strip()
+        except EOFError:
+            out = ""
+        out = out or default_name
         if out:
             open_browser = prompt_open_in_browser()
-            cmd.cmd_view(out, atomic_numbers, coordinates, open_browser=open_browser)
+            show_result(export_workbench_record(calculation, Path(out)))
+            if open_browser:
+                import webbrowser
+
+                webbrowser.open(Path(out).resolve().as_uri())
         else:
             utils.print_warning("Viewer export cancelled.")
+
+    def show_orbitals() -> None:
+        show_result(orbital_frontier(calculation))
+
+    def show_density() -> None:
+        show_result(density_integration(calculation, "total", 0.15, 6.0))
+
+    def create_report() -> None:
+        output = Path(f"{Path(filename).stem}-report.html")
+        show_result(
+            build_report_record(
+                calculation,
+                ("summary", "frontier", "mulliken", "lowdin"),
+                output,
+                "html",
+                f"openwfn {filename} report build {output}",
+                False,
+            )
+        )
 
     def show_bonds() -> None:
         cmd.cmd_bonds(atomic_numbers, coordinates)
@@ -276,11 +314,17 @@ def run_interactive(lines, filename):
             )
         elif action == "bonds":
             nav = run_static_page("Detected Bonds", "List covalent bonds using tabulated covalent radii.", show_bonds)
-        elif action in {"orbitals", "density", "report", "validate"}:
+        elif action == "orbitals":
+            nav = run_static_page("Frontier Orbitals", "Report HOMO, LUMO, and energy gap.", show_orbitals)
+        elif action in {"density", "validate"}:
             nav = run_static_page(
-                action.title(),
-                "This workflow requires the corresponding scientific data and analysis service.",
-                lambda: utils.print_warning("No calculation was run from this guided screen."),
+                "Density Validation",
+                "Integrate total electron density and report conservation error.",
+                show_density,
+            )
+        elif action == "report":
+            nav = run_static_page(
+                "Research Report", "Create a reproducible self-contained HTML report.", create_report
             )
         elif action in {"exit", "q"}:
             print("\nExiting openWFN.")

@@ -1,8 +1,9 @@
 import csv
 import io
 import json
+from pathlib import Path
 
-from openwfn.app import CommandContext
+from openwfn.app import CommandContext, execute
 from openwfn.presentation import render
 from openwfn.results import ResultRecord
 
@@ -44,3 +45,15 @@ def test_plain_output_has_no_terminal_escape_codes() -> None:
     assert "Distance" in output
     assert "0.966598 angstrom" in output
     assert "\x1b[" not in output
+
+
+def test_execute_writes_rendered_result_to_requested_output(tmp_path: Path) -> None:
+    output = tmp_path / "distance.json"
+
+    status = execute(
+        _distance_result,
+        CommandContext(output_path=output, format="json"),
+    )
+
+    assert status == 0
+    assert json.loads(output.read_text(encoding="utf-8"))["kind"] == "distance"

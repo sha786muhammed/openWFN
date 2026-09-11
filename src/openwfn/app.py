@@ -35,7 +35,16 @@ def execute(operation: Callable[[], ResultRecord | int | None], context: Command
         if isinstance(result, ResultRecord):
             from .presentation import render
 
-            context.output_stream.write(render(result, context))
+            rendered = render(result, context)
+            if context.output_path is not None:
+                if context.output_path.exists() and not context.overwrite:
+                    raise FileExistsError(
+                        f"Output exists: {context.output_path}. Pass --overwrite to replace it."
+                    )
+                context.output_path.parent.mkdir(parents=True, exist_ok=True)
+                context.output_path.write_text(rendered, encoding="utf-8")
+            elif not context.quiet:
+                context.output_stream.write(rendered)
         return result if isinstance(result, int) else 0
     except OpenWFNError as exc:
         context.error_stream.write(f"Error: {exc}\n")

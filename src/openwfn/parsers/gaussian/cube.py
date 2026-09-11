@@ -28,17 +28,27 @@ def parse_cube(path: Path) -> VolumetricGrid:
     origin_record = _numbers(lines[2], 4, "origin record")
     signed_atom_count = int(origin_record[0])
     atom_count = abs(signed_atom_count)
-    origin = tuple(value * BOHR_TO_ANGSTROM for value in origin_record[1:4])
-
     shape: list[int] = []
-    axes: list[tuple[float, float, float]] = []
+    raw_axes: list[tuple[float, float, float]] = []
+    signed_axis_counts: list[int] = []
     for offset in range(3):
         axis_record = _numbers(lines[3 + offset], 4, "axis record")
-        axis_count = abs(int(axis_record[0]))
+        signed_axis_count = int(axis_record[0])
+        axis_count = abs(signed_axis_count)
         if axis_count < 1:
             raise ParseError("Malformed cube axis record: grid dimensions must be positive.")
         shape.append(axis_count)
-        axes.append(tuple(value * BOHR_TO_ANGSTROM for value in axis_record[1:4]))
+        signed_axis_counts.append(signed_axis_count)
+        raw_axes.append(tuple(axis_record[1:4]))  # type: ignore[arg-type]
+
+    if all(count > 0 for count in signed_axis_counts):
+        coordinate_factor = BOHR_TO_ANGSTROM
+    elif all(count < 0 for count in signed_axis_counts):
+        coordinate_factor = 1.0
+    else:
+        raise ParseError("Malformed cube axis records: coordinate-unit signs are inconsistent.")
+    origin = tuple(value * coordinate_factor for value in origin_record[1:4])
+    axes = [tuple(value * coordinate_factor for value in axis) for axis in raw_axes]
 
     data_start = 6 + atom_count
     if len(lines) < data_start:

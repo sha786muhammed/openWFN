@@ -4,7 +4,10 @@ from pathlib import Path
 from typing import Any, Callable
 
 from ..errors import ParseError
+from .gaussian.checkpoint import resolve_checkpoint
+from .gaussian.cube import parse_cube
 from .gaussian.fchk import parse_fchk
+from .gaussian.output import parse_gaussian_output
 from .mol import parse_mol
 from .pdb import parse_pdb
 from .sdf import parse_sdf
@@ -39,6 +42,9 @@ class ParserRegistry:
 
 DEFAULT_REGISTRY = ParserRegistry()
 DEFAULT_REGISTRY.register((".fchk", ".fch"), parse_fchk)
+DEFAULT_REGISTRY.register((".chk",), lambda path: parse_fchk(resolve_checkpoint(path)))
+DEFAULT_REGISTRY.register((".cube", ".cub"), parse_cube)
+DEFAULT_REGISTRY.register((".log", ".out"), parse_gaussian_output)
 DEFAULT_REGISTRY.register((".xyz",), parse_xyz)
 DEFAULT_REGISTRY.register((".pdb",), parse_pdb)
 DEFAULT_REGISTRY.register((".mol",), parse_mol)
