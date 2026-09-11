@@ -1,92 +1,131 @@
 ---
-title: Reproducible wavefunction analysis
-description: Learn, run, and verify Gaussian wavefunction analysis with openWFN.
+title: openWFN
+description: Reproducible Gaussian wavefunction analysis from the CLI, Python API, reports, and an offline 3D workbench.
 hide:
   - toc
 ---
 
-<p class="ow-eyebrow">Open computational chemistry</p>
+<div class="ow-home" markdown="1">
 
-# From checkpoint data to defensible molecular insight.
+<section class="ow-hero">
+  <div class="ow-hero__copy" markdown="1">
 
-<p class="ow-lede">openWFN is a transparent command-line, Python, reporting, and offline 3D workbench for Gaussian wavefunction analysis. Learn the science, run a reproducible workflow, and inspect the assumptions behind every result.</p>
+<p class="ow-kicker">Open computational chemistry</p>
+
+<h1>Wavefunction analysis you can inspect, reproduce, and trust.</h1>
+
+<p class="ow-lede">Turn Gaussian formatted-checkpoint data into molecular geometry, orbitals, electron density, atomic populations, electrostatic potential, reports, and a portable 3D workbench—without sending research data to a remote service.</p>
 
 <div class="ow-actions">
-  <a class="ow-button ow-button--primary" href="start/first-analysis/">Begin with the fundamentals</a>
-  <a class="ow-button" href="reference/cli/">Open the reference</a>
+  <a class="ow-button ow-button--primary" href="start/first-analysis/">Get started</a>
+  <a class="ow-button" href="reference/cli/">Explore the CLI</a>
 </div>
 
-![Translucent red-orange and blue molecular orbital lobes surrounding a small ball-and-stick molecule](assets/images/openwfn-orbital-hero.webp){ loading=lazy width=1400 height=1050 }
+<p class="ow-meta">Python 3.10–3.13 · MIT licensed · openWFN 0.7.0</p>
+
+  </div>
+  <div class="ow-hero__visual">
+    <img src="assets/images/openwfn-orbital-hero.webp" alt="Translucent red and blue molecular orbital lobes surrounding a ball-and-stick molecule" width="1400" height="1050">
+  </div>
+</section>
+
+## One workbench, every stage of analysis
+
+<p class="ow-section-intro">Begin with the structure, move into electronic properties, and preserve every result in a form that can be checked later.</p>
+
+<div class="ow-feature-grid" markdown="1">
+
+<div class="ow-feature" markdown="1">
+:material-ruler-square:
+### Geometry
+Distances, angles, signed dihedrals, covalent-radius bonds, and connected fragments.
+</div>
+
+<div class="ow-feature" markdown="1">
+:material-orbit-variant:
+### Orbitals
+Alpha or beta frontier levels, HOMO, LUMO, occupations, and energy-gap reporting.
+</div>
+
+<div class="ow-feature" markdown="1">
+:material-blur:
+### Electron density
+Total, alpha, beta, and spin-density evaluation, integration, and cube export.
+</div>
+
+<div class="ow-feature" markdown="1">
+:material-chart-bubble:
+### Population analysis
+Mulliken and symmetric Löwdin populations with model-dependent atomic charges.
+</div>
+
+<div class="ow-feature" markdown="1">
+:material-flash:
+### Electrostatic potential
+Nuclear, charge-model, and experimental grid-derived point potentials.
+</div>
+
+<div class="ow-feature" markdown="1">
+:material-file-chart:
+### Research output
+JSON, CSV, figures, structures, batch manifests, reports, and offline visualization.
+</div>
+
+</div>
+
+## From a file to a reproducible result
+
+<div class="ow-workflow">
+<div class="ow-steps">
+<div class="ow-step"><strong>1 · Inspect</strong><span>Confirm molecular identity and discover which scientific records are available.</span></div>
+<div class="ow-step"><strong>2 · Analyze</strong><span>Run explicit commands with documented units, assumptions, and numerical controls.</span></div>
+<div class="ow-step"><strong>3 · Verify</strong><span>Check capability status, convergence, limitations, and provenance before interpretation.</span></div>
+<div class="ow-step"><strong>4 · Share</strong><span>Export machine-readable evidence, a fixed report, or a portable local workbench.</span></div>
+</div>
+<div class="ow-terminal">
+<div class="ow-terminal__bar"><span>Terminal</span><span>water.fchk</span></div>
+<pre><code><span class="ow-prompt">$</span> openwfn water.fchk doctor
+Doctor
+Input: water.fchk
+Capabilities: {'basis': True, 'orbitals': True, 'density': True}
+Status: Stable
+
+<span class="ow-prompt">$</span> openwfn water.fchk orbitals frontier
+HOMO       -0.477229 hartree
+LUMO        0.261095 hartree
+Gap         0.738323 hartree
+
+<span class="ow-prompt">$</span> openwfn water.fchk workbench water.html</code></pre>
+</div>
+</div>
+
+## Evidence is part of the interface
+
+<p class="ow-section-intro">Every capability carries an explicit evidence boundary. A command completing successfully is not, by itself, a claim of universal scientific validity.</p>
+
+<div class="ow-proof-strip">
+  <div class="ow-proof ow-proof--stable"><strong>Stable</strong><span>Implemented and regression tested</span></div>
+  <div class="ow-proof ow-proof--validated"><strong>Validated</strong><span>Quantitative evidence for named fixtures</span></div>
+  <div class="ow-proof ow-proof--experimental"><strong>Experimental</strong><span>Usable with documented caution</span></div>
+  <div class="ow-proof ow-proof--unsupported"><strong>Unsupported</strong><span>Missing records, method, or evidence</span></div>
+</div>
+
+[Review the Validation matrix](science/validation-status.md) · [Understand the Limitations](limitations.md)
+
+## Choose your path
 
 <div class="ow-paths">
-  <div class="ow-path">
-    <span class="ow-eyebrow">Analyze</span>
-    <strong>For researchers</strong>
-    <p>Evaluate methods, validation evidence, limitations, provenance, reports, and citation guidance before using a result.</p>
-    <a href="start/learning-paths/#researcher-path">Follow the researcher path</a>
-  </div>
-  <div class="ow-path">
-    <span class="ow-eyebrow">Learn</span>
-    <strong>For students</strong>
-    <p>Build concepts from coordinates and orbitals through density, atomic charges, and electrostatic potential.</p>
-    <a href="start/learning-paths/#student-path">Follow the student path</a>
-  </div>
-  <div class="ow-path">
-    <span class="ow-eyebrow">Build</span>
-    <strong>For developers</strong>
-    <p>Use the Python API, understand the typed calculation model, and extend parsers, analyses, and exporters.</p>
-    <a href="start/learning-paths/#developer-path">Follow the developer path</a>
-  </div>
+  <div class="ow-path"><strong>For researchers</strong><p>Evaluate methods, numerical evidence, provenance, reports, and citation guidance.</p><a href="start/learning-paths/#researcher-path">Research workflow →</a></div>
+  <div class="ow-path"><strong>For students</strong><p>Build concepts from coordinates and orbitals through density, charges, and ESP.</p><a href="start/learning-paths/#student-path">Learning path →</a></div>
+  <div class="ow-path"><strong>For developers</strong><p>Use the typed Python model and extend parsers, analyses, exporters, and tests.</p><a href="start/learning-paths/#developer-path">Developer path →</a></div>
 </div>
 
-## Learn. Run. Verify.
+## Local by design
 
-1. **Learn concepts.** Begin with [wavefunction-analysis foundations](start/index.md) and the [core terminology](start/terminology.md).
-2. **Run workflows.** Follow the [first analysis](start/first-analysis.md), then continue through geometry, orbitals, density, population analysis, ESP, reports, and the workbench.
-3. **Verify results.** Read the [Validation](validation.md), [Limitations](limitations.md), and [Scientific methods](methods.md) before drawing research conclusions.
+Scientific computation happens on your computer. Generated reports, cube files, and HTML workbenches can still contain unpublished molecular data, so treat them with the same controls as the source calculation. Read [Security and data privacy](project/security.md).
 
-## A reproducible first analysis
+**From checkpoint data to defensible molecular insight.**
 
-```bash
-python -m pip install --upgrade openwfn
-openwfn water.fchk summary
-openwfn water.fchk workbench water-workbench.html --open
-```
+**Current release:** openWFN 0.7.0 · [Release notes](releases/0.7.0.md) · [Citation](citation.md) · [GitHub](https://github.com/sha786muhammed/openWFN)
 
-The same calculation model powers the direct CLI, guided terminal, Python API,
-structured reports, and portable offline workbench. Your molecular data remains on
-your computer unless you choose to share an exported file.
-
-[Follow the complete first-analysis tutorial](start/first-analysis.md)
-
-## What openWFN analyzes
-
-| Area | Available work | Read next |
-| --- | --- | --- |
-| Molecular structure | coordinates, distances, angles, dihedrals, bonds, fragments | [Geometry tutorial](tutorials/geometry.md) |
-| Molecular orbitals | energies, occupations, HOMO, LUMO, frontier gap | [Orbitals and density](tutorials/orbitals-density.md) |
-| Electron density | density matrices, point evaluation, integration, cube export | [Scientific methods](methods.md) |
-| Atomic populations | Mulliken and symmetric Löwdin populations and charges | [Validation](validation.md) |
-| Electrostatic potential | nuclear, charge-model, and grid-derived point potentials | [Limitations](limitations.md) |
-| Research outputs | JSON, CSV, Markdown, HTML reports, structures, images | [Reports tutorial](tutorials/reports.md) |
-
-## Know the evidence boundary
-
-<span class="ow-status ow-status--stable"><strong>Stable</strong> — implemented and tested within documented assumptions.</span>
-
-<span class="ow-status ow-status--validated"><strong>Validated</strong> — supported by the active provenance-backed quantitative validation set.</span>
-
-<span class="ow-status ow-status--experimental"><strong>Experimental</strong> — implemented but awaiting broader scientific validation. Grid-derived electronic and total ESP remain here.</span>
-
-<span class="ow-status ow-status--unsupported"><strong>Unsupported</strong> — required records, algorithms, or scientific evidence are absent.</span>
-
-Review the [validation matrix](validation.md) and [documented limitations](limitations.md) for the exact status of each capability.
-
-## Open, local, and citable
-
-- **Open source:** MIT licensed, with public tests and implementation.
-- **Local by design:** calculations and exported workbench files run on your computer.
-- **Reproducible:** reports record inputs, parameters, software version, and provenance.
-- **Citable:** use the [Citation](citation.md) guide to identify the exact release.
-
-Current release: **openWFN 0.7.0** · [Release notes](releases/0.7.0.md) · [GitHub repository](https://github.com/sha786muhammed/openWFN)
+</div>

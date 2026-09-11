@@ -7,6 +7,9 @@ repo_name: sha786muhammed/openWFN
 theme:
   name: material
   language: en
+  icon:
+    logo: material/atom-variant
+    repo: fontawesome/brands/github
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -35,6 +38,7 @@ theme:
     - content.code.copy
     - content.code.annotate
     - content.tooltips
+    - content.code.select
 markdown_extensions:
   - admonition
   - attr_list
@@ -50,6 +54,9 @@ markdown_extensions:
       alternate_style: true
   - pymdownx.tasklist:
       custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.arithmatex:
       generic: true
 plugins:
