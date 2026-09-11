@@ -55,7 +55,7 @@ class FCHKDocument:
         records: dict[str, RecordValue] = {}
         index = 0
         while index < len(lines):
-            match = _HEADER.match(lines[index].rstrip("\n"))
+            match = _HEADER.match(lines[index].rstrip("\r\n"))
             if match is None:
                 index += 1
                 continue
@@ -77,7 +77,7 @@ class FCHKDocument:
             values: list[int | float | str] = []
             index += 1
             while len(values) < count and index < len(lines):
-                candidate = lines[index].rstrip("\n")
+                candidate = lines[index].rstrip("\r\n")
                 if _HEADER.match(candidate):
                     break
                 if kind == "C":

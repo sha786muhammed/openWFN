@@ -98,3 +98,14 @@ def test_parse_fchk_builds_ordered_basis_set_from_real_fixture() -> None:
     assert data.total_density is not None
     assert len(data.total_density.values) == 13
     assert data.total_density.values[0][1] == data.total_density.values[1][0]
+
+
+def test_parse_fchk_accepts_windows_crlf_line_endings(tmp_path: Path) -> None:
+    fixture = Path(__file__).resolve().parents[2] / "examples" / "water" / "water.fchk"
+    source = tmp_path / "water-crlf.fchk"
+    source.write_bytes(fixture.read_bytes().replace(b"\n", b"\r\n"))
+
+    data = parse_fchk(source)
+
+    assert tuple(atom.atomic_number for atom in data.molecule.atoms) == (8, 1, 1)
+    assert data.alpha_orbitals is not None
