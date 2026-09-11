@@ -49,6 +49,10 @@ def execute(operation: Callable[[], ResultRecord | int | None], context: Command
     except OpenWFNError as exc:
         context.error_stream.write(f"Error: {exc}\n")
         return exc.exit_code
+    except FileExistsError as exc:
+        message = str(exc).replace("overwrite=True", "--overwrite")
+        context.error_stream.write(f"Error: {message}\n")
+        return 1
     except Exception as exc:  # application boundary intentionally catches unknown failures
         if context.debug:
             traceback.print_exc(file=context.error_stream)
