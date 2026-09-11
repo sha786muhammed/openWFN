@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/assets/images/openwfn-orbital-hero.webp" width="680" alt="openWFN molecular orbital visualization">
+  <img src="docs/assets/images/openwfn-orbital-hero.webp" width="300" alt="openWFN molecular orbital visualization">
 </p>
 
-<h1 align="center">openWFN</h1>
+<h1 align="center">𝕠𝕡𝕖𝕟𝕎𝔽ℕ</h1>
 
 <p align="center"><strong>Wavefunction analysis for reproducible molecular insight</strong></p>
 
