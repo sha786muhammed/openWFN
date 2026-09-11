@@ -8,9 +8,9 @@ Distances use Euclidean Cartesian separation. Angles use the normalized dot prod
 
 Cartesian contracted Gaussian functions are evaluated with primitive and contraction normalization. The electron density is
 
-\[
+$$
 \rho(\mathbf r)=\sum_{\mu\nu}P_{\mu\nu}\phi_\mu(\mathbf r)\phi_\nu(\mathbf r).
-\]
+$$
 
 Alpha and beta matrices are derived from total and spin matrices as \(P^\alpha=(P+P^s)/2\) and \(P^\beta=(P-P^s)/2\).
 

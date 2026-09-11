@@ -1,4 +1,5 @@
-site_name: openWFN Documentation
+site_name: openWFN
+site_author: Muhammed Shah Shaji
 site_description: Research-grade Gaussian wavefunction analysis from the CLI, Python, and an offline workbench
 site_url: https://sha786muhammed.github.io/openWFN/
 repo_url: https://github.com/sha786muhammed/openWFN
@@ -22,37 +23,86 @@ theme:
         icon: material/weather-sunny
         name: Light mode
   features:
+    - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
+    - navigation.indexes
     - navigation.top
+    - navigation.footer
+    - navigation.tracking
     - search.suggest
+    - search.highlight
     - content.code.copy
+    - content.code.annotate
+    - content.tooltips
 markdown_extensions:
   - admonition
   - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
   - pymdownx.arithmatex:
       generic: true
 plugins:
   - search
+extra_css:
+  - stylesheets/extra.css
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 nav:
   - Home: index.md
-  - Installation: installation.md
-  - Quick start: quick-start.md
-  - User guide:
-      - CLI reference: cli.md
-      - Python API: python-api.md
-      - Workbench: workbench.md
-      - File formats: formats.md
-  - Scientific reference:
-      - Methods: methods.md
-      - Validation: validation.md
+  - Start here:
+      - Overview: start/index.md
+      - Installation: installation.md
+      - Your first analysis: start/first-analysis.md
+      - Learning paths: start/learning-paths.md
+      - Core terminology: start/terminology.md
+      - Quick start: quick-start.md
+  - Learn:
+      - What is wavefunction analysis?: learn/wavefunction-analysis.md
+      - Anatomy of FCHK: learn/fchk-anatomy.md
+      - Reproducible research: learn/reproducibility.md
+      - Terminology: start/terminology.md
+  - Guides:
+      - CLI workflows: guides/cli-workflows.md
+      - Python workflows: guides/python-workflows.md
+      - Batch and reports: guides/batch-and-reports.md
+      - Offline workbench: workbench.md
+      - Troubleshooting: guides/troubleshooting.md
+  - Reference:
+      - Complete CLI: reference/cli.md
+      - Python API: reference/python-api.md
+      - Formats, units, and exports: reference/formats-and-exports.md
+      - Original format notes: formats.md
+      - Original Python API notes: python-api.md
+      - Legacy CLI page: cli.md
+  - Science:
+      - Geometry and topology: science/geometry-topology.md
+      - Orbitals and density: science/orbitals-density.md
+      - Population and ESP: science/population-esp.md
+      - Validation status: science/validation-status.md
+      - Validation summary: validation.md
+      - Methods overview: methods.md
       - Limitations: limitations.md
   - Tutorials:
       - Geometry: tutorials/geometry.md
       - Orbitals and density: tutorials/orbitals-density.md
       - Reports: tutorials/reports.md
   - Citation: citation.md
+  - Project:
+      - Security and privacy: project/security.md
+      - Contributing: project/contributing.md
+      - Release history: project/release-history.md
+      - Releasing: releasing.md
   - Releases:
       - Version 0.7.0: releases/0.7.0.md
