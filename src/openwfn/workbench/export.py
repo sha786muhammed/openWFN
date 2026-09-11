@@ -22,7 +22,7 @@ def export_workbench(
         raise FileNotFoundError(f"Missing bundled viewer asset: {asset_path}")
     engine = asset_path.read_text(encoding="utf-8").replace("</script>", "<\\/script>")
     payload = WorkbenchPayload.from_calculation(data, include_fields=True).to_json().replace("<", "\\u003c")
-    document = """<!doctype html>
+    document = r"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>__TITLE__</title><style>
 :root{color-scheme:dark;--bg:#08111f;--panel:#101c2d;--line:#26364d;--text:#e7eef8;--muted:#9db0c9;--accent:#42c8f5}
