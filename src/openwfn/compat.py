@@ -16,6 +16,34 @@ _BATCH_OPTIONS_WITH_VALUES = {"--operation", "--workers", "--output-dir"}
 _BATCH_FLAGS = {"--fail-fast"}
 
 
+def _translate_file_help(arguments: list[str]) -> list[str]:
+    """Make ``openwfn FILE --help`` display the root CLI help.
+
+    With an optional root ``file`` positional before argparse subparsers, this
+    two-token form is otherwise misread as though the file were a command.  Only
+    the file-plus-help shape is rewritten; command-specific help is left alone.
+    """
+
+    translated = list(arguments)
+    index = 0
+    while index < len(translated):
+        argument = translated[index]
+        if argument in _GLOBAL_OPTIONS_WITH_VALUES:
+            index += 2
+            continue
+        if argument in _GLOBAL_FLAGS:
+            index += 1
+            continue
+        break
+
+    if index + 2 != len(translated):
+        return translated
+    if translated[index].startswith("-") or translated[index + 1] not in {"-h", "--help"}:
+        return translated
+
+    return [*translated[:index], translated[index + 1]]
+
+
 def _translate_command_first_batch(arguments: list[str]) -> list[str]:
     """Adapt ``openwfn batch INPUT ...`` to the legacy parser layout.
 
@@ -75,7 +103,8 @@ def translate_legacy_args(arguments: list[str]) -> list[str]:
     ``geometry geometry angle`` and made valid v0.7 command lines fail in argparse.
     """
 
-    translated = _translate_command_first_batch(arguments)
+    translated = _translate_file_help(arguments)
+    translated = _translate_command_first_batch(translated)
     mapping = {"dist": "distance", "angle": "angle", "dihedral": "dihedral"}
     for index, argument in enumerate(translated):
         replacement = mapping.get(argument)
