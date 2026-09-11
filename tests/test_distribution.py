@@ -2,7 +2,7 @@ from importlib.metadata import entry_points, version
 
 
 def test_installed_distribution_version() -> None:
-    assert version("openwfn") == "0.7.0"
+    assert version("openwfn") == "0.7.1"
 
 
 def test_console_script_targets_cli_main() -> None:

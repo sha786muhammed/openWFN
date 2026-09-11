@@ -50,31 +50,17 @@
 .md-header__button.md-logo {
   align-items: center;
   display: flex;
-  flex-direction: column;
   justify-content: center;
-  margin: 0.3rem 0.55rem 0.3rem 0;
-  padding: 0.2rem 0.45rem 0.16rem;
-  width: 9.4rem;
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.42);
-  border-radius: 0.45rem;
-  box-shadow: 0 0.2rem 0.65rem rgba(8, 18, 38, 0.16);
+  margin: 0.25rem 0.7rem 0.25rem 0;
+  padding: 0.15rem 0;
+  width: 7.25rem;
 }
 
 .md-header__button.md-logo img {
-  height: 1.35rem;
+  height: auto;
+  max-height: 1.9rem;
+  max-width: 100%;
   width: auto;
-}
-
-.md-header__button.md-logo::after {
-  color: #334155;
-  content: "Wavefunction Analysis";
-  font-size: 0.48rem;
-  font-weight: 650;
-  letter-spacing: 0.035em;
-  line-height: 1;
-  margin-top: 0.08rem;
-  white-space: nowrap;
 }
 
 .md-header__title,
@@ -150,11 +136,11 @@
   border-radius: 1rem;
   box-shadow: var(--ow-shadow);
   display: grid;
-  gap: clamp(1.5rem, 3vw, 3rem);
-  grid-template-columns: minmax(0, 1.12fr) minmax(17rem, 0.88fr);
-  margin: 1.5rem 0 3rem;
+  gap: clamp(1.5rem, 2.5vw, 2.5rem);
+  grid-template-columns: minmax(0, 1.08fr) minmax(16rem, 0.92fr);
+  margin: 0.75rem 0 2.25rem;
   overflow: hidden;
-  padding: clamp(2rem, 5vw, 4.5rem);
+  padding: clamp(2rem, 3.5vw, 3rem);
   position: relative;
 }
 
@@ -163,15 +149,15 @@
 .ow-brand-lockup {
   display: block;
   height: auto;
-  margin: 0 0 1.3rem;
-  max-width: min(100%, 19rem);
+  margin: 0 0 1rem;
+  max-width: min(100%, 17rem);
 }
 
 .ow-hero__copy h1 {
   display: block;
-  font-size: clamp(2rem, 3.5vw, 2.6rem);
-  line-height: 1.08;
-  margin: 0 0 1.2rem;
+  font-size: clamp(2.1rem, 3.2vw, 2.75rem);
+  line-height: 1.1;
+  margin: 0 0 1rem;
 }
 
 .ow-hero__visual {
@@ -184,7 +170,8 @@
 .ow-hero__visual img {
   border-radius: 0.9rem;
   box-shadow: 0 20px 50px rgba(48, 63, 159, 0.18);
-  max-height: 34rem;
+  max-height: 25rem;
+  max-width: 27rem;
   object-fit: cover;
   width: 100%;
 }
@@ -202,16 +189,16 @@
 
 .ow-lede {
   color: var(--ow-muted);
-  font-size: clamp(1rem, 1.8vw, 1.16rem);
-  line-height: 1.65;
-  max-width: 56ch;
+  font-size: clamp(1rem, 1.25vw, 1.08rem);
+  line-height: 1.55;
+  max-width: 58ch;
 }
 
 .ow-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin: 1.6rem 0 1.25rem;
+  margin: 1.3rem 0 1rem;
 }
 
 .ow-button {
@@ -367,15 +354,19 @@
 
 @media (max-width: 60rem) {
   .ow-hero { grid-template-columns: 1fr; }
-  .ow-hero__visual img { max-height: 24rem; width: min(100%, 38rem); }
+  .ow-hero__visual img { max-height: 20rem; width: min(100%, 30rem); }
   .ow-feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 44rem) {
+  .md-header__button.md-logo { margin-right: 0.35rem; width: 6.5rem; }
   .md-typeset { font-size: 0.82rem; }
   .md-typeset h1 { font-size: 2rem; }
-  .ow-hero { border-radius: 0.75rem; margin-top: 0.75rem; padding: 1.4rem; }
-  .ow-hero__copy h1 { font-size: clamp(2.15rem, 11vw, 3rem); }
+  .ow-hero { border-radius: 0.75rem; gap: 1.25rem; margin: 0.35rem 0 1.75rem; padding: 1.25rem; }
+  .ow-brand-lockup { margin-bottom: 0.8rem; max-width: min(100%, 14rem); }
+  .ow-hero__copy h1 { font-size: clamp(1.9rem, 9vw, 2.3rem); margin-bottom: 0.8rem; }
+  .ow-lede { font-size: 1rem; line-height: 1.5; }
+  .ow-hero__visual img { max-height: 17rem; width: min(100%, 22rem); }
   .ow-actions { align-items: stretch; flex-direction: column; }
   .ow-button { width: 100%; }
   .ow-feature-grid, .ow-proof-strip, .ow-paths { grid-template-columns: 1fr; }

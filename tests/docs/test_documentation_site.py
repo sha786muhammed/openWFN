@@ -104,8 +104,8 @@ def test_homepage_uses_compact_product_components() -> None:
     ):
         assert component in home
         assert f".{component}" in styles
-    assert "grid-template-columns: minmax(0, 1.12fr) minmax(17rem, 0.88fr)" in styles
-    assert "max-height: 34rem" in styles
+    assert "grid-template-columns: minmax(0, 1.08fr) minmax(16rem, 0.92fr)" in styles
+    assert "max-height: 25rem" in styles
     assert "4.7rem" not in styles
 
 
@@ -142,7 +142,7 @@ def test_molecular_signal_wordmark_is_used_consistently() -> None:
     assert 'alt="openWFN — Wavefunction Analysis"' in home
     assert "logo: assets/images/openwfn-wordmark.png" in config
     assert ".md-header__button.md-logo img" in styles
-    assert 'content: "Wavefunction Analysis"' in styles
+    assert 'content: "Wavefunction Analysis"' not in styles
 
 
 def test_header_has_no_duplicate_plain_title_and_home_identifies_toolkit() -> None:
@@ -155,6 +155,21 @@ def test_header_has_no_duplicate_plain_title_and_home_identifies_toolkit() -> No
         "openWFN is an open, reproducible wavefunction analysis toolkit "
         "for computational chemistry."
     ) in home
+
+
+def test_homepage_has_compact_responsive_branding_and_hero() -> None:
+    styles = (ROOT / "docs" / "stylesheets" / "extra.css").read_text(
+        encoding="utf-8"
+    )
+
+    assert "width: 7.25rem" in styles
+    assert 'content: "Wavefunction Analysis"' not in styles
+    assert "padding: clamp(2rem, 3.5vw, 3rem)" in styles
+    assert "font-size: clamp(2.1rem, 3.2vw, 2.75rem)" in styles
+    assert "font-size: clamp(1rem, 1.25vw, 1.08rem)" in styles
+    assert "max-width: min(100%, 17rem)" in styles
+    assert "@media (max-width: 44rem)" in styles
+    assert "font-size: clamp(1.9rem, 9vw, 2.3rem)" in styles
 
 
 def test_python_workflow_uses_real_calculation_accessors() -> None:

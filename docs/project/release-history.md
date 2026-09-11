@@ -1,5 +1,11 @@
 # Release history
 
+## 0.7.1 — corrective release
+
+Version 0.7.1 repaired CLI routing, offline-workbench JavaScript, overwrite guidance, and responsive documentation layout without changing the v0.7 scientific capability boundaries.
+
+[Read the detailed 0.7.1 notes](../releases/0.7.1.md)
+
 ## 0.7.0 — analysis workbench
 
 Version 0.7.0 introduced the typed calculation model, structured CLI output, nested geometry/orbital/population/density/ESP commands, batch processing, reproducible reports, expanded structure and table exports, and the standalone offline molecular workbench. It also added explicit Stable, Validated, Experimental, and Unsupported capability labels.
@@ -17,4 +23,3 @@ Versions 0.4.0–0.6.0 established FCHK parsing, molecular summaries, geometry a
 ## Versioning guidance
 
 For research, record the exact version from `openwfn --version` and preserve the command and input checksum. The online handbook follows the current `main` branch; release notes describe version-specific differences.
-

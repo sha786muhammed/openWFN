@@ -2,6 +2,16 @@
 
 All notable changes to openWFN are documented in this file.
 
+## [0.7.1] - 2026-09-11
+
+### Fixed
+
+- Corrected command-first batch routing and help routing after an input file.
+- Repaired geometry and connectivity routing in the v0.7 CLI.
+- Fixed invalid JavaScript in the standalone offline workbench.
+- Improved overwrite guidance for existing output files.
+- Rebalanced the documentation header and homepage hero for compact desktop and mobile layouts.
+
 ## [0.7.0] - 2026-09-11
 
 ### Added
