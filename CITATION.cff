@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use openWFN in your research, please cite it."
 title: "openWFN: Research-grade Gaussian wavefunction analysis"
-version: "0.7.0"
+version: "0.7.1"
 date-released: 2026-09-11
 authors:
   - family-names: Shaji

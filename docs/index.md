@@ -21,7 +21,7 @@ hide:
   <a class="ow-button" href="reference/cli/">Explore the CLI</a>
 </div>
 
-<p class="ow-meta">Python 3.10–3.13 · MIT licensed · openWFN 0.7.0</p>
+<p class="ow-meta">Python 3.10–3.13 · MIT licensed · openWFN 0.7.1</p>
 
   </div>
   <div class="ow-hero__visual">
@@ -126,6 +126,6 @@ Scientific computation happens on your computer. Generated reports, cube files, 
 
 **From checkpoint data to defensible molecular insight.**
 
-**Current release:** openWFN 0.7.0 · [Release notes](releases/0.7.0.md) · [Citation](citation.md) · [GitHub](https://github.com/sha786muhammed/openWFN)
+**Current release:** openWFN 0.7.1 · [Release notes](releases/0.7.1.md) · [Citation](citation.md) · [GitHub](https://github.com/sha786muhammed/openWFN)
 
 </div>

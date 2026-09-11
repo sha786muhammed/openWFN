@@ -23,7 +23,7 @@ openwfn --version
 Expected version output for this handbook:
 
 ```text
-openWFN 0.7.0
+openWFN 0.7.1
 ```
 
 Use `python -m pip` so installation and execution refer to the same Python
