@@ -94,6 +94,50 @@ def test_homepage_contains_identity_paths_and_trust_links() -> None:
         assert phrase in home
 
 
+def test_homepage_uses_compact_product_components() -> None:
+    home = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
+    styles = (ROOT / "docs" / "stylesheets" / "extra.css").read_text(encoding="utf-8")
+
+    for component in (
+        "ow-hero", "ow-hero__copy", "ow-hero__visual", "ow-feature-grid",
+        "ow-terminal", "ow-proof-strip",
+    ):
+        assert component in home
+        assert f".{component}" in styles
+    assert "grid-template-columns: minmax(0, 1.12fr) minmax(17rem, 0.88fr)" in styles
+    assert "max-height: 34rem" in styles
+    assert "4.7rem" not in styles
+
+
+def test_material_icon_library_and_brand_identity_are_configured() -> None:
+    config = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
+
+    assert "logo: material/atom-variant" in config
+    assert "pymdownx.emoji" in config
+    assert "material.extensions.emoji.twemoji" in config
+    assert "material.extensions.emoji.to_svg" in config
+
+
+def test_readme_opens_with_visual_product_identity() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert '<p align="center">' in readme
+    assert "openwfn-orbital-hero.webp" in readme
+    assert "Wavefunction analysis for reproducible molecular insight" in readme
+
+
+def test_python_workflow_uses_real_calculation_accessors() -> None:
+    workflow = (ROOT / "docs" / "guides" / "python-workflows.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "calculation.molecule.metadata.energy_hartree" in workflow
+    assert "calculation.geometry_distance(1, 2)" in workflow
+    assert "calculation.geometry_angle(2, 1, 3)" in workflow
+    assert "calculation.molecule.formula" not in workflow
+    assert "calculation.molecule.coordinates" not in workflow
+
+
 def test_documentation_covers_required_user_and_scientific_topics() -> None:
     required = (
         "index.md", "installation.md", "quick-start.md", "cli.md", "python-api.md",

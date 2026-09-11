@@ -1,16 +1,33 @@
-# openWFN
+<p align="center">
+  <img src="docs/assets/images/openwfn-orbital-hero.webp" width="680" alt="openWFN molecular orbital visualization">
+</p>
 
-**From checkpoint data to defensible molecular insight.**
+<h1 align="center">openWFN</h1>
 
-[![PyPI](https://img.shields.io/pypi/v/openwfn?label=PyPI&color=b56a3b)](https://pypi.org/project/openwfn/)
-[![Python](https://img.shields.io/pypi/pyversions/openwfn)](https://pypi.org/project/openwfn/)
-[![Tests](https://github.com/sha786muhammed/openWFN/actions/workflows/tests.yml/badge.svg)](https://github.com/sha786muhammed/openWFN/actions/workflows/tests.yml)
-[![Documentation](https://github.com/sha786muhammed/openWFN/actions/workflows/docs.yml/badge.svg)](https://sha786muhammed.github.io/openWFN/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-31515d)](LICENSE)
+<p align="center"><strong>Wavefunction analysis for reproducible molecular insight</strong></p>
 
-openWFN is a local, research-oriented Python and command-line workbench for Gaussian formatted-checkpoint analysis. It connects molecular geometry, topology, orbitals, electron density, population analysis, electrostatic potential, reproducible reports, and portable offline visualization through one typed calculation model.
+<p align="center">
+  A local Python, command-line, reporting, and offline 3D workbench for Gaussian formatted-checkpoint data.
+</p>
 
-> **New to openWFN?** Begin with the [complete handbook](https://sha786muhammed.github.io/openWFN/)—written for researchers, students, and developers from first principles through validation and reproducible use.
+<p align="center">
+  <a href="https://pypi.org/project/openwfn/"><img alt="PyPI" src="https://img.shields.io/pypi/v/openwfn?label=PyPI&color=4051b5"></a>
+  <a href="https://pypi.org/project/openwfn/"><img alt="Python" src="https://img.shields.io/pypi/pyversions/openwfn?color=00a6c7"></a>
+  <a href="https://github.com/sha786muhammed/openWFN/actions/workflows/tests.yml"><img alt="Tests" src="https://github.com/sha786muhammed/openWFN/actions/workflows/tests.yml/badge.svg"></a>
+  <a href="https://sha786muhammed.github.io/openWFN/"><img alt="Documentation" src="https://github.com/sha786muhammed/openWFN/actions/workflows/docs.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-4051b5"></a>
+</p>
+
+<p align="center">
+  <a href="https://sha786muhammed.github.io/openWFN/start/first-analysis/"><strong>Get started</strong></a>
+  · <a href="https://sha786muhammed.github.io/openWFN/reference/cli/">CLI reference</a>
+  · <a href="https://sha786muhammed.github.io/openWFN/science/validation-status/">Validation</a>
+  · <a href="https://sha786muhammed.github.io/openWFN/citation/">Citation</a>
+</p>
+
+---
+
+openWFN connects molecular geometry, topology, orbitals, electron density, population analysis, electrostatic potential, reproducible reports, and portable offline visualization through one typed calculation model. It is designed for researchers who need results that can be inspected, exported, and checked—not only displayed.
 
 ## Why openWFN
 
