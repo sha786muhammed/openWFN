@@ -3,6 +3,7 @@
 import sys
 from typing import Sequence
 
+
 def print_header(text: str):
     """Print a professional themed header."""
     print(f"\n\033[1;36m{text}\033[0m")
@@ -92,17 +93,17 @@ def print_card(title: str, lines: Sequence[str]) -> None:
     print(f"╭─ {title} " + "─" * max(0, width - len(title)))
     for line in content:
         print(f"│ {line.ljust(width)}")
-    print(f"╰" + "─" * (width + 1))
+    print("╰" + "─" * (width + 1))
 
 
 def print_plain_card(lines: Sequence[str]) -> None:
     """Print a card without a visible title line."""
     content = list(lines)
     width = max(len(line) for line in content) if content else 0
-    print(f"╭" + "─" * (width + 2))
+    print("╭" + "─" * (width + 2))
     for line in content:
         print(f"│ {line.ljust(width)} │")
-    print(f"╰" + "─" * (width + 2))
+    print("╰" + "─" * (width + 2))
 
 
 def print_section_title(title: str) -> None:

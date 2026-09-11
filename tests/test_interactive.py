@@ -43,22 +43,17 @@ def test_print_landing_page_shows_intro_and_features(capsys):
     captured = capsys.readouterr()
     output = captured.out
 
-    assert "Open WaveFunction Network" in output
     assert "openWFN" in output
-    assert "Scientific geometry, topology, and structure analysis" in output
-    assert "Core Analysis" in output
-    assert "Structure & Connectivity" in output
-    assert "Export & Viewer" in output
-    assert "Molecular System Summary" in output
-    assert "Launch Local 3D Molecule Viewer" in output
-    assert "Fragment and Connectivity Graph" in output
-    assert "Citation" in output
-    assert "Muhammed Shah Shaji" in output
-    assert "University of Louisville" in output
-    assert "number or command name" in output.lower()
-    assert "repository + exact software version" in output
-    assert "  7  Detected Covalent Bond Network" in output
-    assert " 10  Launch Local 3D Molecule Viewer" in output
+    assert "water.fchk" in output
+    assert "H2O" in output
+    assert "3 atoms" in output
+    assert "Select a workflow" in output
+    assert "Inspect molecular structure" in output
+    assert "Analyze molecular orbitals" in output
+    assert "Open 3D workbench" in output
+    assert "Muhammed Shah Shaji" not in output
+    assert "University of Louisville" not in output
+    assert "████" not in output
 
 
 def test_print_feature_page_shows_back_and_exit(capsys):

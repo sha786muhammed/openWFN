@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0",
+  "description": "Permanent openWFN scientific validation registry",
+  "cases": [
+    {
+      "id": "water", "status": "active", "path": "examples/water/water.fchk",
+      "sha256": "f3c6cb5e1f9f205e49b439339bb0833160f56be68f40e1c1097db3f30f52dcf2",
+      "origin": "openWFN repository example corpus", "generation_procedure": "Existing Gaussian RHF/3-21G fixture formatted with formchk; exact Gaussian invocation was not recorded",
+      "software": "Gaussian (version not recorded)", "method": "RHF", "basis": "3-21G", "redistribution_status": "Repository-owned fixture distributed under the project license",
+      "targets": [
+        {"metric": "energy_hartree", "expected": -75.58595974892307, "absolute_tolerance": 1e-10},
+        {"metric": "electron_count", "expected": 10.0, "absolute_tolerance": 1e-6},
+        {"metric": "gap_ev", "expected": 20.09080138868305, "absolute_tolerance": 1e-8}
+      ]
+    },
+    {
+      "id": "methane", "status": "active", "path": "examples/methane/methane.fchk",
+      "sha256": "1c37731946a48c3b64abd2a6c6594322f15fa1a4d5081144ef3a53bc7337b343",
+      "origin": "openWFN repository example corpus", "generation_procedure": "Existing Gaussian RHF/3-21G fixture formatted with formchk; exact Gaussian invocation was not recorded",
+      "software": "Gaussian (version not recorded)", "method": "RHF", "basis": "3-21G", "redistribution_status": "Repository-owned fixture distributed under the project license",
+      "targets": [
+        {"metric": "energy_hartree", "expected": -39.97687654112752, "absolute_tolerance": 1e-10},
+        {"metric": "electron_count", "expected": 10.0, "absolute_tolerance": 1e-6},
+        {"metric": "gap_ev", "expected": 22.90755875648417, "absolute_tolerance": 1e-8}
+      ]
+    },
+    {
+      "id": "ammonia", "status": "active", "path": "examples/ammonia/ammonia.fchk",
+      "sha256": "cc6ef792b77b38b35a176bcb9856f10c178ad072fb5f56e8fa78d0f91c817d90",
+      "origin": "openWFN repository example corpus", "generation_procedure": "Existing Gaussian RHF/3-21G fixture formatted with formchk; exact Gaussian invocation was not recorded",
+      "software": "Gaussian (version not recorded)", "method": "RHF", "basis": "3-21G", "redistribution_status": "Repository-owned fixture distributed under the project license",
+      "targets": [
+        {"metric": "energy_hartree", "expected": -55.87220344538076, "absolute_tolerance": 1e-10},
+        {"metric": "electron_count", "expected": 10.0, "absolute_tolerance": 1e-6},
+        {"metric": "gap_ev", "expected": 18.07513215685563, "absolute_tolerance": 1e-8}
+      ]
+    },
+    {"id": "carbon-dioxide", "status": "pending", "origin": "Required v0.7 corpus slot", "generation_procedure": "Not generated", "redistribution_status": "No fixture included", "reason": "A provenance-complete redistribution-safe reference is not yet available"},
+    {"id": "oxygen", "status": "pending", "origin": "Required v0.7 unrestricted corpus slot", "generation_procedure": "Not generated", "redistribution_status": "No fixture included", "reason": "An independently documented unrestricted reference is not yet available"},
+    {"id": "ethanol", "status": "pending", "origin": "Required v0.7 corpus slot", "generation_procedure": "Not generated", "redistribution_status": "No fixture included", "reason": "A provenance-complete redistribution-safe reference is not yet available"},
+    {"id": "water-dimer", "status": "pending", "origin": "Required v0.7 corpus slot", "generation_procedure": "Not generated", "redistribution_status": "No fixture included", "reason": "A provenance-complete redistribution-safe reference is not yet available"},
+    {"id": "benzene", "status": "pending", "origin": "Required v0.7 corpus slot", "generation_procedure": "Not generated", "redistribution_status": "No fixture included", "reason": "A provenance-complete redistribution-safe reference is not yet available"},
+    {"id": "polarization", "status": "pending", "origin": "Required v0.7 pure-shell limitation slot", "generation_procedure": "Not generated", "redistribution_status": "No fixture included", "reason": "A documented pure d/f reference fixture is not yet available"},
+    {"id": "transition-metal", "status": "pending", "origin": "Required v0.7 limitation slot", "generation_procedure": "Not generated", "redistribution_status": "No fixture included", "reason": "A redistribution-safe ECP/transition-metal limitation fixture is not yet available"}
+  ]
+}

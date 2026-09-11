@@ -1,10 +1,9 @@
+import os
 import subprocess
 import sys
-import os
 from pathlib import Path
 
 from openwfn.cli import convert_chk_to_fchk  # type: ignore
-
 
 ROOT = Path(__file__).resolve().parents[1]
 

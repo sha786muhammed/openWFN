@@ -14,7 +14,12 @@
 ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝ ╚══╝╚══╝ ╚═╝     ╚═╝  ╚═══╝
 ```
 
-**openWFN** is a command-line toolkit for molecular geometry, connectivity, and structure exploration from Gaussian checkpoint data. It is designed for fast terminal workflows around formatted checkpoint files, with a built-in local molecule viewer for lightweight inspection and sharing.
+**openWFN 0.7** is a reproducible command-line and Python workbench for Gaussian
+formatted-checkpoint analysis. It combines molecular geometry, orbitals, electron
+density, population analysis, electrostatic potential, reports, and a portable
+offline 3D workbench behind one typed calculation model.
+
+[Read the complete documentation](https://sha786muhammed.github.io/openWFN/)
 
 ## Installation
 
@@ -28,10 +33,11 @@ Run openWFN on a Gaussian formatted checkpoint file:
 
 ```bash
 openwfn molecule.fchk summary
-openwfn molecule.fchk dist 1 2
-openwfn molecule.fchk graph
-openwfn molecule.fchk xyz molecule.xyz
-openwfn molecule.fchk view
+openwfn molecule.fchk geometry distance 1 2
+openwfn molecule.fchk orbitals frontier
+openwfn molecule.fchk population mulliken
+openwfn molecule.fchk density integrate
+openwfn molecule.fchk workbench molecule-workbench.html
 ```
 
 If no subcommand is given:
@@ -55,15 +61,19 @@ openwfn molecule.chk formchk
 openwfn molecule.chk formchk molecule.fchk
 ```
 
-## Stable Commands
+## Analysis commands
 
 - `summary` — molecular system summary
 - `info` — formatted checkpoint metadata
-- `dist i j` — interatomic distance
-- `angle i j k` — three-atom bond angle
-- `dihedral i j k l` — four-atom dihedral
+- `geometry distance|angle|dihedral` — typed geometry analysis
 - `bonds` — detected covalent bond network
 - `graph` — fragment and connectivity graph
+- `orbitals frontier` — HOMO, LUMO, and energy gap
+- `population mulliken|lowdin` — atomic populations and charges
+- `density integrate|cube` — numerical density integration and cube export
+- `esp point` — nuclear, atomic-charge, or grid-based potential at a point
+- `report build` — reproducible HTML or Markdown research report
+- `workbench` — self-contained offline analysis and visualization workspace
 - `xyz output.xyz` — export Cartesian coordinates
 - `view` — export a standalone local HTML molecule viewer
 - `formchk [output.fchk]` — convert a Gaussian checkpoint into a formatted checkpoint
@@ -101,15 +111,20 @@ openwfn examples/water/water.fchk view --save water_viewer.html
 openwfn examples/water/water.fchk
 ```
 
-## Project Scope
+## Capability status
 
-The stable surface of openWFN is focused on:
-- geometry analysis
-- molecular connectivity and fragment inspection
-- coordinate export
-- local browser-based structure viewing
+openWFN labels scientific capabilities explicitly:
 
-Experimental modules may exist in the codebase, but they are not presented as production-ready features.
+- **Stable:** parsing, geometry, topology, frontier orbitals, population analysis,
+  nuclear/atomic-charge ESP, reports, exports, and the Python API.
+- **Validated:** total-density grid integration and cube export for the active
+  provenance-backed validation set.
+- **Experimental:** electronic and total ESP obtained from numerical density grids.
+- **Unsupported:** analyses whose required records or scientific validation are absent.
+
+See the [validation matrix](https://sha786muhammed.github.io/openWFN/validation/)
+and [documented limitations](https://sha786muhammed.github.io/openWFN/limitations/)
+before using results in research.
 
 ## License
 

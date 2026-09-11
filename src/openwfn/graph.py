@@ -2,6 +2,7 @@
 
 from collections import deque
 
+
 class MolecularGraph:
     """A lightweight representation of a molecular graph."""
     
