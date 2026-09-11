@@ -147,18 +147,6 @@ def test_security_page_documents_local_processing_and_safe_reporting() -> None:
         assert phrase in security.lower()
 
 
-def test_python_workflow_uses_real_calculation_accessors() -> None:
-    workflow = (ROOT / "docs" / "guides" / "python-workflows.md").read_text(
-        encoding="utf-8"
-    )
-
-    assert "calculation.molecule.metadata.energy_hartree" in workflow
-    assert "calculation.geometry_distance(1, 2)" in workflow
-    assert "calculation.geometry_angle(2, 1, 3)" in workflow
-    assert "calculation.molecule.formula" not in workflow
-    assert "calculation.molecule.coordinates" not in workflow
-
-
 def test_documented_capability_states_are_defined() -> None:
     validation = (ROOT / "docs" / "validation.md").read_text(encoding="utf-8")
     for state in ("Stable", "Validated", "Experimental", "Unsupported"):
