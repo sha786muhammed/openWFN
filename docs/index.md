@@ -14,7 +14,7 @@ hide:
 
 <h1>Wavefunction analysis you can inspect, reproduce, and trust.</h1>
 
-<p class="ow-lede">Turn Gaussian formatted-checkpoint data into molecular geometry, orbitals, electron density, atomic populations, electrostatic potential, reports, and a portable 3D workbench—without sending research data to a remote service.</p>
+<p class="ow-lede">openWFN is an open, reproducible wavefunction analysis toolkit for computational chemistry. It turns Gaussian formatted-checkpoint data into molecular geometry, orbitals, electron density, atomic populations, electrostatic potential, reports, and a portable 3D workbench—without sending research data to a remote service.</p>
 
 <div class="ow-actions">
   <a class="ow-button ow-button--primary" href="start/first-analysis/">Get started</a>
