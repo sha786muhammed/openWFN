@@ -47,8 +47,34 @@
   background: var(--ow-primary-dark);
 }
 
-.md-header__button.md-logo svg {
-  color: #67e8f9;
+.md-header__button.md-logo {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0.3rem 0.55rem 0.3rem 0;
+  padding: 0.2rem 0.45rem 0.16rem;
+  width: 9.4rem;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 0.45rem;
+  box-shadow: 0 0.2rem 0.65rem rgba(8, 18, 38, 0.16);
+}
+
+.md-header__button.md-logo img {
+  height: 1.35rem;
+  width: auto;
+}
+
+.md-header__button.md-logo::after {
+  color: #334155;
+  content: "Wavefunction Analysis";
+  font-size: 0.48rem;
+  font-weight: 650;
+  letter-spacing: 0.035em;
+  line-height: 1;
+  margin-top: 0.08rem;
+  white-space: nowrap;
 }
 
 .md-header__title,
@@ -56,6 +82,8 @@
 .md-nav__title {
   letter-spacing: 0.01em;
 }
+
+.md-header__topic:first-child { display: none; }
 
 .md-typeset {
   color: var(--ow-ink);
@@ -131,6 +159,13 @@
 }
 
 .ow-hero__copy { position: relative; z-index: 1; }
+
+.ow-brand-lockup {
+  display: block;
+  height: auto;
+  margin: 0 0 1.3rem;
+  max-width: min(100%, 19rem);
+}
 
 .ow-hero__copy h1 {
   display: block;

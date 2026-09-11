@@ -2,7 +2,9 @@
   <img src="docs/assets/images/openwfn-orbital-hero.webp" width="300" alt="openWFN molecular orbital visualization">
 </p>
 
-<h1 align="center">𝕠𝕡𝕖𝕟𝕎𝔽ℕ</h1>
+<p align="center">
+  <img src="docs/assets/images/openwfn-wordmark.png" width="420" alt="openWFN — Wavefunction Analysis">
+</p>
 
 <p align="center"><strong>Wavefunction analysis for reproducible molecular insight</strong></p>
 

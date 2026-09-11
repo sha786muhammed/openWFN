@@ -7,8 +7,8 @@ repo_name: sha786muhammed/openWFN
 theme:
   name: material
   language: en
+  logo: assets/images/openwfn-wordmark.png
   icon:
-    logo: material/atom-variant
     repo: fontawesome/brands/github
   palette:
     - media: "(prefers-color-scheme: light)"

@@ -4,3 +4,8 @@ assets:
     license: MIT project asset
     transformation: Generated from the approved Scholarly Handbook direction, reviewed, resized, converted to WebP, and stripped of metadata
     alt: Translucent red-orange and blue molecular orbital lobes surrounding a small ball-and-stick molecule
+  openwfn-wordmark.png:
+    source: Original generated openWFN Molecular Signal wordmark
+    license: MIT project asset
+    transformation: Generated from the approved Molecular Signal direction with exact openWFN and Wavefunction Analysis text on a transparent background
+    alt: openWFN — Wavefunction Analysis

@@ -10,7 +10,7 @@ hide:
 <section class="ow-hero">
   <div class="ow-hero__copy" markdown="1">
 
-<p class="ow-kicker">Open computational chemistry</p>
+<img class="ow-brand-lockup" src="assets/images/openwfn-wordmark.png" alt="openWFN — Wavefunction Analysis" width="620" height="230">
 
 <h1>Wavefunction analysis you can inspect, reproduce, and trust.</h1>
 
