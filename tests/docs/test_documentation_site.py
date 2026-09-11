@@ -145,6 +145,18 @@ def test_molecular_signal_wordmark_is_used_consistently() -> None:
     assert 'content: "Wavefunction Analysis"' in styles
 
 
+def test_header_has_no_duplicate_plain_title_and_home_identifies_toolkit() -> None:
+    home = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
+    styles = (ROOT / "docs" / "stylesheets" / "extra.css").read_text(encoding="utf-8")
+
+    assert ".md-header__topic { display: none; }" in styles
+    assert ".md-header__title { display: none; }" not in styles
+    assert (
+        "openWFN is an open, reproducible wavefunction analysis toolkit "
+        "for computational chemistry."
+    ) in home
+
+
 def test_python_workflow_uses_real_calculation_accessors() -> None:
     workflow = (ROOT / "docs" / "guides" / "python-workflows.md").read_text(
         encoding="utf-8"

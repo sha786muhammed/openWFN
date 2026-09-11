@@ -83,7 +83,7 @@
   letter-spacing: 0.01em;
 }
 
-.md-header__topic:first-child { display: none; }
+.md-header__topic { display: none; }
 
 .md-typeset {
   color: var(--ow-ink);
