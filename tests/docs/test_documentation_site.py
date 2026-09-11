@@ -112,7 +112,7 @@ def test_homepage_uses_compact_product_components() -> None:
 def test_material_icon_library_and_brand_identity_are_configured() -> None:
     config = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
 
-    assert "logo: material/atom-variant" in config
+    assert "logo: assets/images/openwfn-wordmark.png" in config
     assert "pymdownx.emoji" in config
     assert "material.extensions.emoji.twemoji" in config
     assert "material.extensions.emoji.to_svg" in config
@@ -124,6 +124,25 @@ def test_readme_opens_with_visual_product_identity() -> None:
     assert '<p align="center">' in readme
     assert "openwfn-orbital-hero.webp" in readme
     assert "Wavefunction analysis for reproducible molecular insight" in readme
+
+
+def test_molecular_signal_wordmark_is_used_consistently() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    home = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
+    config = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
+    styles = (ROOT / "docs" / "stylesheets" / "extra.css").read_text(encoding="utf-8")
+    wordmark_path = ROOT / "docs" / "assets" / "images" / "openwfn-wordmark.png"
+
+    assert wordmark_path.exists()
+    assert 'src="docs/assets/images/openwfn-wordmark.png"' in readme
+    assert 'width="300" alt="openWFN molecular orbital visualization"' in readme
+    assert 'alt="openWFN — Wavefunction Analysis"' in readme
+    assert "𝕠𝕡𝕖𝕟𝕎𝔽ℕ" not in readme
+    assert 'class="ow-brand-lockup"' in home
+    assert 'alt="openWFN — Wavefunction Analysis"' in home
+    assert "logo: assets/images/openwfn-wordmark.png" in config
+    assert ".md-header__button.md-logo img" in styles
+    assert 'content: "Wavefunction Analysis"' in styles
 
 
 def test_python_workflow_uses_real_calculation_accessors() -> None:
