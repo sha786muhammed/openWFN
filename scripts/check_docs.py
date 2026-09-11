@@ -10,7 +10,10 @@ from collections.abc import Iterator, Sequence
 from pathlib import Path
 from urllib.parse import unquote
 
-import tomllib
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - Python 3.10 compatibility
+    import tomli as tomllib
 
 LINK_PATTERN = re.compile(r"(?<!!)\[[^]]+\]\(([^)]+)\)")
 PRIVATE_PATTERNS = (
