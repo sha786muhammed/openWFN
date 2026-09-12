@@ -1,4 +1,4 @@
-"""Vectorized normalized Cartesian Gaussian basis evaluation."""
+"""Vectorized normalized Gaussian basis evaluation with Gaussian 5D support."""
 
 import math
 
@@ -17,6 +17,19 @@ _CARTESIAN_POWERS: dict[int, tuple[tuple[int, int, int], ...]] = {
         (2, 0, 1), (1, 0, 2), (0, 1, 2), (0, 2, 1), (1, 1, 1),
     ),
 }
+
+# Gaussian FCHK pure-d order: c0, c1, s1, c2, s2.
+# The Cartesian working order above is xx, yy, zz, xy, xz, yz.
+_PURE_D_FROM_CARTESIAN = np.asarray(
+    (
+        (-0.5, -0.5, 1.0, 0.0, 0.0, 0.0),
+        (0.0, 0.0, 0.0, 0.0, 1.0, 0.0),
+        (0.0, 0.0, 0.0, 0.0, 0.0, 1.0),
+        (math.sqrt(3.0) / 2.0, -math.sqrt(3.0) / 2.0, 0.0, 0.0, 0.0, 0.0),
+        (0.0, 0.0, 0.0, 1.0, 0.0, 0.0),
+    ),
+    dtype=float,
+)
 
 
 def _double_factorial(value: int) -> int:
@@ -71,6 +84,14 @@ def _evaluate_contraction(
     return polynomial * (radial @ (coefficient_array * primitive_norms)) * contraction_scale
 
 
+def _pure_transform(angular_momentum: int) -> np.ndarray:
+    if angular_momentum == 2:
+        return _PURE_D_FROM_CARTESIAN
+    raise DataUnavailableError(
+        f"Pure angular momentum {angular_momentum} requires a spherical transformation."
+    )
+
+
 def evaluate_ao(basis: BasisSet, molecule: Molecule, points_bohr: np.ndarray) -> np.ndarray:
     """Evaluate ordered atomic-orbital basis functions at Bohr-coordinate points."""
 
@@ -94,18 +115,24 @@ def evaluate_ao(basis: BasisSet, molecule: Molecule, points_bohr: np.ndarray) ->
             raise DataUnavailableError(
                 f"Gaussian angular momentum {shell.angular_momentum} is not supported by this evaluator."
             )
+        shell_columns = [
+            _evaluate_contraction(displacement, shell.exponents, shell.coefficients, powers)
+            for powers in _CARTESIAN_POWERS[shell.angular_momentum]
+        ]
         if shell.pure and shell.angular_momentum >= 2:
-            raise DataUnavailableError(
-                f"Pure angular momentum {shell.angular_momentum} requires a spherical transformation."
-            )
-        for powers in _CARTESIAN_POWERS[shell.angular_momentum]:
-            columns.append(_evaluate_contraction(displacement, shell.exponents, shell.coefficients, powers))
+            cartesian_values = np.column_stack(shell_columns)
+            pure_values = cartesian_values @ _pure_transform(shell.angular_momentum).T
+            columns.extend(pure_values[:, index] for index in range(pure_values.shape[1]))
+        else:
+            columns.extend(shell_columns)
     return np.column_stack(columns) if columns else np.empty((len(points), 0), dtype=float)
 
 
 def _function_specs(
     basis: BasisSet,
 ) -> list[tuple[int, tuple[float, ...], tuple[float, ...], tuple[int, int, int]]]:
+    """Return the Cartesian working representation used for analytic overlaps."""
+
     specs: list[tuple[int, tuple[float, ...], tuple[float, ...], tuple[int, int, int]]] = []
     for shell in basis.shells:
         if shell.angular_momentum == -1:
@@ -122,9 +149,7 @@ def _function_specs(
                 f"Gaussian angular momentum {shell.angular_momentum} is not supported by this evaluator."
             )
         if shell.pure and shell.angular_momentum >= 2:
-            raise DataUnavailableError(
-                f"Pure angular momentum {shell.angular_momentum} requires a spherical transformation."
-            )
+            _pure_transform(shell.angular_momentum)
         specs.extend(
             (shell.atom_index, shell.exponents, shell.coefficients, powers)
             for powers in _CARTESIAN_POWERS[shell.angular_momentum]
@@ -132,10 +157,45 @@ def _function_specs(
     return specs
 
 
+def _basis_transform(basis: BasisSet) -> np.ndarray:
+    """Map the Cartesian working basis into Gaussian's final AO ordering."""
+
+    cartesian_size = 0
+    final_size = 0
+    blocks: list[tuple[int, int, np.ndarray]] = []
+    for shell in basis.shells:
+        if shell.angular_momentum == -1:
+            block = np.eye(4, dtype=float)
+        elif shell.angular_momentum not in _CARTESIAN_POWERS:
+            raise DataUnavailableError(
+                f"Gaussian angular momentum {shell.angular_momentum} is not supported by this evaluator."
+            )
+        elif shell.pure and shell.angular_momentum >= 2:
+            block = _pure_transform(shell.angular_momentum)
+        else:
+            block = np.eye(len(_CARTESIAN_POWERS[shell.angular_momentum]), dtype=float)
+        blocks.append((final_size, cartesian_size, block))
+        final_size += block.shape[0]
+        cartesian_size += block.shape[1]
+
+    transform = np.zeros((final_size, cartesian_size), dtype=float)
+    for final_offset, cartesian_offset, block in blocks:
+        rows, columns = block.shape
+        transform[
+            final_offset : final_offset + rows,
+            cartesian_offset : cartesian_offset + columns,
+        ] = block
+    return transform
+
+
 def ao_atom_indices(basis: BasisSet) -> tuple[int, ...]:
     """Return the zero-based center atom for each AO in Gaussian function order."""
 
-    return tuple(spec[0] for spec in _function_specs(basis))
+    return tuple(
+        shell.atom_index
+        for shell in basis.shells
+        for _ in range(shell.n_functions)
+    )
 
 
 def _contraction_scale(
@@ -187,11 +247,11 @@ def _overlap_1d(
 
 
 def overlap_matrix(basis: BasisSet, molecule: Molecule) -> np.ndarray:
-    """Evaluate the normalized Cartesian AO overlap matrix analytically."""
+    """Evaluate the normalized AO overlap matrix analytically."""
 
     specs = _function_specs(basis)
     centers = [np.asarray(molecule.atoms[atom].coordinates) / BOHR_TO_ANGSTROM for atom, *_ in specs]
-    matrix = np.empty((len(specs), len(specs)), dtype=float)
+    cartesian_matrix = np.empty((len(specs), len(specs)), dtype=float)
     for left, (_, exponents_a, coefficients_a, powers_a) in enumerate(specs):
         scale_a = _contraction_scale(exponents_a, coefficients_a, powers_a)
         for right in range(left + 1):
@@ -218,5 +278,7 @@ def overlap_matrix(basis: BasisSet, molecule: Molecule) -> np.ndarray:
                         * _primitive_normalization(beta, powers_b)
                         * integral
                     )
-            matrix[left, right] = matrix[right, left] = value * scale_a * scale_b
-    return matrix
+            cartesian_matrix[left, right] = cartesian_matrix[right, left] = value * scale_a * scale_b
+
+    transform = _basis_transform(basis)
+    return transform @ cartesian_matrix @ transform.T
