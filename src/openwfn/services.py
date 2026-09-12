@@ -11,13 +11,37 @@ from .analysis.population import lowdin_population, mulliken_population
 from .constants import BOHR_TO_ANGSTROM
 from .errors import DataUnavailableError
 from .exporters.cube import write_cube
-from .geometry import angle, dihedral, distance
+from .geometry import angle, center_of_mass, detect_bonds, dihedral, distance, molecular_formula
+from .graph import build_graph
 from .model import CalculationData, Molecule
 from .results import ResultRecord
 
 
 def _coordinates(molecule: Molecule) -> list[tuple[float, float, float]]:
     return [atom.coordinates for atom in molecule.atoms]
+
+
+def molecular_summary(data: CalculationData) -> ResultRecord:
+    atomic_numbers = [atom.atomic_number for atom in data.molecule.atoms]
+    coordinates = _coordinates(data.molecule)
+    bonds = detect_bonds(atomic_numbers, coordinates)
+    fragments = build_graph(len(atomic_numbers), bonds).connected_components()
+    com = center_of_mass(atomic_numbers, coordinates)
+    return ResultRecord(
+        kind="summary",
+        data={
+            "formula": molecular_formula(atomic_numbers),
+            "atom_count": len(atomic_numbers),
+            "charge": data.molecule.charge,
+            "multiplicity": data.molecule.multiplicity,
+            "center_of_mass": [round(value, 6) for value in com],
+            "energy_hartree": data.molecule.metadata.energy_hartree,
+            "bond_count": len(bonds),
+            "fragments": len(fragments),
+        },
+        units={"center_of_mass": "angstrom", "energy_hartree": "hartree"},
+        validation_status="Stable",
+    )
 
 
 def geometry_distance(molecule: Molecule, atom_i: int, atom_j: int) -> ResultRecord:
