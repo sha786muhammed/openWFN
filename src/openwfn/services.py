@@ -31,7 +31,7 @@ def molecular_summary(data: CalculationData) -> ResultRecord:
         kind="summary",
         data={
             "formula": molecular_formula(atomic_numbers),
-            "atom_count": len(atomic_numbers),
+            "atoms": len(atomic_numbers),
             "charge": data.molecule.charge,
             "multiplicity": data.molecule.multiplicity,
             "center_of_mass": [round(value, 6) for value in com],
