@@ -28,9 +28,16 @@ def test_summary_honors_json_format() -> None:
     payload = json.loads(result.stdout)
     assert payload["kind"] == "summary"
     assert payload["data"]["formula"] == "H2O"
-    assert payload["data"]["atom_count"] == 3
+    assert payload["data"]["atoms"] == 3
     assert payload["data"]["charge"] == 0
     assert payload["data"]["multiplicity"] == 1
+
+
+def test_summary_table_keeps_atoms_label() -> None:
+    result = run_cli(str(WATER), "summary")
+
+    assert result.returncode == 0, result.stderr
+    assert "Atoms: 3" in result.stdout
 
 
 def test_mol_header_uses_installed_package_version(tmp_path: Path) -> None:
