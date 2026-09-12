@@ -301,8 +301,11 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("an input file is required unless --version is used")
 
     if args.command == "summary":
-        calculation = load_calculation(Path(args.file))
-        return execute(lambda: molecular_summary(calculation), _context(args))
+        def summary_operation() -> ResultRecord:
+            calculation = load_calculation(Path(args.file))
+            return molecular_summary(calculation)
+
+        return execute(summary_operation, _context(args))
 
     if args.command == "geometry":
         context = _context(args)
