@@ -41,6 +41,31 @@ def test_combined_sp_shell_produces_one_s_and_three_p_functions() -> None:
     assert values.shape == (1, 4)
 
 
+def test_pure_d_shell_uses_gaussian_5d_order_and_normalization() -> None:
+    basis = BasisSet((BasisShell(0, 2, (1.0,), (1.0,), pure=True),))
+    points = np.array(
+        (
+            (0.0, 0.0, 1.0),
+            (1.0, 0.0, 0.0),
+            (1.0, 1.0, 0.0),
+        )
+    )
+
+    values = evaluate_ao(basis, _atom(), points)
+    matrix = overlap_matrix(basis, _atom())
+
+    assert values.shape == (3, 5)
+    # Gaussian FCHK pure-d order is c0, c1, s1, c2, s2.
+    assert values[0, 0] > 0.0
+    assert values[0, 1:] == pytest.approx((0.0, 0.0, 0.0, 0.0), abs=1e-15)
+    assert values[1, 0] < 0.0
+    assert values[1, 3] > 0.0
+    assert values[1, (1, 2, 4)] == pytest.approx((0.0, 0.0, 0.0), abs=1e-15)
+    assert values[2, 4] > 0.0
+    np.testing.assert_allclose(matrix, np.eye(5), atol=1e-12)
+    assert ao_atom_indices(basis) == (0, 0, 0, 0, 0)
+
+
 def test_overlap_matrix_for_normalized_separated_s_functions() -> None:
     molecule = Molecule(
         (
