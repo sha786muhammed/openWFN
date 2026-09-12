@@ -29,7 +29,7 @@ def resolve_checkpoint(
     formchk = executable or shutil.which("formchk")
     if formchk is None:
         raise ExternalProgramError(
-            "Gaussian checkpoint conversion requires formchk, but it was not found in PATH. "
+            "Gaussian checkpoint conversion requires `formchk`, but it was not found in PATH. "
             "Install Gaussian utilities or run: formchk input.chk output.fchk"
         )
     try:

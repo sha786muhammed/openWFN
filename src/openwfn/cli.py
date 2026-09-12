@@ -33,6 +33,7 @@ from .services import (
     geometry_angle,
     geometry_dihedral,
     geometry_distance,
+    molecular_summary,
     orbital_frontier,
     population_analysis,
 )
@@ -43,7 +44,7 @@ from .workbench.export import export_workbench_record
 # -------------------------------------------------
 
 def convert_chk_to_fchk(file: str, output: str | None = None, *, quiet: bool = False) -> str:
-    """Convert a Gaussian .chk file into a .fchk file."""
+    """Convert a Gaussian .chk file into a formatted checkpoint file."""
     if not file.endswith(".chk"):
         raise ValueError("Checkpoint conversion requires a Gaussian `.chk` input file.")
 
@@ -87,6 +88,20 @@ def load_data(filename: str) -> tuple[str, dict[str, Any], list[int], list[tuple
     return fchk_file, scalars, atomic_numbers, coordinates
 
 
+def _context(args: argparse.Namespace) -> CommandContext:
+    return CommandContext(
+        input_path=Path(args.file),
+        output_path=args.output,
+        format="plain" if args.plain else args.format,
+        color=not args.no_color and args.format == "table",
+        quiet=args.quiet,
+        verbose=args.verbose,
+        debug=args.debug,
+        compact=args.compact,
+        overwrite=args.overwrite,
+    )
+
+
 # -------------------------------------------------
 # Main CLI
 # -------------------------------------------------
@@ -97,7 +112,7 @@ def main(argv: list[str] | None = None) -> int:
         description=(
             "openWFN — reproducible Gaussian wavefunction analysis, reporting, "
             "and offline molecular visualization."
-        )
+        ),
     )
 
     parser.add_argument("--version", action="version", version=f"openWFN {__version__}")
@@ -113,44 +128,31 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--non-interactive", action="store_true")
     parser.add_argument("file", nargs="?", help="Molecular or quantum-chemistry input file")
 
-    subparsers = parser.add_subparsers(
-        dest="command",
-        metavar="COMMAND",
-    )
+    subparsers = parser.add_subparsers(dest="command", metavar="COMMAND")
 
-    # summary (now the default view)
     subparsers.add_parser("summary", help="Show professional molecular summary")
-
-    # info
     subparsers.add_parser("info", help="Show detailed FCHK metadata")
 
-    # ... [rest of parsers remain same] ...
-    # distance
     p_dist = subparsers.add_parser("dist", help="Distance between two atoms")
     p_dist.add_argument("i", type=int)
     p_dist.add_argument("j", type=int)
 
-    # angle
     p_angle = subparsers.add_parser("angle", help="Bond angle i-j-k")
     p_angle.add_argument("i", type=int)
     p_angle.add_argument("j", type=int)
     p_angle.add_argument("k", type=int)
 
-    # dihedral
     p_dih = subparsers.add_parser("dihedral", help="Dihedral i-j-k-l")
     p_dih.add_argument("i", type=int)
     p_dih.add_argument("j", type=int)
     p_dih.add_argument("k", type=int)
     p_dih.add_argument("l", type=int)
 
-    # bonds
     subparsers.add_parser("bonds", help="Detect covalent bonds")
 
-    # xyz
     p_xyz = subparsers.add_parser("xyz", help="Export XYZ file")
     p_xyz.add_argument("output", help="Output XYZ filename")
 
-    # formchk
     p_formchk = subparsers.add_parser(
         "formchk",
         help="Convert a Gaussian checkpoint (.chk) file into a formatted checkpoint (.fchk)",
@@ -161,8 +163,9 @@ def main(argv: list[str] | None = None) -> int:
         help="Optional output .fchk path (defaults to the input name with .fchk)",
     )
 
-    # view
-    p_view = subparsers.add_parser("view", help="Export a standalone local HTML molecule viewer with atom labels")
+    p_view = subparsers.add_parser(
+        "view", help="Export a standalone local HTML molecule viewer with atom labels"
+    )
     p_view.add_argument("--save", help="Optional HTML output path")
     p_view.add_argument("--open", action="store_true", help="Open the exported viewer in your default browser")
     p_view.add_argument("--no-open", action="store_true", help=argparse.SUPPRESS)
@@ -174,14 +177,12 @@ def main(argv: list[str] | None = None) -> int:
         help="Viewer rendering style",
     )
 
-    # interactive
     subparsers.add_parser("interactive", help="Launch interactive menu mode")
-
-    # graph
     subparsers.add_parser("graph", help="Show molecular graph components")
 
-    # preferred nested geometry interface
-    p_geometry = subparsers.add_parser("geometry", help="Distances, angles, dihedrals, and geometry properties")
+    p_geometry = subparsers.add_parser(
+        "geometry", help="Distances, angles, dihedrals, and geometry properties"
+    )
     geometry_commands = p_geometry.add_subparsers(dest="geometry_command", required=True)
     p_geometry_distance = geometry_commands.add_parser("distance", help="Distance between two atoms")
     p_geometry_distance.add_argument("i", type=int)
@@ -236,7 +237,8 @@ def main(argv: list[str] | None = None) -> int:
     p_report_build.add_argument("report_output", type=Path)
     p_report_build.add_argument("--report-format", choices=["html", "markdown"], default="html")
     p_report_build.add_argument(
-        "--analyses", default="summary,frontier,mulliken,lowdin",
+        "--analyses",
+        default="summary,frontier,mulliken,lowdin",
         help="Comma-separated analyses",
     )
 
@@ -270,10 +272,14 @@ def main(argv: list[str] | None = None) -> int:
     p_batch.add_argument("--output-dir", type=Path, required=True)
     p_batch.add_argument("--fail-fast", action="store_true")
 
-    subparsers.add_parser("validate", help="Validate numerical density electron conservation")
+    p_validate = subparsers.add_parser(
+        "validate", help="Validate numerical density electron conservation"
+    )
+    p_validate.add_argument("--spacing", type=float, default=0.15, help="Grid spacing in bohr")
+    p_validate.add_argument("--padding", type=float, default=6.0, help="Padding around molecule in bohr")
+
     subparsers.add_parser("doctor", help="Inspect parsed data and available analysis capabilities")
 
-    # mo
     p_mo = subparsers.add_parser(
         "mo",
         help=argparse.SUPPRESS,
@@ -282,7 +288,6 @@ def main(argv: list[str] | None = None) -> int:
     p_mo.add_argument("index", type=int, help="MO index")
     p_mo.add_argument("--export", required=True, help="Output VTK file path")
 
-    # Keep the obsolete developer-only MO-grid command out of public help.
     subparsers._choices_actions = [  # type: ignore[attr-defined]
         action
         for action in subparsers._choices_actions  # type: ignore[attr-defined]
@@ -295,18 +300,15 @@ def main(argv: list[str] | None = None) -> int:
     if args.file is None:
         parser.error("an input file is required unless --version is used")
 
+    if args.command == "summary":
+        def summary_operation() -> ResultRecord:
+            calculation = load_calculation(Path(args.file))
+            return molecular_summary(calculation)
+
+        return execute(summary_operation, _context(args))
+
     if args.command == "geometry":
-        context = CommandContext(
-            input_path=Path(args.file),
-            output_path=args.output,
-            format="plain" if args.plain else args.format,
-            color=not args.no_color and args.format == "table",
-            quiet=args.quiet,
-            verbose=args.verbose,
-            debug=args.debug,
-            compact=args.compact,
-            overwrite=args.overwrite,
-        )
+        context = _context(args)
         calculation = load_calculation(Path(args.file))
         operations = {
             "distance": lambda: geometry_distance(calculation.molecule, args.i, args.j),
@@ -318,43 +320,18 @@ def main(argv: list[str] | None = None) -> int:
         return execute(operations[args.geometry_command], context)
 
     if args.command == "population":
-        context = CommandContext(
-            input_path=Path(args.file),
-            output_path=args.output,
-            format="plain" if args.plain else args.format,
-            color=not args.no_color and args.format == "table",
-            quiet=args.quiet,
-            verbose=args.verbose,
-            debug=args.debug,
-            compact=args.compact,
-            overwrite=args.overwrite,
-        )
         calculation = load_calculation(Path(args.file))
-        return execute(lambda: population_analysis(calculation, args.population_method), context)
+        return execute(
+            lambda: population_analysis(calculation, args.population_method),
+            _context(args),
+        )
 
     if args.command == "orbitals":
-        context = CommandContext(
-            input_path=Path(args.file),
-            output_path=args.output,
-            format="plain" if args.plain else args.format,
-            color=not args.no_color and args.format == "table",
-            quiet=args.quiet,
-            verbose=args.verbose,
-            debug=args.debug,
-            compact=args.compact,
-            overwrite=args.overwrite,
-        )
         calculation = load_calculation(Path(args.file))
-        return execute(lambda: orbital_frontier(calculation, args.spin), context)
+        return execute(lambda: orbital_frontier(calculation, args.spin), _context(args))
 
     if args.command == "density":
-        context = CommandContext(
-            input_path=Path(args.file), output_path=args.output,
-            format="plain" if args.plain else args.format,
-            color=not args.no_color and args.format == "table", quiet=args.quiet,
-            verbose=args.verbose, debug=args.debug, compact=args.compact,
-            overwrite=args.overwrite,
-        )
+        context = _context(args)
         calculation = load_calculation(Path(args.file))
         if args.density_command == "integrate":
             return execute(
@@ -363,76 +340,61 @@ def main(argv: list[str] | None = None) -> int:
             )
         return execute(
             lambda: density_cube_export(
-                calculation, args.kind, args.spacing, args.padding,
-                args.cube_output, args.overwrite,
+                calculation,
+                args.kind,
+                args.spacing,
+                args.padding,
+                args.cube_output,
+                args.overwrite,
             ),
             context,
         )
 
     if args.command == "esp":
-        context = CommandContext(
-            input_path=Path(args.file), output_path=args.output,
-            format="plain" if args.plain else args.format,
-            color=not args.no_color and args.format == "table", quiet=args.quiet,
-            verbose=args.verbose, debug=args.debug, compact=args.compact,
-            overwrite=args.overwrite,
-        )
         calculation = load_calculation(Path(args.file))
         return execute(
             lambda: electrostatic_potential_point(
-                calculation, (args.x, args.y, args.z), args.component,
-                args.spacing, args.padding,
+                calculation,
+                (args.x, args.y, args.z),
+                args.component,
+                args.spacing,
+                args.padding,
             ),
-            context,
+            _context(args),
         )
 
     if args.command == "report":
-        context = CommandContext(
-            input_path=Path(args.file), output_path=args.output,
-            format="plain" if args.plain else args.format,
-            color=not args.no_color and args.format == "table", quiet=args.quiet,
-            verbose=args.verbose, debug=args.debug, compact=args.compact,
-            overwrite=args.overwrite,
-        )
         calculation = load_calculation(Path(args.file))
         analyses = tuple(item.strip() for item in args.analyses.split(",") if item.strip())
         command = "openwfn " + " ".join(raw_arguments)
         return execute(
             lambda: build_report_record(
-                calculation, analyses, args.report_output, args.report_format,
-                command, args.overwrite,
+                calculation,
+                analyses,
+                args.report_output,
+                args.report_format,
+                command,
+                args.overwrite,
             ),
-            context,
+            _context(args),
         )
 
     if args.command == "workbench":
         calculation = load_calculation(Path(args.file))
         output = args.workbench_output or Path(f"{Path(args.file).stem}-workbench.html")
-        context = CommandContext(
-            input_path=Path(args.file), output_path=args.output,
-            format="plain" if args.plain else args.format,
-            color=not args.no_color and args.format == "table", quiet=args.quiet,
-            verbose=args.verbose, debug=args.debug, compact=args.compact,
-            overwrite=args.overwrite,
-        )
         status = execute(
             lambda: export_workbench_record(calculation, output, overwrite=args.overwrite),
-            context,
+            _context(args),
         )
         if status == 0 and args.open_workbench:
             webbrowser.open(output.resolve().as_uri())
         return status
 
     if args.command in {"cube", "convert", "export", "plot", "batch", "validate", "doctor"}:
-        context = CommandContext(
-            input_path=Path(args.file), output_path=args.output,
-            format="plain" if args.plain else args.format,
-            color=not args.no_color and args.format == "table", quiet=args.quiet,
-            verbose=args.verbose, debug=args.debug, compact=args.compact,
-            overwrite=args.overwrite,
-        )
+        context = _context(args)
         if args.command == "batch":
             inputs = [Path(args.file), *args.inputs]
+
             def batch_operation() -> ResultRecord:
                 manifest = run_batch(
                     inputs, args.operation, args.workers, args.output_dir, args.fail_fast
@@ -448,16 +410,24 @@ def main(argv: list[str] | None = None) -> int:
                         "manifest": str(args.output_dir / "batch-manifest.json"),
                     },
                 )
+
             return execute(batch_operation, context)
 
         calculation = load_calculation(Path(args.file))
+
         if args.command == "cube":
             return execute(
                 lambda: density_cube_export(
-                    calculation, args.kind, args.spacing, args.padding,
-                    args.cube_output, args.overwrite,
-                ), context,
+                    calculation,
+                    args.kind,
+                    args.spacing,
+                    args.padding,
+                    args.cube_output,
+                    args.overwrite,
+                ),
+                context,
             )
+
         if args.command == "convert":
             def convert_operation() -> ResultRecord:
                 write_structure(
@@ -467,7 +437,9 @@ def main(argv: list[str] | None = None) -> int:
                     kind="structure_export",
                     data={"format": args.to, "output": str(args.convert_output)},
                 )
+
             return execute(convert_operation, context)
+
         if args.command == "export":
             def export_operation() -> ResultRecord:
                 result = (
@@ -484,7 +456,9 @@ def main(argv: list[str] | None = None) -> int:
                     kind="table_export",
                     data={"analysis": args.analysis, "output": str(args.export_output)},
                 )
+
             return execute(export_operation, context)
+
         if args.command == "plot":
             def plot_operation() -> ResultRecord:
                 if calculation.alpha_orbitals is None:
@@ -499,11 +473,17 @@ def main(argv: list[str] | None = None) -> int:
                     kind="figure_export",
                     data={"analysis": "frontier", "output": str(args.plot_output)},
                 )
+
             return execute(plot_operation, context)
+
         if args.command == "validate":
             return execute(
-                lambda: density_integration(calculation, "total", 0.15, 6.0), context
+                lambda: density_integration(
+                    calculation, "total", args.spacing, args.padding
+                ),
+                context,
             )
+
         available = {
             "basis": calculation.basis is not None,
             "orbitals": calculation.alpha_orbitals is not None,
@@ -513,7 +493,8 @@ def main(argv: list[str] | None = None) -> int:
             lambda: ResultRecord(
                 kind="doctor",
                 data={"input": str(args.file), "capabilities": available},
-            ), context,
+            ),
+            context,
         )
 
     if getattr(args, "command", None) == "formchk":
@@ -525,12 +506,12 @@ def main(argv: list[str] | None = None) -> int:
         utils.print_success(f"Formatted checkpoint ready: {output_path}")
         return 0
 
-    # If no subcommand → default to interactive if it's a TTY, else summary
     if getattr(args, "command", None) is None:
         if sys.stdin.isatty():
             args.command = "interactive"  # type: ignore
         else:
-            args.command = "summary"  # type: ignore
+            calculation = load_calculation(Path(args.file))
+            return execute(lambda: molecular_summary(calculation), _context(args))
 
     filename = args.file
     try:
@@ -541,39 +522,32 @@ def main(argv: list[str] | None = None) -> int:
 
     lines = read_fchk(fchk_file)
 
-    # -----------------------------
-    # Commands
-    # -----------------------------
-
     try:
-        if args.command == "summary": # type: ignore
-            return cmd.cmd_summary(scalars, atomic_numbers, coordinates)
-
-        if args.command == "info": # type: ignore
+        if args.command == "info":  # type: ignore
             return cmd.cmd_info(scalars, atomic_numbers, coordinates)
 
-        if args.command == "dist": # type: ignore
+        if args.command == "dist":  # type: ignore
             return cmd.cmd_dist(args.i, args.j, coordinates)
 
-        if args.command == "angle": # type: ignore
+        if args.command == "angle":  # type: ignore
             return cmd.cmd_angle(args.i, args.j, args.k, coordinates)
 
-        if args.command == "dihedral": # type: ignore
+        if args.command == "dihedral":  # type: ignore
             return cmd.cmd_dihedral(args.i, args.j, args.k, args.l, coordinates)
 
-        if args.command == "bonds": # type: ignore
+        if args.command == "bonds":  # type: ignore
             return cmd.cmd_bonds(atomic_numbers, coordinates)
 
-        if args.command == "graph": # type: ignore
+        if args.command == "graph":  # type: ignore
             return cmd.cmd_graph(atomic_numbers, coordinates)
 
-        if args.command == "mo": # type: ignore
+        if args.command == "mo":  # type: ignore
             return cmd.cmd_mo(filename, args.index, args.export, lines, coordinates)
 
-        if args.command == "xyz": # type: ignore
+        if args.command == "xyz":  # type: ignore
             return cmd.cmd_xyz(args.output, atomic_numbers, coordinates)
 
-        if args.command == "view": # type: ignore
+        if args.command == "view":  # type: ignore
             output_path = args.save or f"{Path(filename).stem}_viewer.html"
             return cmd.cmd_view(
                 output_path,
@@ -584,7 +558,7 @@ def main(argv: list[str] | None = None) -> int:
                 style=args.style,
             )
 
-        if args.command == "interactive": # type: ignore
+        if args.command == "interactive":  # type: ignore
             run_interactive(lines, fchk_file)
             return 0
     except Exception as e:

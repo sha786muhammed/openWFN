@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from .. import __version__
 from ..constants import Z_TO_SYMBOL
 from ..model import Molecule
 
@@ -39,7 +40,7 @@ def write_structure(
             lines.append(f"CONECT{bond.atom1 + 1:5d}{bond.atom2 + 1:5d}")
         lines.append("END")
     else:
-        lines = ["openWFN", "  openWFN 0.7.0", ""]
+        lines = ["openWFN", f"  openWFN {__version__}", ""]
         lines.append(f"{len(molecule.atoms):3d}{len(molecule.bonds):3d}  0  0  0  0            999 V2000")
         for atom in molecule.atoms:
             symbol = Z_TO_SYMBOL[atom.atomic_number]
