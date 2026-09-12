@@ -66,6 +66,28 @@ def test_pure_d_shell_uses_gaussian_5d_order_and_normalization() -> None:
     assert ao_atom_indices(basis) == (0, 0, 0, 0, 0)
 
 
+@pytest.mark.parametrize(("momentum", "count"), ((3, 7), (4, 9), (5, 11)))
+def test_pure_high_angular_momentum_shell_has_expected_function_count(
+    momentum: int, count: int
+) -> None:
+    basis = BasisSet((BasisShell(0, momentum, (1.0,), (1.0,), pure=True),))
+    points = np.array(((0.2, 0.3, 0.4),))
+
+    values = evaluate_ao(basis, _atom(), points)
+
+    assert values.shape == (1, count)
+    assert ao_atom_indices(basis) == (0,) * count
+
+
+@pytest.mark.parametrize(("momentum", "count"), ((3, 7), (4, 9), (5, 11)))
+def test_pure_high_angular_momentum_overlap_is_orthonormal(momentum: int, count: int) -> None:
+    basis = BasisSet((BasisShell(0, momentum, (1.0,), (1.0,), pure=True),))
+
+    matrix = overlap_matrix(basis, _atom())
+
+    np.testing.assert_allclose(matrix, np.eye(count), atol=1e-11)
+
+
 def test_overlap_matrix_for_normalized_separated_s_functions() -> None:
     molecule = Molecule(
         (
@@ -100,7 +122,7 @@ def test_combined_sp_shell_maps_all_four_functions_to_its_atom() -> None:
 
 
 def test_unsupported_higher_angular_momentum_is_explicit() -> None:
-    basis = BasisSet((BasisShell(0, 4, (1.0,), (1.0,)),))
+    basis = BasisSet((BasisShell(0, 6, (1.0,), (1.0,), pure=True),))
 
-    with pytest.raises(DataUnavailableError, match="angular momentum 4"):
+    with pytest.raises(DataUnavailableError, match="[Pp]ure angular momentum 6"):
         evaluate_ao(basis, _atom(), np.zeros((1, 3)))
