@@ -1,6 +1,7 @@
-"""Vectorized normalized Gaussian basis evaluation with Gaussian 5D support."""
+"""Vectorized normalized Gaussian basis evaluation with spherical D/F/G/H support."""
 
 import math
+from functools import cache
 
 import numpy as np
 
@@ -8,32 +9,46 @@ from ..constants import BOHR_TO_ANGSTROM
 from ..errors import DataUnavailableError
 from ..model import BasisSet, Molecule
 
-_CARTESIAN_POWERS: dict[int, tuple[tuple[int, int, int], ...]] = {
+# Gaussian FCHK uses special Cartesian ordering through F, then the reverse of
+# the usual alphabetical Cartesian order for G and higher shells.
+_GAUSSIAN_CARTESIAN_POWERS: dict[int, tuple[tuple[int, int, int], ...]] = {
     0: ((0, 0, 0),),
     1: ((1, 0, 0), (0, 1, 0), (0, 0, 1)),
     2: ((2, 0, 0), (0, 2, 0), (0, 0, 2), (1, 1, 0), (1, 0, 1), (0, 1, 1)),
     3: (
-        (3, 0, 0), (0, 3, 0), (0, 0, 3), (1, 2, 0), (2, 1, 0),
-        (2, 0, 1), (1, 0, 2), (0, 1, 2), (0, 2, 1), (1, 1, 1),
+        (3, 0, 0),
+        (0, 3, 0),
+        (0, 0, 3),
+        (1, 2, 0),
+        (2, 1, 0),
+        (2, 0, 1),
+        (1, 0, 2),
+        (0, 1, 2),
+        (0, 2, 1),
+        (1, 1, 1),
     ),
 }
-
-# Gaussian FCHK pure-d order: c0, c1, s1, c2, s2.
-# The Cartesian working order above is xx, yy, zz, xy, xz, yz.
-_PURE_D_FROM_CARTESIAN = np.asarray(
-    (
-        (-0.5, -0.5, 1.0, 0.0, 0.0, 0.0),
-        (0.0, 0.0, 0.0, 0.0, 1.0, 0.0),
-        (0.0, 0.0, 0.0, 0.0, 0.0, 1.0),
-        (math.sqrt(3.0) / 2.0, -math.sqrt(3.0) / 2.0, 0.0, 0.0, 0.0, 0.0),
-        (0.0, 0.0, 0.0, 1.0, 0.0, 0.0),
-    ),
-    dtype=float,
-)
 
 
 def _double_factorial(value: int) -> int:
     return 1 if value <= 0 else math.prod(range(value, 0, -2))
+
+
+def _cartesian_powers(angular_momentum: int) -> tuple[tuple[int, int, int], ...]:
+    """Return Gaussian FCHK Cartesian function ordering through H shells."""
+
+    if angular_momentum in _GAUSSIAN_CARTESIAN_POWERS:
+        return _GAUSSIAN_CARTESIAN_POWERS[angular_momentum]
+    if 4 <= angular_momentum <= 5:
+        alphabetical: list[tuple[int, int, int]] = []
+        for nx in range(angular_momentum, -1, -1):
+            for ny in range(angular_momentum - nx, -1, -1):
+                nz = angular_momentum - nx - ny
+                alphabetical.append((nx, ny, nz))
+        return tuple(reversed(alphabetical))
+    raise DataUnavailableError(
+        f"Gaussian angular momentum {angular_momentum} is not supported by this evaluator."
+    )
 
 
 def _primitive_normalization(alpha: float, powers: tuple[int, int, int]) -> float:
@@ -84,12 +99,147 @@ def _evaluate_contraction(
     return polynomial * (radial @ (coefficient_array * primitive_norms)) * contraction_scale
 
 
+Polynomial = dict[tuple[int, int, int], float]
+
+
+def _poly_add_scaled(target: Polynomial, source: Polynomial, factor: float) -> None:
+    for powers, coefficient in source.items():
+        value = target.get(powers, 0.0) + factor * coefficient
+        if abs(value) < 1e-15:
+            target.pop(powers, None)
+        else:
+            target[powers] = value
+
+
+def _poly_mul_axis(polynomial: Polynomial, axis: int) -> Polynomial:
+    result: Polynomial = {}
+    for powers, coefficient in polynomial.items():
+        updated = list(powers)
+        updated[axis] += 1
+        key = tuple(updated)
+        result[key] = result.get(key, 0.0) + coefficient
+    return result
+
+
+def _poly_mul_r2(polynomial: Polynomial) -> Polynomial:
+    result: Polynomial = {}
+    for axis in range(3):
+        squared = _poly_mul_axis(_poly_mul_axis(polynomial, axis), axis)
+        _poly_add_scaled(result, squared, 1.0)
+    return result
+
+
+def _scaled_polynomial(polynomial: Polynomial, factor: float) -> Polynomial:
+    return {powers: factor * coefficient for powers, coefficient in polynomial.items()}
+
+
+@cache
+def _real_solid_harmonics(angular_momentum: int) -> tuple[Polynomial, ...]:
+    """Generate C(l,m)/S(l,m) homogeneous polynomials in Gaussian pure order."""
+
+    if not 2 <= angular_momentum <= 5:
+        raise DataUnavailableError(
+            f"Pure angular momentum {angular_momentum} is not supported; validated range is 2 through 5."
+        )
+
+    cosine: dict[tuple[int, int], Polynomial] = {
+        (0, 0): {(0, 0, 0): 1.0},
+        (1, 0): {(0, 0, 1): 1.0},
+        (1, 1): {(1, 0, 0): 1.0},
+    }
+    sine: dict[tuple[int, int], Polynomial] = {
+        (1, 1): {(0, 1, 0): 1.0},
+    }
+
+    for degree in range(2, angular_momentum + 1):
+        edge_scale = math.sqrt((2 * degree - 1) / (2 * degree))
+
+        c_edge: Polynomial = {}
+        _poly_add_scaled(c_edge, _poly_mul_axis(cosine[(degree - 1, degree - 1)], 0), edge_scale)
+        _poly_add_scaled(c_edge, _poly_mul_axis(sine[(degree - 1, degree - 1)], 1), -edge_scale)
+        cosine[(degree, degree)] = c_edge
+
+        s_edge: Polynomial = {}
+        _poly_add_scaled(s_edge, _poly_mul_axis(sine[(degree - 1, degree - 1)], 0), edge_scale)
+        _poly_add_scaled(s_edge, _poly_mul_axis(cosine[(degree - 1, degree - 1)], 1), edge_scale)
+        sine[(degree, degree)] = s_edge
+
+        near_edge_scale = math.sqrt(2 * degree - 1)
+        cosine[(degree, degree - 1)] = _scaled_polynomial(
+            _poly_mul_axis(cosine[(degree - 1, degree - 1)], 2), near_edge_scale
+        )
+        sine[(degree, degree - 1)] = _scaled_polynomial(
+            _poly_mul_axis(sine[(degree - 1, degree - 1)], 2), near_edge_scale
+        )
+
+        for magnetic in range(0, degree - 1):
+            z_scale = (2 * degree - 1) / math.sqrt(
+                (degree + magnetic) * (degree - magnetic)
+            )
+            r2_scale = math.sqrt(
+                ((degree - magnetic - 1) * (degree + magnetic - 1))
+                / ((degree + magnetic) * (degree - magnetic))
+            )
+
+            c_poly: Polynomial = {}
+            _poly_add_scaled(
+                c_poly,
+                _poly_mul_axis(cosine[(degree - 1, magnetic)], 2),
+                z_scale,
+            )
+            _poly_add_scaled(
+                c_poly,
+                _poly_mul_r2(cosine[(degree - 2, magnetic)]),
+                -r2_scale,
+            )
+            cosine[(degree, magnetic)] = c_poly
+
+            if magnetic > 0:
+                s_poly: Polynomial = {}
+                _poly_add_scaled(
+                    s_poly,
+                    _poly_mul_axis(sine[(degree - 1, magnetic)], 2),
+                    z_scale,
+                )
+                _poly_add_scaled(
+                    s_poly,
+                    _poly_mul_r2(sine[(degree - 2, magnetic)]),
+                    -r2_scale,
+                )
+                sine[(degree, magnetic)] = s_poly
+
+    ordered: list[Polynomial] = [cosine[(angular_momentum, 0)]]
+    for magnetic in range(1, angular_momentum + 1):
+        ordered.append(cosine[(angular_momentum, magnetic)])
+        ordered.append(sine[(angular_momentum, magnetic)])
+    return tuple(ordered)
+
+
+@cache
 def _pure_transform(angular_momentum: int) -> np.ndarray:
-    if angular_momentum == 2:
-        return _PURE_D_FROM_CARTESIAN
-    raise DataUnavailableError(
-        f"Pure angular momentum {angular_momentum} requires a spherical transformation."
-    )
+    """Return normalized Cartesian-to-real-spherical transform in Gaussian order."""
+
+    if not 2 <= angular_momentum <= 5:
+        raise DataUnavailableError(
+            f"Pure angular momentum {angular_momentum} is not supported; validated range is 2 through 5."
+        )
+
+    cartesian = _cartesian_powers(angular_momentum)
+    pure_denominator = _double_factorial(2 * angular_momentum - 1)
+    rows: list[list[float]] = []
+    for polynomial in _real_solid_harmonics(angular_momentum):
+        row: list[float] = []
+        for powers in cartesian:
+            cartesian_denominator = math.prod(
+                _double_factorial(2 * power - 1) for power in powers
+            )
+            normalization_ratio = math.sqrt(cartesian_denominator / pure_denominator)
+            row.append(polynomial.get(powers, 0.0) * normalization_ratio)
+        rows.append(row)
+
+    transform = np.asarray(rows, dtype=float)
+    transform.setflags(write=False)
+    return transform
 
 
 def evaluate_ao(basis: BasisSet, molecule: Molecule, points_bohr: np.ndarray) -> np.ndarray:
@@ -108,20 +258,22 @@ def evaluate_ao(basis: BasisSet, molecule: Molecule, points_bohr: np.ndarray) ->
             if shell.p_coefficients is None:
                 raise ValueError("combined sp shell requires p coefficients")
             columns.append(_evaluate_contraction(displacement, shell.exponents, shell.coefficients, (0, 0, 0)))
-            for powers in _CARTESIAN_POWERS[1]:
+            for powers in _cartesian_powers(1):
                 columns.append(_evaluate_contraction(displacement, shell.exponents, shell.p_coefficients, powers))
             continue
-        if shell.angular_momentum not in _CARTESIAN_POWERS:
-            raise DataUnavailableError(
-                f"Gaussian angular momentum {shell.angular_momentum} is not supported by this evaluator."
-            )
+
+        if shell.pure and shell.angular_momentum >= 2:
+            transform = _pure_transform(shell.angular_momentum)
+        else:
+            transform = None
+        powers_order = _cartesian_powers(shell.angular_momentum)
         shell_columns = [
             _evaluate_contraction(displacement, shell.exponents, shell.coefficients, powers)
-            for powers in _CARTESIAN_POWERS[shell.angular_momentum]
+            for powers in powers_order
         ]
-        if shell.pure and shell.angular_momentum >= 2:
+        if transform is not None:
             cartesian_values = np.column_stack(shell_columns)
-            pure_values = cartesian_values @ _pure_transform(shell.angular_momentum).T
+            pure_values = cartesian_values @ transform.T
             columns.extend(pure_values[:, index] for index in range(pure_values.shape[1]))
         else:
             columns.extend(shell_columns)
@@ -141,18 +293,14 @@ def _function_specs(
             specs.append((shell.atom_index, shell.exponents, shell.coefficients, (0, 0, 0)))
             specs.extend(
                 (shell.atom_index, shell.exponents, shell.p_coefficients, powers)
-                for powers in _CARTESIAN_POWERS[1]
+                for powers in _cartesian_powers(1)
             )
             continue
-        if shell.angular_momentum not in _CARTESIAN_POWERS:
-            raise DataUnavailableError(
-                f"Gaussian angular momentum {shell.angular_momentum} is not supported by this evaluator."
-            )
         if shell.pure and shell.angular_momentum >= 2:
             _pure_transform(shell.angular_momentum)
         specs.extend(
             (shell.atom_index, shell.exponents, shell.coefficients, powers)
-            for powers in _CARTESIAN_POWERS[shell.angular_momentum]
+            for powers in _cartesian_powers(shell.angular_momentum)
         )
     return specs
 
@@ -166,14 +314,10 @@ def _basis_transform(basis: BasisSet) -> np.ndarray:
     for shell in basis.shells:
         if shell.angular_momentum == -1:
             block = np.eye(4, dtype=float)
-        elif shell.angular_momentum not in _CARTESIAN_POWERS:
-            raise DataUnavailableError(
-                f"Gaussian angular momentum {shell.angular_momentum} is not supported by this evaluator."
-            )
         elif shell.pure and shell.angular_momentum >= 2:
             block = _pure_transform(shell.angular_momentum)
         else:
-            block = np.eye(len(_CARTESIAN_POWERS[shell.angular_momentum]), dtype=float)
+            block = np.eye(len(_cartesian_powers(shell.angular_momentum)), dtype=float)
         blocks.append((final_size, cartesian_size, block))
         final_size += block.shape[0]
         cartesian_size += block.shape[1]
