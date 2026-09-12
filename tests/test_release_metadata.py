@@ -38,8 +38,8 @@ def citation_release_date() -> str:
     return match.group(1)
 
 
-def test_release_version_is_071() -> None:
-    assert project_version() == "0.7.1"
+def test_release_version_is_072() -> None:
+    assert project_version() == "0.7.2"
 
 
 def test_runtime_version_matches_project() -> None:
@@ -83,11 +83,11 @@ def test_readme_documents_binary_checkpoint_requirement() -> None:
 
 def test_changelog_contains_current_release() -> None:
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    assert "## [0.7.1] - 2026-09-11" in changelog
+    assert "## [0.7.2] - 2026-09-12" in changelog
 
 
 def test_release_notes_document_capability_boundaries() -> None:
-    notes = (ROOT / "docs" / "releases" / "0.7.1.md").read_text(encoding="utf-8")
+    notes = (ROOT / "docs" / "releases" / "0.7.2.md").read_text(encoding="utf-8")
     for required in ("Validated", "Experimental", "Unsupported", "GitHub Pages"):
         assert required in notes
 
@@ -100,7 +100,7 @@ def test_release_guide_contains_required_gates() -> None:
         "python -m build",
         "python -m twine check",
         "git tag -a",
-        "0.7.1",
+        "0.7.2",
     ):
         assert required in guide
 

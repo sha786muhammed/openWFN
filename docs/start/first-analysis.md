@@ -23,7 +23,7 @@ openwfn --version
 Expected version output for this handbook:
 
 ```text
-openWFN 0.7.1
+openWFN 0.7.2
 ```
 
 Use `python -m pip` so installation and execution refer to the same Python
@@ -37,23 +37,9 @@ From a repository checkout:
 openwfn examples/water/water.fchk summary
 ```
 
-The public water fixture produces:
+The public water fixture produces a molecular summary including the formula, atom count, charge, multiplicity, center of mass, energy, bond count, fragments, and status. Field presentation can vary by output mode; use `--format json` for machine-readable results.
 
-```text
-Molecular Summary
------------------
-Formula:    H2O
-Atoms:      3
-Charge:     0
-Spin Mult:  1
-COM (Å):    (-0.000, 0.000, 0.050)
-Energy:      -75.58595975 a.u.
-Bonds:      2
-Fragments:  1
-```
-
-The center of mass is reported in ångströms and energy in atomic units. Bond count
-comes from openWFN's covalent-radius perception; it is not a bond-order assignment.
+The center of mass is reported in ångströms and energy in hartree. Bond count comes from openWFN's covalent-radius perception; it is not a bond-order assignment.
 
 ## 3. Measure the molecular geometry
 
