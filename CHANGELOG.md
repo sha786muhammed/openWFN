@@ -2,6 +2,25 @@
 
 All notable changes to openWFN are documented in this file.
 
+## [0.7.2] - 2026-09-12
+
+### Added
+
+- Added Gaussian real spherical basis support for 5D, 7F, 9G, and 11H shells through angular momentum `l=5`.
+- Added configurable `--spacing` and `--padding` controls to `openwfn ... validate` for practical validation-grid sizing.
+
+### Changed
+
+- Routed molecular summaries through the shared result renderer so table, plain, JSON, CSV, and output-file workflows stay consistent.
+- Structure exporters now report the installed package version dynamically in MOL and SDF headers.
+- Updated release documentation and capability boundaries to reflect spherical D/F/G/H support.
+
+### Fixed
+
+- Preserved backward-compatible `Atoms:` summary output while adding structured summary data.
+- Restored clean actionable `.chk` conversion errors through the shared CLI error boundary.
+- Kept the established ``requires `formchk` `` error contract for missing Gaussian utilities.
+
 ## [0.7.1] - 2026-09-11
 
 ### Fixed
