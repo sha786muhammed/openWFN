@@ -1,5 +1,11 @@
 # Release history
 
+## 0.7.2 — spherical basis and workflow consistency
+
+Version 0.7.2 adds Gaussian real spherical basis support through H shells (5D, 7F, 9G, 11H), makes molecular summaries consistently available through structured renderers, fixes dynamic MOL/SDF version metadata, adds configurable validation-grid controls, and restores clean checkpoint-conversion error handling.
+
+[Read the detailed 0.7.2 notes](../releases/0.7.2.md)
+
 ## 0.7.1 — corrective release
 
 Version 0.7.1 repaired CLI routing, offline-workbench JavaScript, overwrite guidance, and responsive documentation layout without changing the v0.7 scientific capability boundaries.
