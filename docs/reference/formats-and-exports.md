@@ -18,7 +18,7 @@ openwfn molecule.fchk xyz molecule.xyz
 
 ## Scientific outputs
 
-Table and record output can be rendered as terminal tables, plain text, JSON, or CSV. `export` writes frontier or population tables based on the destination extension. `plot frontier` writes a publication-oriented figure. `density cube` writes Gaussian cube volumetric data.
+Table and record output can be rendered as terminal tables, plain text, JSON, or CSV. JSON uses the versioned result envelope, including analysis identity, provenance, validation, warnings, timing, and structured failure fields. `export` writes frontier or population tables based on the destination extension. `plot frontier` writes a publication-oriented figure. `density cube` writes Gaussian cube volumetric data.
 
 ## HTML outputs
 
@@ -35,4 +35,3 @@ Table and record output can be rendered as terminal tables, plain text, JSON, or
 | Electrostatic potential | atomic units |
 
 Always follow the label in machine-readable output and the installed version's help. See [scientific methods](../science/geometry-topology.md) for definitions.
-

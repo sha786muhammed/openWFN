@@ -15,6 +15,7 @@ from . import (
 )
 from . import commands as cmd  # type: ignore
 from .analysis.orbitals import frontier_orbitals
+from .analysis.registry import run_analysis
 from .app import CommandContext, execute
 from .batch import run_batch
 from .compat import translate_legacy_args
@@ -33,9 +34,6 @@ from .services import (
     geometry_angle,
     geometry_dihedral,
     geometry_distance,
-    molecular_summary,
-    orbital_frontier,
-    population_analysis,
 )
 from .workbench.export import export_workbench_record
 
@@ -303,7 +301,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "summary":
         def summary_operation() -> ResultRecord:
             calculation = load_calculation(Path(args.file))
-            return molecular_summary(calculation)
+            return run_analysis(calculation, "summary")
 
         return execute(summary_operation, _context(args))
 
@@ -322,13 +320,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "population":
         calculation = load_calculation(Path(args.file))
         return execute(
-            lambda: population_analysis(calculation, args.population_method),
+            lambda: run_analysis(calculation, args.population_method),
             _context(args),
         )
 
     if args.command == "orbitals":
         calculation = load_calculation(Path(args.file))
-        return execute(lambda: orbital_frontier(calculation, args.spin), _context(args))
+        analysis = "beta-frontier" if args.spin == "beta" else "frontier"
+        return execute(lambda: run_analysis(calculation, analysis), _context(args))
 
     if args.command == "density":
         context = _context(args)
@@ -442,11 +441,7 @@ def main(argv: list[str] | None = None) -> int:
 
         if args.command == "export":
             def export_operation() -> ResultRecord:
-                result = (
-                    orbital_frontier(calculation)
-                    if args.analysis == "frontier"
-                    else population_analysis(calculation, args.analysis)
-                )
+                result = run_analysis(calculation, args.analysis)
                 output_format = args.export_output.suffix.lstrip(".").lower()
                 write_result_table(
                     result,
@@ -511,7 +506,7 @@ def main(argv: list[str] | None = None) -> int:
             args.command = "interactive"  # type: ignore
         else:
             calculation = load_calculation(Path(args.file))
-            return execute(lambda: molecular_summary(calculation), _context(args))
+            return execute(lambda: run_analysis(calculation, "summary"), _context(args))
 
     filename = args.file
     try:

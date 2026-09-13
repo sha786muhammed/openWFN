@@ -23,6 +23,20 @@ format, parser version, warnings, and named transformations. These fields make
 ingestion decisions traceable without changing scientific values. The v0.8
 fields are additive, and existing v0.7 constructor forms remain supported.
 
+## Named analyses and results
+
+Use `available_analyses()` to discover stable registry names. Run an analysis
+with `calculation.analyze(name)` after `load(path)`, or use
+`run_analysis(calculation_data, name)` when working directly with the canonical
+model.
+
+Every registered analysis returns a `ResultRecord` using result schema
+`RESULT_SCHEMA_VERSION`, currently `"1.0"`. Its JSON representation includes
+the analysis name and version, scientific data and units, validation status,
+input provenance, warnings, elapsed time, execution status, and structured
+failure details. Existing `ResultRecord(kind, data, units, validation_status)`
+construction remains supported.
+
 ## FCHK parsing
 
 - `read_fchk(path)` — read FCHK records.

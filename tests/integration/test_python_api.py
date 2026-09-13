@@ -28,6 +28,17 @@ def test_python_api_exposes_molecular_summary() -> None:
     assert summary["multiplicity"] == 1
 
 
+def test_python_api_runs_registered_analysis_with_provenance() -> None:
+    calculation = openwfn.load(ROOT / "examples" / "water" / "water.fchk")
+
+    result = calculation.analyze("summary")
+
+    assert result.analysis_name == "summary"
+    assert result.data["formula"] == "H2O"
+    assert result.provenance["source_format"] == "fchk"
+    assert result.provenance["input_sha256"] == calculation.molecule.provenance.sha256
+
+
 def test_python_api_exposes_frontier_orbitals() -> None:
     calculation = openwfn.load(ROOT / "examples" / "water" / "water.fchk")
 
@@ -67,4 +78,15 @@ def test_v08_model_foundation_is_available_from_top_level_package() -> None:
         "BoundaryConditions",
         "CalculationData",
         "Provenance",
+    }.issubset(openwfn.__all__)
+
+
+def test_result_contract_and_registry_are_available_from_top_level_package() -> None:
+    assert openwfn.RESULT_SCHEMA_VERSION == "1.0"
+    assert "summary" in openwfn.available_analyses()
+    assert {
+        "RESULT_SCHEMA_VERSION",
+        "ResultRecord",
+        "available_analyses",
+        "run_analysis",
     }.issubset(openwfn.__all__)

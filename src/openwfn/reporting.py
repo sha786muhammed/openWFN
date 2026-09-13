@@ -7,62 +7,34 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from . import __version__
+from .analysis.registry import run_analysis_safe
 from .model import CalculationData
 from .results import ResultRecord
-from .services import orbital_frontier, population_analysis
-
-
-def _summary(data: CalculationData) -> ResultRecord:
-    metadata = data.molecule.metadata
-    return ResultRecord(
-        kind="summary",
-        data={
-            "atoms": len(data.molecule.atoms),
-            "charge": data.molecule.charge,
-            "multiplicity": data.molecule.multiplicity,
-            "source_program": metadata.source_program,
-            "method": metadata.method or "Unavailable",
-            "basis": metadata.basis or "Unavailable",
-            "energy_hartree": metadata.energy_hartree,
-        },
-        units={"energy_hartree": "hartree"},
-        validation_status="Stable",
-    )
-
-
-def _run_analysis(data: CalculationData, name: str) -> ResultRecord:
-    if name == "summary":
-        return _summary(data)
-    if name == "frontier":
-        return orbital_frontier(data)
-    if name == "beta-frontier":
-        return orbital_frontier(data, "beta")
-    if name in {"mulliken", "lowdin"}:
-        return population_analysis(data, name)
-    raise ValueError(f"Unknown report analysis: {name}")
 
 
 def _sections(data: CalculationData, analyses: Iterable[str]) -> list[dict[str, Any]]:
     sections: list[dict[str, Any]] = []
     for name in analyses:
-        try:
-            result = _run_analysis(data, name)
-            sections.append(
-                {
-                    "name": name,
-                    "status": "Available",
-                    "validation_status": result.validation_status,
-                    "data": result.data,
-                    "units": result.units,
-                }
-            )
-        except Exception as exc:
+        result = run_analysis_safe(data, name)
+        if result.status == "failed":
             sections.append(
                 {
                     "name": name,
                     "status": "Unavailable",
                     "validation_status": "Unsupported",
-                    "error": str(exc),
+                    "error": result.error.message if result.error else "Unknown analysis failure",
+                }
+            )
+        else:
+            sections.append(
+                {
+                    "name": name,
+                    "status": "Available",
+                    "validation_status": result.validation_status,
+                    "analysis_version": result.analysis_version,
+                    "data": result.data,
+                    "units": result.units,
+                    "warnings": list(result.warnings),
                 }
             )
     return sections

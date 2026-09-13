@@ -40,6 +40,19 @@ def test_nested_geometry_distance_supports_json_output() -> None:
     assert payload["units"]["value"] == "angstrom"
 
 
+def test_summary_json_uses_the_registered_analysis_envelope() -> None:
+    result = run_cli("--format", "json", str(WATER), "summary")
+
+    assert result.returncode == 0
+    payload = json.loads(result.stdout)
+    assert payload["analysis_name"] == "summary"
+    assert payload["analysis_version"] == "1"
+    assert payload["schema_version"] == "1.0"
+    assert payload["status"] == "success"
+    assert payload["provenance"]["source_format"] == "fchk"
+    assert len(payload["provenance"]["input_sha256"]) == 64
+
+
 def test_nested_geometry_angle_runs_without_legacy_retranslation() -> None:
     result = run_cli(str(WATER), "geometry", "angle", "2", "1", "3")
 
