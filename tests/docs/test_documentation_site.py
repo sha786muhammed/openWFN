@@ -79,11 +79,14 @@ def test_public_images_have_provenance_and_are_bounded() -> None:
         assert "    license:" in manifest
 
 
-def test_homepage_contains_identity_paths_and_trust_links() -> None:
+def test_homepage_contains_product_paths_and_trust_links() -> None:
     home = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
 
     for phrase in (
-        "From checkpoint data to defensible molecular insight.",
+        "Analyze",
+        "Automate",
+        "Validate",
+        "Publish",
         "For researchers",
         "For students",
         "For developers",
@@ -94,19 +97,17 @@ def test_homepage_contains_identity_paths_and_trust_links() -> None:
         assert phrase in home
 
 
-def test_homepage_uses_compact_product_components() -> None:
+def test_homepage_uses_documentation_first_product_components() -> None:
     home = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
     styles = (ROOT / "docs" / "stylesheets" / "extra.css").read_text(encoding="utf-8")
 
     for component in (
-        "ow-hero", "ow-hero__copy", "ow-hero__visual", "ow-feature-grid",
-        "ow-terminal", "ow-proof-strip",
+        "ow-intro", "ow-intro__brand", "ow-intro__command",
+        "ow-capability-grid", "ow-terminal", "ow-proof-strip", "ow-support",
     ):
         assert component in home
         assert f".{component}" in styles
-    assert "grid-template-columns: minmax(0, 1.08fr) minmax(16rem, 0.92fr)" in styles
-    assert "max-height: 25rem" in styles
-    assert "4.7rem" not in styles
+    assert "openwfn-orbital-hero.webp" not in home
 
 
 def test_material_icon_library_and_brand_identity_are_configured() -> None:
@@ -118,31 +119,29 @@ def test_material_icon_library_and_brand_identity_are_configured() -> None:
     assert "material.extensions.emoji.to_svg" in config
 
 
-def test_readme_opens_with_visual_product_identity() -> None:
+def test_readme_opens_with_canonical_product_identity() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
     assert '<p align="center">' in readme
-    assert "openwfn-orbital-hero.webp" in readme
-    assert "Wavefunction analysis for reproducible molecular insight" in readme
+    assert 'src="docs/assets/images/openwfn-header.png"' in readme
+    assert "Wavefunction analysis, made reproducible." in readme
+    assert "openwfn-orbital-hero.webp" not in readme
+    assert "openwfn-wordmark.png" not in readme
 
 
-def test_molecular_signal_wordmark_is_used_consistently() -> None:
+def test_public_brand_uses_one_canonical_logo() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     home = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
     config = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
     styles = (ROOT / "docs" / "stylesheets" / "extra.css").read_text(encoding="utf-8")
-    wordmark_path = ROOT / "docs" / "assets" / "images" / "openwfn-wordmark.png"
 
-    assert wordmark_path.exists()
-    assert 'src="docs/assets/images/openwfn-wordmark.png"' in readme
-    assert 'width="300" alt="openWFN molecular orbital visualization"' in readme
-    assert 'alt="openWFN — Wavefunction Analysis"' in readme
-    assert "𝕠𝕡𝕖𝕟𝕎𝔽ℕ" not in readme
-    assert 'class="ow-brand-lockup"' in home
-    assert 'alt="openWFN — Wavefunction Analysis"' in home
+    assert 'src="docs/assets/images/openwfn-header.png"' in readme
+    assert 'src="assets/images/openwfn-header.png"' in home
     assert "logo: assets/images/openwfn-header.png" in config
     assert ".md-header__button.md-logo img" in styles
-    assert 'content: "Wavefunction Analysis"' not in styles
+    for obsolete in ("openwfn-wordmark.png", "openwfn-orbital-hero.webp"):
+        assert obsolete not in readme
+        assert obsolete not in home
 
 
 def test_header_has_no_duplicate_plain_title_and_home_identifies_toolkit() -> None:
@@ -152,24 +151,39 @@ def test_header_has_no_duplicate_plain_title_and_home_identifies_toolkit() -> No
     assert ".md-header__topic { display: none; }" in styles
     assert ".md-header__title { display: none; }" not in styles
     assert (
-        "openWFN is an open, reproducible wavefunction analysis toolkit "
-        "for computational chemistry."
+        "A unified post-processing toolkit for turning quantum-chemistry "
+        "calculations into traceable, validated, publication-ready results."
     ) in home
 
 
-def test_homepage_has_compact_responsive_branding_and_hero() -> None:
+def test_homepage_has_compact_responsive_branding() -> None:
     styles = (ROOT / "docs" / "stylesheets" / "extra.css").read_text(
         encoding="utf-8"
     )
 
     assert "width: 7.25rem" in styles
-    assert 'content: "Wavefunction Analysis"' not in styles
-    assert "padding: clamp(2rem, 3.5vw, 3rem)" in styles
-    assert "font-size: clamp(2.1rem, 3.2vw, 2.75rem)" in styles
-    assert "font-size: clamp(1rem, 1.25vw, 1.08rem)" in styles
-    assert "max-width: min(100%, 17rem)" in styles
+    assert "grid-template-columns: minmax(0, 1.12fr) minmax(18rem, 0.88fr)" in styles
     assert "@media (max-width: 44rem)" in styles
-    assert "font-size: clamp(1.9rem, 9vw, 2.3rem)" in styles
+
+
+def test_site_uses_home_and_five_clear_navigation_groups() -> None:
+    config = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
+    nav = config.split("nav:\n", maxsplit=1)[1]
+    top_level = re.findall(r"^  - ([^:]+):", nav, flags=re.MULTILINE)
+
+    assert top_level == ["Home", "Get Started", "User Guide", "Reference", "Science", "Project"]
+
+
+def test_homepage_and_readme_use_generalized_scale_language() -> None:
+    public_copy = "\n".join(
+        (
+            (ROOT / "README.md").read_text(encoding="utf-8"),
+            (ROOT / "docs" / "index.md").read_text(encoding="utf-8"),
+        )
+    ).lower()
+
+    assert "individual calculations and high-throughput collections" in public_copy
+    assert not re.search(r"\b(?:1,?000|10,?000)\b", public_copy)
 
 
 def test_header_uses_compact_asset_and_keeps_mobile_drawer_available() -> None:

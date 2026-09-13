@@ -2,15 +2,15 @@ assets:
   openwfn-orbital-hero.webp:
     source: Generated specifically for the openWFN documentation redesign
     license: MIT project asset
-    transformation: Generated from the approved Scholarly Handbook direction, reviewed, resized, converted to WebP, and stripped of metadata
+    transformation: Generated from the approved Scholarly Handbook direction, reviewed, resized, converted to WebP, and stripped of metadata; retained as an archived project illustration but not used as branding
     alt: Translucent red-orange and blue molecular orbital lobes surrounding a small ball-and-stick molecule
   openwfn-wordmark.png:
     source: Original generated openWFN Molecular Signal wordmark
     license: MIT project asset
-    transformation: Generated from the approved Molecular Signal direction with exact openWFN and Wavefunction Analysis text on a transparent background
+    transformation: Generated from the approved Molecular Signal direction; retained as an archived asset while the compact header mark is the canonical public logo
     alt: openWFN — Wavefunction Analysis
   openwfn-header.png:
     source: Original generated openWFN Compact Molecular Signal header mark
     license: MIT project asset
-    transformation: Generated from the approved header concept, background removed, tightly cropped, resized, and exported with transparency
+    transformation: Generated from the approved header concept, background removed, tightly cropped, resized, exported with transparency, and adopted as the single canonical project logo
     alt: openWFN
