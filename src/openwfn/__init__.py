@@ -26,6 +26,12 @@ from .geometry import angle, detect_bonds, dihedral, distance  # type: ignore
 from .graph import MolecularGraph, build_graph  # type: ignore
 from .grid import make_bounding_box_grid  # type: ignore
 from .mo import evaluate_mo  # type: ignore
+from .model import (
+    MODEL_SCHEMA_VERSION,
+    BoundaryConditions,
+    CalculationData,
+    Provenance,
+)
 
 __all__ = [
     "read_fchk",
@@ -49,5 +55,9 @@ __all__ = [
     "export_csv",
     "export_molecule_viewer",
     "OpenWFNCalculation",
+    "MODEL_SCHEMA_VERSION",
+    "BoundaryConditions",
+    "CalculationData",
+    "Provenance",
     "load",
 ]

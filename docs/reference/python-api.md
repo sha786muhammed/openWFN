@@ -12,6 +12,17 @@ Load a supported calculation file through the parser registry. The returned type
 
 Top-level calculation model used by the v0.7 analysis stack. Check optional fields before electronic analyses.
 
+### Model schema v2 foundation
+
+`MODEL_SCHEMA_VERSION` is `"2.0"`. `Molecule.boundary_conditions` defaults
+to an immutable isolated-system record. Periodic construction is rejected in
+v0.8 and is reserved for a later periodic implementation.
+
+`Provenance` records the source path, SHA-256 checksum, parser name, source
+format, parser version, warnings, and named transformations. These fields make
+ingestion decisions traceable without changing scientific values. The v0.8
+fields are additive, and existing v0.7 constructor forms remain supported.
+
 ## FCHK parsing
 
 - `read_fchk(path)` — read FCHK records.
@@ -54,4 +65,3 @@ Outputs can disclose the underlying molecular data. Apply the same access contro
 ## Compatibility
 
 The public import surface is versioned, but scientific behavior can be clarified between releases. Pin an exact openWFN version for reproducible work and review the [release history](../project/release-history.md).
-
