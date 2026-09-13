@@ -56,3 +56,15 @@ def test_safe_registry_run_returns_structured_unavailable_result() -> None:
     assert result.error.category == "DataUnavailableError"
     assert "Beta orbitals are not available" in result.error.message
     assert result.elapsed_seconds is not None and result.elapsed_seconds >= 0
+
+
+def test_safe_registry_run_captures_an_unknown_analysis_name() -> None:
+    data = parse_fchk(WATER)
+
+    result = run_analysis_safe(data, "missing")
+
+    assert result.analysis_name == "missing"
+    assert result.status == "failed"
+    assert result.error is not None
+    assert result.error.category == "ValueError"
+    assert "Available analyses" in result.error.message

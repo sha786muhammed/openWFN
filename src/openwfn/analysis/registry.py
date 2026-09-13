@@ -99,8 +99,19 @@ def run_analysis(data: CalculationData, name: str) -> ResultRecord:
 def run_analysis_safe(data: CalculationData, name: str) -> ResultRecord:
     """Run one analysis and return expected scientific failures as data."""
 
-    definition = _resolve(name)
     started = perf_counter()
+    try:
+        definition = _resolve(name)
+    except ValueError as exc:
+        return ResultRecord.failure(
+            kind="analysis",
+            analysis_name=name.strip().lower() or "unknown",
+            analysis_version="unknown",
+            exception=exc,
+            elapsed_seconds=perf_counter() - started,
+            warnings=_source_warnings(data),
+            provenance=_input_provenance(data),
+        )
     try:
         return run_analysis(data, definition.name)
     except Exception as exc:
