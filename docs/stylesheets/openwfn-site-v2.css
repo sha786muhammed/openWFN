@@ -1,0 +1,2 @@
+/* Versioned entry point prevents stale GitHub Pages CSS from hiding new layouts. */
+@import url("extra.css?v=20260913");

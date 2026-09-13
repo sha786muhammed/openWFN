@@ -135,19 +135,16 @@
 .ow-intro__brand { min-width: 0; }
 
 .ow-brand-panel {
-  background: linear-gradient(100deg, #17213f, #303f9f);
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  border-radius: 0.65rem;
-  box-shadow: 0 12px 30px rgba(23, 33, 63, 0.2);
   display: inline-flex;
   margin-bottom: 1.5rem;
-  padding: 0.72rem 1rem;
 }
 
 .ow-brand-panel img {
+  border-radius: 0.65rem;
+  box-shadow: 0 12px 30px rgba(23, 33, 63, 0.2);
   display: block;
   height: auto;
-  max-width: min(100%, 19rem);
+  max-width: min(100%, 20rem);
 }
 
 .ow-kicker {
@@ -409,7 +406,7 @@
   .md-typeset { font-size: 0.82rem; }
   .md-typeset h1 { font-size: 2rem; }
   .ow-intro { gap: 1.5rem; margin-top: 0; padding: 1.5rem 0 2.5rem; }
-  .ow-brand-panel { margin-bottom: 1.2rem; padding: 0.55rem 0.75rem; }
+  .ow-brand-panel { margin-bottom: 1.2rem; }
   .ow-brand-panel img { max-width: min(100%, 15rem); }
   .ow-intro h1 { font-size: clamp(2.35rem, 12vw, 3.25rem); }
   .ow-actions { align-items: stretch; flex-direction: column; }

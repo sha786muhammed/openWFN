@@ -7,7 +7,7 @@ repo_name: sha786muhammed/openWFN
 theme:
   name: material
   language: en
-  logo: assets/images/openwfn-header.png
+  logo: assets/images/openwfn-brand.svg
   icon:
     repo: fontawesome/brands/github
   palette:
@@ -62,7 +62,7 @@ markdown_extensions:
 plugins:
   - search
 extra_css:
-  - stylesheets/extra.css
+  - stylesheets/openwfn-site-v2.css
 extra_javascript:
   - javascripts/mathjax.js
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
