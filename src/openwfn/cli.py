@@ -266,6 +266,10 @@ def main(argv: list[str] | None = None) -> int:
     p_batch = subparsers.add_parser("batch", help="Analyze multiple inputs reproducibly")
     p_batch.add_argument("inputs", nargs="*", type=Path)
     p_batch.add_argument("--operation", choices=["summary"], default="summary")
+    p_batch.add_argument(
+        "--analyses",
+        help="Comma-separated registered analyses (for example: summary,frontier)",
+    )
     p_batch.add_argument("--workers", type=int, default=1)
     p_batch.add_argument("--output-dir", type=Path, required=True)
     p_batch.add_argument("--fail-fast", action="store_true")
@@ -395,17 +399,31 @@ def main(argv: list[str] | None = None) -> int:
             inputs = [Path(args.file), *args.inputs]
 
             def batch_operation() -> ResultRecord:
+                analyses = (
+                    tuple(item.strip() for item in args.analyses.split(",") if item.strip())
+                    if args.analyses
+                    else (args.operation,)
+                )
                 manifest = run_batch(
-                    inputs, args.operation, args.workers, args.output_dir, args.fail_fast
+                    inputs,
+                    args.operation,
+                    args.workers,
+                    args.output_dir,
+                    args.fail_fast,
+                    analyses=analyses,
                 )
                 successes = sum(record.status == "success" for record in manifest.records)
+                partial = sum(record.status == "partial" for record in manifest.records)
+                errors = sum(record.status == "error" for record in manifest.records)
                 return ResultRecord(
                     kind="batch",
                     data={
                         "operation": manifest.operation,
+                        "analyses": list(manifest.analyses),
                         "inputs": len(manifest.records),
                         "successes": successes,
-                        "errors": len(manifest.records) - successes,
+                        "partial": partial,
+                        "errors": errors,
                         "manifest": str(args.output_dir / "batch-manifest.json"),
                     },
                 )

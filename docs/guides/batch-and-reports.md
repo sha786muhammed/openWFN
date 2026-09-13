@@ -1,15 +1,22 @@
 # Batch analysis and reports
 
-## Batch summaries
+## Batch analyses
 
-Batch mode applies the supported operation to multiple inputs and writes a manifest recording success or error per file.
+Batch mode applies one or more registered analyses to multiple inputs and writes
+a versioned manifest. Each input record contains its SHA-256 checksum, overall
+status, and complete result envelopes in the requested order.
 
 ```bash
 openwfn first.fchk batch second.fchk third.fchk \
-  --operation summary --workers 2 --output-dir batch-results
+  --analyses summary,frontier,mulliken \
+  --workers 2 --output-dir batch-results
 ```
 
-Add `--fail-fast` when the first failed input should stop the run. Without it, independent inputs continue and the manifest shows partial success. Use a conservative worker count when files are large.
+An input is `success` when every analysis succeeds, `partial` when some analyses
+are unavailable, and `error` when parsing fails or every analysis fails. Invalid
+analysis names are rejected before output is created. Add `--fail-fast` when the
+first erroneous input should stop the run. The older `--operation summary` form
+remains supported.
 
 ## Research reports
 
@@ -31,4 +38,3 @@ The output is a standalone local HTML file. It supports review and sharing witho
 ## Suggested archive
 
 Archive the input checksum, version, command log, batch manifest, machine-readable tables, and report together. Do not use the visual workbench as the only scientific record.
-
