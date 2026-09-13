@@ -1,4 +1,5 @@
 import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -107,3 +108,67 @@ def test_batch_rejects_unknown_analysis_before_creating_output(tmp_path: Path) -
         )
 
     assert not output_dir.exists()
+
+
+def test_batch_resume_reuses_matching_per_input_result(tmp_path: Path) -> None:
+    source = ROOT / "examples" / "water" / "water.fchk"
+    water = tmp_path / "water.fchk"
+    shutil.copyfile(source, water)
+    output_dir = tmp_path / "results"
+
+    first = run_batch(
+        inputs=[water],
+        operation=None,
+        analyses=("summary", "frontier"),
+        workers=1,
+        output_dir=output_dir,
+    )
+    record_path = next((output_dir / "records").glob("*.json"))
+    saved_record = record_path.read_text(encoding="utf-8")
+
+    resumed = run_batch(
+        inputs=[water],
+        operation=None,
+        analyses=("summary", "frontier"),
+        workers=1,
+        output_dir=output_dir,
+        resume=True,
+    )
+
+    assert first.records[0].skipped is False
+    assert resumed.records[0].skipped is True
+    assert resumed.records[0].results == first.records[0].results
+    assert record_path.read_text(encoding="utf-8") == saved_record
+    assert len(resumed.configuration_fingerprint) == 64
+    manifest = json.loads((output_dir / "batch-manifest.json").read_text(encoding="utf-8"))
+    assert manifest["configuration_fingerprint"] == resumed.configuration_fingerprint
+    assert manifest["records"][0]["skipped"] is True
+
+
+def test_batch_resume_recomputes_when_input_checksum_changes(tmp_path: Path) -> None:
+    source = ROOT / "examples" / "water" / "water.fchk"
+    water = tmp_path / "water.fchk"
+    shutil.copyfile(source, water)
+    output_dir = tmp_path / "results"
+    first = run_batch([water], "summary", 1, output_dir)
+
+    water.write_text(water.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+    resumed = run_batch([water], "summary", 1, output_dir, resume=True)
+
+    assert resumed.records[0].skipped is False
+    assert resumed.records[0].input_sha256 != first.records[0].input_sha256
+
+
+def test_batch_writes_manifest_and_records_atomically(tmp_path: Path) -> None:
+    output_dir = tmp_path / "results"
+
+    run_batch(
+        [ROOT / "examples" / "water" / "water.fchk"],
+        "summary",
+        1,
+        output_dir,
+    )
+
+    assert (output_dir / "batch-manifest.json").exists()
+    assert len(list((output_dir / "records").glob("*.json"))) == 1
+    assert not list(output_dir.rglob("*.tmp"))

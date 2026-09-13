@@ -37,12 +37,14 @@ manifest = run_batch(
     analyses=("summary", "frontier"),
     workers=2,
     output_dir=Path("batch-results"),
+    resume=True,
 )
 print(manifest.schema_version, manifest.analyses)
 ```
 
-The manifest preserves input order and records successful, partial, and failed
-inputs without discarding completed analyses.
+The manifest preserves input order and records successful, partial, skipped,
+and failed inputs without discarding completed analyses. Resume reuses only
+records with matching input checksums and configuration fingerprints.
 
 ## Density and orbitals
 

@@ -83,3 +83,26 @@ def test_batch_cli_reports_partial_inputs_separately_from_errors(tmp_path: Path)
     assert payload["successes"] == 0
     assert payload["partial"] == 1
     assert payload["errors"] == 0
+
+
+def test_batch_cli_resume_reports_skipped_inputs(tmp_path: Path) -> None:
+    output_dir = tmp_path / "results"
+    arguments = (
+        "--format",
+        "json",
+        "batch",
+        str(WATER),
+        "--analyses",
+        "summary,frontier",
+        "--output-dir",
+        str(output_dir),
+    )
+    first = run_cli(*arguments)
+
+    resumed = run_cli(*arguments, "--resume")
+
+    assert first.returncode == 0, first.stderr
+    assert resumed.returncode == 0, resumed.stderr
+    assert json.loads(resumed.stdout)["data"]["skipped"] == 1
+    manifest = json.loads((output_dir / "batch-manifest.json").read_text(encoding="utf-8"))
+    assert manifest["records"][0]["skipped"] is True
