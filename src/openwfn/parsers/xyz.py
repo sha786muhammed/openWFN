@@ -35,7 +35,13 @@ def parse_xyz(path: Path) -> CalculationData:
             raise ParseError(f"Malformed XYZ coordinate at line {line_number}.") from exc
         atoms.append(Atom(atomic_number, coordinates))  # type: ignore[arg-type]
 
-    provenance = Provenance(str(path), sha256(raw).hexdigest(), "xyz")
+    provenance = Provenance(
+        source_path=str(path),
+        sha256=sha256(raw).hexdigest(),
+        parser="xyz",
+        source_format="xyz",
+        parser_version="1",
+    )
     molecule = Molecule(
         atoms=tuple(atoms),
         charge=0,

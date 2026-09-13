@@ -44,12 +44,18 @@ def parse_mol_text(
             raise ParseError(f"Malformed V2000 bond at line {offset}.") from exc
     raw = provenance_bytes if provenance_bytes is not None else text.encode("utf-8")
     molecule = Molecule(
-        tuple(atoms),
-        0,
-        1,
-        CalculationMetadata(parser_name.upper()),
-        Provenance(str(path), sha256(raw).hexdigest(), parser_name),
-        tuple(bonds),
+        atoms=tuple(atoms),
+        charge=0,
+        multiplicity=1,
+        metadata=CalculationMetadata(source_program=parser_name.upper()),
+        provenance=Provenance(
+            source_path=str(path),
+            sha256=sha256(raw).hexdigest(),
+            parser=parser_name,
+            source_format=parser_name,
+            parser_version="1",
+        ),
+        bonds=tuple(bonds),
     )
     return CalculationData(molecule)
 
