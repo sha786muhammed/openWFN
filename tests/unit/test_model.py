@@ -117,6 +117,51 @@ def test_provenance_requires_sha256_checksum() -> None:
         Provenance(source_path="water.fchk", sha256="abc", parser="gaussian-fchk")
 
 
+def test_v07_metadata_constructor_remains_compatible() -> None:
+    metadata = CalculationMetadata("Gaussian", "# RHF/3-21G", "RHF", "3-21G")
+
+    assert metadata.route == "# RHF/3-21G"
+    assert metadata.source_program_version is None
+
+
+def test_provenance_exposes_versioned_ingestion_metadata() -> None:
+    provenance = Provenance(
+        source_path="water.fchk",
+        sha256="a" * 64,
+        parser="gaussian-fchk",
+        source_format="fchk",
+        parser_version="1",
+        transformations=("bohr-to-angstrom",),
+    )
+
+    assert provenance.source_format == "fchk"
+    assert provenance.parser_version == "1"
+    assert provenance.transformations == ("bohr-to-angstrom",)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("source_format", "", "source format"),
+        ("parser_version", "", "parser version"),
+    ],
+)
+def test_provenance_rejects_blank_ingestion_metadata(
+    field: str, value: str, message: str
+) -> None:
+    arguments = {
+        "source_path": "water.fchk",
+        "sha256": "a" * 64,
+        "parser": "gaussian-fchk",
+        "source_format": "fchk",
+        "parser_version": "1",
+    }
+    arguments[field] = value
+
+    with pytest.raises(ValueError, match=message):
+        Provenance(**arguments)  # type: ignore[arg-type]
+
+
 @pytest.mark.parametrize(
     ("error_type", "expected_code"),
     [

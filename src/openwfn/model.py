@@ -32,6 +32,7 @@ class CalculationMetadata:
     basis: str | None = None
     energy_hartree: float | None = None
     terminated_normally: bool | None = None
+    source_program_version: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,10 +43,17 @@ class Provenance:
     sha256: str
     parser: str
     warnings: tuple[str, ...] = ()
+    source_format: str | None = None
+    parser_version: str = "1"
+    transformations: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if len(self.sha256) != 64 or any(c not in "0123456789abcdefABCDEF" for c in self.sha256):
             raise ValueError("sha256 must be a 64-character SHA-256 checksum")
+        if self.source_format is not None and not self.source_format.strip():
+            raise ValueError("source format must not be blank")
+        if not self.parser_version.strip():
+            raise ValueError("parser version must not be blank")
 
 
 @dataclass(frozen=True, order=True, slots=True)
