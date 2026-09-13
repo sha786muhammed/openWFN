@@ -9,9 +9,11 @@ from openwfn.errors import (
     ValidationError,
 )
 from openwfn.model import (
+    MODEL_SCHEMA_VERSION,
     Atom,
     BasisSet,
     BasisShell,
+    BoundaryConditions,
     CalculationMetadata,
     DensityMatrix,
     MolecularOrbitals,
@@ -44,6 +46,24 @@ def test_molecule_rejects_nonpositive_multiplicity() -> None:
             multiplicity=0,
             metadata=metadata,
         )
+
+
+def test_molecule_defaults_to_isolated_boundary_conditions() -> None:
+    molecule = Molecule(
+        atoms=(Atom(1, (0.0, 0.0, 0.0)),),
+        charge=0,
+        multiplicity=1,
+        metadata=CalculationMetadata("fixture"),
+    )
+
+    assert MODEL_SCHEMA_VERSION == "2.0"
+    assert molecule.boundary_conditions == BoundaryConditions()
+    assert molecule.boundary_conditions.kind == "isolated"
+
+
+def test_v2_foundation_rejects_periodic_boundary_conditions() -> None:
+    with pytest.raises(ValueError, match="periodic boundary conditions are not supported"):
+        BoundaryConditions(kind="periodic")  # type: ignore[arg-type]
 
 
 def test_orbitals_reject_coefficient_shape_mismatch() -> None:

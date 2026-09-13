@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from math import prod
 from typing import Any, Literal
 
+MODEL_SCHEMA_VERSION = "2.0"
+
 
 @dataclass(frozen=True, slots=True)
 class Atom:
@@ -62,6 +64,17 @@ class Bond:
 
 
 @dataclass(frozen=True, slots=True)
+class BoundaryConditions:
+    """Boundary conditions attached to a molecular system."""
+
+    kind: Literal["isolated"] = "isolated"
+
+    def __post_init__(self) -> None:
+        if self.kind != "isolated":
+            raise ValueError("periodic boundary conditions are not supported by the v2 foundation")
+
+
+@dataclass(frozen=True, slots=True)
 class Molecule:
     """Molecular identity, geometry, charge, spin, and calculation metadata."""
 
@@ -71,6 +84,7 @@ class Molecule:
     metadata: CalculationMetadata
     provenance: Provenance | None = None
     bonds: tuple[Bond, ...] = ()
+    boundary_conditions: BoundaryConditions = field(default_factory=BoundaryConditions)
 
     def __post_init__(self) -> None:
         if self.multiplicity < 1:
