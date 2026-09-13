@@ -273,6 +273,7 @@ def main(argv: list[str] | None = None) -> int:
     p_batch.add_argument("--workers", type=int, default=1)
     p_batch.add_argument("--output-dir", type=Path, required=True)
     p_batch.add_argument("--fail-fast", action="store_true")
+    p_batch.add_argument("--resume", action="store_true", help="Reuse matching completed inputs")
 
     p_validate = subparsers.add_parser(
         "validate", help="Validate numerical density electron conservation"
@@ -411,10 +412,12 @@ def main(argv: list[str] | None = None) -> int:
                     args.output_dir,
                     args.fail_fast,
                     analyses=analyses,
+                    resume=args.resume,
                 )
                 successes = sum(record.status == "success" for record in manifest.records)
                 partial = sum(record.status == "partial" for record in manifest.records)
                 errors = sum(record.status == "error" for record in manifest.records)
+                skipped = sum(record.skipped for record in manifest.records)
                 return ResultRecord(
                     kind="batch",
                     data={
@@ -424,6 +427,8 @@ def main(argv: list[str] | None = None) -> int:
                         "successes": successes,
                         "partial": partial,
                         "errors": errors,
+                        "skipped": skipped,
+                        "configuration_fingerprint": manifest.configuration_fingerprint,
                         "manifest": str(args.output_dir / "batch-manifest.json"),
                     },
                 )

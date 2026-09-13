@@ -63,7 +63,9 @@ ESP components are `nuclear`, `mulliken`, `lowdin`, `electronic`, and `total`. C
 ## Batch and guided mode
 
 `batch` accepts the primary file plus additional inputs, comma-separated
-`--analyses`, `--workers`, required `--output-dir`, and optional `--fail-fast`.
+`--analyses`, `--workers`, required `--output-dir`, and optional `--fail-fast`
+and `--resume` flags. Resume requires matching input checksums and configuration
+fingerprints; failed inputs are retried.
 It writes result schema `1.0` envelopes inside batch manifest schema `1.0`.
 The older `--operation summary` form remains supported.
 
