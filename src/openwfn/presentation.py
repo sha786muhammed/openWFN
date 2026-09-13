@@ -22,13 +22,7 @@ def render(result: ResultRecord, context: CommandContext) -> str:
     """Render a result without performing scientific calculations."""
 
     if context.format == "json":
-        payload = {
-            "data": result.data,
-            "kind": result.kind,
-            "units": result.units,
-            "validation_status": result.validation_status,
-        }
-        return json.dumps(payload, indent=2, sort_keys=True) + "\n"
+        return json.dumps(result.as_dict(), indent=2, sort_keys=True) + "\n"
 
     if context.format == "csv":
         stream = io.StringIO()

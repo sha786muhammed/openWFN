@@ -10,6 +10,7 @@ try:
 except PackageNotFoundError:
     __version__ = "0+unknown"
 
+from .analysis.registry import available_analyses, run_analysis
 from .api import OpenWFNCalculation, load
 from .basis import eval_s_type_gto  # type: ignore
 from .density import compute_density  # type: ignore
@@ -32,6 +33,7 @@ from .model import (
     CalculationData,
     Provenance,
 )
+from .results import RESULT_SCHEMA_VERSION, ResultRecord
 
 __all__ = [
     "read_fchk",
@@ -59,5 +61,9 @@ __all__ = [
     "BoundaryConditions",
     "CalculationData",
     "Provenance",
+    "RESULT_SCHEMA_VERSION",
+    "ResultRecord",
+    "available_analyses",
+    "run_analysis",
     "load",
 ]

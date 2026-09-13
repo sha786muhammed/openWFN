@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from .analysis.registry import run_analysis
 from .errors import DataUnavailableError
 from .model import CalculationData, Molecule
 from .parsers.registry import load as parse_input
@@ -32,6 +33,11 @@ class OpenWFNCalculation:
             "charge": self.molecule.charge,
             "multiplicity": self.molecule.multiplicity,
         }
+
+    def analyze(self, name: str) -> ResultRecord:
+        """Run a named analysis through the shared versioned registry."""
+
+        return run_analysis(self.data, name)
 
     def geometry_distance(self, atom_i: int, atom_j: int) -> ResultRecord:
         return geometry_distance(self.molecule, atom_i, atom_j)

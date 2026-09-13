@@ -21,12 +21,20 @@ def test_json_output_is_deterministic_and_includes_units_and_status() -> None:
     output = render(_distance_result(), CommandContext(format="json"))
 
     assert json.loads(output) == {
+        "analysis_name": "distance",
+        "analysis_version": "1",
         "data": {"atom_i": 1, "atom_j": 2, "value": 0.966598},
+        "elapsed_seconds": None,
+        "error": None,
         "kind": "distance",
+        "provenance": {},
+        "schema_version": "1.0",
+        "status": "success",
         "units": {"value": "angstrom"},
         "validation_status": "Stable",
+        "warnings": [],
     }
-    assert output.index('"data"') < output.index('"kind"')
+    assert output.index('"analysis_name"') < output.index('"data"')
 
 
 def test_csv_output_contains_unit_in_column_heading() -> None:
