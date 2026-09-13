@@ -55,3 +55,16 @@ def test_python_api_exposes_density_integration() -> None:
     assert result.kind == "density_integration"
     assert result.data["density_kind"] == "total"
     assert result.data["expected_electrons"] == 10.0
+
+
+def test_v08_model_foundation_is_available_from_top_level_package() -> None:
+    assert openwfn.MODEL_SCHEMA_VERSION == "2.0"
+    assert openwfn.BoundaryConditions().kind == "isolated"
+    assert openwfn.CalculationData is not None
+    assert openwfn.Provenance is not None
+    assert {
+        "MODEL_SCHEMA_VERSION",
+        "BoundaryConditions",
+        "CalculationData",
+        "Provenance",
+    }.issubset(openwfn.__all__)

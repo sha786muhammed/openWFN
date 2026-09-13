@@ -293,6 +293,8 @@ def parse_fchk(path: Path) -> CalculationData:
         source_path=str(path),
         sha256=sha256(raw).hexdigest(),
         parser="gaussian-fchk",
+        source_format="fchk",
+        parser_version="1",
     )
     atoms = tuple(
         Atom(

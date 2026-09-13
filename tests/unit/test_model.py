@@ -9,9 +9,11 @@ from openwfn.errors import (
     ValidationError,
 )
 from openwfn.model import (
+    MODEL_SCHEMA_VERSION,
     Atom,
     BasisSet,
     BasisShell,
+    BoundaryConditions,
     CalculationMetadata,
     DensityMatrix,
     MolecularOrbitals,
@@ -44,6 +46,24 @@ def test_molecule_rejects_nonpositive_multiplicity() -> None:
             multiplicity=0,
             metadata=metadata,
         )
+
+
+def test_molecule_defaults_to_isolated_boundary_conditions() -> None:
+    molecule = Molecule(
+        atoms=(Atom(1, (0.0, 0.0, 0.0)),),
+        charge=0,
+        multiplicity=1,
+        metadata=CalculationMetadata("fixture"),
+    )
+
+    assert MODEL_SCHEMA_VERSION == "2.0"
+    assert molecule.boundary_conditions == BoundaryConditions()
+    assert molecule.boundary_conditions.kind == "isolated"
+
+
+def test_v2_foundation_rejects_periodic_boundary_conditions() -> None:
+    with pytest.raises(ValueError, match="periodic boundary conditions are not supported"):
+        BoundaryConditions(kind="periodic")  # type: ignore[arg-type]
 
 
 def test_orbitals_reject_coefficient_shape_mismatch() -> None:
@@ -95,6 +115,51 @@ def test_grid_rejects_value_count_different_from_shape() -> None:
 def test_provenance_requires_sha256_checksum() -> None:
     with pytest.raises(ValueError, match="SHA-256"):
         Provenance(source_path="water.fchk", sha256="abc", parser="gaussian-fchk")
+
+
+def test_v07_metadata_constructor_remains_compatible() -> None:
+    metadata = CalculationMetadata("Gaussian", "# RHF/3-21G", "RHF", "3-21G")
+
+    assert metadata.route == "# RHF/3-21G"
+    assert metadata.source_program_version is None
+
+
+def test_provenance_exposes_versioned_ingestion_metadata() -> None:
+    provenance = Provenance(
+        source_path="water.fchk",
+        sha256="a" * 64,
+        parser="gaussian-fchk",
+        source_format="fchk",
+        parser_version="1",
+        transformations=("bohr-to-angstrom",),
+    )
+
+    assert provenance.source_format == "fchk"
+    assert provenance.parser_version == "1"
+    assert provenance.transformations == ("bohr-to-angstrom",)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("source_format", "", "source format"),
+        ("parser_version", "", "parser version"),
+    ],
+)
+def test_provenance_rejects_blank_ingestion_metadata(
+    field: str, value: str, message: str
+) -> None:
+    arguments = {
+        "source_path": "water.fchk",
+        "sha256": "a" * 64,
+        "parser": "gaussian-fchk",
+        "source_format": "fchk",
+        "parser_version": "1",
+    }
+    arguments[field] = value
+
+    with pytest.raises(ValueError, match=message):
+        Provenance(**arguments)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize(

@@ -61,6 +61,9 @@ def test_parse_fchk_returns_typed_molecule_with_provenance(tmp_path: Path) -> No
     assert data.molecule.provenance is not None
     assert data.molecule.provenance.source_path == str(source)
     assert len(data.molecule.provenance.sha256) == 64
+    assert data.molecule.provenance.source_format == "fchk"
+    assert data.molecule.provenance.parser_version == "1"
+    assert data.molecule.boundary_conditions.kind == "isolated"
 
 
 def test_parse_fchk_rejects_atom_coordinate_count_mismatch(tmp_path: Path) -> None:

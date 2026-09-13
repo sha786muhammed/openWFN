@@ -30,6 +30,32 @@ def test_xyz_round_trip_preserves_elements_and_coordinates(tmp_path: Path) -> No
     )
 
 
+@pytest.mark.parametrize(
+    ("suffix", "contents", "expected_format"),
+    [
+        ("xyz", "1\nwater\nO 0 0 0\n", "xyz"),
+        (
+            "mol",
+            "water\nopenWFN\n\n  1  0  0  0  0  0            999 V2000\n"
+            "    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n"
+            "M  END\n",
+            "mol",
+        ),
+    ],
+)
+def test_structure_parsers_record_source_format(
+    tmp_path: Path, suffix: str, contents: str, expected_format: str
+) -> None:
+    source = tmp_path / f"water.{suffix}"
+    source.write_text(contents, encoding="utf-8")
+
+    provenance = load(source).molecule.provenance
+
+    assert provenance is not None
+    assert provenance.source_format == expected_format
+    assert provenance.parser_version == "1"
+
+
 def test_registry_reports_unsupported_format(tmp_path: Path) -> None:
     source = tmp_path / "water.unknown"
     source.write_text("data", encoding="utf-8")
@@ -94,6 +120,7 @@ def test_sdf_provenance_hash_identifies_original_file_bytes(tmp_path: Path) -> N
 
     assert data.molecule.provenance is not None
     assert data.molecule.provenance.sha256 == sha256(source.read_bytes()).hexdigest()
+    assert data.molecule.provenance.source_format == "sdf"
 
 
 def test_structure_writer_protects_existing_output(tmp_path: Path) -> None:
@@ -124,3 +151,6 @@ def test_bonded_structure_round_trip_preserves_atoms_coordinates_and_bonds(
     assert tuple(atom.atomic_number for atom in restored.atoms) == (8, 1, 1)
     assert restored.atoms[0].coordinates == pytest.approx((0.0, 0.0, 0.1), abs=1e-4)
     assert restored.bonds == (Bond(0, 1), Bond(0, 2))
+    assert restored.provenance is not None
+    assert restored.provenance.source_format == format
+    assert restored.provenance.parser_version == "1"

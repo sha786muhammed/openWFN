@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from math import prod
 from typing import Any, Literal
 
+MODEL_SCHEMA_VERSION = "2.0"
+
 
 @dataclass(frozen=True, slots=True)
 class Atom:
@@ -30,6 +32,7 @@ class CalculationMetadata:
     basis: str | None = None
     energy_hartree: float | None = None
     terminated_normally: bool | None = None
+    source_program_version: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,10 +43,17 @@ class Provenance:
     sha256: str
     parser: str
     warnings: tuple[str, ...] = ()
+    source_format: str | None = None
+    parser_version: str = "1"
+    transformations: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if len(self.sha256) != 64 or any(c not in "0123456789abcdefABCDEF" for c in self.sha256):
             raise ValueError("sha256 must be a 64-character SHA-256 checksum")
+        if self.source_format is not None and not self.source_format.strip():
+            raise ValueError("source format must not be blank")
+        if not self.parser_version.strip():
+            raise ValueError("parser version must not be blank")
 
 
 @dataclass(frozen=True, order=True, slots=True)
@@ -62,6 +72,17 @@ class Bond:
 
 
 @dataclass(frozen=True, slots=True)
+class BoundaryConditions:
+    """Boundary conditions attached to a molecular system."""
+
+    kind: Literal["isolated"] = "isolated"
+
+    def __post_init__(self) -> None:
+        if self.kind != "isolated":
+            raise ValueError("periodic boundary conditions are not supported by the v2 foundation")
+
+
+@dataclass(frozen=True, slots=True)
 class Molecule:
     """Molecular identity, geometry, charge, spin, and calculation metadata."""
 
@@ -71,6 +92,7 @@ class Molecule:
     metadata: CalculationMetadata
     provenance: Provenance | None = None
     bonds: tuple[Bond, ...] = ()
+    boundary_conditions: BoundaryConditions = field(default_factory=BoundaryConditions)
 
     def __post_init__(self) -> None:
         if self.multiplicity < 1:

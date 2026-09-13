@@ -48,11 +48,17 @@ def parse_pdb(path: Path) -> CalculationData:
     except KeyError as exc:
         raise ParseError(f"PDB CONECT references unknown atom serial {exc.args[0]}.") from exc
     molecule = Molecule(
-        tuple(atoms),
-        0,
-        1,
-        CalculationMetadata("PDB"),
-        Provenance(str(path), sha256(raw).hexdigest(), "pdb"),
-        bonds,
+        atoms=tuple(atoms),
+        charge=0,
+        multiplicity=1,
+        metadata=CalculationMetadata(source_program="PDB"),
+        provenance=Provenance(
+            source_path=str(path),
+            sha256=sha256(raw).hexdigest(),
+            parser="pdb",
+            source_format="pdb",
+            parser_version="1",
+        ),
+        bonds=bonds,
     )
     return CalculationData(molecule)
