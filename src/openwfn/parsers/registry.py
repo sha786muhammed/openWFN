@@ -24,6 +24,11 @@ class ParserRegistry:
         for suffix in suffixes:
             self._parsers[suffix.lower() if suffix.startswith(".") else f".{suffix.lower()}"] = parser
 
+    def supported_suffixes(self) -> tuple[str, ...]:
+        """Return registered filename suffixes in deterministic order."""
+
+        return tuple(sorted(self._parsers))
+
     def load(self, path: Path) -> Any:
         suffix = path.suffix.lower()
         parser = self._parsers.get(suffix)

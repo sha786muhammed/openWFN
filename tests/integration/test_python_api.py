@@ -95,3 +95,5 @@ def test_result_contract_and_registry_are_available_from_top_level_package() -> 
 def test_batch_contract_is_available_from_top_level_package() -> None:
     assert openwfn.BATCH_SCHEMA_VERSION == "1.0"
     assert "run_batch" in openwfn.__all__
+    assert callable(openwfn.discover_inputs)
+    assert "discover_inputs" in openwfn.__all__

@@ -7,7 +7,7 @@ import pytest
 from openwfn.errors import ParseError
 from openwfn.exporters.structures import write_structure
 from openwfn.model import Bond
-from openwfn.parsers.registry import load
+from openwfn.parsers.registry import DEFAULT_REGISTRY, load
 
 
 def test_xyz_round_trip_preserves_elements_and_coordinates(tmp_path: Path) -> None:
@@ -62,6 +62,22 @@ def test_registry_reports_unsupported_format(tmp_path: Path) -> None:
 
     with pytest.raises(ParseError, match="Unsupported input format '.unknown'"):
         load(source)
+
+
+def test_registry_reports_supported_suffixes_for_batch_discovery() -> None:
+    assert DEFAULT_REGISTRY.supported_suffixes() == (
+        ".chk",
+        ".cub",
+        ".cube",
+        ".fch",
+        ".fchk",
+        ".log",
+        ".mol",
+        ".out",
+        ".pdb",
+        ".sdf",
+        ".xyz",
+    )
 
 
 def test_registry_dispatches_gaussian_cube_and_output_files(tmp_path: Path) -> None:

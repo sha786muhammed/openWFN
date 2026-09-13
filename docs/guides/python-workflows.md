@@ -32,12 +32,13 @@ from pathlib import Path
 from openwfn import run_batch
 
 manifest = run_batch(
-    inputs=[Path("first.fchk"), Path("second.fchk")],
+    inputs=[Path("calculations")],
     operation=None,
     analyses=("summary", "frontier"),
     workers=2,
     output_dir=Path("batch-results"),
     resume=True,
+    recursive=True,
 )
 print(manifest.schema_version, manifest.analyses)
 ```
@@ -45,6 +46,9 @@ print(manifest.schema_version, manifest.analyses)
 The manifest preserves input order and records successful, partial, skipped,
 and failed inputs without discarding completed analyses. Resume reuses only
 records with matching input checksums and configuration fingerprints.
+The output directory also contains `batch-summary.csv` for spreadsheet and
+dataframe workflows. Use `discover_inputs(...)` directly when an application
+needs to preview supported and unsupported paths before execution.
 
 ## Density and orbitals
 

@@ -66,6 +66,11 @@ ESP components are `nuclear`, `mulliken`, `lowdin`, `electronic`, and `total`. C
 `--analyses`, `--workers`, required `--output-dir`, and optional `--fail-fast`
 and `--resume` flags. Resume requires matching input checksums and configuration
 fingerprints; failed inputs are retried.
+Inputs may be files or directories. `--recursive` scans subdirectories and
+`--dry-run` previews supported and unsupported files without requiring
+`--output-dir`. Completed runs write `batch-manifest.json`, per-input JSON
+records, and `batch-summary.csv`. Progress uses stderr and global `--quiet`
+suppresses it.
 It writes result schema `1.0` envelopes inside batch manifest schema `1.0`.
 The older `--operation summary` form remains supported.
 

@@ -20,6 +20,9 @@ openwfn molecule.fchk xyz molecule.xyz
 
 Table and record output can be rendered as terminal tables, plain text, JSON, or CSV. JSON uses the versioned result envelope, including analysis identity, provenance, validation, warnings, timing, and structured failure fields. `export` writes frontier or population tables based on the destination extension. `plot frontier` writes a publication-oriented figure. `density cube` writes Gaussian cube volumetric data.
 
+Batch runs write detailed JSON result records plus `batch-summary.csv`, a compact
+index suitable for spreadsheets and dataframe ingestion.
+
 ## HTML outputs
 
 `report build`, `workbench`, and `view` can create self-contained HTML. “Self-contained” means no openWFN server is required; it does not mean the artifact is free of research data.

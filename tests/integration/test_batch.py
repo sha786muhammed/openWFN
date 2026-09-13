@@ -1,10 +1,11 @@
+import csv
 import json
 import shutil
 from pathlib import Path
 
 import pytest
 
-from openwfn.batch import BATCH_SCHEMA_VERSION, run_batch
+from openwfn.batch import BATCH_SCHEMA_VERSION, discover_inputs, run_batch
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -172,3 +173,52 @@ def test_batch_writes_manifest_and_records_atomically(tmp_path: Path) -> None:
     assert (output_dir / "batch-manifest.json").exists()
     assert len(list((output_dir / "records").glob("*.json"))) == 1
     assert not list(output_dir.rglob("*.tmp"))
+
+
+def test_discovery_is_recursive_deduplicated_and_ignores_output_directory(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "calculations"
+    nested = root / "nested"
+    output_dir = root / "results"
+    nested.mkdir(parents=True)
+    output_dir.mkdir()
+    first = root / "first.xyz"
+    second = nested / "second.xyz"
+    first.write_text("1\nfirst\nH 0 0 0\n", encoding="utf-8")
+    second.write_text("1\nsecond\nH 0 0 0\n", encoding="utf-8")
+    (root / "notes.txt").write_text("ignore", encoding="utf-8")
+    (output_dir / "cached.xyz").write_text("1\ncached\nH 0 0 0\n", encoding="utf-8")
+
+    shallow = discover_inputs([root, first], recursive=False, output_dir=output_dir)
+    recursive = discover_inputs([root, first], recursive=True, output_dir=output_dir)
+
+    assert shallow.inputs == (first,)
+    assert shallow.unsupported == (root / "notes.txt",)
+    assert recursive.inputs == (first, second)
+    assert recursive.unsupported == (root / "notes.txt",)
+
+
+def test_directory_batch_writes_compact_csv_index(tmp_path: Path) -> None:
+    root = tmp_path / "calculations"
+    root.mkdir()
+    (root / "hydrogen.xyz").write_text("1\nhydrogen\nH 0 0 0\n", encoding="utf-8")
+    (root / "helium.xyz").write_text("1\nhelium\nHe 0 0 0\n", encoding="utf-8")
+    output_dir = tmp_path / "results"
+
+    manifest = run_batch(
+        [root],
+        "summary",
+        1,
+        output_dir,
+        recursive=True,
+    )
+
+    assert len(manifest.records) == 2
+    assert manifest.unsupported_inputs == ()
+    with (output_dir / "batch-summary.csv").open(newline="", encoding="utf-8") as stream:
+        rows = list(csv.DictReader(stream))
+    assert [Path(row["input_path"]).name for row in rows] == ["helium.xyz", "hydrogen.xyz"]
+    assert [row["status"] for row in rows] == ["success", "success"]
+    assert [row["analysis_successes"] for row in rows] == ["1", "1"]
+    assert [row["analysis_failures"] for row in rows] == ["0", "0"]
