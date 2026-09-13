@@ -24,6 +24,26 @@ print(hoh.data["value"])
 
 The high-level geometry methods use the same one-based atom numbers as the CLI.
 
+## Batch analyses
+
+```python
+from pathlib import Path
+
+from openwfn import run_batch
+
+manifest = run_batch(
+    inputs=[Path("first.fchk"), Path("second.fchk")],
+    operation=None,
+    analyses=("summary", "frontier"),
+    workers=2,
+    output_dir=Path("batch-results"),
+)
+print(manifest.schema_version, manifest.analyses)
+```
+
+The manifest preserves input order and records successful, partial, and failed
+inputs without discarding completed analyses.
+
 ## Density and orbitals
 
 The public package exports low-level evaluators including `compute_density`, `evaluate_mo`, and `make_bounding_box_grid`. These require compatible basis, coefficient, and density data. Prefer the typed model as the source and validate numerical settings before treating a grid result as converged.
