@@ -106,3 +106,58 @@ def test_batch_cli_resume_reports_skipped_inputs(tmp_path: Path) -> None:
     assert json.loads(resumed.stdout)["data"]["skipped"] == 1
     manifest = json.loads((output_dir / "batch-manifest.json").read_text(encoding="utf-8"))
     assert manifest["records"][0]["skipped"] is True
+
+
+def test_batch_dry_run_discovers_directory_without_output_directory(tmp_path: Path) -> None:
+    calculations = tmp_path / "calculations"
+    nested = calculations / "nested"
+    nested.mkdir(parents=True)
+    (calculations / "water.xyz").write_text(
+        "3\nwater\nO 0 0 0\nH 0 0 1\nH 1 0 0\n", encoding="utf-8"
+    )
+    (nested / "hydrogen.xyz").write_text("1\nhydrogen\nH 0 0 0\n", encoding="utf-8")
+    (calculations / "README.txt").write_text("not an input", encoding="utf-8")
+
+    result = run_cli(
+        "--format",
+        "json",
+        "batch",
+        str(calculations),
+        "--recursive",
+        "--dry-run",
+        "--analyses",
+        "summary",
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["kind"] == "batch_dry_run"
+    assert payload["data"]["discovered"] == 2
+    assert payload["data"]["unsupported"] == 1
+    assert [Path(path).name for path in payload["data"]["inputs"]] == [
+        "water.xyz",
+        "hydrogen.xyz",
+    ]
+
+
+def test_batch_progress_uses_stderr_and_quiet_suppresses_it(tmp_path: Path) -> None:
+    visible = run_cli(
+        "--format",
+        "json",
+        "batch",
+        str(WATER),
+        "--output-dir",
+        str(tmp_path / "visible"),
+    )
+    quiet = run_cli(
+        "--quiet",
+        "batch",
+        str(WATER),
+        "--output-dir",
+        str(tmp_path / "quiet"),
+    )
+
+    assert visible.returncode == quiet.returncode == 0
+    assert "Batch 1/1: success" in visible.stderr
+    assert "Batch 1/1:" not in quiet.stderr
+    assert json.loads(visible.stdout)["kind"] == "batch"

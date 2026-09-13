@@ -25,6 +25,21 @@ invalidates the corresponding cache. Both per-input records in `records/` and
 `batch-manifest.json` are replaced atomically so interruption cannot leave a
 partially written JSON document.
 
+Files and directories can be mixed. Add `--recursive` to scan subdirectories;
+registered parser suffixes are selected in stable order, duplicates are removed,
+and the output directory is excluded automatically. Preview discovery without
+performing analysis or requiring an output directory:
+
+```bash
+openwfn batch calculations/ --recursive --dry-run \
+  --analyses summary,frontier
+```
+
+Each completed run also writes `batch-summary.csv`, a compact one-row-per-input
+index containing checksums, status, skip state, analysis counts, elapsed time,
+and errors. Progress is written to stderr so JSON stdout stays machine-readable;
+use global `--quiet` to suppress progress.
+
 ## Research reports
 
 ```bash

@@ -17,7 +17,7 @@ from . import commands as cmd  # type: ignore
 from .analysis.orbitals import frontier_orbitals
 from .analysis.registry import run_analysis
 from .app import CommandContext, execute
-from .batch import run_batch
+from .batch import discover_inputs, run_batch
 from .compat import translate_legacy_args
 from .exporters.images import write_frontier_diagram
 from .exporters.structures import write_structure
@@ -271,9 +271,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Comma-separated registered analyses (for example: summary,frontier)",
     )
     p_batch.add_argument("--workers", type=int, default=1)
-    p_batch.add_argument("--output-dir", type=Path, required=True)
+    p_batch.add_argument("--output-dir", type=Path)
     p_batch.add_argument("--fail-fast", action="store_true")
     p_batch.add_argument("--resume", action="store_true", help="Reuse matching completed inputs")
+    p_batch.add_argument("--recursive", action="store_true", help="Discover inputs recursively")
+    p_batch.add_argument("--dry-run", action="store_true", help="List inputs without analysis")
 
     p_validate = subparsers.add_parser(
         "validate", help="Validate numerical density electron conservation"
@@ -398,13 +400,41 @@ def main(argv: list[str] | None = None) -> int:
         context = _context(args)
         if args.command == "batch":
             inputs = [Path(args.file), *args.inputs]
+            analyses = (
+                tuple(item.strip() for item in args.analyses.split(",") if item.strip())
+                if args.analyses
+                else (args.operation,)
+            )
+            if args.dry_run:
+                discovery = discover_inputs(
+                    inputs,
+                    recursive=args.recursive,
+                    output_dir=args.output_dir,
+                )
+                return execute(
+                    lambda: ResultRecord(
+                        kind="batch_dry_run",
+                        data={
+                            "analyses": list(analyses),
+                            "discovered": len(discovery.inputs),
+                            "inputs": [str(path) for path in discovery.inputs],
+                            "unsupported": len(discovery.unsupported),
+                            "unsupported_inputs": [
+                                str(path) for path in discovery.unsupported
+                            ],
+                        },
+                    ),
+                    context,
+                )
+            if args.output_dir is None:
+                p_batch.error("--output-dir is required unless --dry-run is used")
 
             def batch_operation() -> ResultRecord:
-                analyses = (
-                    tuple(item.strip() for item in args.analyses.split(",") if item.strip())
-                    if args.analyses
-                    else (args.operation,)
-                )
+                def report_progress(completed: int, total: int, record) -> None:
+                    context.error_stream.write(
+                        f"Batch {completed}/{total}: {record.status} {record.input_path}\n"
+                    )
+
                 manifest = run_batch(
                     inputs,
                     args.operation,
@@ -413,6 +443,8 @@ def main(argv: list[str] | None = None) -> int:
                     args.fail_fast,
                     analyses=analyses,
                     resume=args.resume,
+                    recursive=args.recursive,
+                    progress=None if context.quiet else report_progress,
                 )
                 successes = sum(record.status == "success" for record in manifest.records)
                 partial = sum(record.status == "partial" for record in manifest.records)
@@ -429,7 +461,9 @@ def main(argv: list[str] | None = None) -> int:
                         "errors": errors,
                         "skipped": skipped,
                         "configuration_fingerprint": manifest.configuration_fingerprint,
+                        "unsupported": len(manifest.unsupported_inputs),
                         "manifest": str(args.output_dir / "batch-manifest.json"),
+                        "csv_index": str(args.output_dir / "batch-summary.csv"),
                     },
                 )
 

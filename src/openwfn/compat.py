@@ -12,8 +12,8 @@ _GLOBAL_FLAGS = {
     "--overwrite",
     "--non-interactive",
 }
-_BATCH_OPTIONS_WITH_VALUES = {"--operation", "--workers", "--output-dir"}
-_BATCH_FLAGS = {"--fail-fast"}
+_BATCH_OPTIONS_WITH_VALUES = {"--analyses", "--operation", "--workers", "--output-dir"}
+_BATCH_FLAGS = {"--dry-run", "--fail-fast", "--recursive", "--resume"}
 
 
 def _translate_file_help(arguments: list[str]) -> list[str]:
