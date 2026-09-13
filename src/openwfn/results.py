@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from math import isfinite
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 CapabilityStatus = Literal["Stable", "Validated", "Experimental", "Unsupported"]
 ResultStatus = Literal["success", "partial", "failed"]
@@ -103,3 +103,34 @@ class ResultRecord:
             "validation_status": self.validation_status,
             "warnings": list(self.warnings),
         }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "ResultRecord":
+        """Restore a result envelope written by :meth:`as_dict`."""
+
+        schema_version = str(payload.get("schema_version", RESULT_SCHEMA_VERSION))
+        if schema_version != RESULT_SCHEMA_VERSION:
+            raise ValueError(f"Unsupported result schema version: {schema_version}")
+        error_payload = payload.get("error")
+        error = None
+        if error_payload is not None:
+            error = ResultError(
+                category=str(error_payload["category"]),
+                message=str(error_payload["message"]),
+                recoverable=bool(error_payload.get("recoverable", True)),
+            )
+        return cls(
+            kind=str(payload["kind"]),
+            data=dict(payload.get("data", {})),
+            units=dict(payload.get("units", {})),
+            validation_status=cast(
+                CapabilityStatus, payload.get("validation_status", "Stable")
+            ),
+            analysis_name=payload.get("analysis_name"),
+            analysis_version=str(payload.get("analysis_version", "1")),
+            status=cast(ResultStatus, payload.get("status", "success")),
+            warnings=tuple(str(item) for item in payload.get("warnings", ())),
+            provenance=dict(payload.get("provenance", {})),
+            elapsed_seconds=payload.get("elapsed_seconds"),
+            error=error,
+        )

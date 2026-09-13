@@ -53,3 +53,29 @@ def test_result_record_builds_a_structured_failure_envelope() -> None:
 def test_result_record_rejects_negative_elapsed_time() -> None:
     with pytest.raises(ValueError, match="elapsed_seconds must be non-negative"):
         ResultRecord(kind="summary", data={}, elapsed_seconds=-0.1)
+
+
+def test_result_record_round_trips_a_failure_envelope() -> None:
+    original = ResultRecord.failure(
+        kind="frontier_orbitals",
+        analysis_name="frontier",
+        analysis_version="1",
+        exception=ValueError("unavailable"),
+        elapsed_seconds=0.5,
+        provenance={"input_sha256": "abc"},
+    )
+
+    restored = ResultRecord.from_dict(original.as_dict())
+
+    assert restored == original
+
+
+def test_result_record_rejects_an_unknown_schema_when_restoring() -> None:
+    with pytest.raises(ValueError, match="Unsupported result schema version: 9.0"):
+        ResultRecord.from_dict(
+            {
+                "schema_version": "9.0",
+                "kind": "summary",
+                "data": {},
+            }
+        )
