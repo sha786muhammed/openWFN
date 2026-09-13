@@ -1,6 +1,6 @@
 site_name: openWFN
 site_author: Muhammed Shah Shaji
-site_description: Research-grade Gaussian wavefunction analysis from the CLI, Python, and an offline workbench
+site_description: Unified wavefunction post-processing for reproducible computational chemistry
 site_url: https://sha786muhammed.github.io/openWFN/
 repo_url: https://github.com/sha786muhammed/openWFN
 repo_name: sha786muhammed/openWFN
@@ -68,31 +68,31 @@ extra_javascript:
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 nav:
   - Home: index.md
-  - Start here:
+  - Get Started:
       - Overview: start/index.md
       - Installation: installation.md
       - Your first analysis: start/first-analysis.md
+      - Quick start: quick-start.md
       - Learning paths: start/learning-paths.md
       - Core terminology: start/terminology.md
-      - Quick start: quick-start.md
-  - Learn:
-      - What is wavefunction analysis?: learn/wavefunction-analysis.md
-      - Anatomy of FCHK: learn/fchk-anatomy.md
-      - Reproducible research: learn/reproducibility.md
-      - Terminology: start/terminology.md
-  - Guides:
+  - User Guide:
+      - Foundations:
+          - What is wavefunction analysis?: learn/wavefunction-analysis.md
+          - Anatomy of FCHK: learn/fchk-anatomy.md
+          - Reproducible research: learn/reproducibility.md
       - CLI workflows: guides/cli-workflows.md
       - Python workflows: guides/python-workflows.md
       - Batch and reports: guides/batch-and-reports.md
       - Offline workbench: workbench.md
       - Troubleshooting: guides/troubleshooting.md
+      - Tutorials:
+          - Geometry: tutorials/geometry.md
+          - Orbitals and density: tutorials/orbitals-density.md
+          - Reports: tutorials/reports.md
   - Reference:
       - Complete CLI: reference/cli.md
       - Python API: reference/python-api.md
       - Formats, units, and exports: reference/formats-and-exports.md
-      - Original format notes: formats.md
-      - Original Python API notes: python-api.md
-      - Legacy CLI page: cli.md
   - Science:
       - Geometry and topology: science/geometry-topology.md
       - Orbitals and density: science/orbitals-density.md
@@ -101,17 +101,13 @@ nav:
       - Validation summary: validation.md
       - Methods overview: methods.md
       - Limitations: limitations.md
-  - Tutorials:
-      - Geometry: tutorials/geometry.md
-      - Orbitals and density: tutorials/orbitals-density.md
-      - Reports: tutorials/reports.md
-  - Citation: citation.md
   - Project:
+      - Citation: citation.md
       - Security and privacy: project/security.md
       - Contributing: project/contributing.md
       - Release history: project/release-history.md
       - Releasing: releasing.md
-  - Releases:
-      - Version 0.7.2: releases/0.7.2.md
-      - Version 0.7.1: releases/0.7.1.md
-      - Version 0.7.0: releases/0.7.0.md
+      - Releases:
+          - Version 0.7.2: releases/0.7.2.md
+          - Version 0.7.1: releases/0.7.1.md
+          - Version 0.7.0: releases/0.7.0.md
