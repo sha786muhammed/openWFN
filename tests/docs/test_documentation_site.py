@@ -3,6 +3,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -69,6 +71,7 @@ def test_mkdocs_loads_scholarly_theme_and_mathjax() -> None:
     assert "navigation.footer" in config
 
 
+@pytest.mark.docs
 def test_homepage_build_has_distinct_title_and_project_favicon(tmp_path: Path) -> None:
     output = tmp_path / "site"
     result = subprocess.run(
@@ -323,3 +326,18 @@ def test_pages_workflow_uses_least_privilege_and_main_only() -> None:
     assert "cancel-in-progress: true" in workflow
     assert "mkdocs build --strict" in workflow
     assert "actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e" in workflow
+
+
+def test_mkdocs_integration_test_runs_only_in_documentation_workflow() -> None:
+    test_workflow = (ROOT / ".github" / "workflows" / "tests.yml").read_text(
+        encoding="utf-8"
+    )
+    docs_workflow = (ROOT / ".github" / "workflows" / "docs.yml").read_text(
+        encoding="utf-8"
+    )
+    config = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+
+    assert '"docs: tests that require the documentation toolchain"' in config
+    assert 'python -m pytest --strict-markers -m "not docs"' in test_workflow
+    assert "python -m pip install .[test,docs]" in docs_workflow
+    assert "python -m pytest --strict-markers -m docs tests/docs" in docs_workflow
