@@ -109,6 +109,7 @@ nav:
       - Release history: project/release-history.md
       - Releasing: releasing.md
       - Releases:
+          - Version 0.8.0a1: releases/0.8.0a1.md
           - Version 0.7.2: releases/0.7.2.md
           - Version 0.7.1: releases/0.7.1.md
           - Version 0.7.0: releases/0.7.0.md

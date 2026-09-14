@@ -4,6 +4,6 @@ For reproducibility, cite the repository, exact release, input checksum, and rel
 
 Suggested software citation text:
 
-> Muhammed Shah Shaji. openWFN: wavefunction analysis toolkit, version 0.7.2. University of Louisville. https://github.com/sha786muhammed/openWFN
+> Muhammed Shah Shaji. openWFN: wavefunction analysis toolkit, version 0.8.0a1. University of Louisville. https://github.com/sha786muhammed/openWFN
 
 Archive identifiers will be added after an approved archival deposit.

@@ -38,8 +38,8 @@ def citation_release_date() -> str:
     return match.group(1)
 
 
-def test_release_version_is_072() -> None:
-    assert project_version() == "0.7.2"
+def test_release_version_is_080a1() -> None:
+    assert project_version() == "0.8.0a1"
 
 
 def test_runtime_version_matches_project() -> None:
@@ -83,12 +83,18 @@ def test_readme_documents_binary_checkpoint_requirement() -> None:
 
 def test_changelog_contains_current_release() -> None:
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    assert "## [0.7.2] - 2026-09-12" in changelog
+    assert "## [0.8.0a1] - 2026-09-14" in changelog
 
 
 def test_release_notes_document_capability_boundaries() -> None:
-    notes = (ROOT / "docs" / "releases" / "0.7.2.md").read_text(encoding="utf-8")
-    for required in ("Validated", "Experimental", "Unsupported", "GitHub Pages"):
+    notes = (ROOT / "docs" / "releases" / "0.8.0a1.md").read_text(encoding="utf-8")
+    for required in (
+        "alpha",
+        "Validated",
+        "Experimental",
+        "Unsupported",
+        "GitHub Pages",
+    ):
         assert required in notes
 
 
@@ -100,9 +106,10 @@ def test_release_guide_contains_required_gates() -> None:
         "python -m build",
         "python -m twine check",
         "git tag -a",
-        "0.7.2",
+        "0.8.0a1",
     ):
         assert required in guide
+    assert "dist/openwfn-0.7.2" not in guide
 
 
 def test_publish_workflow_is_oidc_only_pinned_and_version_gated() -> None:
