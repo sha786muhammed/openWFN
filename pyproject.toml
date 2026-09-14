@@ -74,6 +74,9 @@ openwfn = ["assets/*.js"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "docs: tests that require the documentation toolchain",
+]
 
 [tool.ruff]
 target-version = "py310"
