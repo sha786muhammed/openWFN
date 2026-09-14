@@ -1,5 +1,11 @@
 # Release history
 
+## 0.8.0a1 — reproducible analysis contracts and resilient batching
+
+Version 0.8.0a1 is an alpha release of the v0.8 foundation. It introduces the schema-2.0 calculation boundary, versioned result envelopes, named analysis execution, provenance-rich batch manifests, recursive discovery, CSV indexing, and crash-safe resume. It also establishes the redesigned documentation and unified project identity.
+
+[Read the detailed 0.8.0a1 notes](../releases/0.8.0a1.md)
+
 ## 0.7.2 — spherical basis and workflow consistency
 
 Version 0.7.2 adds Gaussian real spherical basis support through H shells (5D, 7F, 9G, 11H), makes molecular summaries consistently available through structured renderers, fixes dynamic MOL/SDF version metadata, adds configurable validation-grid controls, and restores clean checkpoint-conversion error handling.

@@ -2,6 +2,26 @@
 
 All notable changes to openWFN are documented in this file.
 
+## [0.8.0a1] - 2026-09-14
+
+### Added
+
+- Added a versioned calculation boundary with schema `2.0`, immutable source identity, parser provenance, named transformations, and canonical source-format tracking.
+- Added a versioned analysis registry and result envelope carrying analysis identity, units, validation status, warnings, timing, provenance, and structured failures.
+- Added multi-analysis batch manifests, recursive directory discovery, deterministic CSV indexing, and crash-safe resume from persisted result envelopes.
+
+### Changed
+
+- Unified named analysis execution across the Python API and high-throughput batch workflows.
+- Redesigned the documentation website around task-oriented learning, CLI/API reference material, scientific-method documentation, and a single project identity.
+- Added dedicated documentation integration testing without expanding the standard Python-version test matrix.
+
+### Alpha limitations
+
+- Gaussian formatted checkpoint files remain the primary wavefunction input for quantitative orbital, density, population, and electrostatic analyses.
+- The `2.0` model and result schemas are alpha interfaces and may receive compatibility-driven refinements before `0.8.0`.
+- Experimental and Unsupported scientific capabilities remain labeled as such in machine-readable results and documentation.
+
 ## [0.7.2] - 2026-09-12
 
 ### Added
