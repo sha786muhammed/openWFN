@@ -69,6 +69,31 @@ def test_mkdocs_loads_scholarly_theme_and_mathjax() -> None:
     assert "navigation.footer" in config
 
 
+def test_homepage_build_has_distinct_title_and_project_favicon(tmp_path: Path) -> None:
+    output = tmp_path / "site"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "mkdocs",
+            "build",
+            "--strict",
+            "--site-dir",
+            str(output),
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    homepage = (output / "index.html").read_text(encoding="utf-8")
+    assert "<title>Wavefunction analysis - openWFN</title>" in homepage
+    assert 'rel="icon" href="assets/images/openwfn-icon.svg"' in homepage
+    assert (output / "assets" / "images" / "openwfn-icon.svg").is_file()
+
+
 def test_public_images_have_provenance_and_are_bounded() -> None:
     manifest_path = ROOT / "docs" / "assets" / "data" / "asset-provenance.yml"
     image_root = ROOT / "docs" / "assets" / "images"

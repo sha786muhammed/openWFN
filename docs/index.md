@@ -1,5 +1,5 @@
 ---
-title: openWFN
+title: Wavefunction analysis
 description: Unified wavefunction post-processing for reproducible computational chemistry.
 hide:
   - toc
