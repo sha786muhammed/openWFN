@@ -56,12 +56,42 @@ def test_mkdocs_navigation_references_existing_pages() -> None:
 
 def test_mkdocs_loads_scholarly_theme_and_mathjax() -> None:
     config = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
+    stylesheet_entry = "stylesheets/openwfn-site-v2.css"
+    stylesheet = ROOT / "docs" / stylesheet_entry
 
-    assert "stylesheets/extra.css" in config
+    assert stylesheet_entry in config
+    assert '@import url("extra.css?v=20260913");' in stylesheet.read_text(
+        encoding="utf-8"
+    )
     assert "javascripts/mathjax.js" in config
     assert "cdn.jsdelivr.net/npm/mathjax@3" in config
     assert "navigation.tabs" in config
     assert "navigation.footer" in config
+
+
+def test_homepage_build_has_distinct_title_and_project_favicon(tmp_path: Path) -> None:
+    output = tmp_path / "site"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "mkdocs",
+            "build",
+            "--strict",
+            "--site-dir",
+            str(output),
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    homepage = (output / "index.html").read_text(encoding="utf-8")
+    assert "<title>Wavefunction analysis - openWFN</title>" in homepage
+    assert 'rel="icon" href="assets/images/openwfn-icon.svg"' in homepage
+    assert (output / "assets" / "images" / "openwfn-icon.svg").is_file()
 
 
 def test_public_images_have_provenance_and_are_bounded() -> None:
@@ -113,7 +143,7 @@ def test_homepage_uses_documentation_first_product_components() -> None:
 def test_material_icon_library_and_brand_identity_are_configured() -> None:
     config = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
 
-    assert "logo: assets/images/openwfn-header.png" in config
+    assert "logo: assets/images/openwfn-brand.svg" in config
     assert "pymdownx.emoji" in config
     assert "material.extensions.emoji.twemoji" in config
     assert "material.extensions.emoji.to_svg" in config
@@ -123,7 +153,8 @@ def test_readme_opens_with_canonical_product_identity() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
     assert '<p align="center">' in readme
-    assert 'src="docs/assets/images/openwfn-header.png"' in readme
+    assert 'src="docs/assets/images/openwfn-brand.svg"' in readme
+    assert "bgcolor=" not in readme
     assert "Wavefunction analysis, made reproducible." in readme
     assert "openwfn-orbital-hero.webp" not in readme
     assert "openwfn-wordmark.png" not in readme
@@ -135,11 +166,21 @@ def test_public_brand_uses_one_canonical_logo() -> None:
     config = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
     styles = (ROOT / "docs" / "stylesheets" / "extra.css").read_text(encoding="utf-8")
 
-    assert 'src="docs/assets/images/openwfn-header.png"' in readme
-    assert 'src="assets/images/openwfn-header.png"' in home
-    assert "logo: assets/images/openwfn-header.png" in config
+    brand_path = ROOT / "docs" / "assets" / "images" / "openwfn-brand.svg"
+
+    assert brand_path.exists()
+    brand = brand_path.read_text(encoding="utf-8")
+    assert 'fill="#17213f"' in brand
+    assert "data:image/png;base64," in brand
+    assert 'src="docs/assets/images/openwfn-brand.svg"' in readme
+    assert 'src="assets/images/openwfn-brand.svg"' in home
+    assert "logo: assets/images/openwfn-brand.svg" in config
     assert ".md-header__button.md-logo img" in styles
-    for obsolete in ("openwfn-wordmark.png", "openwfn-orbital-hero.webp"):
+    for obsolete in (
+        "openwfn-header.png",
+        "openwfn-wordmark.png",
+        "openwfn-orbital-hero.webp",
+    ):
         assert obsolete not in readme
         assert obsolete not in home
 
@@ -191,9 +232,9 @@ def test_header_uses_compact_asset_and_keeps_mobile_drawer_available() -> None:
     styles = (ROOT / "docs" / "stylesheets" / "extra.css").read_text(
         encoding="utf-8"
     )
-    header_logo = ROOT / "docs" / "assets" / "images" / "openwfn-header.png"
+    header_logo = ROOT / "docs" / "assets" / "images" / "openwfn-brand.svg"
 
-    assert "logo: assets/images/openwfn-header.png" in config
+    assert "logo: assets/images/openwfn-brand.svg" in config
     assert header_logo.exists()
     desktop_media = styles.index("@media (min-width: 60.01rem)")
     drawer_rule = styles.index(

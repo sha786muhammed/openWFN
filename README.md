@@ -1,10 +1,6 @@
-<table align="center">
-  <tr>
-    <td align="center" bgcolor="#303f9f">
-      <img src="docs/assets/images/openwfn-header.png" width="360" alt="openWFN">
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <img src="docs/assets/images/openwfn-brand.svg" width="420" alt="openWFN">
+</p>
 
 <p align="center"><strong>Wavefunction analysis, made reproducible.</strong></p>
 

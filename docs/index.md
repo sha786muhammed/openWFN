@@ -1,5 +1,5 @@
 ---
-title: openWFN
+title: Wavefunction analysis
 description: Unified wavefunction post-processing for reproducible computational chemistry.
 hide:
   - toc
@@ -11,7 +11,7 @@ hide:
   <div class="ow-intro__brand" markdown="1">
 
 <div class="ow-brand-panel">
-  <img src="assets/images/openwfn-header.png" alt="openWFN" width="500" height="88">
+  <img src="assets/images/openwfn-brand.svg" alt="openWFN" width="560" height="120">
 </div>
 
 <p class="ow-kicker">Wavefunction post-processing</p>
