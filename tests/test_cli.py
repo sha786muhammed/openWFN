@@ -8,10 +8,13 @@ from openwfn.cli import convert_chk_to_fchk  # type: ignore
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def run_cli(args: list[str]) -> subprocess.CompletedProcess[str]:
+def run_cli(
+    args: list[str], *, env_overrides: dict[str, str] | None = None
+) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     existing = env.get("PYTHONPATH", "")
     env["PYTHONPATH"] = f"{ROOT / 'src'}{os.pathsep}{existing}" if existing else str(ROOT / "src")
+    env.update(env_overrides or {})
     return subprocess.run(
         [sys.executable, "-m", "openwfn.cli", *args],
         capture_output=True,
@@ -107,7 +110,7 @@ def test_chk_conversion_error_is_actionable(tmp_path):
     chk = tmp_path / "mini.chk"
     chk.write_text("placeholder")
 
-    result = run_cli([str(chk), "summary"])
+    result = run_cli([str(chk), "summary"], env_overrides={"PATH": str(tmp_path)})
 
     assert result.returncode != 0
     assert "requires `formchk`" in result.stderr
