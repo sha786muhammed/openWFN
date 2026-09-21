@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use openWFN in your research, please cite it."
 title: "openWFN: Research-grade Gaussian wavefunction analysis"
 version: "0.8.0a1"
-date-released: 2026-09-14
+date-released: 2026-09-21
 authors:
   - family-names: Shaji
     given-names: Muhammed Shah

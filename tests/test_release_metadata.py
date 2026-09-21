@@ -83,7 +83,7 @@ def test_readme_documents_binary_checkpoint_requirement() -> None:
 
 def test_changelog_contains_current_release() -> None:
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    assert "## [0.8.0a1] - 2026-09-14" in changelog
+    assert "## [0.8.0a1] - 2026-09-21" in changelog
 
 
 def test_release_notes_document_capability_boundaries() -> None:
