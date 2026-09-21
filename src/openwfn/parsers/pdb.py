@@ -23,11 +23,17 @@ def parse_pdb(path: Path) -> CalculationData:
                 raise ParseError(f"Malformed PDB atom record at line {line_number}.") from exc
             symbol = line[76:78].strip().title()
             if not symbol:
-                symbol = "".join(
-                    character for character in line[12:16] if character.isalpha()
-                ).title()
-                if len(symbol) > 2:
-                    symbol = symbol[:1]
+                atom_name = line[12:16]
+                letters = "".join(
+                    character for character in atom_name if character.isalpha()
+                )
+                if atom_name.startswith(" "):
+                    symbol = letters[:1].title()
+                else:
+                    two_letter = letters[:2].title()
+                    symbol = (
+                        two_letter if two_letter in SYMBOL_TO_Z else letters[:1].title()
+                    )
             if symbol not in SYMBOL_TO_Z:
                 raise ParseError(f"Unknown PDB element {symbol!r} at line {line_number}.")
             serial_to_index[serial] = len(atoms)

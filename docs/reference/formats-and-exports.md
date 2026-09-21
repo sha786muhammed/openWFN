@@ -6,6 +6,13 @@
 |---|---|---|
 | Gaussian `.fchk` | Direct | Primary analysis format |
 | Gaussian `.chk` | Via `formchk` | Requires licensed Gaussian utility in `PATH` |
+| Gaussian `.cube` | Volumetric grid | `doctor` reports grid capability; molecular analyses require FCHK data |
+| Gaussian `.log`/`.out` | Calculation metadata | `doctor` reports metadata capability; molecular analyses require FCHK data |
+| XYZ, PDB, MOL/SDF | Molecular structure | Coordinates and available connectivity only |
+
+`doctor` is safe to run across these input kinds. Other analysis commands fail
+cleanly when the parsed input does not provide a molecular calculation; openWFN
+does not infer missing wavefunction records.
 
 ## Structure outputs
 

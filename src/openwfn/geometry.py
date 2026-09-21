@@ -150,6 +150,37 @@ def detect_bonds(
     bonds: list[tuple[int, int, float]] = []
     n = len(atomic_numbers)
 
+    known_radii = [
+        radius
+        for atomic_number in atomic_numbers
+        if (radius := COVALENT_RADII.get(Z_TO_SYMBOL.get(atomic_number))) is not None
+    ]
+    use_spatial_index = (
+        scale > 0.0
+        and bool(known_radii)
+        and all(math.isfinite(value) for point in coordinates for value in point)
+    )
+    if use_spatial_index:
+        cell_size = scale * 2.0 * max(known_radii)
+        cells: dict[tuple[int, int, int], list[int]] = {}
+        for i, (atomic_number, point) in enumerate(zip(atomic_numbers, coordinates)):
+            radius = COVALENT_RADII.get(Z_TO_SYMBOL.get(atomic_number))
+            if radius is None:
+                continue
+            cell = tuple(math.floor(value / cell_size) for value in point)
+            for dx in (-1, 0, 1):
+                for dy in (-1, 0, 1):
+                    for dz in (-1, 0, 1):
+                        neighbor = (cell[0] + dx, cell[1] + dy, cell[2] + dz)
+                        for j in cells.get(neighbor, ()):
+                            other_radius = COVALENT_RADII[Z_TO_SYMBOL[atomic_numbers[j]]]
+                            bond_distance = distance(j + 1, i + 1, coordinates)
+                            if bond_distance <= scale * (radius + other_radius):
+                                bonds.append((j + 1, i + 1, bond_distance))
+            cells.setdefault(cell, []).append(i)
+        bonds.sort(key=lambda bond: (bond[0], bond[1]))
+        return bonds
+
     for i in range(n):
         Zi = atomic_numbers[i]
         sym_i = Z_TO_SYMBOL.get(Zi)

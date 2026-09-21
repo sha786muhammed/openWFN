@@ -39,6 +39,27 @@ def test_detect_bonds_missing_radius():
     assert len(bonds) == 0
 
 
+def test_detect_bonds_prunes_distant_pairs_before_distance_evaluation(monkeypatch):
+    import openwfn.geometry as geometry
+
+    distance_calls = 0
+    real_distance = geometry.distance
+
+    def tracked_distance(i, j, coordinates):
+        nonlocal distance_calls
+        distance_calls += 1
+        return real_distance(i, j, coordinates)
+
+    monkeypatch.setattr(geometry, "distance", tracked_distance)
+    atomic_numbers = [6] * 1_000
+    coordinates = [(float(index) * 10.0, 0.0, 0.0) for index in range(1_000)]
+
+    bonds = geometry.detect_bonds(atomic_numbers, coordinates)
+
+    assert bonds == []
+    assert distance_calls < 5_000
+
+
 def test_distance_rejects_out_of_range_index():
     coordinates = [(0.0, 0.0, 0.0), (1.0, 0.0, 0.0)]
     with pytest.raises(ValueError, match="out of range"):

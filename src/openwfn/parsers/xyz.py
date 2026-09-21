@@ -11,6 +11,8 @@ from ..model import Atom, CalculationData, CalculationMetadata, Molecule, Proven
 def parse_xyz(path: Path) -> CalculationData:
     raw = path.read_bytes()
     lines = raw.decode("utf-8").splitlines()
+    while len(lines) > 2 and not lines[-1].strip():
+        lines.pop()
     if len(lines) < 2:
         raise ParseError("Malformed XYZ file: atom count and comment line are required.")
     try:
@@ -23,7 +25,7 @@ def parse_xyz(path: Path) -> CalculationData:
     atoms: list[Atom] = []
     for line_number, line in enumerate(lines[2:], start=3):
         fields = line.split()
-        if len(fields) != 4:
+        if len(fields) < 4:
             raise ParseError(f"Malformed XYZ atom record at line {line_number}.")
         symbol = fields[0][0].upper() + fields[0][1:].lower()
         atomic_number = SYMBOL_TO_Z.get(symbol)

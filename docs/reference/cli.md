@@ -24,7 +24,7 @@ Run `openwfn --help` or `openwfn FILE COMMAND --help` for the installed release'
 |---|---|---|
 | `summary` | `openwfn FILE summary` | Formula, state, energy, center of mass, bonds, fragments |
 | `info` | `openwfn FILE info` | Parsed FCHK scalar metadata |
-| `doctor` | `openwfn FILE doctor` | Availability of basis, orbitals, and density |
+| `doctor` | `openwfn FILE doctor` | Input kind and availability of metadata, grid, basis, orbitals, and density |
 | `bonds` | `openwfn FILE bonds` | Covalent-radius bond heuristic |
 | `graph` | `openwfn FILE graph` | Connected molecular fragments |
 | `geometry` | `geometry distance I J` | Interatomic distance in ångströms |
@@ -74,6 +74,8 @@ suppresses it.
 It writes result schema `1.0` envelopes inside batch manifest schema `1.0`.
 The older `--operation summary` form remains supported.
 
-`interactive` launches the guided terminal menu. With no command, a terminal session enters guided mode; redirected/non-interactive use defaults to `summary`.
+`interactive` launches the guided terminal menu. With a file but no command, a
+terminal session enters guided mode; redirected input or `--non-interactive`
+defaults to `summary`.
 
 The hidden `mo` developer preview is intentionally not part of the public command contract.

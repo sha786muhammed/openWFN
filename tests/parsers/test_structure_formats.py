@@ -30,6 +30,33 @@ def test_xyz_round_trip_preserves_elements_and_coordinates(tmp_path: Path) -> No
     )
 
 
+def test_xyz_accepts_additional_columns_and_trailing_blank_lines(tmp_path: Path) -> None:
+    source = tmp_path / "extended.xyz"
+    source.write_text(
+        "2\nproperties\n"
+        "Al 0.0 0.1 0.2 13 1.0 2.0 3.0\n"
+        "H 1.0 1.1 1.2 fragment-1\n\n",
+        encoding="utf-8",
+    )
+
+    molecule = load(source).molecule
+
+    assert tuple(atom.atomic_number for atom in molecule.atoms) == (13, 1)
+    assert molecule.atoms[1].coordinates == pytest.approx((1.0, 1.1, 1.2))
+
+
+def test_pdb_infers_one_letter_element_from_aligned_atom_name(tmp_path: Path) -> None:
+    source = tmp_path / "hydrogen.pdb"
+    source.write_text(
+        "ATOM      2  HT1 LYS A   1       0.663  -0.746  -0.018  1.00  0.00            \n",
+        encoding="utf-8",
+    )
+
+    molecule = load(source).molecule
+
+    assert molecule.atoms[0].atomic_number == 1
+
+
 @pytest.mark.parametrize(
     ("suffix", "contents", "expected_format"),
     [
@@ -137,6 +164,21 @@ def test_sdf_provenance_hash_identifies_original_file_bytes(tmp_path: Path) -> N
     assert data.molecule.provenance is not None
     assert data.molecule.provenance.sha256 == sha256(source.read_bytes()).hexdigest()
     assert data.molecule.provenance.source_format == "sdf"
+
+
+def test_sdf_accepts_case_insensitive_v2000_version_marker(tmp_path: Path) -> None:
+    source = tmp_path / "formamide.sdf"
+    source.write_text(
+        "formamide\nfixture\n\n  1  0  0  0  0  0            999 v2000\n"
+        "    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n"
+        "M  END\n$$$$\n",
+        encoding="utf-8",
+    )
+
+    molecule = load(source).molecule
+
+    assert len(molecule.atoms) == 1
+    assert molecule.atoms[0].atomic_number == 8
 
 
 def test_structure_writer_protects_existing_output(tmp_path: Path) -> None:

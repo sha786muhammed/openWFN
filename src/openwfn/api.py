@@ -6,7 +6,7 @@ from typing import Any
 
 from .analysis.registry import run_analysis
 from .errors import DataUnavailableError
-from .model import CalculationData, Molecule
+from .model import CalculationData, CalculationMetadata, Molecule, VolumetricGrid
 from .parsers.registry import load as parse_input
 from .results import ResultRecord
 from .services import (
@@ -71,6 +71,16 @@ class OpenWFNCalculation:
 
 def load(path: str | Path) -> OpenWFNCalculation:
     parsed = parse_input(Path(path))
+    if isinstance(parsed, CalculationMetadata):
+        raise DataUnavailableError(
+            f"{path} contains calculation metadata rather than a molecular calculation."
+        )
+    if isinstance(parsed, VolumetricGrid):
+        raise DataUnavailableError(
+            f"{path} contains a volumetric grid rather than a molecular calculation."
+        )
     if not isinstance(parsed, CalculationData):
-        raise DataUnavailableError(f"{path} contains a volumetric grid rather than a molecular calculation.")
+        raise DataUnavailableError(
+            f"{path} does not contain a supported molecular calculation."
+        )
     return OpenWFNCalculation(parsed)

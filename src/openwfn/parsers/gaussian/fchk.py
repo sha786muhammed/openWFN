@@ -31,6 +31,9 @@ RecordValue: TypeAlias = Scalar | Array
 _HEADER = re.compile(
     r"^(?P<label>.*?)\s+(?P<kind>[IRC])\s+(?:(?:N\s*=\s*(?P<count>\d+))|(?P<value>.*?))\s*$"
 )
+_REAL_TOKEN = re.compile(
+    r"[-+]?(?:(?:\d+(?:\.\d*)?)|(?:\.\d+))(?:[DEde][-+]?\d+)?"
+)
 
 
 def _convert_numeric(token: str, kind: str, label: str, line_number: int) -> int | float:
@@ -44,6 +47,26 @@ def _convert_numeric(token: str, kind: str, label: str, line_number: int) -> int
             f"Malformed FCHK record '{label}' at line {line_number}: "
             f"token {token!r} is {description}."
         ) from exc
+
+
+def _numeric_tokens(line: str, kind: str, label: str, line_number: int) -> list[str]:
+    """Split numeric array records, including adjacent signed real fields."""
+
+    if kind == "I":
+        return line.split()
+
+    tokens: list[str] = []
+    position = 0
+    for match in _REAL_TOKEN.finditer(line):
+        gap = line[position : match.start()]
+        if gap.strip():
+            _convert_numeric(gap.strip(), kind, label, line_number)
+        tokens.append(match.group())
+        position = match.end()
+    remainder = line[position:]
+    if remainder.strip():
+        _convert_numeric(remainder.strip(), kind, label, line_number)
+    return tokens
 
 
 @dataclass(frozen=True, slots=True)
@@ -83,12 +106,18 @@ class FCHKDocument:
                 if _HEADER.match(candidate):
                     break
                 if kind == "C":
-                    chunks = [candidate[start : start + 12].strip() for start in range(0, len(candidate), 12)]
+                    if candidate:
+                        chunks = [
+                            candidate[start : start + 12].strip()
+                            for start in range(0, len(candidate), 12)
+                        ]
+                    else:
+                        chunks = [""] * min(5, count - len(values))
                     values.extend(chunks)
                 else:
                     values.extend(
                         _convert_numeric(token, kind, label, index + 1)
-                        for token in candidate.split()
+                        for token in _numeric_tokens(candidate, kind, label, index + 1)
                     )
                 if len(values) > count:
                     raise ParseError(
@@ -264,11 +293,20 @@ def parse_fchk(path: Path) -> CalculationData:
     raw = path.read_bytes()
     text = raw.decode("utf-8")
     lines = text.splitlines(keepends=True)
-    document = FCHKDocument.from_lines(lines)
+    # Standard FCHK files begin with two free-form title/descriptor lines, and
+    # some producers put text there that resembles a scalar record. Retain
+    # compatibility with compact record-only fixtures and generated inputs.
+    record_lines = lines if lines and _HEADER.match(lines[0].rstrip("\r\n")) else lines[2:]
+    document = FCHKDocument.from_lines(record_lines)
 
-    atom_count = int(document.scalar("Number of atoms"))
     atomic_numbers = tuple(int(value) for value in document.array("Atomic numbers"))
     raw_coordinates = tuple(float(value) for value in document.array("Current cartesian coordinates"))
+    atom_count_record = document.records.get("Number of atoms")
+    atom_count = (
+        int(atom_count_record)
+        if isinstance(atom_count_record, (int, float))
+        else len(atomic_numbers)
+    )
     if len(atomic_numbers) != atom_count or len(raw_coordinates) != atom_count * 3:
         raise ParseError(
             "FCHK 'Number of atoms' does not match Atomic numbers and Current cartesian coordinates."

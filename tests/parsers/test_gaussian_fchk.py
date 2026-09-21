@@ -29,6 +29,12 @@ def test_document_preserves_blank_fixed_width_character_values() -> None:
     assert document.array("Atom Types") == ("", "", "")
 
 
+def test_document_reads_compact_blank_character_array_line() -> None:
+    document = FCHKDocument.from_lines(["Atom Types C N= 3\n", "\n"])
+
+    assert document.array("Atom Types") == ("", "", "")
+
+
 def test_document_rejects_truncated_array_with_record_and_line() -> None:
     with pytest.raises(ParseError, match=r"Atomic numbers.*line 1.*expected 3.*found 2"):
         FCHKDocument.from_lines(["Atomic numbers I N= 3\n", "8 1\n"])
@@ -37,6 +43,19 @@ def test_document_rejects_truncated_array_with_record_and_line() -> None:
 def test_document_rejects_invalid_numeric_token() -> None:
     with pytest.raises(ParseError, match=r"Atomic numbers.*not-an-integer"):
         FCHKDocument.from_lines(["Atomic numbers I N= 2\n", "8 not-an-integer\n"])
+
+
+def test_document_reads_adjacent_signed_real_values_from_fixed_width_writer() -> None:
+    document = FCHKDocument.from_lines(
+        [
+            "Current cartesian coordinates R N= 2\n",
+            " 1.13086932e+00-3.46281773e-118\n",
+        ]
+    )
+
+    assert document.array("Current cartesian coordinates") == pytest.approx(
+        (1.13086932, -3.46281773e-118)
+    )
 
 
 def test_parse_fchk_returns_typed_molecule_with_provenance(tmp_path: Path) -> None:
@@ -64,6 +83,47 @@ def test_parse_fchk_returns_typed_molecule_with_provenance(tmp_path: Path) -> No
     assert data.molecule.provenance.source_format == "fchk"
     assert data.molecule.provenance.parser_version == "1"
     assert data.molecule.boundary_conditions.kind == "isolated"
+
+
+def test_parse_fchk_derives_atom_count_when_redundant_scalar_is_absent(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "minimal.fchk"
+    source.write_text(
+        "Minimal\n"
+        "SP RHF STO-3G\n"
+        "Charge I 0\n"
+        "Multiplicity I 1\n"
+        "Atomic numbers I N= 2\n"
+        "1 1\n"
+        "Current cartesian coordinates R N= 6\n"
+        "0.0 0.0 0.0 1.4 0.0 0.0\n",
+        encoding="utf-8",
+    )
+
+    data = parse_fchk(source)
+
+    assert tuple(atom.atomic_number for atom in data.molecule.atoms) == (1, 1)
+
+
+def test_parse_fchk_does_not_parse_header_text_as_a_record(tmp_path: Path) -> None:
+    source = tmp_path / "qchem.fchk"
+    source.write_text(
+        "Jobname.Temp\n"
+        "SP        R                             STO-3G\n"
+        "Number of atoms I 1\n"
+        "Charge I 0\n"
+        "Multiplicity I 1\n"
+        "Atomic numbers I N= 1\n"
+        "1\n"
+        "Current cartesian coordinates R N= 3\n"
+        "0.0 0.0 0.0\n",
+        encoding="utf-8",
+    )
+
+    data = parse_fchk(source)
+
+    assert data.molecule.atoms[0].atomic_number == 1
 
 
 def test_parse_fchk_rejects_atom_coordinate_count_mismatch(tmp_path: Path) -> None:

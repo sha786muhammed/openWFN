@@ -53,6 +53,108 @@ def test_summary_json_uses_the_registered_analysis_envelope() -> None:
     assert len(payload["provenance"]["input_sha256"]) == 64
 
 
+def test_non_interactive_file_without_command_defaults_to_summary() -> None:
+    result = run_cli("--non-interactive", "--format", "json", str(WATER))
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["kind"] == "summary"
+    assert payload["data"]["formula"] == "H2O"
+
+
+def test_doctor_describes_gaussian_output_metadata_without_traceback(tmp_path: Path) -> None:
+    source = tmp_path / "job.log"
+    source.write_text(
+        "# RHF/3-21G\nSCF Done: E(RHF) = -7.5\nNormal termination of Gaussian\n",
+        encoding="utf-8",
+    )
+
+    result = run_cli("--format", "json", str(source), "doctor")
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["data"]["input_kind"] == "calculation-metadata"
+    assert payload["data"]["capabilities"] == {
+        "basis": False,
+        "density": False,
+        "metadata": True,
+        "orbitals": False,
+        "volumetric_grid": False,
+    }
+    assert "Traceback" not in result.stderr
+
+
+def test_doctor_describes_cube_grid_without_traceback(tmp_path: Path) -> None:
+    source = tmp_path / "density.cube"
+    source.write_text(
+        "density\nfixture\n0 0 0 0\n1 1 0 0\n1 0 1 0\n1 0 0 1\n0.5\n",
+        encoding="utf-8",
+    )
+
+    result = run_cli("--format", "json", str(source), "doctor")
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["data"]["input_kind"] == "volumetric-grid"
+    assert payload["data"]["capabilities"] == {
+        "basis": False,
+        "density": True,
+        "metadata": False,
+        "orbitals": False,
+        "volumetric_grid": True,
+    }
+    assert "Traceback" not in result.stderr
+
+
+@pytest.mark.parametrize("suffix", ["log", "cube"])
+def test_summary_rejects_non_molecular_input_cleanly(tmp_path: Path, suffix: str) -> None:
+    source = tmp_path / f"input.{suffix}"
+    if suffix == "log":
+        source.write_text("# RHF/3-21G\nSCF Done: E(RHF) = -7.5\n", encoding="utf-8")
+    else:
+        source.write_text(
+            "density\nfixture\n0 0 0 0\n1 1 0 0\n1 0 1 0\n1 0 0 1\n0.5\n",
+            encoding="utf-8",
+        )
+
+    result = run_cli(str(source), "summary")
+
+    assert result.returncode == 4
+    assert "does not contain a molecular calculation" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("suffix", "contents", "command"),
+    [
+        (
+            "log",
+            "# RHF/3-21G\nSCF Done: E(RHF) = -7.5\n",
+            ("orbitals", "frontier"),
+        ),
+        (
+            "cube",
+            "density\nfixture\n0 0 0 0\n1 1 0 0\n1 0 1 0\n1 0 0 1\n0.5\n",
+            ("validate",),
+        ),
+    ],
+)
+def test_molecular_analysis_commands_reject_other_input_kinds_cleanly(
+    tmp_path: Path,
+    suffix: str,
+    contents: str,
+    command: tuple[str, ...],
+) -> None:
+    source = tmp_path / f"input.{suffix}"
+    source.write_text(contents, encoding="utf-8")
+
+    result = run_cli(str(source), *command)
+
+    assert result.returncode == 4
+    assert "does not contain a molecular calculation" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
 def test_nested_geometry_angle_runs_without_legacy_retranslation() -> None:
     result = run_cli(str(WATER), "geometry", "angle", "2", "1", "3")
 

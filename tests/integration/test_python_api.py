@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 import openwfn
+from openwfn.errors import DataUnavailableError
 from openwfn.services import geometry_distance
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -97,3 +98,14 @@ def test_batch_contract_is_available_from_top_level_package() -> None:
     assert "run_batch" in openwfn.__all__
     assert callable(openwfn.discover_inputs)
     assert "discover_inputs" in openwfn.__all__
+
+
+def test_load_rejects_metadata_only_input_with_accurate_message(tmp_path: Path) -> None:
+    source = tmp_path / "job.log"
+    source.write_text(
+        "# RHF/3-21G\nSCF Done: E(RHF) = -7.5\nNormal termination of Gaussian\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(DataUnavailableError, match="calculation metadata"):
+        openwfn.load(source)

@@ -15,7 +15,7 @@ def parse_mol_text(
     provenance_bytes: bytes | None = None,
 ) -> CalculationData:
     lines = text.splitlines()
-    if len(lines) < 4 or "V2000" not in lines[3]:
+    if len(lines) < 4 or "V2000" not in lines[3].upper():
         raise ParseError("Only MDL V2000 MOL/SDF records are supported.")
     try:
         atom_count = int(lines[3][0:3])

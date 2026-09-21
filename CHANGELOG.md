@@ -2,6 +2,16 @@
 
 All notable changes to openWFN are documented in this file.
 
+## Unreleased
+
+### Fixed
+
+- Accepted adjacent signed real fields, omitted redundant atom counts, blank character arrays, and producer-specific title text in Gaussian formatted-checkpoint files.
+- Accepted case-insensitive V2000 markers, common XYZ trailing columns/blank lines, and standard PDB atom-name element inference.
+- Made `doctor` type-aware for molecular calculations, Gaussian metadata, and cube grids, with clean capability errors for incompatible analysis commands.
+- Restored the documented file-only CLI behavior before argument parsing.
+- Replaced exhaustive all-pairs bond detection with an equivalent spatial search for finite molecular coordinates.
+
 ## [0.8.0a1] - 2026-09-14
 
 ### Added

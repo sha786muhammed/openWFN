@@ -95,6 +95,32 @@ def _translate_command_first_batch(arguments: list[str]) -> list[str]:
     ]
 
 
+def complete_implicit_command(arguments: list[str], *, stdin_is_tty: bool) -> list[str]:
+    """Make the documented file-only invocation explicit before argparse runs."""
+
+    translated = list(arguments)
+    index = 0
+    while index < len(translated):
+        argument = translated[index]
+        if argument in _GLOBAL_OPTIONS_WITH_VALUES:
+            index += 2
+            continue
+        if argument in _GLOBAL_FLAGS:
+            index += 1
+            continue
+        break
+
+    if index + 1 != len(translated) or translated[index].startswith("-"):
+        return translated
+
+    command = (
+        "interactive"
+        if stdin_is_tty and "--non-interactive" not in translated
+        else "summary"
+    )
+    return [*translated, command]
+
+
 def translate_legacy_args(arguments: list[str]) -> list[str]:
     """Translate compatibility command forms to the v0.7 parser layout.
 
