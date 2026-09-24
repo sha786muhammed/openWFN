@@ -92,7 +92,14 @@ def _source_path(case: dict[str, object], input_root: Path | None) -> Path:
     raw = Path(str(case["input"]))
     if raw.is_absolute():
         return raw
-    return (input_root or ROOT) / raw
+    scope = str(case.get("input_scope", "external"))
+    if scope == "repository":
+        return ROOT / raw
+    if scope == "external":
+        if input_root is None:
+            raise ValueError("external benchmark input requires --input-root")
+        return input_root / raw
+    raise ValueError(f"unsupported input_scope: {scope}")
 
 
 def _grid_convergence(source: Path, metric: dict[str, object]) -> dict[str, object]:
@@ -153,8 +160,8 @@ def run(manifest_path: Path, input_root: Path | None = None) -> dict[str, object
             )
             continue
 
-        source = _source_path(case, input_root)
         try:
+            source = _source_path(case, input_root)
             digest = sha256(source.read_bytes()).hexdigest()
             if digest != case["sha256"]:
                 raise ValueError("SHA-256 mismatch")

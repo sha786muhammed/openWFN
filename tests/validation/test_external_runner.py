@@ -14,6 +14,7 @@ def active_case(*, metric: str = "energy_hartree", digest: str | None = None) ->
     return {
         "id": "water",
         "status": "active",
+        "input_scope": "repository",
         "input": "examples/water/water.fchk",
         "sha256": digest or sha256(WATER.read_bytes()).hexdigest(),
         "provenance": {
@@ -81,13 +82,30 @@ def test_compare_metric_rejects_vector_length_mismatch() -> None:
 
 
 def test_runner_passes_active_case_and_preserves_metric_details(tmp_path: Path) -> None:
-    payload = run(write_manifest(tmp_path, [active_case()]), ROOT)
+    payload = run(write_manifest(tmp_path, [active_case()]))
 
     assert payload["status"] == "passed"
     assert payload["summary"] == {"passed": 1, "failed": 0, "pending": 0}
     assert payload["results"][0]["metric"] == "energy_hartree"
     assert payload["results"][0]["observed"] == pytest.approx(-75.58595974892307)
     assert payload["results"][0]["status"] == "passed"
+
+
+def test_runner_resolves_external_input_only_from_explicit_root(tmp_path: Path) -> None:
+    external = tmp_path / "external"
+    source = external / "sample.fchk"
+    source.parent.mkdir()
+    source.write_bytes(WATER.read_bytes())
+    case = active_case(digest=sha256(source.read_bytes()).hexdigest())
+    case["input_scope"] = "external"
+    case["input"] = "sample.fchk"
+
+    missing = run(write_manifest(tmp_path, [case]))
+    present = run(write_manifest(tmp_path, [case]), external)
+
+    assert missing["status"] == "failed"
+    assert "--input-root" in missing["results"][0]["error"]
+    assert present["status"] == "passed"
 
 
 def test_runner_fails_before_analysis_on_checksum_mismatch(tmp_path: Path) -> None:

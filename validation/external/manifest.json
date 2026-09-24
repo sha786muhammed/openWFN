@@ -4,73 +4,134 @@
   "cases": [
     {
       "id": "water",
-      "status": "pending",
+      "status": "active",
+      "input_scope": "repository",
+      "input": "examples/water/water.fchk",
+      "sha256": "f3c6cb5e1f9f205e49b439339bb0833160f56be68f40e1c1097db3f30f52dcf2",
       "provenance": {
         "origin": "openWFN repository example corpus",
-        "source_locator": "examples/water/water.fchk",
+        "generation_procedure": "validation/external/procedures/qc-iodata.md",
+        "upstream_commit": "c00855207c7bc94b0bc49d0d27ca060c93b328ed",
         "redistribution_status": "Repository-owned fixture distributed under the project license"
       },
-      "reason": "Independent parser and analysis references have not yet been captured"
+      "reference": {"program": "qc-iodata", "version": "1.0.1", "procedure": "validation/external/procedures/qc-iodata.md"},
+      "metrics": [
+        {"name": "energy_hartree", "expected": -75.58595974892307, "unit": "hartree", "absolute_tolerance": 1e-10},
+        {"name": "homo_hartree", "expected": -0.477228505, "unit": "hartree", "absolute_tolerance": 1e-9},
+        {"name": "lumo_hartree", "expected": 0.261094828, "unit": "hartree", "absolute_tolerance": 1e-9},
+        {"name": "gap_hartree", "expected": 0.7383233330000001, "unit": "hartree", "absolute_tolerance": 2e-9}
+      ]
     },
     {
       "id": "benzene",
-      "status": "pending",
+      "status": "active",
+      "input_scope": "external",
+      "input": "QuickFF/quickff/data/systems/benzene/gaussian.fchk",
+      "sha256": "5b89235313728b8ac9b8d75d64d2077def033d996c101aa4f1aba7121a672bce",
       "provenance": {
         "origin": "https://github.com/molmod/QuickFF",
-        "source_locator": "quickff/data/systems/benzene/gaussian.fchk",
+        "generation_procedure": "validation/external/procedures/qc-iodata.md",
+        "upstream_commit": "40292b7cbc1b7b295dcf1310266a922f455ae8c8",
         "redistribution_status": "External GPL-3.0 source; supplied through --input-root and not redistributed here"
       },
-      "reason": "The upstream commit, input checksum, and independent references must be captured together"
+      "reference": {"program": "qc-iodata", "version": "1.0.1", "procedure": "validation/external/procedures/qc-iodata.md"},
+      "metrics": [
+        {"name": "energy_hartree", "expected": -232.3112460856035, "unit": "hartree", "absolute_tolerance": 1e-10},
+        {"name": "homo_hartree", "expected": -0.260085709, "unit": "hartree", "absolute_tolerance": 1e-9},
+        {"name": "lumo_hartree", "expected": -0.0176424948, "unit": "hartree", "absolute_tolerance": 1e-9},
+        {"name": "gap_hartree", "expected": 0.2424432142, "unit": "hartree", "absolute_tolerance": 2e-9}
+      ]
     },
     {
       "id": "lih",
-      "status": "pending",
+      "status": "active",
+      "input_scope": "external",
+      "input": "iodata/iodata/test/data/li_h_3-21G_hf_g09.fchk",
+      "sha256": "6c083e8730c88caee139122e154f80c5028e0246670af6b4e7f40fc9fda913f7",
       "provenance": {
         "origin": "https://github.com/theochem/iodata",
-        "source_locator": "iodata/test/data/li_h_3-21G_hf_g09.fchk",
+        "generation_procedure": "validation/external/procedures/qc-iodata.md",
+        "upstream_commit": "9f7e800fc414b086d677b5f2882dd0c1dfa919f3",
         "redistribution_status": "External GPL-3.0 source; supplied through --input-root and not redistributed here"
       },
-      "reason": "The upstream commit, input checksum, and unrestricted references must be captured together"
+      "reference": {"program": "qc-iodata", "version": "1.0.1", "procedure": "validation/external/procedures/qc-iodata.md"},
+      "metrics": [
+        {"name": "energy_hartree", "expected": -7.687331212191968, "unit": "hartree", "absolute_tolerance": 1e-10},
+        {"name": "homo_hartree", "expected": -0.724564188, "unit": "hartree", "absolute_tolerance": 1e-9},
+        {"name": "lumo_hartree", "expected": -0.179148636, "unit": "hartree", "absolute_tolerance": 1e-9},
+        {"name": "gap_hartree", "expected": 0.545415552, "unit": "hartree", "absolute_tolerance": 2e-9}
+      ]
     },
     {
       "id": "oxygen-pure",
-      "status": "pending",
+      "status": "active",
+      "input_scope": "external",
+      "input": "iodata/iodata/test/data/o2_cc_pvtz_pure.fchk",
+      "sha256": "8819fd8c2de84554b739cd28f270c33fb9d136e4b6029c0819fee49b378784cd",
       "provenance": {
         "origin": "https://github.com/theochem/iodata",
-        "source_locator": "iodata/test/data/o2_cc_pvtz_pure.fchk",
+        "generation_procedure": "validation/external/procedures/qc-iodata.md",
+        "upstream_commit": "9f7e800fc414b086d677b5f2882dd0c1dfa919f3",
         "redistribution_status": "External GPL-3.0 source; supplied through --input-root and not redistributed here"
       },
-      "reason": "The upstream commit, input checksum, and pure-shell references must be captured together"
+      "reference": {"program": "qc-iodata", "version": "1.0.1", "procedure": "validation/external/procedures/qc-iodata.md"},
+      "metrics": [
+        {"name": "energy_hartree", "expected": -149.5944878699246, "unit": "hartree", "absolute_tolerance": 1e-10},
+        {"name": "homo_hartree", "expected": -0.446092083, "unit": "hartree", "absolute_tolerance": 1e-9},
+        {"name": "lumo_hartree", "expected": 0.0517534446, "unit": "hartree", "absolute_tolerance": 1e-9},
+        {"name": "gap_hartree", "expected": 0.49784552759999995, "unit": "hartree", "absolute_tolerance": 2e-9}
+      ]
     },
     {
       "id": "oxygen-cartesian",
-      "status": "pending",
+      "status": "active",
+      "input_scope": "external",
+      "input": "iodata/iodata/test/data/o2_cc_pvtz_cart.fchk",
+      "sha256": "398f37a06728b90af4c878052509aeba9fbf25f22c0833b9310e1f608a89f56b",
       "provenance": {
         "origin": "https://github.com/theochem/iodata",
-        "source_locator": "iodata/test/data/o2_cc_pvtz_cart.fchk",
+        "generation_procedure": "validation/external/procedures/qc-iodata.md",
+        "upstream_commit": "9f7e800fc414b086d677b5f2882dd0c1dfa919f3",
         "redistribution_status": "External GPL-3.0 source; supplied through --input-root and not redistributed here"
       },
-      "reason": "The upstream commit, input checksum, and Cartesian-shell references must be captured together"
+      "reference": {"program": "qc-iodata", "version": "1.0.1", "procedure": "validation/external/procedures/qc-iodata.md"},
+      "metrics": [
+        {"name": "energy_hartree", "expected": -149.5953594545721, "unit": "hartree", "absolute_tolerance": 1e-10},
+        {"name": "homo_hartree", "expected": -0.447242368, "unit": "hartree", "absolute_tolerance": 1e-9},
+        {"name": "lumo_hartree", "expected": 0.0503839959, "unit": "hartree", "absolute_tolerance": 1e-9},
+        {"name": "gap_hartree", "expected": 0.4976263639, "unit": "hartree", "absolute_tolerance": 2e-9}
+      ]
     },
     {
       "id": "acetylene",
       "status": "pending",
       "provenance": {
         "origin": "https://github.com/theochem/iodata",
-        "source_locator": "iodata/test/data/psi4_hcch.fchk",
+        "source_locator": "iodata/iodata/test/data/psi4_hcch.fchk",
+        "upstream_commit": "9f7e800fc414b086d677b5f2882dd0c1dfa919f3",
         "redistribution_status": "External GPL-3.0 source; supplied through --input-root and not redistributed here"
       },
-      "reason": "The upstream commit, input checksum, and independent producer references must be captured together"
+      "reason": "qc-iodata 1.0.1 cannot parse a fixed-width field where adjacent exponent-form numbers are not separated"
     },
     {
       "id": "helium-high-l",
-      "status": "pending",
+      "status": "active",
+      "input_scope": "external",
+      "input": "iodata/iodata/test/data/he_spdfgh_orbital.fchk",
+      "sha256": "6718276882ac4afa0d4cc9e1703d5ed0470b3f888ef22392843f6a8c5ffda23f",
       "provenance": {
         "origin": "https://github.com/theochem/iodata",
-        "source_locator": "iodata/test/data/he_spdfgh_orbital.fchk",
+        "generation_procedure": "validation/external/procedures/qc-iodata.md",
+        "upstream_commit": "9f7e800fc414b086d677b5f2882dd0c1dfa919f3",
         "redistribution_status": "External GPL-3.0 source; supplied through --input-root and not redistributed here"
       },
-      "reason": "The upstream commit, input checksum, and high-angular-momentum references must be captured together"
+      "reference": {"program": "qc-iodata", "version": "1.0.1", "procedure": "validation/external/procedures/qc-iodata.md"},
+      "metrics": [
+        {"name": "energy_hartree", "expected": -1.048675168345635, "unit": "hartree", "absolute_tolerance": 1e-10},
+        {"name": "homo_hartree", "expected": -0.383109139, "unit": "hartree", "absolute_tolerance": 1e-9},
+        {"name": "lumo_hartree", "expected": 0.0672890652, "unit": "hartree", "absolute_tolerance": 1e-9},
+        {"name": "gap_hartree", "expected": 0.4503982042, "unit": "hartree", "absolute_tolerance": 2e-9}
+      ]
     }
   ]
 }
