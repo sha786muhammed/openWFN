@@ -126,3 +126,28 @@ def test_runner_preserves_pending_case_without_counting_it_as_passed(tmp_path: P
             "reason": "reference unavailable",
         }
     ]
+
+
+def test_runner_records_grid_points_and_convergence_decision(tmp_path: Path) -> None:
+    case = active_case()
+    case["metrics"] = [
+        {
+            "kind": "grid_convergence",
+            "name": "total_density_convergence",
+            "density_kind": "total",
+            "spacings": [0.5, 0.4],
+            "padding": 3.0,
+            "maximum_relative_error": 1.0,
+            "maximum_successive_change": 1.0,
+            "unit": "electron",
+        }
+    ]
+
+    payload = run(write_manifest(tmp_path, [case]), ROOT)
+
+    result = payload["results"][0]
+    assert result["metric"] == "total_density_convergence"
+    assert len(result["points"]) == 2
+    assert result["points"][0]["spacing"] == 0.5
+    assert result["points"][1]["spacing"] == 0.4
+    assert result["status"] == "passed"

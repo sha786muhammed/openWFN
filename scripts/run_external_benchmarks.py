@@ -19,6 +19,8 @@ from openwfn.analysis.basis import ao_atom_indices, overlap_matrix
 from openwfn.analysis.orbitals import frontier_orbitals
 from openwfn.analysis.population import lowdin_population, mulliken_population
 from openwfn.parsers.gaussian.fchk import parse_fchk
+from openwfn.services import density_integration
+from openwfn.validation.convergence import GridPoint, assess_convergence
 
 MetricValue: TypeAlias = float | list[float]
 
@@ -93,6 +95,49 @@ def _source_path(case: dict[str, object], input_root: Path | None) -> Path:
     return (input_root or ROOT) / raw
 
 
+def _grid_convergence(source: Path, metric: dict[str, object]) -> dict[str, object]:
+    data = parse_fchk(source)
+    density_kind = str(metric["density_kind"])
+    padding = float(metric["padding"])
+    spacings = sorted((float(value) for value in metric["spacings"]), reverse=True)
+    points: list[GridPoint] = []
+    for spacing in spacings:
+        record = density_integration(data, density_kind, spacing, padding)
+        points.append(
+            GridPoint(
+                spacing=spacing,
+                padding=padding,
+                electron_count=float(record.data["electron_count"]),
+                expected_electrons=float(record.data["expected_electrons"]),
+            )
+        )
+    decision = assess_convergence(
+        points,
+        maximum_relative_error=float(metric["maximum_relative_error"]),
+        maximum_successive_change=float(metric["maximum_successive_change"]),
+    )
+    return {
+        "metric": str(metric["name"]),
+        "unit": str(metric["unit"]),
+        "density_kind": density_kind,
+        "points": [
+            {
+                "spacing": point.spacing,
+                "padding": point.padding,
+                "electron_count": point.electron_count,
+                "expected_electrons": point.expected_electrons,
+            }
+            for point in points
+        ],
+        "relative_error": decision.relative_error,
+        "successive_change": decision.successive_change,
+        "maximum_relative_error": float(metric["maximum_relative_error"]),
+        "maximum_successive_change": float(metric["maximum_successive_change"]),
+        "message": decision.message,
+        "status": decision.status,
+    }
+
+
 def run(manifest_path: Path, input_root: Path | None = None) -> dict[str, object]:
     """Run all active cases and preserve pending cases in manifest order."""
 
@@ -115,6 +160,11 @@ def run(manifest_path: Path, input_root: Path | None = None) -> dict[str, object
                 raise ValueError("SHA-256 mismatch")
             observed = observations(source)
             for metric in case["metrics"]:
+                if metric.get("kind") == "grid_convergence":
+                    item = {"case": case_id, **_grid_convergence(source, metric)}
+                    counts[str(item["status"])] += 1
+                    results.append(item)
+                    continue
                 name = str(metric["name"])
                 if name not in observed:
                     raise ValueError(f"Unsupported benchmark metric or unavailable data: {name}")
@@ -169,6 +219,14 @@ def markdown(payload: dict[str, object]) -> str:
             lines.append(f"| {item['case']} | pending | — | — | — | — | Pending |")
         elif "error" in item:
             lines.append(f"| {item['case']} | error | — | — | — | — | Failed |")
+        elif "points" in item:
+            lines.append(
+                f"| {item['case']} | {item['metric']} | converged grid | "
+                f"{item['points'][-1]['electron_count']:.12g} | "
+                f"{item['relative_error']:.6g} | "
+                f"{item['maximum_relative_error']:.6g} | "
+                f"{str(item['status']).title()} |"
+            )
         else:
             expected = json.dumps(item["expected"], separators=(",", ":"))
             observed = json.dumps(item["observed"], separators=(",", ":"))
