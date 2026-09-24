@@ -41,11 +41,18 @@ source commits, selection conventions, and tolerances.
 
 ## Independent analysis comparisons
 
-Multiwfn comparisons for restricted water and unrestricted LiH are **Pending**. No
-population-analysis or same-wavefunction orbital result is labeled independently
-validated until the NASAKY binary version, settings hash, procedure hash, transcript
-hash, conventions, and numerical values are captured and reviewed. The required record
-is defined in the [Multiwfn procedure](https://github.com/sha786muhammed/openWFN/blob/main/validation/external/procedures/multiwfn.md).
+Multiwfn `3.8(dev)` (2024-10-24) independently agrees with openWFN for restricted water
+and unrestricted LiH. Eight comparisons pass: alpha frontier orbital energies,
+Mulliken atomic charges, and Löwdin atomic charges, with tolerances based only on the
+reference program's printed precision.
+
+| Case | Wavefunction | Compared metrics | Status |
+|---|---|---|---|
+| Water | Restricted | HOMO, LUMO, Mulliken charges, Löwdin charges | 4 passing |
+| LiH | Unrestricted doublet | Alpha HOMO, alpha LUMO, Mulliken charges, Löwdin charges | 4 passing |
+
+The evidence records include binary, settings, input, procedure, and transcript hashes,
+plus NASAKY platform metadata. See the [Multiwfn procedure](https://github.com/sha786muhammed/openWFN/blob/main/validation/external/procedures/multiwfn.md). These comparisons validate only the named metrics and fixtures; they do not establish accuracy for every chemical system.
 
 ## Coverage still needed
 

@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "program": "Multiwfn",
+  "program_version": "3.8(dev), update date 2024-Oct-24",
+  "openwfn_commit": "157f1a3328057c940ec030baa8e799facd797dce",
+  "input_sha256": "f3c6cb5e1f9f205e49b439339bb0833160f56be68f40e1c1097db3f30f52dcf2",
+  "binary_sha256": "6b34d1a0545ac4c3e2b26cfe66c22dde2dd29e318aaf8816ae11e460ba409b1e",
+  "settings_sha256": "778a727832a67f8c5e1d20c599bc065fcf081421d46add5b33ed4428201635fd",
+  "procedure_sha256": "d8094cfce90b968b22811f005f55723ed1a9bf5796c3b163e7d540179ce82b79",
+  "transcript_sha256": "1630d7e2c13c074fb4a12f4bbb904266e16ee4f70166b9600ff13d01b50497f5",
+  "platform": {
+    "host": "NASAKY",
+    "operating_system": "Ubuntu 22.04.5 LTS, Linux 6.8.0-138-generic",
+    "architecture": "x86_64",
+    "threads": 4,
+    "locale": "C",
+    "omp_stacksize": "1G"
+  },
+  "metrics": [
+    {"name": "homo_hartree", "value": -0.477229, "unit": "hartree", "printed_precision": "0.000001 hartree", "absolute_tolerance": 5e-7, "convention": "highest alpha-plus-beta orbital with positive occupation"},
+    {"name": "lumo_hartree", "value": 0.261095, "unit": "hartree", "printed_precision": "0.000001 hartree", "absolute_tolerance": 5e-7, "convention": "lowest alpha-plus-beta orbital with zero occupation"},
+    {"name": "mulliken_atomic_charges", "value": [-0.73288863, 0.36644432, 0.36644432], "unit": "elementary_charge", "printed_precision": "0.00000001 elementary charge", "absolute_tolerance": 5e-9, "convention": "input atom order; nuclear charge minus Mulliken population"},
+    {"name": "lowdin_atomic_charges", "value": [-0.47035044, 0.23517522, 0.23517522], "unit": "elementary_charge", "printed_precision": "0.00000001 elementary charge", "absolute_tolerance": 5e-9, "convention": "input atom order; symmetric Lowdin orthogonalization"}
+  ]
+}

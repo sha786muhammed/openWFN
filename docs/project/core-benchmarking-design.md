@@ -117,11 +117,13 @@ The alpha release remains the public evaluation build until these conditions are
   and a high-angular-momentum helium case: 24 comparisons, zero failures.
 - The Psi4 acetylene parser comparison remains pending because qc-iodata 1.0.1 cannot
   parse one adjacent fixed-width exponent pair in that fixture.
-- Multiwfn same-wavefunction frontier and population comparisons for restricted water
-  and unrestricted LiH remain pending until the NASAKY execution record is captured.
+- Multiwfn `3.8(dev)` same-wavefunction frontier and population comparisons pass for
+  restricted water and unrestricted LiH: eight comparisons with binary, settings,
+  procedure, input, and transcript hashes captured on NASAKY.
 - CI runs the repository-owned external comparison and preserves external-input cases as
   pending. Maintainers run the complete matrix with `--input-root`.
 
-Stable `0.8.0` is therefore **not release-ready**: the analysis-level Multiwfn evidence
-required by conditions 3–5 is incomplete. The parser evidence must not be described as
-validation of Mulliken, Löwdin, density, or ESP algorithms.
+The defined `0.8.0` release gate is satisfied for the named restricted/unrestricted
+frontier, Mulliken, and Löwdin scope. Acetylene producer compatibility, broader chemistry,
+density, and ESP remain outside that independently validated scope and must not be
+described as validated. Publishing `0.8.0` remains a separate maintainer decision.

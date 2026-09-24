@@ -54,3 +54,42 @@ def test_external_manifest_requires_complete_evidence_before_activation() -> Non
                 "absolute_tolerance" in metric
                 or "max_absolute_tolerance" in metric
             )
+
+
+def test_multiwfn_references_are_active_complete_and_match_manifest() -> None:
+    payload = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    cases = {case["id"]: case for case in payload["cases"]}
+
+    for case_id in ("water-multiwfn", "lih-multiwfn"):
+        case = cases[case_id]
+        assert case["status"] == "active"
+        assert case["reference"]["program"] == "Multiwfn"
+        evidence_path = ROOT / case["reference"]["evidence_file"]
+        evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+        assert evidence["program"] == "Multiwfn"
+        assert evidence["program_version"] == case["reference"]["version"]
+        assert evidence["input_sha256"] == case["sha256"]
+        assert re.fullmatch(r"[0-9a-f]{40}", evidence["openwfn_commit"])
+        for name in (
+            "binary_sha256",
+            "settings_sha256",
+            "procedure_sha256",
+            "transcript_sha256",
+        ):
+            assert re.fullmatch(r"[0-9a-f]{64}", evidence[name])
+        assert evidence["platform"]["host"] == "NASAKY"
+        assert evidence["platform"]["threads"] == 4
+        expected_metrics = {metric["name"]: metric["expected"] for metric in case["metrics"]}
+        evidence_metrics = {metric["name"]: metric["value"] for metric in evidence["metrics"]}
+        assert evidence_metrics == expected_metrics
+        manifest_tolerances = {
+            metric["name"]: metric.get(
+                "absolute_tolerance", metric.get("max_absolute_tolerance")
+            )
+            for metric in case["metrics"]
+        }
+        evidence_tolerances = {
+            metric["name"]: metric["absolute_tolerance"]
+            for metric in evidence["metrics"]
+        }
+        assert evidence_tolerances == manifest_tolerances

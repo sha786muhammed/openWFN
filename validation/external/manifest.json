@@ -135,23 +135,53 @@
     },
     {
       "id": "water-multiwfn",
-      "status": "pending",
+      "status": "active",
+      "input_scope": "repository",
+      "input": "examples/water/water.fchk",
+      "sha256": "f3c6cb5e1f9f205e49b439339bb0833160f56be68f40e1c1097db3f30f52dcf2",
       "provenance": {
         "origin": "openWFN repository example corpus",
-        "source_locator": "examples/water/water.fchk",
+        "generation_procedure": "validation/external/procedures/multiwfn.md",
+        "upstream_commit": "157f1a3328057c940ec030baa8e799facd797dce",
         "redistribution_status": "Repository-owned fixture distributed under the project license"
       },
-      "reason": "Multiwfn binary metadata, settings hash, transcript hash, and reviewed numerical output have not yet been captured on NASAKY"
+      "reference": {
+        "program": "Multiwfn",
+        "version": "3.8(dev), update date 2024-Oct-24",
+        "procedure": "validation/external/procedures/multiwfn-analysis.in",
+        "evidence_file": "validation/external/references/water-multiwfn.json"
+      },
+      "metrics": [
+        {"name": "homo_hartree", "expected": -0.477229, "unit": "hartree", "absolute_tolerance": 5e-7},
+        {"name": "lumo_hartree", "expected": 0.261095, "unit": "hartree", "absolute_tolerance": 5e-7},
+        {"name": "mulliken_atomic_charges", "expected": [-0.73288863, 0.36644432, 0.36644432], "unit": "elementary_charge", "max_absolute_tolerance": 5e-9},
+        {"name": "lowdin_atomic_charges", "expected": [-0.47035044, 0.23517522, 0.23517522], "unit": "elementary_charge", "max_absolute_tolerance": 5e-9}
+      ]
     },
     {
       "id": "lih-multiwfn",
-      "status": "pending",
+      "status": "active",
+      "input_scope": "external",
+      "input": "iodata/iodata/test/data/li_h_3-21G_hf_g09.fchk",
+      "sha256": "6c083e8730c88caee139122e154f80c5028e0246670af6b4e7f40fc9fda913f7",
       "provenance": {
         "origin": "https://github.com/theochem/iodata",
-        "source_locator": "iodata/iodata/test/data/li_h_3-21G_hf_g09.fchk",
+        "generation_procedure": "validation/external/procedures/multiwfn.md",
+        "upstream_commit": "9f7e800fc414b086d677b5f2882dd0c1dfa919f3",
         "redistribution_status": "External GPL-3.0 source; supplied through --input-root and not redistributed here"
       },
-      "reason": "Multiwfn binary metadata, settings hash, transcript hash, and reviewed unrestricted numerical output have not yet been captured on NASAKY"
+      "reference": {
+        "program": "Multiwfn",
+        "version": "3.8(dev), update date 2024-Oct-24",
+        "procedure": "validation/external/procedures/multiwfn-analysis.in",
+        "evidence_file": "validation/external/references/lih-multiwfn.json"
+      },
+      "metrics": [
+        {"name": "homo_hartree", "expected": -0.72456, "unit": "hartree", "absolute_tolerance": 5e-6},
+        {"name": "lumo_hartree", "expected": -0.17915, "unit": "hartree", "absolute_tolerance": 5e-6},
+        {"name": "mulliken_atomic_charges", "expected": [0.92949, 0.07051], "unit": "elementary_charge", "max_absolute_tolerance": 5e-6},
+        {"name": "lowdin_atomic_charges", "expected": [0.85993, 0.14007], "unit": "elementary_charge", "max_absolute_tolerance": 5e-6}
+      ]
     }
   ]
 }

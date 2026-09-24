@@ -23,7 +23,9 @@ requested values.
 ## Reproducible execution
 
 Create and review one plain-text standard-input file per Multiwfn version and analysis.
-Keep menu selections in that file, not in an undocumented interactive session. Execute
+The reviewed sequence for this evidence is `multiwfn-analysis.in`; it lists orbitals,
+prints Mulliken charges, and prints Löwdin charges. Keep menu selections in that file,
+not in an undocumented interactive session. Execute
 with fixed locale and thread count, preserving standard output and standard error:
 
 ```bash
@@ -50,8 +52,16 @@ indices are one-based. For Mulliken and Löwdin populations, compare atomic char
 the same wavefunction and state the atom ordering. Tighten tolerances to printed
 precision; never widen them to conceal an unexplained difference.
 
-## Current status
+## Captured evidence
 
-The restricted water and unrestricted LiH analysis records remain pending until this
-procedure is run on NASAKY and the resulting metadata and transcripts are reviewed.
-Pending evidence is not a validation pass.
+The restricted water and unrestricted LiH records were captured on NASAKY on
+2026-09-24 with Multiwfn `3.8(dev)`, update date `2024-Oct-24`. The executed binary,
+settings, procedure, and transcript hashes are recorded in
+`validation/external/references/`. The run used four threads, `LC_ALL=C`, and
+`OMP_STACKSIZE=1G`; it completed without runtime errors. Raw transcripts remain on the
+validation host and are identified by immutable SHA-256 hashes rather than committed.
+
+Tolerances follow the precision printed by Multiwfn: half a unit in the final printed
+decimal place. Water charges were printed to eight decimals; unrestricted LiH charges
+and orbital energies were printed to five decimals. No tolerance was widened beyond
+that reporting precision.
