@@ -18,7 +18,7 @@ hide:
 
 <h1>Wavefunction analysis, made reproducible.</h1>
 
-<p class="ow-lede">A unified post-processing toolkit for turning quantum-chemistry calculations into traceable, validated, publication-ready results.</p>
+<p class="ow-lede">A unified post-processing toolkit for turning quantum-chemistry calculations into traceable, reproducible, review-ready results.</p>
 
 <p class="ow-context">Work locally through the command line or Python, from individual calculations to high-throughput collections.</p>
 

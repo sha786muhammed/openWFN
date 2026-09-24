@@ -5,7 +5,7 @@
 <p align="center"><strong>Wavefunction analysis, made reproducible.</strong></p>
 
 <p align="center">
-  A unified post-processing toolkit for turning quantum-chemistry calculations into traceable, validated, publication-ready results.
+  A unified post-processing toolkit for turning quantum-chemistry calculations into traceable, reproducible, review-ready results.
 </p>
 
 <p align="center">

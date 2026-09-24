@@ -189,15 +189,18 @@ def test_public_brand_uses_one_canonical_logo() -> None:
 
 
 def test_header_has_no_duplicate_plain_title_and_home_identifies_toolkit() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
     home = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
     styles = (ROOT / "docs" / "stylesheets" / "extra.css").read_text(encoding="utf-8")
 
     assert ".md-header__topic { display: none; }" in styles
     assert ".md-header__title { display: none; }" not in styles
-    assert (
+    product_description = (
         "A unified post-processing toolkit for turning quantum-chemistry "
-        "calculations into traceable, validated, publication-ready results."
-    ) in home
+        "calculations into traceable, reproducible, review-ready results."
+    )
+    assert product_description in home
+    assert product_description in readme
 
 
 def test_homepage_has_compact_responsive_branding() -> None:
