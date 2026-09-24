@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0",
+  "description": "Independent external benchmark evidence for openWFN",
+  "cases": [
+    {
+      "id": "water",
+      "status": "pending",
+      "provenance": {
+        "origin": "openWFN repository example corpus",
+        "source_locator": "examples/water/water.fchk",
+        "redistribution_status": "Repository-owned fixture distributed under the project license"
+      },
+      "reason": "Independent parser and analysis references have not yet been captured"
+    },
+    {
+      "id": "benzene",
+      "status": "pending",
+      "provenance": {
+        "origin": "https://github.com/molmod/QuickFF",
+        "source_locator": "quickff/data/systems/benzene/gaussian.fchk",
+        "redistribution_status": "External GPL-3.0 source; supplied through --input-root and not redistributed here"
+      },
+      "reason": "The upstream commit, input checksum, and independent references must be captured together"
+    },
+    {
+      "id": "lih",
+      "status": "pending",
+      "provenance": {
+        "origin": "https://github.com/theochem/iodata",
+        "source_locator": "iodata/test/data/li_h_3-21G_hf_g09.fchk",
+        "redistribution_status": "External GPL-3.0 source; supplied through --input-root and not redistributed here"
+      },
+      "reason": "The upstream commit, input checksum, and unrestricted references must be captured together"
+    },
+    {
+      "id": "oxygen-pure",
+      "status": "pending",
+      "provenance": {
+        "origin": "https://github.com/theochem/iodata",
+        "source_locator": "iodata/test/data/o2_cc_pvtz_pure.fchk",
+        "redistribution_status": "External GPL-3.0 source; supplied through --input-root and not redistributed here"
+      },
+      "reason": "The upstream commit, input checksum, and pure-shell references must be captured together"
+    },
+    {
+      "id": "oxygen-cartesian",
+      "status": "pending",
+      "provenance": {
+        "origin": "https://github.com/theochem/iodata",
+        "source_locator": "iodata/test/data/o2_cc_pvtz_cart.fchk",
+        "redistribution_status": "External GPL-3.0 source; supplied through --input-root and not redistributed here"
+      },
+      "reason": "The upstream commit, input checksum, and Cartesian-shell references must be captured together"
+    },
+    {
+      "id": "acetylene",
+      "status": "pending",
+      "provenance": {
+        "origin": "https://github.com/theochem/iodata",
+        "source_locator": "iodata/test/data/psi4_hcch.fchk",
+        "redistribution_status": "External GPL-3.0 source; supplied through --input-root and not redistributed here"
+      },
+      "reason": "The upstream commit, input checksum, and independent producer references must be captured together"
+    },
+    {
+      "id": "helium-high-l",
+      "status": "pending",
+      "provenance": {
+        "origin": "https://github.com/theochem/iodata",
+        "source_locator": "iodata/test/data/he_spdfgh_orbital.fchk",
+        "redistribution_status": "External GPL-3.0 source; supplied through --input-root and not redistributed here"
+      },
+      "reason": "The upstream commit, input checksum, and high-angular-momentum references must be captured together"
+    }
+  ]
+}
