@@ -14,6 +14,8 @@ def test_test_workflow_has_required_quality_and_platform_gates() -> None:
         assert version in text
     for gate in ("ruff check", "pytest --strict-markers", "run_validation.py", "twine check"):
         assert gate in text
+    assert "run_external_benchmarks.py" in text
+    assert "--repository-only" in text
     assert "macos-latest" in text
     assert "windows-latest" in text
     assert "wheel-smoke" in text

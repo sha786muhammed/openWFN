@@ -107,3 +107,21 @@ The stable `0.8.0` release requires:
 6. an updated public validation report and limitations page.
 
 The alpha release remains the public evaluation build until these conditions are met.
+
+## Evidence checkpoint — 2026-09-24
+
+- The workbench is labeled Experimental; static reports remain supported artifacts.
+- The full local regression suite and lint checks pass.
+- `qc-iodata==1.0.1` independently agrees on total energy and alpha frontier orbitals
+  for restricted water and benzene, unrestricted LiH, pure and Cartesian oxygen cases,
+  and a high-angular-momentum helium case: 24 comparisons, zero failures.
+- The Psi4 acetylene parser comparison remains pending because qc-iodata 1.0.1 cannot
+  parse one adjacent fixed-width exponent pair in that fixture.
+- Multiwfn same-wavefunction frontier and population comparisons for restricted water
+  and unrestricted LiH remain pending until the NASAKY execution record is captured.
+- CI runs the repository-owned external comparison and preserves external-input cases as
+  pending. Maintainers run the complete matrix with `--input-root`.
+
+Stable `0.8.0` is therefore **not release-ready**: the analysis-level Multiwfn evidence
+required by conditions 3–5 is incomplete. The parser evidence must not be described as
+validation of Mulliken, Löwdin, density, or ESP algorithms.

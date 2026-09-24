@@ -55,6 +55,7 @@ jobs:
           cache: pip
       - run: python -m pip install .
       - run: python scripts/run_validation.py
+      - run: python scripts/run_external_benchmarks.py --repository-only --output-dir /tmp/openwfn-external-validation
   wheel-smoke:
     runs-on: ubuntu-latest
     steps:

@@ -108,6 +108,28 @@ def test_runner_resolves_external_input_only_from_explicit_root(tmp_path: Path) 
     assert present["status"] == "passed"
 
 
+def test_repository_only_run_keeps_external_cases_visible_as_pending(
+    tmp_path: Path,
+) -> None:
+    external_case = active_case()
+    external_case["id"] = "external-water"
+    external_case["input_scope"] = "external"
+    external_case["input"] = "water.fchk"
+
+    payload = run(
+        write_manifest(tmp_path, [active_case(), external_case]),
+        repository_only=True,
+    )
+
+    assert payload["status"] == "pending"
+    assert payload["summary"] == {"passed": 1, "failed": 0, "pending": 1}
+    assert payload["results"][-1] == {
+        "case": "external-water",
+        "status": "pending",
+        "reason": "external input excluded by repository-only run",
+    }
+
+
 def test_runner_fails_before_analysis_on_checksum_mismatch(tmp_path: Path) -> None:
     payload = run(write_manifest(tmp_path, [active_case(digest="0" * 64)]), ROOT)
 

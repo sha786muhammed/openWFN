@@ -145,7 +145,12 @@ def _grid_convergence(source: Path, metric: dict[str, object]) -> dict[str, obje
     }
 
 
-def run(manifest_path: Path, input_root: Path | None = None) -> dict[str, object]:
+def run(
+    manifest_path: Path,
+    input_root: Path | None = None,
+    *,
+    repository_only: bool = False,
+) -> dict[str, object]:
     """Run all active cases and preserve pending cases in manifest order."""
 
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -157,6 +162,16 @@ def run(manifest_path: Path, input_root: Path | None = None) -> dict[str, object
             counts["pending"] += 1
             results.append(
                 {"case": case_id, "status": "pending", "reason": str(case["reason"])}
+            )
+            continue
+        if repository_only and case.get("input_scope", "external") == "external":
+            counts["pending"] += 1
+            results.append(
+                {
+                    "case": case_id,
+                    "status": "pending",
+                    "reason": "external input excluded by repository-only run",
+                }
             )
             continue
 
@@ -260,11 +275,16 @@ def main() -> int:
         default=ROOT / "validation" / "external" / "manifest.json",
     )
     parser.add_argument("--input-root", type=Path)
+    parser.add_argument("--repository-only", action="store_true")
     parser.add_argument(
         "--output-dir", type=Path, default=ROOT / "validation" / "external" / "generated"
     )
     args = parser.parse_args()
-    payload = run(args.manifest, args.input_root)
+    payload = run(
+        args.manifest,
+        args.input_root,
+        repository_only=args.repository_only,
+    )
     args.output_dir.mkdir(parents=True, exist_ok=True)
     (args.output_dir / "results.json").write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"

@@ -18,11 +18,18 @@ python -m pip install -e ".[test,docs]"
 python -m pytest
 python -m ruff check .
 python scripts/run_validation.py
+python scripts/run_external_benchmarks.py --repository-only
 python scripts/check_docs.py --root .
 python -m mkdocs build --strict
 ```
 
 Add tests before changing behavior. Scientific features need equations, units, assumptions, failure modes, reference evidence, and a declared capability status. New fixtures must have redistribution permission and provenance.
+
+For the complete external matrix, clone the pinned upstream fixture repositories into a
+separate directory and pass it with `--input-root`. Repository-only CI verifies checked-in
+inputs and reports external-input cases as pending. Regenerate independent reference
+values only with the documented program version and procedure; never replace a
+reference merely to make a mismatch pass.
 
 ## Documentation standard
 
@@ -31,4 +38,3 @@ Examples must run against the current CLI, equations must render with `$$` delim
 ## Pull requests
 
 Keep changes focused, describe user and scientific impact, list verification performed, and identify any limitations. A passing test suite is required but does not replace review of scientific assumptions.
-
