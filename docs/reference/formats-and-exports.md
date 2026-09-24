@@ -32,7 +32,11 @@ index suitable for spreadsheets and dataframe ingestion.
 
 ## HTML outputs
 
-`report build`, `workbench`, and `view` can create self-contained HTML. “Self-contained” means no openWFN server is required; it does not mean the artifact is free of research data.
+`report build`, `workbench`, and `view` can create self-contained HTML. Reports are
+supported research records when preserved with their machine-readable results. The
+workbench is an optional Experimental visualization surface, not a numerical reference.
+“Self-contained” means no openWFN server is required; it does not mean the artifact is
+free of research data.
 
 ## Units
 

@@ -2,6 +2,8 @@
 
 The workbench packages a calculation, selected derived data, interface code, and the molecular renderer into one HTML file. It is designed for inspection, teaching, and sharing when a hosted service is unnecessary or inappropriate.
 
+**Status: Experimental.** The workbench is an optional visualization and teaching surface, not a numerical reference. Preserve the corresponding JSON, CSV, or report output as the scientific record.
+
 ```bash
 openwfn water.fchk workbench water-workbench.html --open
 ```
@@ -24,7 +26,7 @@ Inspect available frontier information and, when the calculation contains compat
 
 ### Density and ESP
 
-Review total, alpha, beta, or spin-density fields together with isovalue and grid provenance. Grid-derived electronic and total ESP remain Experimental in v0.7; do not remove that qualification in screenshots or reports.
+Review total, alpha, beta, or spin-density fields together with isovalue and grid provenance. Embedded coarse grids are visualization data unless separately converged and validated. Grid-derived electronic and total ESP remain Experimental; do not remove that qualification in screenshots or reports.
 
 ### Measurements
 

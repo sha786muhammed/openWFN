@@ -49,13 +49,16 @@ openwfn molecule.fchk report build report.html \
 
 Set `--report-format markdown` for a Markdown artifact. Requested analyses require their underlying FCHK records; run `doctor` first if the file's contents are unknown.
 
-## Portable workbench
+## Optional Experimental workbench
 
 ```bash
 openwfn molecule.fchk workbench molecule-workbench.html --open
 ```
 
-The output is a standalone local HTML file. It supports review and sharing without a web service, but it contains molecular data from the input. Treat it with the same confidentiality as the source calculation.
+The output is a standalone local HTML file for visualization and teaching. It is not
+a numerical reference or a substitute for structured results. It supports review and
+sharing without a web service, but it contains molecular data from the input. Treat it
+with the same confidentiality as the source calculation.
 
 ## Suggested archive
 

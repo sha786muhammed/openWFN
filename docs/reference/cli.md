@@ -52,7 +52,7 @@ ESP components are `nuclear`, `mulliken`, `lowdin`, `electronic`, and `total`. C
 | Command | Syntax | Output |
 |---|---|---|
 | `report` | `report build OUTPUT [--report-format html\|markdown] [--analyses LIST]` | Self-contained research report |
-| `workbench` | `workbench [OUTPUT] [--open]` | Standalone offline HTML workbench |
+| `workbench` | `workbench [OUTPUT] [--open]` | Optional Experimental offline visualization |
 | `view` | `view [--save HTML] [--open] [--no-labels] [--style ballstick\|stick]` | Standalone molecular viewer |
 | `xyz` | `xyz OUTPUT` | Legacy XYZ export |
 | `convert` | `convert --to xyz\|pdb\|mol\|sdf --output PATH` | Structure conversion |

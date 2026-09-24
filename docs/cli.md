@@ -6,7 +6,7 @@ Global flags must precede the input file:
 openwfn [--format table|plain|json|csv] [--output PATH] [--overwrite] FILE COMMAND
 ```
 
-Core command groups are `summary`, `info`, `geometry`, `bonds`, `graph`, `orbitals`, `density`, `esp`, `population`, `view`, `workbench`, and `report`. Run `openwfn --help` or `openwfn FILE COMMAND --help` for the authoritative options.
+Core scientific command groups are `summary`, `info`, `geometry`, `bonds`, `graph`, `orbitals`, `density`, `esp`, `population`, and `validate`. Export and presentation commands include `report`, `view`, and the optional Experimental `workbench`. Run `openwfn --help` or `openwfn FILE COMMAND --help` for the authoritative options.
 
 Examples:
 

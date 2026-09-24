@@ -1,7 +1,7 @@
 # Your first analysis
 
 This walkthrough installs openWFN, checks the version, analyzes a water calculation,
-and creates a portable offline workbench.
+and creates machine-readable and portable research records.
 
 ## Prerequisites
 
@@ -53,20 +53,20 @@ openwfn examples/water/water.fchk geometry angle 2 1 3
 Confirm atom ordering from the source calculation or the guided interactive atom table before measuring
 an unfamiliar system.
 
-## 4. Create an offline workbench
+## 4. Save a machine-readable result
 
 ```bash
-openwfn examples/water/water.fchk workbench water-workbench.html --open
+openwfn --format json --output water-summary.json \
+  examples/water/water.fchk summary
 ```
 
-The HTML file is self-contained. It can be opened without a local server and does
-not upload the calculation. Treat the file as research data if it contains results
-you would not otherwise share.
+The JSON result includes the analysis identity, units, validation status, warnings,
+and provenance fields needed by downstream programs.
 
 ## 5. Record reproducibility information
 
 Record the input-file checksum, openWFN version, command, parameters, and capability
-status. The report workflow automates this record:
+status. The supported report workflow creates a portable human-readable record:
 
 ```bash
 openwfn examples/water/water.fchk report build water-report.html

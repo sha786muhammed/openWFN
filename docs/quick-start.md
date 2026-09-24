@@ -14,7 +14,6 @@ Create portable research artifacts:
 ```bash
 openwfn water.fchk density cube water-density.cube
 openwfn water.fchk report build water-report.html
-openwfn water.fchk workbench water-workbench.html
 ```
 
 Atom indices shown in commands are one-based. Coordinates are reported in ångströms, orbital energies in Hartree and eV, and ESP in Hartree/e.

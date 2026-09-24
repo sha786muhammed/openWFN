@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "openwfn"
 version = "0.8.0a1"
-description = "Research-grade Gaussian wavefunction analysis with CLI, Python API, reports, and an offline workbench"
+description = "Reproducible wavefunction post-processing with CLI, Python API, validation, and research exports"
 requires-python = ">=3.10"
 readme = "README.md"
 license = "MIT"

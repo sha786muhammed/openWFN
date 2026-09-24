@@ -46,6 +46,6 @@ openwfn examples/water/water.fchk convert --to xyz --output water.xyz
 openwfn examples/water/water.fchk workbench water-workbench.html
 ```
 
-XYZ preserves structure but not basis functions, orbitals, or density. Use the workbench for spatial review and JSON for computation.
+XYZ preserves structure but not basis functions, orbitals, or density. Use the Experimental workbench only for optional spatial review and JSON for computation.
 
 Ask whether charge, multiplicity, atom ordering, dimensions, and connectivity all match the intended system. Continue with the [geometry methods](../science/geometry-topology.md).

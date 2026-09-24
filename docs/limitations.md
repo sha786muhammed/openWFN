@@ -4,7 +4,7 @@
 - Binary CHK files require Gaussian `formchk` and are not decoded internally.
 - Gaussian real spherical 5D, 7F, 9G, and 11H shells are supported; pure spherical shells above H (`l > 5`) are rejected explicitly.
 - Electronic and total ESP use grid quadrature and are Experimental.
-- Coarse workbench grids are intended for visualization, not final quantitative integration.
+- Embedded coarse workbench grids are visualization data unless separately converged and validated; they are not final quantitative integration evidence.
 - XYZ files provide geometry only.
 
 Always record the openWFN version, source-file checksum, grid spacing, padding, units, and validation status in research outputs.

@@ -32,7 +32,7 @@ openWFN connects scientific analysis, automation, validation evidence, and resea
 - **Analyze** molecular structure, orbitals, electron density, atomic populations, electrostatic potential, and derived properties.
 - **Automate** with stable CLI commands, a typed Python API, structured results, resumable batches, and JSON/CSV exports.
 - **Validate** using explicit capability status, parser provenance, transformations, numerical controls, and fixture-backed evidence.
-- **Publish** durable reports, figures, cube files, structures, batch manifests, and portable offline workbenches.
+- **Publish** durable reports, figures, cube files, structures, and batch manifests.
 
 ## Install
 
@@ -80,7 +80,8 @@ openwfn --format json --output summary.json molecule.fchk summary
 | Electrostatic potential | Nuclear and charge-model point ESP | Stable |
 | Grid electronic/total ESP | Numerical Coulomb evaluation | Experimental |
 | Automation | Versioned results, batch manifests, discovery, resume, JSON and CSV | Stable |
-| Research output | HTML/Markdown reports, tables, figures, structures, and workbench | Stable |
+| Research reports | HTML/Markdown reports, tables, figures, and structures | Stable |
+| Interactive workbench | Optional visualization and teaching surface | Experimental |
 
 “Validated” is deliberately scoped. Review the [validation evidence](https://sha786muhammed.github.io/openWFN/science/validation-status/) and [limitations](https://sha786muhammed.github.io/openWFN/limitations/) before research use.
 
@@ -104,6 +105,7 @@ openwfn calculation.fchk density cube density.cube
 - [Python API](https://sha786muhammed.github.io/openWFN/reference/python-api/)
 - [Scientific methods](https://sha786muhammed.github.io/openWFN/science/geometry-topology/)
 - [Validation status](https://sha786muhammed.github.io/openWFN/science/validation-status/)
+- [Optional workbench](https://sha786muhammed.github.io/openWFN/workbench/)
 - [Troubleshooting](https://sha786muhammed.github.io/openWFN/guides/troubleshooting/)
 
 ## Security and privacy

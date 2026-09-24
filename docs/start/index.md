@@ -2,8 +2,9 @@
 
 openWFN helps you move from a Gaussian checkpoint calculation to inspectable,
 reproducible analysis. You can work through a command line, a guided terminal,
-Python, structured reports, or a self-contained offline 3D workbench. Every surface
-uses the same calculation model and the same scientific conventions.
+Python, or structured reports. An optional Experimental offline workbench supports
+visual inspection and teaching. Every surface uses the same calculation model and
+the same scientific conventions.
 
 ## What openWFN is
 
@@ -27,8 +28,9 @@ utility when that program is installed. It reads formatted `.fchk` files directl
 ## A single scientific core
 
 An input file is parsed once into a calculation model. Analysis services consume
-that model and return typed results. CLI presentation, Python code, reports, and the
-workbench format those results without changing their scientific meaning.
+that model and return typed results. CLI presentation, Python code, and reports
+format those results without changing their scientific meaning. The optional
+workbench visualizes selected results but is not a numerical reference.
 
 This boundary matters for reproducibility: a distance calculated through Python and
 the same distance requested from the CLI use the same coordinates, unit conversion,

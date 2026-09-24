@@ -84,7 +84,7 @@ nav:
       - CLI workflows: guides/cli-workflows.md
       - Python workflows: guides/python-workflows.md
       - Batch and reports: guides/batch-and-reports.md
-      - Offline workbench: workbench.md
+      - Experimental workbench: workbench.md
       - Troubleshooting: guides/troubleshooting.md
       - Tutorials:
           - Geometry: tutorials/geometry.md
@@ -107,6 +107,7 @@ nav:
       - Security and privacy: project/security.md
       - Contributing: project/contributing.md
       - Release history: project/release-history.md
+      - Product boundary and benchmarking: project/core-benchmarking-design.md
       - Releasing: releasing.md
       - Releases:
           - Version 0.8.0a1: releases/0.8.0a1.md

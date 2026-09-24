@@ -68,7 +68,7 @@ Track parser provenance, transformations, units, numerical controls, capability 
 <div class="ow-capability" markdown="1">
 <span class="ow-capability__number">04</span>
 ### Publish
-Produce JSON, CSV, figures, cube files, reports, structures, and portable offline workbenches for review and reuse.
+Produce JSON, CSV, figures, cube files, reports, and structures for review and reuse.
 </div>
 
 </div>

@@ -7,4 +7,4 @@
 
 The water total-density grid integrates to 10 electrons with relative error below 0.5% using 0.15-bohr spacing and 6-bohr padding. The AO overlap and density matrices recover 10 electrons through both Mulliken and Löwdin accounting.
 
-Validation status is included in structured CLI results, reports, and workbench fields. A successful command alone does not promote a method to Validated.
+Validation status is included in structured CLI results, reports, and workbench fields. A successful command alone does not promote a method to Validated. The workbench itself is Experimental, and its embedded coarse grids are visualization data unless separately converged and validated.
