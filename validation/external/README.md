@@ -20,3 +20,31 @@ unknown provenance, unavailable inputs, or incomplete reference evidence keep a 
 External fixtures are supplied with `--input-root` when redistribution has not been
 approved. Do not commit third-party binaries, restricted calculation files, private
 filesystem paths, credentials, or license material.
+
+## Reproduce the pinned input tree
+
+The manifest expects `QuickFF/` and `iodata/` beneath one input root. Create an immutable
+checkout without adding either repository to openWFN:
+
+```bash
+export OPENWFN_BENCHMARK_INPUTS=/tmp/openwfn-benchmark-inputs
+mkdir -p "$OPENWFN_BENCHMARK_INPUTS"
+
+git init "$OPENWFN_BENCHMARK_INPUTS/QuickFF"
+git -C "$OPENWFN_BENCHMARK_INPUTS/QuickFF" remote add origin https://github.com/molmod/QuickFF.git
+git -C "$OPENWFN_BENCHMARK_INPUTS/QuickFF" fetch --depth 1 origin 40292b7cbc1b7b295dcf1310266a922f455ae8c8
+git -C "$OPENWFN_BENCHMARK_INPUTS/QuickFF" checkout --detach FETCH_HEAD
+
+git init "$OPENWFN_BENCHMARK_INPUTS/iodata"
+git -C "$OPENWFN_BENCHMARK_INPUTS/iodata" remote add origin https://github.com/theochem/iodata.git
+git -C "$OPENWFN_BENCHMARK_INPUTS/iodata" fetch --depth 1 origin 9f7e800fc414b086d677b5f2882dd0c1dfa919f3
+git -C "$OPENWFN_BENCHMARK_INPUTS/iodata" checkout --detach FETCH_HEAD
+
+python scripts/run_external_benchmarks.py \
+  --input-root "$OPENWFN_BENCHMARK_INPUTS" \
+  --output-dir /tmp/openwfn-external
+```
+
+The runner verifies every active input checksum before parsing it. A checkout mismatch,
+missing fixture, or numerical disagreement is a failure; unavailable reference evidence
+remains pending.

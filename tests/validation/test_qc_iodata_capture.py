@@ -67,6 +67,17 @@ def test_build_reference_rejects_non_finite_numbers(tmp_path: Path) -> None:
         build_reference(source, lambda _: fake_data(energy=float("nan")), "1.0.1")
 
 
+def test_build_reference_normalizes_parser_errors(tmp_path: Path) -> None:
+    source = tmp_path / "malformed.fchk"
+    source.write_text("broken fixture\n", encoding="utf-8")
+
+    def reject(_: str) -> SimpleNamespace:
+        raise RuntimeError("adjacent fields")
+
+    with pytest.raises(ValueError, match="qc-iodata could not parse.*adjacent fields"):
+        build_reference(source, reject, "1.0.1")
+
+
 def test_write_reference_protects_existing_output(tmp_path: Path) -> None:
     output = tmp_path / "reference.json"
     output.write_text("keep\n", encoding="utf-8")

@@ -47,7 +47,10 @@ def build_reference(
 ) -> dict[str, object]:
     """Normalize the independent parser's public data model."""
 
-    data = loader(str(input_path))
+    try:
+        data = loader(str(input_path))
+    except Exception as exc:
+        raise ValueError(f"qc-iodata could not parse {input_path}: {exc}") from exc
     if (
         data.mo is None
         or data.mo.energiesa is None
