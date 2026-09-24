@@ -132,6 +132,26 @@
         {"name": "lumo_hartree", "expected": 0.0672890652, "unit": "hartree", "absolute_tolerance": 1e-9},
         {"name": "gap_hartree", "expected": 0.4503982042, "unit": "hartree", "absolute_tolerance": 2e-9}
       ]
+    },
+    {
+      "id": "water-multiwfn",
+      "status": "pending",
+      "provenance": {
+        "origin": "openWFN repository example corpus",
+        "source_locator": "examples/water/water.fchk",
+        "redistribution_status": "Repository-owned fixture distributed under the project license"
+      },
+      "reason": "Multiwfn binary metadata, settings hash, transcript hash, and reviewed numerical output have not yet been captured on NASAKY"
+    },
+    {
+      "id": "lih-multiwfn",
+      "status": "pending",
+      "provenance": {
+        "origin": "https://github.com/theochem/iodata",
+        "source_locator": "iodata/iodata/test/data/li_h_3-21G_hf_g09.fchk",
+        "redistribution_status": "External GPL-3.0 source; supplied through --input-root and not redistributed here"
+      },
+      "reason": "Multiwfn binary metadata, settings hash, transcript hash, and reviewed unrestricted numerical output have not yet been captured on NASAKY"
     }
   ]
 }

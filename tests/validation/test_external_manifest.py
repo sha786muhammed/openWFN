@@ -12,6 +12,8 @@ REQUIRED_CASES = {
     "oxygen-cartesian",
     "acetylene",
     "helium-high-l",
+    "water-multiwfn",
+    "lih-multiwfn",
 }
 
 
@@ -19,7 +21,9 @@ def test_external_manifest_has_required_cases_and_states() -> None:
     payload = json.loads(MANIFEST.read_text(encoding="utf-8"))
 
     assert payload["schema_version"] == "1.0"
-    assert {case["id"] for case in payload["cases"]} == REQUIRED_CASES
+    case_ids = [case["id"] for case in payload["cases"]]
+    assert REQUIRED_CASES <= set(case_ids)
+    assert len(case_ids) == len(set(case_ids))
     assert {case["status"] for case in payload["cases"]} <= {"active", "pending"}
 
 
