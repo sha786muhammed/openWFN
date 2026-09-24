@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from openwfn.parsers.gaussian.fchk import parse_fchk
-from openwfn.workbench.export import export_workbench
+from openwfn.workbench.export import export_workbench, export_workbench_record
 
 WATER = Path(__file__).resolve().parents[2] / "examples" / "water" / "water.fchk"
 
@@ -35,3 +35,12 @@ def test_workbench_export_protects_existing_file(tmp_path: Path) -> None:
         export_workbench(parse_fchk(WATER), output)
 
     assert output.read_text(encoding="utf-8") == "keep"
+
+
+def test_workbench_record_is_experimental(tmp_path: Path) -> None:
+    output = tmp_path / "water-workbench.html"
+
+    result = export_workbench_record(parse_fchk(WATER), output)
+
+    assert result.validation_status == "Experimental"
+    assert output.is_file()

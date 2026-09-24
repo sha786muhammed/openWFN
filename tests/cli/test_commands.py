@@ -317,6 +317,7 @@ def test_workbench_command_exports_offline_application(tmp_path: Path) -> None:
     payload = output.read_text(encoding="utf-8")
     assert 'id="openwfn-workbench"' in payload
     assert "Molecular Workbench" in result.stdout
+    assert "Status: Experimental" in result.stdout
 
 
 def test_workbench_command_protects_existing_output(tmp_path: Path) -> None:
