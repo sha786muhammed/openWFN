@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "program": "Multiwfn",
+  "program_version": "3.8(dev), update date 2024-Oct-24",
+  "openwfn_commit": "230a7cb522d57b3f4a729567df751582764fd1b3",
+  "input_sha256": "ebb8c0053fba598db616d1f437a34f7531e4873283dce61ee891ba9b8ca634b8",
+  "binary_sha256": "6b34d1a0545ac4c3e2b26cfe66c22dde2dd29e318aaf8816ae11e460ba409b1e",
+  "settings_sha256": "778a727832a67f8c5e1d20c599bc065fcf081421d46add5b33ed4428201635fd",
+  "procedure_sha256": "d8094cfce90b968b22811f005f55723ed1a9bf5796c3b163e7d540179ce82b79",
+  "transcript_sha256": "2062b307bcf7252fb5249aeae6e9032412857dc683c641dbd6ccf7031268edea",
+  "platform": {
+    "host": "NASAKY",
+    "operating_system": "Ubuntu 22.04.5 LTS, Linux 6.8.0-138-generic",
+    "architecture": "x86_64",
+    "threads": 4,
+    "locale": "C",
+    "omp_stacksize": "1G"
+  },
+  "metrics": [
+    {"name": "energy_hartree", "value": -77.364521148764, "unit": "hartree", "printed_precision": "0.000000000001 hartree", "absolute_tolerance": 5e-13, "convention": "total energy printed during file loading"},
+    {"name": "homo_hartree", "value": -0.300512, "unit": "hartree", "printed_precision": "0.000001 hartree", "absolute_tolerance": 5e-7, "convention": "highest alpha-plus-beta orbital with positive occupation"},
+    {"name": "lumo_hartree", "value": 0.021623, "unit": "hartree", "printed_precision": "0.000001 hartree", "absolute_tolerance": 5e-7, "convention": "lowest alpha-plus-beta orbital with zero occupation"}
+  ]
+}

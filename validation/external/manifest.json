@@ -104,14 +104,27 @@
     },
     {
       "id": "acetylene",
-      "status": "pending",
+      "status": "active",
+      "input_scope": "external",
+      "input": "iodata/iodata/test/data/psi4_hcch.fchk",
+      "sha256": "ebb8c0053fba598db616d1f437a34f7531e4873283dce61ee891ba9b8ca634b8",
       "provenance": {
         "origin": "https://github.com/theochem/iodata",
-        "source_locator": "iodata/iodata/test/data/psi4_hcch.fchk",
+        "generation_procedure": "validation/external/procedures/multiwfn.md",
         "upstream_commit": "9f7e800fc414b086d677b5f2882dd0c1dfa919f3",
         "redistribution_status": "External GPL-3.0 source; supplied through --input-root and not redistributed here"
       },
-      "reason": "qc-iodata 1.0.1 cannot parse a fixed-width field where adjacent exponent-form numbers are not separated"
+      "reference": {
+        "program": "Multiwfn",
+        "version": "3.8(dev), update date 2024-Oct-24",
+        "procedure": "validation/external/procedures/multiwfn-analysis.in",
+        "evidence_file": "validation/external/references/acetylene-multiwfn.json"
+      },
+      "metrics": [
+        {"name": "energy_hartree", "expected": -77.364521148764, "unit": "hartree", "absolute_tolerance": 5e-13},
+        {"name": "homo_hartree", "expected": -0.300512, "unit": "hartree", "absolute_tolerance": 5e-7},
+        {"name": "lumo_hartree", "expected": 0.021623, "unit": "hartree", "absolute_tolerance": 5e-7}
+      ]
     },
     {
       "id": "helium-high-l",

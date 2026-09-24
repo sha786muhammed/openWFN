@@ -60,7 +60,7 @@ def test_multiwfn_references_are_active_complete_and_match_manifest() -> None:
     payload = json.loads(MANIFEST.read_text(encoding="utf-8"))
     cases = {case["id"]: case for case in payload["cases"]}
 
-    for case_id in ("water-multiwfn", "lih-multiwfn"):
+    for case_id in ("water-multiwfn", "lih-multiwfn", "acetylene"):
         case = cases[case_id]
         assert case["status"] == "active"
         assert case["reference"]["program"] == "Multiwfn"

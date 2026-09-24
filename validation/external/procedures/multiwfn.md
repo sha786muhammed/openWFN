@@ -54,8 +54,8 @@ precision; never widen them to conceal an unexplained difference.
 
 ## Captured evidence
 
-The restricted water and unrestricted LiH records were captured on NASAKY on
-2026-09-24 with Multiwfn `3.8(dev)`, update date `2024-Oct-24`. The executed binary,
+The restricted water, unrestricted LiH, and Psi4-produced acetylene records were
+captured on NASAKY on 2026-09-24 with Multiwfn `3.8(dev)`, update date `2024-Oct-24`. The executed binary,
 settings, procedure, and transcript hashes are recorded in
 `validation/external/references/`. The run used four threads, `LC_ALL=C`, and
 `OMP_STACKSIZE=1G`; it completed without runtime errors. Raw transcripts remain on the
@@ -63,5 +63,7 @@ validation host and are identified by immutable SHA-256 hashes rather than commi
 
 Tolerances follow the precision printed by Multiwfn: half a unit in the final printed
 decimal place. Water charges were printed to eight decimals; unrestricted LiH charges
-and orbital energies were printed to five decimals. No tolerance was widened beyond
-that reporting precision.
+and orbital energies were printed to five decimals. Acetylene confirms producer
+compatibility through total energy and frontier orbitals; population metrics are omitted
+because that fixture does not expose the density data required by openWFN's population
+analysis. No tolerance was widened beyond the printed precision.

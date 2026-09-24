@@ -115,15 +115,16 @@ The alpha release remains the public evaluation build until these conditions are
 - `qc-iodata==1.0.1` independently agrees on total energy and alpha frontier orbitals
   for restricted water and benzene, unrestricted LiH, pure and Cartesian oxygen cases,
   and a high-angular-momentum helium case: 24 comparisons, zero failures.
-- The Psi4 acetylene parser comparison remains pending because qc-iodata 1.0.1 cannot
-  parse one adjacent fixed-width exponent pair in that fixture.
+- Psi4 acetylene producer compatibility passes through Multiwfn total-energy and
+  frontier-orbital comparisons. The qc-iodata 1.0.1 parser still cannot parse one
+  adjacent fixed-width exponent pair in that fixture.
 - Multiwfn `3.8(dev)` same-wavefunction frontier and population comparisons pass for
-  restricted water and unrestricted LiH: eight comparisons with binary, settings,
+  restricted water, unrestricted LiH, and Psi4-produced acetylene: eleven comparisons with binary, settings,
   procedure, input, and transcript hashes captured on NASAKY.
 - CI runs the repository-owned external comparison and preserves external-input cases as
   pending. Maintainers run the complete matrix with `--input-root`.
 
 The defined `0.8.0` release gate is satisfied for the named restricted/unrestricted
-frontier, Mulliken, and Löwdin scope. Acetylene producer compatibility, broader chemistry,
-density, and ESP remain outside that independently validated scope and must not be
+frontier, Mulliken, and Löwdin scope. Broader chemistry, density, and ESP remain outside
+that independently validated scope and must not be
 described as validated. Publishing `0.8.0` remains a separate maintainer decision.

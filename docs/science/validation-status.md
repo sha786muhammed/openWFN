@@ -25,7 +25,7 @@ inputs, immutable source commits, SHA-256 checksums, and explicit tolerances.
 | Evidence | Active cases | Metrics | Status |
 |---|---|---|---|
 | Independent FCHK parsing | water, benzene, LiH, oxygen (pure and Cartesian), helium high-l | total energy and alpha frontier orbitals | 24 comparisons passing |
-| Independent producer | acetylene from Psi4 | parser fields | Pending: qc-iodata 1.0.1 cannot parse one adjacent fixed-width exponent pair |
+| Independent producer parser | acetylene from Psi4 | parser fields | qc-iodata 1.0.1 limitation: cannot parse one adjacent fixed-width exponent pair |
 
 The parser comparison verifies extraction of the listed values. It does not independently
 validate population or density algorithms. Reproduce the complete external matrix with:
@@ -41,8 +41,8 @@ source commits, selection conventions, and tolerances.
 
 ## Independent analysis comparisons
 
-Multiwfn `3.8(dev)` (2024-10-24) independently agrees with openWFN for restricted water
-and unrestricted LiH. Eight comparisons pass: alpha frontier orbital energies,
+Multiwfn `3.8(dev)` (2024-10-24) independently agrees with openWFN for restricted water,
+unrestricted LiH, and Psi4-produced acetylene. Eleven comparisons pass: total energy, alpha frontier orbital energies,
 Mulliken atomic charges, and Löwdin atomic charges, with tolerances based only on the
 reference program's printed precision.
 
@@ -50,6 +50,7 @@ reference program's printed precision.
 |---|---|---|---|
 | Water | Restricted | HOMO, LUMO, Mulliken charges, Löwdin charges | 4 passing |
 | LiH | Unrestricted doublet | Alpha HOMO, alpha LUMO, Mulliken charges, Löwdin charges | 4 passing |
+| Acetylene | Restricted, Psi4 producer | Total energy, HOMO, LUMO | 3 passing |
 
 The evidence records include binary, settings, input, procedure, and transcript hashes,
 plus NASAKY platform metadata. See the [Multiwfn procedure](https://github.com/sha786muhammed/openWFN/blob/main/validation/external/procedures/multiwfn.md). These comparisons validate only the named metrics and fixtures; they do not establish accuracy for every chemical system.
