@@ -88,5 +88,6 @@ ignore = ["E501"]
 
 [tool.ruff.lint.per-file-ignores]
 "scripts/run_validation.py" = ["E402"]
+"scripts/run_external_benchmarks.py" = ["E402"]
 "src/openwfn/commands.py" = ["E741"]
 "src/openwfn/geometry.py" = ["E741"]
