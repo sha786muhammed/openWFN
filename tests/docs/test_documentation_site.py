@@ -1,6 +1,7 @@
 import re
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
@@ -93,8 +94,22 @@ def test_homepage_build_has_distinct_title_and_project_favicon(tmp_path: Path) -
     assert result.returncode == 0, result.stderr
     homepage = (output / "index.html").read_text(encoding="utf-8")
     assert "<title>Wavefunction analysis - openWFN</title>" in homepage
-    assert 'rel="icon" href="assets/images/openwfn-icon.svg"' in homepage
-    assert (output / "assets" / "images" / "openwfn-icon.svg").is_file()
+    assert 'rel="icon" href="assets/images/openwfn-icon-v2.svg"' in homepage
+    assert (output / "assets" / "images" / "openwfn-icon-v2.svg").is_file()
+
+
+def test_favicon_uses_full_orbital_mark_on_transparent_background() -> None:
+    favicon = ROOT / "docs" / "assets" / "images" / "openwfn-icon-v2.svg"
+    root = ET.fromstring(favicon.read_text(encoding="utf-8"))
+    namespace = "{http://www.w3.org/2000/svg}"
+
+    assert root.findall(f"{namespace}rect") == []
+    image = root.find(f".//{namespace}image")
+    assert image is not None
+    assert float(image.attrib["width"]) > 128
+    group = root.find(f"{namespace}g")
+    assert group is not None
+    assert group.attrib["transform"] == "matrix(0.84 0 0 0.84 -8 10)"
 
 
 def test_public_images_have_provenance_and_are_bounded() -> None:

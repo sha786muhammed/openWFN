@@ -4,10 +4,10 @@ assets:
     license: MIT project asset
     transformation: The original compact mark is embedded without redrawing on a permanent navy background so the same logo remains legible in website headers, content, GitHub light mode, and GitHub dark mode
     alt: openWFN
-  openwfn-icon.svg:
+  openwfn-icon-v2.svg:
     source: Compact icon crop from the canonical openWFN header artwork
     license: MIT project asset
-    transformation: The orbital symbol from the original compact mark is embedded without redrawing on the same permanent navy background for browser-tab use
+    transformation: The orbital symbol from the original compact mark is embedded without redrawing, centered in a square transparent viewport, and used without a background plate for browser-tab display
     alt: openWFN orbital symbol
   openwfn-orbital-hero.webp:
     source: Generated specifically for the openWFN documentation redesign
