@@ -58,7 +58,7 @@ fields before electronic analyses.
 | `geometry_distance(i, j)` | Distance in ångströms; one-based atom numbers |
 | `geometry_angle(i, j, k)` | Angle in degrees; one-based atom numbers |
 | `geometry_dihedral(i, j, k, l)` | Signed torsion in degrees; one-based atom numbers |
-| `orbitals(spin)` | Frontier orbitals for `"alpha"` or `"beta"` |
+| `orbitals(spin)` | Frontier orbitals for `"alpha"`, `"beta"`, or spin-complete `"all"` |
 | `population(method)` | Populations for `"mulliken"` or `"lowdin"` |
 | `density(kind, spacing_bohr=0.15, padding_bohr=6.0)` | Grid integration for `"total"`, `"alpha"`, `"beta"`, or `"spin"` |
 
@@ -86,6 +86,7 @@ constructor forms covered by the compatibility tests remain supported.
 |---|---|
 | `beta-frontier` | Beta-spin HOMO, LUMO, and gap |
 | `frontier` | Alpha/default HOMO, LUMO, and gap |
+| `frontier-all` | Alpha and beta frontiers plus the true overall HOMO for unrestricted calculations |
 | `lowdin` | Löwdin populations and charges |
 | `mulliken` | Mulliken populations and charges |
 | `summary` | Molecular and calculation summary |
