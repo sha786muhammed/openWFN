@@ -5,12 +5,11 @@ hide:
   - toc
 ---
 
-!!! warning "Pre-release handbook"
+!!! note "Current release"
 
-    This site documents the current 0.8 alpha. Install it with
-    `python -m pip install --pre --upgrade openwfn`, or use
-    `python -m pip install openwfn==0.8.0a2` after publication. The stable
-    channel remains `python -m pip install --upgrade openwfn`.
+    This site documents openWFN 0.8.0. Install the stable channel with
+    `python -m pip install --upgrade openwfn`, or pin the release with
+    `python -m pip install openwfn==0.8.0` for reproducible work.
 
 <div class="ow-home" markdown="1">
 
@@ -39,7 +38,7 @@ hide:
   </div>
   <div class="ow-intro__command">
     <div class="ow-command-label"><span>Quick start</span><span>Terminal</span></div>
-    <pre><code>python -m pip install --pre --upgrade openwfn
+    <pre><code>python -m pip install --upgrade openwfn
 openwfn examples install ./openwfn-examples
 
 openwfn ./openwfn-examples/water.fchk doctor

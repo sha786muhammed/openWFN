@@ -2,10 +2,9 @@
 
 openWFN requires Python 3.10–3.13.
 
-!!! warning "Pre-release handbook"
+!!! note "Current release"
 
-    This handbook documents openWFN 0.8.0a2. The plain package command installs
-    the current stable release, which may not include commands introduced in 0.8.
+    This handbook documents openWFN 0.8.0.
 
 ## Stable release
 
@@ -19,18 +18,12 @@ openwfn --version
 
 On Windows, activate with `.venv\Scripts\activate`.
 
-## Current pre-release
+## Exact release
 
-Install the newest alpha:
-
-```bash
-python -m pip install --pre --upgrade openwfn
-```
-
-Pin the exact published alpha when reproducing research:
+Pin the exact release when reproducing research:
 
 ```bash
-python -m pip install openwfn==0.8.0a2
+python -m pip install openwfn==0.8.0
 ```
 
 ## Conda
@@ -38,7 +31,7 @@ python -m pip install openwfn==0.8.0a2
 ```bash
 conda create -n openwfn python=3.12
 conda activate openwfn
-python -m pip install --pre --upgrade openwfn
+python -m pip install --upgrade openwfn
 ```
 
 Binary `.chk` conversion requires Gaussian's licensed `formchk` program on `PATH`. FCHK files do not require Gaussian.

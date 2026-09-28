@@ -15,6 +15,7 @@ from openwfn.model import (
     Molecule,
     VolumetricGrid,
 )
+from openwfn.services import density_grid
 
 
 def test_density_contracts_ao_matrix_on_both_indices() -> None:
@@ -68,6 +69,36 @@ def test_density_channels_are_derived_from_total_and_spin_matrices() -> None:
     np.testing.assert_allclose(beta.values, ((0.5, 0.1), (0.1, 0.5)), atol=1e-12)
     assert density_matrix_for_kind(data, "total") is data.total_density
     assert density_matrix_for_kind(data, "spin") is data.spin_density
+
+
+def test_density_matrix_rejects_unknown_kind_before_selecting_a_channel() -> None:
+    molecule = Molecule((Atom(1, (0.0, 0.0, 0.0)),), 0, 2, CalculationMetadata("fixture"))
+    data = CalculationData(
+        molecule=molecule,
+        total_density=DensityMatrix(((1.0,),), "total"),
+        spin_density=DensityMatrix(((0.0,),), "spin"),
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="density kind must be 'total', 'alpha', 'beta', or 'spin'",
+    ):
+        density_matrix_for_kind(data, "anything")  # type: ignore[arg-type]
+
+
+def test_density_service_rejects_unknown_kind_before_checking_basis_data() -> None:
+    molecule = Molecule((Atom(1, (0.0, 0.0, 0.0)),), 0, 2, CalculationMetadata("fixture"))
+
+    with pytest.raises(
+        ValueError,
+        match="density kind must be 'total', 'alpha', 'beta', or 'spin'",
+    ):
+        density_grid(
+            CalculationData(molecule=molecule),
+            "anything",  # type: ignore[arg-type]
+            0.15,
+            6.0,
+        )
 
 
 def test_density_channel_requires_available_source_matrices() -> None:

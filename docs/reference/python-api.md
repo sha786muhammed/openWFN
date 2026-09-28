@@ -51,6 +51,24 @@ Load a supported calculation file through the parser registry. The returned type
 Top-level calculation model used by the current analysis stack. Check optional
 fields before electronic analyses.
 
+| Method | Contract |
+|---|---|
+| `analyze(name)` | Preferred reproducible route for a registered named analysis |
+| `analyze_geometry()` | Basic atom count, charge, and multiplicity |
+| `geometry_distance(i, j)` | Distance in ångströms; one-based atom numbers |
+| `geometry_angle(i, j, k)` | Angle in degrees; one-based atom numbers |
+| `geometry_dihedral(i, j, k, l)` | Signed torsion in degrees; one-based atom numbers |
+| `orbitals(spin)` | Frontier orbitals for `"alpha"` or `"beta"` |
+| `population(method)` | Populations for `"mulliken"` or `"lowdin"` |
+| `density(kind, spacing_bohr=0.15, padding_bohr=6.0)` | Grid integration for `"total"`, `"alpha"`, `"beta"`, or `"spin"` |
+
+All these methods return `ResultRecord`. Specialized methods are convenience
+interfaces; use `analyze(name)` when analysis identity, registry version, and
+elapsed time are important to an automated workflow. Every high-level result
+includes available source provenance and parser warnings. Unsupported option
+values raise `ValueError`; requests requiring records absent from the input
+raise `DataUnavailableError`.
+
 ### Model schema
 
 `MODEL_SCHEMA_VERSION` is `"2.0"`. `Molecule.boundary_conditions` defaults
@@ -72,7 +90,7 @@ constructor forms covered by the compatibility tests remain supported.
 | `mulliken` | Mulliken populations and charges |
 | `summary` | Molecular and calculation summary |
 
-Use `available_analyses()` to discover stable registry names. Run an analysis
+Use `available_analyses()` to discover registered names. Run an analysis
 with `calculation.analyze(name)` after `load(path)`, or use
 `run_analysis(calculation_data, name)` when working directly with the canonical
 model.
@@ -103,7 +121,12 @@ These low-level functions are public for specialized workflows, but `load` is th
 - `detect_bonds(atomic_numbers, coordinates)` — covalent-radius heuristic.
 - `build_graph(...)` and `MolecularGraph` — connectivity and fragments.
 
-Python indices follow ordinary zero-based sequence semantics.
+These public geometry and topology functions use one-based atom numbers,
+matching the CLI and `OpenWFNCalculation` geometry methods. Internal model
+fields and Python arrays retain normal zero-based indexing: examples include
+`molecule.atoms`, `BasisShell.atom_index`, `Bond.atom1`/`Bond.atom2`, and
+orbital coefficient arrays. Each public method documents which convention it
+accepts; do not assume one convention applies to every integer field.
 
 ## Basis, density, and orbitals
 
@@ -112,7 +135,9 @@ Python indices follow ordinary zero-based sequence semantics.
 - `evaluate_mo(...)` — evaluate a molecular orbital.
 - `make_bounding_box_grid(...)` — build a molecular Cartesian grid.
 
-These are numerical building blocks. Units and array shapes must match the function contract; add convergence checks to research code.
+These are numerical building blocks. Units and array shapes must match the
+function contract, and non-finite scientific values are rejected by the public
+models and result envelope. Add convergence checks to research code.
 
 ## Export functions
 

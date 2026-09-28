@@ -11,14 +11,14 @@ and creates machine-readable and portable research records.
 ## 1. Install openWFN
 
 ```bash
-python -m pip install --pre --upgrade openwfn
+python -m pip install --upgrade openwfn
 openwfn --version
 ```
 
 Expected version output for this handbook:
 
 ```text
-openWFN 0.8.0a2
+openWFN 0.8.0
 ```
 
 Use `python -m pip` so installation and execution refer to the same Python

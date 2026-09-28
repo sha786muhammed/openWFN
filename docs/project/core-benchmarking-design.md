@@ -106,7 +106,8 @@ The stable `0.8.0` release requires:
 5. no unexplained numerical mismatch in a capability advertised as Validated;
 6. an updated public validation report and limitations page.
 
-The alpha release remains the public evaluation build until these conditions are met.
+Version 0.8.0 satisfies this gate for the named validation scope. Future releases
+must preserve the same evidence requirements.
 
 ## Batch-throughput benchmark
 
@@ -150,4 +151,4 @@ validation and external-reference comparisons.
 The defined `0.8.0` release gate is satisfied for the named restricted/unrestricted
 frontier, Mulliken, and Löwdin scope. Broader chemistry, density, and ESP remain outside
 that independently validated scope and must not be
-described as validated. Publishing `0.8.0` remains a separate maintainer decision.
+described as validated.

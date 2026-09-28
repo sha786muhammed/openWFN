@@ -1,3 +1,4 @@
+import math
 from dataclasses import FrozenInstanceError
 
 import pytest
@@ -34,6 +35,17 @@ def test_atom_is_immutable_and_declares_coordinate_units() -> None:
 def test_atom_rejects_invalid_atomic_number() -> None:
     with pytest.raises(ValueError, match="atomic number"):
         Atom(atomic_number=0, coordinates=(0.0, 0.0, 0.0))
+
+
+@pytest.mark.parametrize("invalid", [math.nan, math.inf, -math.inf])
+def test_atom_rejects_non_finite_coordinates(invalid: float) -> None:
+    with pytest.raises(ValueError, match="coordinates must contain only finite values"):
+        Atom(atomic_number=1, coordinates=(invalid, 0.0, 0.0))
+
+
+def test_metadata_rejects_non_finite_energy() -> None:
+    with pytest.raises(ValueError, match="energy_hartree must be finite"):
+        CalculationMetadata(source_program="fixture", energy_hartree=math.nan)
 
 
 def test_molecule_rejects_nonpositive_multiplicity() -> None:
@@ -75,9 +87,32 @@ def test_orbitals_reject_coefficient_shape_mismatch() -> None:
         )
 
 
+@pytest.mark.parametrize(
+    ("energies", "coefficients", "occupations", "message"),
+    [
+        ((math.nan,), ((1.0,),), (1.0,), "orbital energies"),
+        ((-0.5,), ((math.inf,),), (1.0,), "orbital coefficients"),
+        ((-0.5,), ((1.0,),), (-math.inf,), "orbital occupations"),
+    ],
+)
+def test_orbitals_reject_non_finite_values(
+    energies: tuple[float, ...],
+    coefficients: tuple[tuple[float, ...], ...],
+    occupations: tuple[float, ...],
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        MolecularOrbitals(energies, coefficients, occupations)
+
+
 def test_density_matrix_rejects_nonsquare_values() -> None:
     with pytest.raises(ValueError, match="square"):
         DensityMatrix(values=((1.0, 0.0),), kind="total")
+
+
+def test_density_matrix_rejects_non_finite_values() -> None:
+    with pytest.raises(ValueError, match="density matrix must contain only finite values"):
+        DensityMatrix(values=((math.nan,),), kind="total")
 
 
 def test_basis_shell_requires_matching_primitive_arrays() -> None:
@@ -88,6 +123,24 @@ def test_basis_shell_requires_matching_primitive_arrays() -> None:
             exponents=(1.0, 0.5),
             coefficients=(1.0,),
         )
+
+
+@pytest.mark.parametrize(
+    ("exponents", "coefficients", "p_coefficients", "message"),
+    [
+        ((math.nan,), (1.0,), None, "primitive exponents"),
+        ((1.0,), (math.inf,), None, "contraction coefficients"),
+        ((1.0,), (1.0,), (-math.inf,), "p contraction coefficients"),
+    ],
+)
+def test_basis_shell_rejects_non_finite_values(
+    exponents: tuple[float, ...],
+    coefficients: tuple[float, ...],
+    p_coefficients: tuple[float, ...] | None,
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        BasisShell(0, -1 if p_coefficients else 0, exponents, coefficients, False, p_coefficients)
 
 
 def test_basis_set_counts_functions_from_shells() -> None:
@@ -108,6 +161,30 @@ def test_grid_rejects_value_count_different_from_shape() -> None:
             axes=((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)),
             shape=(2, 2, 2),
             values=(0.0,),
+            value_unit="electron/bohr^3",
+        )
+
+
+@pytest.mark.parametrize(
+    ("origin", "axes", "values", "message"),
+    [
+        ((math.nan, 0.0, 0.0), ((1.0, 0.0, 0.0),) * 3, (1.0,), "grid origin"),
+        ((0.0, 0.0, 0.0), ((math.inf, 0.0, 0.0),) * 3, (1.0,), "grid axes"),
+        ((0.0, 0.0, 0.0), ((1.0, 0.0, 0.0),) * 3, (-math.inf,), "grid values"),
+    ],
+)
+def test_grid_rejects_non_finite_values(
+    origin: tuple[float, float, float],
+    axes: tuple[tuple[float, float, float], ...],
+    values: tuple[float, ...],
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        VolumetricGrid(
+            origin=origin,
+            axes=axes,  # type: ignore[arg-type]
+            shape=(1, 1, 1),
+            values=values,
             value_unit="electron/bohr^3",
         )
 
@@ -146,9 +223,7 @@ def test_provenance_exposes_versioned_ingestion_metadata() -> None:
         ("parser_version", "", "parser version"),
     ],
 )
-def test_provenance_rejects_blank_ingestion_metadata(
-    field: str, value: str, message: str
-) -> None:
+def test_provenance_rejects_blank_ingestion_metadata(field: str, value: str, message: str) -> None:
     arguments = {
         "source_path": "water.fchk",
         "sha256": "a" * 64,

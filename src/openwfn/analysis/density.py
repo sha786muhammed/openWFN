@@ -24,6 +24,9 @@ def density_matrix_for_kind(
 ) -> DensityMatrix:
     """Return a requested density channel, deriving alpha/beta when necessary."""
 
+    if kind not in {"total", "alpha", "beta", "spin"}:
+        raise ValueError("density kind must be 'total', 'alpha', 'beta', or 'spin'")
+
     if kind == "total":
         if data.total_density is None:
             raise DataUnavailableError("Total density matrix is not available.")

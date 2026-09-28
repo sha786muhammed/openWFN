@@ -8,7 +8,8 @@ from openwfn.analysis.electrostatics import (
     total_esp_from_grid,
 )
 from openwfn.constants import BOHR_TO_ANGSTROM
-from openwfn.model import Atom, CalculationMetadata, Molecule, VolumetricGrid
+from openwfn.model import Atom, CalculationData, CalculationMetadata, Molecule, VolumetricGrid
+from openwfn.services import electrostatic_potential_point
 
 
 def _h2() -> Molecule:
@@ -116,3 +117,13 @@ def test_total_grid_esp_combines_nuclear_and_electronic_terms() -> None:
     value = total_esp_from_grid(molecule, grid, np.array(((2.0, 0.0, 0.0),)))[0]
 
     assert value == pytest.approx(0.0, abs=1e-12)
+
+
+def test_esp_service_rejects_unknown_component_before_computation() -> None:
+    data = CalculationData(molecule=_h2())
+
+    with pytest.raises(
+        ValueError,
+        match="ESP component must be 'nuclear', 'electronic', 'total', 'mulliken', or 'lowdin'",
+    ):
+        electrostatic_potential_point(data, (1.0, 0.0, 0.0), "anything", 0.15, 6.0)

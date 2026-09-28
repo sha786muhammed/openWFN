@@ -1,10 +1,10 @@
 # Quick start
 
-Install the current pre-release, copy the packaged example, and run one
+Install the stable release, copy the packaged example, and run one
 machine-readable analysis:
 
 ```bash
-python -m pip install --pre --upgrade openwfn
+python -m pip install --upgrade openwfn
 openwfn examples install ./openwfn-examples
 openwfn --format json ./openwfn-examples/water.fchk summary
 ```
