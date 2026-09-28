@@ -100,8 +100,8 @@ HOMO       -0.477229 hartree
 LUMO        0.261095 hartree
 Gap         0.738323 hartree
 
-<span class="ow-prompt">$</span> openwfn batch ./calculations --analysis summary \
-    --analysis frontier --output-dir ./results</code></pre>
+<span class="ow-prompt">$</span> openwfn batch ./calculations \
+    --analyses summary,frontier --output-dir ./results</code></pre>
 </div>
 </div>
 

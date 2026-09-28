@@ -72,8 +72,7 @@ Run a collection of calculations with resumable, structured output:
 
 ```bash
 openwfn batch ./calculations \
-  --analysis summary \
-  --analysis frontier \
+  --analyses summary,frontier \
   --output-dir ./results \
   --resume
 ```

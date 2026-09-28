@@ -270,6 +270,16 @@ def test_first_analysis_uses_installed_example_workflow() -> None:
     assert "substitute the path" not in tutorial
 
 
+def test_public_batch_examples_use_supported_analyses_option() -> None:
+    public = "\n".join(
+        (ROOT / path).read_text(encoding="utf-8")
+        for path in ("README.md", "docs/index.md")
+    )
+
+    assert "--analysis " not in public
+    assert "--analyses summary,frontier" in public
+
+
 def test_header_uses_compact_asset_and_keeps_mobile_drawer_available() -> None:
     config = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
     styles = (ROOT / "docs" / "stylesheets" / "extra.css").read_text(
