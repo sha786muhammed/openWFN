@@ -19,6 +19,7 @@ class Atom:
 
     atomic_number: int
     coordinates: tuple[float, float, float]
+    nuclear_charge: float | None = None
     coordinate_unit: Literal["angstrom"] = field(default="angstrom", init=False)
 
     def __post_init__(self) -> None:
@@ -27,6 +28,8 @@ class Atom:
         if len(self.coordinates) != 3:
             raise ValueError("coordinates must contain exactly three values")
         _require_finite("coordinates", self.coordinates)
+        if self.nuclear_charge is not None and not isfinite(self.nuclear_charge):
+            raise ValueError("nuclear_charge must be finite")
 
 
 @dataclass(frozen=True, slots=True)
@@ -196,6 +199,7 @@ class DensityMatrix:
 
     values: tuple[tuple[float, ...], ...]
     kind: Literal["total", "alpha", "beta", "spin"]
+    source: str | None = None
     value_unit: Literal["electron"] = field(default="electron", init=False)
 
     def __post_init__(self) -> None:
@@ -206,6 +210,8 @@ class DensityMatrix:
             "density matrix",
             (value for row in self.values for value in row),
         )
+        if self.source is not None and not self.source.strip():
+            raise ValueError("density matrix source must not be blank")
 
 
 @dataclass(frozen=True, slots=True)
