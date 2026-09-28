@@ -19,6 +19,9 @@ from .model import CalculationData, DensityMatrix, Molecule
 from .results import ResultRecord
 
 POPULATION_CONSERVATION_TOLERANCE = 1e-6
+LOWDIN_MIN_EIGENVALUE_TOLERANCE = 1e-8
+LOWDIN_CONDITION_NUMBER_TOLERANCE = 1e10
+LOWDIN_RANK_TOLERANCE = 1e-12
 
 
 def _coordinates(molecule: Molecule) -> list[tuple[float, float, float]]:
@@ -39,6 +42,15 @@ def _density_source_warnings(data: CalculationData, matrix: DensityMatrix) -> tu
             f"{method} calculation is using the SCF density because no supported post-SCF density was selected.",
         )
     return ()
+
+
+def _lowdin_overlap_diagnostics(overlap: np.ndarray) -> tuple[float, float | None, bool]:
+    eigenvalues = np.linalg.eigvalsh(np.asarray(overlap, dtype=float))
+    minimum = float(np.min(eigenvalues))
+    maximum = float(np.max(eigenvalues))
+    rank_deficient = minimum <= LOWDIN_RANK_TOLERANCE
+    condition_number = None if rank_deficient else maximum / minimum
+    return minimum, condition_number, rank_deficient
 
 
 def molecular_summary(data: CalculationData) -> ResultRecord:
@@ -127,16 +139,41 @@ def population_analysis(
             f"error {result.conservation_error:.6g} e exceeds "
             f"tolerance {POPULATION_CONSERVATION_TOLERANCE:.6g} e."
         )
+
+    payload = {
+        "electron_populations": [round(value, 8) for value in result.electron_populations],
+        "atomic_charges": [round(value, 8) for value in result.atomic_charges],
+        "electron_count": round(result.electron_count, 8),
+        "total_charge": round(result.total_charge, 8),
+        "conservation_error": round(result.conservation_error, 10),
+        "density_source": data.total_density.source,
+    }
+    if method == "lowdin":
+        minimum, condition_number, rank_deficient = _lowdin_overlap_diagnostics(overlap)
+        payload.update(
+            {
+                "overlap_min_eigenvalue": minimum,
+                "overlap_condition_number": condition_number,
+                "overlap_rank_deficient": rank_deficient,
+            }
+        )
+        ill_conditioned = (
+            rank_deficient
+            or minimum < LOWDIN_MIN_EIGENVALUE_TOLERANCE
+            or (
+                condition_number is not None
+                and condition_number > LOWDIN_CONDITION_NUMBER_TOLERANCE
+            )
+        )
+        if ill_conditioned:
+            partial = True
+            warnings.append(
+                "Löwdin overlap matrix is rank deficient or ill-conditioned; atomic populations may be unreliable."
+            )
+
     return ResultRecord(
         kind=f"{method}_population",
-        data={
-            "electron_populations": [round(value, 8) for value in result.electron_populations],
-            "atomic_charges": [round(value, 8) for value in result.atomic_charges],
-            "electron_count": round(result.electron_count, 8),
-            "total_charge": round(result.total_charge, 8),
-            "conservation_error": round(result.conservation_error, 10),
-            "density_source": data.total_density.source,
-        },
+        data=payload,
         units={
             "electron_populations": "electron",
             "atomic_charges": "e",
@@ -146,7 +183,7 @@ def population_analysis(
         },
         validation_status="Experimental" if partial else "Stable",
         status="partial" if partial else "success",
-        warnings=tuple(warnings),
+        warnings=tuple(dict.fromkeys(warnings)),
     )
 
 
