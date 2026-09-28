@@ -143,10 +143,10 @@ def _run_one(arguments: tuple[Path, tuple[str, ...]]) -> BatchRecord:
     try:
         calculation = load(path)
         results = tuple(run_analysis_safe(calculation.data, name) for name in analyses)
-        successful = [result for result in results if result.status == "success"]
-        if len(successful) == len(results):
+        usable = [result for result in results if result.status in {"success", "partial"}]
+        if results and all(result.status == "success" for result in results):
             status = "success"
-        elif successful:
+        elif usable:
             status = "partial"
         else:
             status = "error"
@@ -156,7 +156,7 @@ def _run_one(arguments: tuple[Path, tuple[str, ...]]) -> BatchRecord:
         return BatchRecord(
             input_path=str(path),
             status=status,
-            result=successful[0].data if successful else None,
+            result=usable[0].data if usable else None,
             error="; ".join(errors) if status == "error" else None,
             input_sha256=checksum,
             results=results,
