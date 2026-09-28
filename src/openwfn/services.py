@@ -458,6 +458,8 @@ def electrostatic_potential_point(
             "ESP component must be 'nuclear', 'electronic', 'total', 'mulliken', or 'lowdin'"
         )
     point = np.asarray((coordinates_angstrom,), dtype=float) / BOHR_TO_ANGSTROM
+    warnings: list[str] = []
+    density_source: str | None = None
     if component == "nuclear":
         value = float(nuclear_esp(data.molecule, point)[0])
         status = "Stable"
@@ -466,33 +468,43 @@ def electrostatic_potential_point(
             raise DataUnavailableError(
                 "Atomic-charge ESP requires Gaussian basis and total-density data."
             )
+        matrix = data.total_density
+        density_source = matrix.source
+        warnings.extend(_density_source_warnings(data, matrix))
         overlap = overlap_matrix(data.basis, data.molecule)
         mapping = ao_atom_indices(data.basis)
         population = (
-            mulliken_population(data.molecule, data.total_density, overlap, mapping)
+            mulliken_population(data.molecule, matrix, overlap, mapping)
             if component == "mulliken"
-            else lowdin_population(data.molecule, data.total_density, overlap, mapping)
+            else lowdin_population(data.molecule, matrix, overlap, mapping)
         )
         centers = np.asarray([atom.coordinates for atom in data.molecule.atoms], dtype=float)
         centers /= BOHR_TO_ANGSTROM
         value = float(point_charge_esp(centers, np.asarray(population.atomic_charges), point)[0])
         status = "Stable"
     else:
+        matrix = density_matrix_for_kind(data, "total")
+        density_source = matrix.source
+        warnings.extend(_density_source_warnings(data, matrix))
         grid = density_grid(data, "total", spacing_bohr, padding_bohr)
         electronic = float(electronic_esp_from_grid(grid, point)[0])
         value = electronic
         if component == "total":
             value += float(nuclear_esp(data.molecule, point)[0])
         status = "Experimental"
+    payload: dict[str, object] = {
+        "component": component,
+        "x": coordinates_angstrom[0],
+        "y": coordinates_angstrom[1],
+        "z": coordinates_angstrom[2],
+        "value": round(value, 10),
+    }
+    if density_source is not None:
+        payload["density_source"] = density_source
     return ResultRecord(
         kind="electrostatic_potential",
-        data={
-            "component": component,
-            "x": coordinates_angstrom[0],
-            "y": coordinates_angstrom[1],
-            "z": coordinates_angstrom[2],
-            "value": round(value, 10),
-        },
+        data=payload,
         units={"x": "angstrom", "y": "angstrom", "z": "angstrom", "value": "hartree/e"},
         validation_status=status,  # type: ignore[arg-type]
+        warnings=tuple(dict.fromkeys(warnings)),
     )
