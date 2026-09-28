@@ -59,7 +59,7 @@ def test_python_api_exposes_frontier_orbitals() -> None:
 def test_python_api_rejects_unknown_spin_channel() -> None:
     calculation = openwfn.load(ROOT / "examples" / "water" / "water.fchk")
 
-    with pytest.raises(ValueError, match="spin must be 'alpha' or 'beta'"):
+    with pytest.raises(ValueError, match="spin must be 'alpha', 'beta', or 'all'"):
         calculation.orbitals("anything")
 
 
