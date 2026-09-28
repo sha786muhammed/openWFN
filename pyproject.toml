@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 
@@ -10,6 +10,11 @@ description = "Reproducible wavefunction post-processing with CLI, Python API, v
 requires-python = ">=3.10"
 readme = "README.md"
 license = "MIT"
+license-files = [
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "src/openwfn/assets/3Dmol-min.js.LICENSE.txt",
+]
 authors = [{ name = "Muhammed Shah Shaji" }]
 keywords = [
     "computational chemistry",
@@ -66,11 +71,6 @@ test = [
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-license-files = [
-    "LICENSE",
-    "THIRD_PARTY_NOTICES.md",
-    "src/openwfn/assets/3Dmol-min.js.LICENSE.txt",
-]
 
 
 [tool.setuptools.packages.find]

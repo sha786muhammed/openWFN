@@ -36,8 +36,9 @@ def test_third_party_notice_records_vendored_checksum() -> None:
 
 def test_distribution_metadata_includes_third_party_license() -> None:
     metadata = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    license_files = metadata["tool"]["setuptools"]["license-files"]
+    license_files = metadata["project"]["license-files"]
 
+    assert metadata["build-system"]["requires"] == ["setuptools>=77"]
     assert "LICENSE" in license_files
     assert "THIRD_PARTY_NOTICES.md" in license_files
     assert "src/openwfn/assets/3Dmol-min.js.LICENSE.txt" in license_files

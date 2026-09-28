@@ -19,6 +19,10 @@ def test_test_workflow_has_required_quality_and_platform_gates() -> None:
     assert "--repository-only" in text
     assert "macos-latest" in text
     assert "windows-latest" in text
+    assert "report build report.html" in text
+    assert "workbench workbench.html" in text
+    assert "Molecular rendering: 3Dmol.js (BSD-3-Clause)" in text
+    assert '"formula"] == "H2O"' in text
     assert "wheel-smoke" in text
     for required in (
         "openwfn examples install",

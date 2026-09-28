@@ -8,12 +8,15 @@ All notable changes to openWFN are documented in this file.
 
 - Added an installed-example command and packaged water fixture so the first analysis works from a wheel without cloning the repository.
 - Added a deterministic batch-throughput benchmark with machine-readable timing, count, version, and parent-process memory evidence.
+- Added contributor, maintainer, security, conduct, citation, provenance, and third-party-attribution records.
+- Added a read-only repository preflight and built-archive content tests for release consistency.
 
 ### Changed
 
 - Parallel batches now use a bounded completion-driven queue, persist each finished input immediately, and retain deterministic manifest ordering.
 - Stable and pre-release installation instructions are separated throughout the README and handbook.
 - Wheel and platform CI now exercise packaged examples and real multi-worker batch execution.
+- Release smoke testing now verifies summary, frontier-orbital, report, and offline workbench workflows from the built wheel.
 
 ### Fixed
 

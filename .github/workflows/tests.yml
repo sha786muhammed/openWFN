@@ -73,6 +73,25 @@ jobs:
       - run: wheel-test/bin/python -m pip install dist/*.whl
       - run: wheel-test/bin/openwfn --version
       - run: wheel-test/bin/openwfn examples install installed-examples
-      - run: wheel-test/bin/openwfn installed-examples/water.fchk summary
+      - run: wheel-test/bin/openwfn --format json --output summary.json installed-examples/water.fchk summary
       - run: wheel-test/bin/openwfn installed-examples/water.fchk orbitals frontier
+      - run: wheel-test/bin/openwfn installed-examples/water.fchk report build report.html
+      - run: wheel-test/bin/openwfn installed-examples/water.fchk workbench workbench.html > workbench.txt
+      - run: |
+          wheel-test/bin/python - <<'PY'
+          import json
+          from pathlib import Path
+
+          data = json.loads(Path("summary.json").read_text())
+          assert data["status"] == "success"
+          assert data["data"]["formula"] == "H2O"
+          report = Path("report.html").read_text()
+          workbench = Path("workbench.html").read_text()
+          workbench_output = Path("workbench.txt").read_text()
+          assert "http://" not in report and "https://" not in report
+          assert "Molecular rendering: 3Dmol.js (BSD-3-Clause)" in workbench
+          assert "Status: Experimental" in workbench_output
+          assert '<script src="http' not in workbench
+          assert "<script src='http" not in workbench
+          PY
       - run: wheel-test/bin/python scripts/benchmark_batch.py --count 20 --workers 2 --workspace wheel-benchmark --output wheel-benchmark.json

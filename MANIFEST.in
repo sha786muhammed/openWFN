@@ -1,0 +1,11 @@
+include CITATION.cff
+include CODE_OF_CONDUCT.md
+include CONTRIBUTING.md
+include CONTRIBUTORS.md
+include LICENSE
+include MAINTAINERS.md
+include ROADMAP.md
+include SECURITY.md
+include THIRD_PARTY_NOTICES.md
+include examples/PROVENANCE.md
+include docs/assets/data/asset-provenance.yml
