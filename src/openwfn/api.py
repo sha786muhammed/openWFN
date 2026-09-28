@@ -82,8 +82,8 @@ class OpenWFNCalculation:
             geometry_dihedral(self.molecule, atom_i, atom_j, atom_k, atom_l)
         )
 
-    def orbitals(self, spin: Literal["alpha", "beta"] = "alpha") -> ResultRecord:
-        """Return frontier molecular-orbital energies for one spin channel."""
+    def orbitals(self, spin: Literal["alpha", "beta", "all"] = "alpha") -> ResultRecord:
+        """Return frontier molecular-orbital energies for one or both spin channels."""
         return self._with_provenance(orbital_frontier(self.data, spin))
 
     def density(
