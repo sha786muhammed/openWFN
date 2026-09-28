@@ -2,6 +2,39 @@
 
 All notable changes to openWFN are documented in this file.
 
+## [0.8.1] - Unreleased
+
+### Added
+
+- Added permanent regression fixtures for ECP effective charges, ghost centers, post-HF calculations using an SCF density, unrestricted cases with a higher beta HOMO, ROHF classification, zero-spin density integration, and density-grid chunk equivalence.
+- Added the spin-complete `frontier-all` registered analysis and `spin="all"` Python/CLI workflow for unrestricted calculations.
+- Added Löwdin overlap conditioning diagnostics and explicit density/electron-count provenance fields in structured results.
+
+### Changed
+
+- Population charges, nuclear ESP, cube atom charges, and related special-case logic now use source effective nuclear charges when FCHK provides them.
+- Expected density electron counts now prefer source FCHK electron records; deterministic fallbacks emit warnings.
+- Density grids are evaluated in chunked AO batches to reduce peak memory without changing Cartesian grid order or numerical values.
+- Batch workflows preserve usable `partial` results and include frontier spin selection in reproducibility fingerprints.
+- Scientific warnings from analyses and parser provenance are merged rather than one source replacing the other.
+
+### Fixed
+
+- Conservation errors can no longer remain silent clean successes: inconsistent population or density results retain their numbers but return `status="partial"`, Experimental validation status, and an explanatory warning.
+- Zero-target spin-density validation now uses an absolute-error criterion rather than an invalid relative-error calculation.
+- Density cube results are labeled Validated only after the exact generated grid passes electron-conservation validation.
+- Ghost centers no longer contribute as physical nuclei to formula, center of mass, inferred bonds, fragments, or nuclear ESP.
+- Unrestricted frontier analysis no longer hides the beta channel when the spin-complete view is requested; the overall HOMO is selected from both channels.
+- HOMO/LUMO selection is occupation aware instead of blindly assuming the LUMO is adjacent to the HOMO index.
+- Restricted open-shell and unrestricted references are distinguished from restricted closed-shell calculations.
+- Post-HF analyses explicitly identify when the available SCF density is being used rather than implying a post-SCF density.
+
+### Scientific boundaries
+
+- ECP, ghost, UHF, ROHF, and post-HF fixtures in this release are implementation/regression evidence; they do not by themselves establish broad independent validation across all methods and chemical systems.
+- The default density grid spacing of 0.15 bohr remains an accuracy/performance starting point. Quantitative research should converge spacing and padding and inspect result status/warnings.
+- openWFN still does not claim general post-SCF density support unless a supported correlated density is explicitly parsed and selected.
+
 ## [0.8.0] - 2026-09-28
 
 ### Added
