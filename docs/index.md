@@ -7,9 +7,9 @@ hide:
 
 !!! note "Current release"
 
-    This site documents openWFN 0.8.0. Install the stable channel with
+    This site documents openWFN 0.8.1. Install the stable channel with
     `python -m pip install --upgrade openwfn`, or pin the release with
-    `python -m pip install openwfn==0.8.0` for reproducible work.
+    `python -m pip install openwfn==0.8.1` for reproducible work.
 
 <div class="ow-home" markdown="1">
 

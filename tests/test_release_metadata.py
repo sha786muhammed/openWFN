@@ -39,8 +39,8 @@ def citation_release_date() -> str:
     return match.group(1)
 
 
-def test_release_version_is_080() -> None:
-    assert project_version() == "0.8.0"
+def test_release_version_is_081() -> None:
+    assert project_version() == "0.8.1"
 
 
 def test_runtime_version_matches_project() -> None:
@@ -94,13 +94,13 @@ def test_citation_contains_verified_software_fields() -> None:
     for required in (
         "type: software",
         'title: "openWFN: Wavefunction post-processing analysis toolkit"',
-        'version: "0.8.0"',
+        'version: "0.8.1"',
         "date-released: 2026-09-28",
         "family-names: Shaji",
         "given-names: Muhammed Shah",
         "license: MIT",
         'repository-code: "https://github.com/sha786muhammed/openWFN"',
-        'url: "https://github.com/sha786muhammed/openWFN/releases/tag/v0.8.0"',
+        'url: "https://github.com/sha786muhammed/openWFN/releases/tag/v0.8.1"',
     ):
         assert required in citation
 
@@ -130,9 +130,9 @@ def test_citation_guide_matches_cff() -> None:
     for field in (
         "Muhammed Shah Shaji",
         "openWFN: Wavefunction post-processing analysis toolkit",
-        "0.8.0",
+        "0.8.1",
         "2026",
-        "https://github.com/sha786muhammed/openWFN/releases/tag/v0.8.0",
+        "https://github.com/sha786muhammed/openWFN/releases/tag/v0.8.1",
         "@software{shaji_openwfn_2026",
     ):
         assert field in guide
@@ -181,25 +181,25 @@ def test_readme_documents_binary_checkpoint_requirement() -> None:
 
 def test_changelog_contains_current_release() -> None:
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    assert "## [0.8.0] - 2026-09-28" in changelog
+    assert "## [0.8.1] - 2026-09-28" in changelog
 
 
 def test_release_notes_document_capability_boundaries() -> None:
-    notes = (ROOT / "docs" / "releases" / "0.8.0.md").read_text(encoding="utf-8")
+    notes = (ROOT / "docs" / "releases" / "0.8.1.md").read_text(encoding="utf-8")
     for required in (
-        "stable release",
+        "scientific-correctness hardening release",
         "Validated",
         "Experimental",
         "Unsupported",
         "GitHub Pages",
-        "openwfn examples install",
-        "bounded",
-        "lazy",
-        "--count 10000",
-        "Linux validation host",
+        "openwfn==0.8.1",
+        "--spin all",
+        "partial",
+        "0.15 bohr",
+        "Python 3.10–3.13",
     ):
         assert required in notes
-    assert (ROOT / "docs" / "releases" / "0.8.0a1.md").is_file()
+    assert (ROOT / "docs" / "releases" / "0.8.0.md").is_file()
 
 
 def test_release_guide_contains_required_gates() -> None:
@@ -210,7 +210,7 @@ def test_release_guide_contains_required_gates() -> None:
         "python -m build",
         "python -m twine check",
         "git tag -a",
-        "0.8.0",
+        "0.8.1",
     ):
         assert required in guide
     assert "dist/openwfn-0.7.2" not in guide
