@@ -15,12 +15,30 @@ from .errors import DataUnavailableError
 from .exporters.cube import write_cube
 from .geometry import angle, center_of_mass, detect_bonds, dihedral, distance, molecular_formula
 from .graph import build_graph
-from .model import CalculationData, Molecule
+from .model import CalculationData, DensityMatrix, Molecule
 from .results import ResultRecord
+
+POPULATION_CONSERVATION_TOLERANCE = 1e-6
 
 
 def _coordinates(molecule: Molecule) -> list[tuple[float, float, float]]:
     return [atom.coordinates for atom in molecule.atoms]
+
+
+def _is_post_hf_method(method: str | None) -> bool:
+    if not method:
+        return False
+    normalized = method.upper().replace("-", "")
+    return normalized.startswith(("MP2", "MP3", "MP4", "CC", "CI", "QCI"))
+
+
+def _density_source_warnings(data: CalculationData, matrix: DensityMatrix) -> tuple[str, ...]:
+    if matrix.source == "scf" and _is_post_hf_method(data.molecule.metadata.method):
+        method = data.molecule.metadata.method or "post-HF"
+        return (
+            f"{method} calculation is using the SCF density because no supported post-SCF density was selected.",
+        )
+    return ()
 
 
 def molecular_summary(data: CalculationData) -> ResultRecord:
@@ -98,8 +116,17 @@ def population_analysis(
     mapping = ao_atom_indices(data.basis)
     if method == "mulliken":
         result = mulliken_population(data.molecule, data.total_density, overlap, mapping)
-    elif method == "lowdin":
+    else:
         result = lowdin_population(data.molecule, data.total_density, overlap, mapping)
+
+    warnings = list(_density_source_warnings(data, data.total_density))
+    partial = result.conservation_error > POPULATION_CONSERVATION_TOLERANCE
+    if partial:
+        warnings.append(
+            "Population charge conservation failed: "
+            f"error {result.conservation_error:.6g} e exceeds "
+            f"tolerance {POPULATION_CONSERVATION_TOLERANCE:.6g} e."
+        )
     return ResultRecord(
         kind=f"{method}_population",
         data={
@@ -108,6 +135,7 @@ def population_analysis(
             "electron_count": round(result.electron_count, 8),
             "total_charge": round(result.total_charge, 8),
             "conservation_error": round(result.conservation_error, 10),
+            "density_source": data.total_density.source,
         },
         units={
             "electron_populations": "electron",
@@ -116,7 +144,9 @@ def population_analysis(
             "total_charge": "e",
             "conservation_error": "e",
         },
-        validation_status="Stable",
+        validation_status="Experimental" if partial else "Stable",
+        status="partial" if partial else "success",
+        warnings=tuple(warnings),
     )
 
 
