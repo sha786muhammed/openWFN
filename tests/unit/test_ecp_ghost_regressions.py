@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import numpy as np
 
 from openwfn.analysis.electrostatics import nuclear_esp
