@@ -152,11 +152,35 @@ def _doctor_result(path: Path) -> ResultRecord:
     )
 
 
+def _run_examples_command(arguments: list[str]) -> int:
+    examples_parser = argparse.ArgumentParser(prog="openwfn examples")
+    commands = examples_parser.add_subparsers(dest="examples_command", required=True)
+    install = commands.add_parser("install", help="Copy packaged examples to a directory")
+    install.add_argument("destination", type=Path)
+    install.add_argument("--overwrite", action="store_true")
+    args = examples_parser.parse_args(arguments)
+
+    from .examples import install_examples
+
+    try:
+        written = install_examples(args.destination, overwrite=args.overwrite)
+    except FileExistsError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 2
+    for path in written:
+        print(path)
+    return 0
+
+
 # -------------------------------------------------
 # Main CLI
 # -------------------------------------------------
 
 def main(argv: list[str] | None = None) -> int:
+    raw_arguments = sys.argv[1:] if argv is None else argv
+    if raw_arguments and raw_arguments[0] == "examples":
+        return _run_examples_command(raw_arguments[1:])
+
     parser = argparse.ArgumentParser(
         prog="openwfn",
         description=(
@@ -180,6 +204,7 @@ def main(argv: list[str] | None = None) -> int:
 
     subparsers = parser.add_subparsers(dest="command", metavar="COMMAND")
 
+    subparsers.add_parser("examples", help="Install redistributable example inputs")
     subparsers.add_parser("summary", help="Show professional molecular summary")
     subparsers.add_parser("info", help="Show detailed FCHK metadata")
 
@@ -351,13 +376,15 @@ def main(argv: list[str] | None = None) -> int:
         if action.dest != "mo"
     ]
 
-    raw_arguments = sys.argv[1:] if argv is None else argv
     translated_arguments = translate_legacy_args(raw_arguments)
     translated_arguments = complete_implicit_command(
         translated_arguments,
         stdin_is_tty=sys.stdin.isatty(),
     )
     args = parser.parse_args(translated_arguments)
+
+    if args.command == "examples":
+        parser.error("use `openwfn examples install DESTINATION` without an input file")
 
     if args.file is None:
         parser.error("an input file is required unless --version is used")

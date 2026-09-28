@@ -30,6 +30,7 @@ venv/
 # BUT keep example files (important!)
 !examples/**/*.fchk
 !examples/**/*.xyz
+!src/openwfn/example_data/*.fchk
 
 # =========================
 # OS junk
