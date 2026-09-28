@@ -46,10 +46,11 @@ class OpenWFNCalculation:
             "source_program_version": self.molecule.metadata.source_program_version,
             "transformations": list(source.transformations) if source else [],
         }
+        source_warnings = source.warnings if source else ()
         return replace(
             result,
             provenance=provenance,
-            warnings=source.warnings if source else (),
+            warnings=tuple(dict.fromkeys((*result.warnings, *source_warnings))),
         )
 
     def analyze_geometry(self) -> ResultRecord:
