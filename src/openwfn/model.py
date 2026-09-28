@@ -177,6 +177,7 @@ class MolecularOrbitals:
     coefficients: tuple[tuple[float, ...], ...]
     occupations: tuple[float, ...]
     spin: Literal["restricted", "alpha", "beta"] = "restricted"
+    occupation_source: str | None = None
     energy_unit: Literal["hartree"] = field(default="hartree", init=False)
 
     def __post_init__(self) -> None:
@@ -191,6 +192,8 @@ class MolecularOrbitals:
             (value for row in self.coefficients for value in row),
         )
         _require_finite("orbital occupations", self.occupations)
+        if self.occupation_source is not None and not self.occupation_source.strip():
+            raise ValueError("occupation_source must not be blank")
 
 
 @dataclass(frozen=True, slots=True)
