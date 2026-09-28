@@ -21,6 +21,7 @@ coverage files, generated package metadata, or research data.
 ## Run the checks
 
 ```bash
+python scripts/check_repository.py --root .
 python -m ruff check src tests scripts
 python -m pytest --strict-markers
 python scripts/run_validation.py
@@ -28,6 +29,18 @@ python scripts/run_external_benchmarks.py --repository-only
 python scripts/check_docs.py --root .
 python scripts/sync_release_metadata.py --check
 python -m mkdocs build --strict
+```
+
+The repository preflight checks required policy and attribution files, public
+text for private-machine or internal-tool details, source-tree package metadata,
+and the active editable install. It only reports findings; it never deletes or
+rewrites files. If it reports stale generated metadata or an editable install
+from another checkout, inspect the ignored files and refresh this environment:
+
+```bash
+git status --ignored --short
+python -m pip install --no-build-isolation -e .
+python scripts/check_repository.py --root .
 ```
 
 Run the focused test first while developing, then the complete suite before a

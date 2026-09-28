@@ -15,6 +15,13 @@ tolerances, reference procedures, shareable fixtures, provenance, and explicit
 limitations. External code or data requires compatible license terms and
 preserved attribution.
 
+After installing the repository in editable mode, run
+`python scripts/check_repository.py --root .`. This read-only preflight checks
+policy and attribution files, public text, generated package metadata, and the
+editable installation. If it reports stale metadata, inspect ignored files with
+`git status --ignored --short`, reinstall with
+`python -m pip install --no-build-isolation -e .`, and run the preflight again.
+
 Also read the repository's [Code of Conduct](https://github.com/sha786muhammed/openWFN/blob/main/CODE_OF_CONDUCT.md),
 [maintainer policy](https://github.com/sha786muhammed/openWFN/blob/main/MAINTAINERS.md),
 and [roadmap](https://github.com/sha786muhammed/openWFN/blob/main/ROADMAP.md).

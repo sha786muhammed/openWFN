@@ -14,6 +14,7 @@ def test_test_workflow_has_required_quality_and_platform_gates() -> None:
         assert version in text
     for gate in ("ruff check", "pytest --strict-markers", "run_validation.py", "twine check"):
         assert gate in text
+    assert "python scripts/check_repository.py --root ." in text
     assert "run_external_benchmarks.py" in text
     assert "--repository-only" in text
     assert "macos-latest" in text
@@ -43,3 +44,11 @@ def test_actions_are_pinned_to_full_commit_shas() -> None:
         action_refs = re.findall(r"uses:\s+[^\s@]+@([^\s#]+)", text)
         assert action_refs, name
         assert all(re.fullmatch(r"[0-9a-f]{40}", ref) for ref in action_refs), (name, action_refs)
+
+
+def test_documentation_workflow_runs_repository_preflight_after_install() -> None:
+    text = _workflow("docs.yml")
+
+    install = text.index("python -m pip install .[test,docs]")
+    preflight = text.index("python scripts/check_repository.py --root .")
+    assert preflight > install
