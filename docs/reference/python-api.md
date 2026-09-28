@@ -115,6 +115,12 @@ input provenance, warnings, elapsed time, execution status, and structured
 failure details. Existing `ResultRecord(kind, data, units, validation_status)`
 construction remains supported.
 
+## Batch API
+
+`run_batch(...)` accepts the existing `inputs`, `operation`, `workers`, and `output_dir` arguments plus optional named analyses, resume/discovery controls, and `frontier_spin="alpha"|"beta"|"all"`. The `frontier_spin` selector applies when `frontier` is requested: alpha preserves the historical analysis, beta maps it to `beta-frontier`, and all maps it to the spin-complete `frontier-all` analysis. The spin selection participates in the configuration fingerprint so resume does not reuse incompatible frontier results.
+
+Batch records preserve usable `partial` analyses and their warnings/data. A record becomes `error` only when every requested analysis failed.
+
 ## FCHK parsing
 
 - `read_fchk(path)` — read FCHK records.
