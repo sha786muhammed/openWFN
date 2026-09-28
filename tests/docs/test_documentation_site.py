@@ -1,3 +1,4 @@
+import hashlib
 import re
 import subprocess
 import sys
@@ -125,6 +126,23 @@ def test_public_images_have_provenance_and_are_bounded() -> None:
         assert f"  {image.name}:" in manifest
         assert "    alt:" in manifest
         assert "    license:" in manifest
+
+
+def test_every_public_image_has_complete_factual_provenance() -> None:
+    manifest = (ROOT / "docs" / "assets" / "data" / "asset-provenance.yml").read_text(
+        encoding="utf-8"
+    )
+    image_root = ROOT / "docs" / "assets" / "images"
+
+    for image in image_root.iterdir():
+        block = manifest.split(f"  {image.name}:", maxsplit=1)[1]
+        block = re.split(r"(?m)^  (?=\S)", block, maxsplit=1)[0]
+        digest = hashlib.sha256(image.read_bytes()).hexdigest()
+        for field in ("source: project-created", "generation_record:", "license:", "alt:"):
+            assert field in block
+        assert digest in block
+        assert "generated specifically" not in block.lower()
+        assert "approved" not in block.lower()
 
 
 def test_homepage_contains_product_paths_and_trust_links() -> None:
