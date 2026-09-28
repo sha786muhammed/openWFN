@@ -20,7 +20,6 @@ from .app import CommandContext, execute
 from .batch import discover_inputs, run_batch
 from .compat import complete_implicit_command, translate_legacy_args
 from .errors import DataUnavailableError
-from .exporters.images import write_frontier_diagram
 from .exporters.structures import write_structure
 from .exporters.tables import ExportRequest, write_result_table
 from .fchk import parse_fchk_arrays, parse_fchk_scalars, read_fchk  # type: ignore
@@ -580,6 +579,8 @@ def main(argv: list[str] | None = None) -> int:
 
         if args.command == "plot":
             def plot_operation() -> ResultRecord:
+                from .exporters.images import write_frontier_diagram
+
                 calculation = _require_calculation(Path(args.file))
                 if calculation.alpha_orbitals is None:
                     raise ValueError("Molecular orbital data are not available.")
