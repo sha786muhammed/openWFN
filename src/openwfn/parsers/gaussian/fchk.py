@@ -76,7 +76,7 @@ class FCHKDocument:
     records: dict[str, RecordValue]
 
     @classmethod
-    def from_lines(cls, lines: list[str]) -> FCHKDocument:
+    def from_lines(cls, lines: list[str]) -> "FCHKDocument":
         records: dict[str, RecordValue] = {}
         index = 0
         while index < len(lines):
@@ -216,7 +216,13 @@ def _orbital_channel(
     )
     if len(occupations) != orbital_count:
         raise ParseError(f"FCHK electron counts are incompatible with {energy_record}.")
-    return MolecularOrbitals(energies, coefficients, occupations, spin=spin)  # type: ignore[arg-type]
+    return MolecularOrbitals(
+        energies,
+        coefficients,
+        occupations,
+        spin=spin,  # type: ignore[arg-type]
+        occupation_source="electron-count filling",
+    )
 
 
 def _orbitals_from_document(
@@ -297,9 +303,6 @@ def parse_fchk(path: Path) -> CalculationData:
     raw = path.read_bytes()
     text = raw.decode("utf-8")
     lines = text.splitlines(keepends=True)
-    # Standard FCHK files begin with two free-form title/descriptor lines, and
-    # some producers put text there that resembles a scalar record. Retain
-    # compatibility with compact record-only fixtures and generated inputs.
     record_lines = lines if lines and _HEADER.match(lines[0].rstrip("\r\n")) else lines[2:]
     document = FCHKDocument.from_lines(record_lines)
 
@@ -377,12 +380,8 @@ def parse_fchk(path: Path) -> CalculationData:
         bonds=inferred_bonds,
     )
     alpha_orbitals, beta_orbitals = _orbitals_from_document(document)
-    total_density = _density_from_document(
-        document, "Total SCF Density", "total", source="scf"
-    )
-    spin_density = _density_from_document(
-        document, "Spin SCF Density", "spin", source="scf"
-    )
+    total_density = _density_from_document(document, "Total SCF Density", "total", source="scf")
+    spin_density = _density_from_document(document, "Spin SCF Density", "spin", source="scf")
     return CalculationData(
         molecule=molecule,
         basis=_basis_from_document(document),
