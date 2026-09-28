@@ -17,7 +17,7 @@ from .geometry import angle, center_of_mass, detect_bonds, dihedral, distance, m
 from .graph import build_graph
 from .model import CalculationData, DensityMatrix, Molecule
 from .results import ResultRecord
-from .scientific import expected_electron_count
+from .scientific import expected_electron_count, is_ghost_atom
 
 POPULATION_CONSERVATION_TOLERANCE = 1e-6
 LOWDIN_MIN_EIGENVALUE_TOLERANCE = 1e-8
@@ -63,25 +63,51 @@ def _density_validation_warning(result) -> str:
 
 
 def molecular_summary(data: CalculationData) -> ResultRecord:
-    atomic_numbers = [atom.atomic_number for atom in data.molecule.atoms]
-    coordinates = _coordinates(data.molecule)
-    bonds = detect_bonds(atomic_numbers, coordinates)
-    fragments = build_graph(len(atomic_numbers), bonds).connected_components()
-    com = center_of_mass(atomic_numbers, coordinates)
+    centers = list(data.molecule.atoms)
+    physical_atoms = [atom for atom in centers if not is_ghost_atom(atom)]
+    ghost_count = len(centers) - len(physical_atoms)
+    warnings: list[str] = []
+
+    if physical_atoms:
+        atomic_numbers = [atom.atomic_number for atom in physical_atoms]
+        coordinates = [atom.coordinates for atom in physical_atoms]
+        bonds = detect_bonds(atomic_numbers, coordinates)
+        fragments = build_graph(len(atomic_numbers), bonds).connected_components()
+        com = center_of_mass(atomic_numbers, coordinates)
+        formula = molecular_formula(atomic_numbers)
+        center = [round(value, 6) for value in com]
+    else:
+        atomic_numbers = []
+        bonds = []
+        fragments = ()
+        formula = ""
+        center = None
+
+    if ghost_count:
+        warnings.append(
+            f"Structural summary excludes {ghost_count} ghost center(s) from formula, "
+            "center of mass, bond inference, and fragment counting."
+        )
+
     return ResultRecord(
         kind="summary",
         data={
-            "formula": molecular_formula(atomic_numbers),
-            "atoms": len(atomic_numbers),
+            "formula": formula,
+            "atoms": len(physical_atoms),
+            "centers": len(centers),
+            "physical_nuclei": len(physical_atoms),
+            "ghost_centers": ghost_count,
             "charge": data.molecule.charge,
             "multiplicity": data.molecule.multiplicity,
-            "center_of_mass": [round(value, 6) for value in com],
+            "center_of_mass": center,
             "energy_hartree": data.molecule.metadata.energy_hartree,
             "bond_count": len(bonds),
             "fragments": len(fragments),
+            "bond_source": "covalent-radius heuristic",
         },
         units={"center_of_mass": "angstrom", "energy_hartree": "hartree"},
         validation_status="Stable",
+        warnings=tuple(warnings),
     )
 
 
