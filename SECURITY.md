@@ -4,11 +4,11 @@
 
 | Version | Security fixes |
 |---|---|
-| `0.8.0a2` | Supported |
+| `0.8.0` | Supported |
 | Earlier releases | Not supported |
 
-The current published pre-release is the supported line. Upgrade before
-reporting unless the issue prevents it.
+The current stable release is the supported line. Upgrade before reporting
+unless the issue prevents it.
 
 ## Report a vulnerability privately
 

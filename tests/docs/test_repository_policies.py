@@ -34,7 +34,7 @@ def test_contributors_match_verified_git_identity_without_affiliation() -> None:
 def test_security_policy_uses_private_reporting_and_supported_versions() -> None:
     policy = read("SECURITY.md")
 
-    assert "0.8.0a2" in policy
+    assert "0.8.0" in policy
     assert "private security advisory" in policy.lower()
     assert "https://github.com/sha786muhammed/openWFN/security/advisories/new" in policy
     assert "scientific discrepancy" in policy.lower()

@@ -1,5 +1,15 @@
 # Release history
 
+## 0.8.0 — stable analysis contracts
+
+Version 0.8.0 promotes the tested 0.8 interfaces to a stable release. It adds
+strict option and finite-value validation, makes high-level Python results
+consistent and provenance-bearing, and clarifies public atom numbering and the
+preferred automation API. Scientific capability labels remain scoped to their
+documented validation evidence.
+
+[Read the detailed 0.8.0 notes](../releases/0.8.0.md)
+
 ## 0.8.0a2 — installed examples and bounded batching
 
 Version 0.8.0a2 makes the alpha easier to evaluate from a built wheel, bounds

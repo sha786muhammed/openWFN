@@ -45,12 +45,10 @@ python -m pip install --upgrade openwfn
 openwfn --version
 ```
 
-The current handbook documents the 0.8 pre-release. To evaluate it, use either
-the moving pre-release channel or the exact version after publication:
+Install the exact release when reproducing research:
 
 ```bash
-python -m pip install --pre --upgrade openwfn
-python -m pip install openwfn==0.8.0a2
+python -m pip install openwfn==0.8.0
 ```
 
 ## First analysis

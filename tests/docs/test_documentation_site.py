@@ -310,16 +310,15 @@ def test_homepage_and_readme_use_generalized_scale_language() -> None:
     assert not re.search(r"\b(?:1,?000|10,?000)\b", public_copy)
 
 
-def test_public_installation_copy_distinguishes_stable_and_alpha() -> None:
+def test_public_installation_copy_documents_stable_release() -> None:
     public = "\n".join(
         (ROOT / path).read_text(encoding="utf-8")
         for path in ("README.md", "docs/index.md", "docs/installation.md")
     )
 
     assert "python -m pip install --upgrade openwfn" in public
-    assert "python -m pip install --pre --upgrade openwfn" in public
-    assert "python -m pip install openwfn==0.8.0a2" in public
-    assert "pre-release" in public.lower()
+    assert "python -m pip install openwfn==0.8.0" in public
+    assert "pre-release handbook" not in public.lower()
 
 
 def test_first_analysis_uses_installed_example_workflow() -> None:

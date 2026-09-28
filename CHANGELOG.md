@@ -2,6 +2,29 @@
 
 All notable changes to openWFN are documented in this file.
 
+## [0.8.0] - 2026-09-28
+
+### Added
+
+- Added strict finite-value validation across public scientific models and result envelopes, including nested NumPy arrays.
+- Added explicit regression coverage for invalid spin channels, density kinds, population methods, ESP kinds, atom indices, and non-finite scientific data.
+
+### Changed
+
+- High-level Python analysis helpers now return the same provenance-bearing `ResultRecord` type as named analyses.
+- Public geometry documentation now states the one-based atom numbering used by the CLI and high-level Python API, while internal arrays remain zero-based.
+- The Python guide now identifies `analyze(name)` as the preferred automation interface and the specialized methods as discoverable convenience helpers.
+
+### Fixed
+
+- Invalid analysis options now fail immediately instead of falling through to a default spin channel or being masked by missing calculation data.
+- High-level analysis results now preserve source provenance consistently.
+
+### Scientific boundaries
+
+- Existing capability labels remain authoritative: methods marked **Validated** retain their documented evidence scope, while **Experimental** and **Unsupported** capabilities keep those labels.
+- Gaussian formatted-checkpoint files remain the primary source for full wavefunction analysis in this release.
+
 ## [0.8.0a2] - 2026-09-28
 
 ### Added

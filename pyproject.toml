@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openwfn"
-version = "0.8.0a2"
+version = "0.8.0"
 description = "Reproducible wavefunction post-processing with CLI, Python API, validation, and research exports"
 requires-python = ">=3.10"
 readme = "README.md"
@@ -25,7 +25,7 @@ keywords = [
     "wavefunction",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
