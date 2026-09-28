@@ -15,6 +15,7 @@ from openwfn.model import (
     Molecule,
     VolumetricGrid,
 )
+from openwfn.services import density_grid
 
 
 def test_density_contracts_ao_matrix_on_both_indices() -> None:
@@ -83,6 +84,21 @@ def test_density_matrix_rejects_unknown_kind_before_selecting_a_channel() -> Non
         match="density kind must be 'total', 'alpha', 'beta', or 'spin'",
     ):
         density_matrix_for_kind(data, "anything")  # type: ignore[arg-type]
+
+
+def test_density_service_rejects_unknown_kind_before_checking_basis_data() -> None:
+    molecule = Molecule((Atom(1, (0.0, 0.0, 0.0)),), 0, 2, CalculationMetadata("fixture"))
+
+    with pytest.raises(
+        ValueError,
+        match="density kind must be 'total', 'alpha', 'beta', or 'spin'",
+    ):
+        density_grid(
+            CalculationData(molecule=molecule),
+            "anything",  # type: ignore[arg-type]
+            0.15,
+            6.0,
+        )
 
 
 def test_density_channel_requires_available_source_matrices() -> None:

@@ -177,6 +177,8 @@ def density_grid(
     spacing_bohr: float,
     padding_bohr: float,
 ):
+    if kind not in {"total", "alpha", "beta", "spin"}:
+        raise ValueError("density kind must be 'total', 'alpha', 'beta', or 'spin'")
     if data.basis is None:
         raise DataUnavailableError("Density analysis requires Gaussian basis-set data.")
     matrix = density_matrix_for_kind(data, kind)  # type: ignore[arg-type]

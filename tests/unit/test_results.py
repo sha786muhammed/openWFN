@@ -1,5 +1,6 @@
 import math
 
+import numpy as np
 import pytest
 
 from openwfn.results import RESULT_SCHEMA_VERSION, ResultRecord
@@ -62,6 +63,8 @@ def test_result_record_rejects_negative_elapsed_time() -> None:
     [
         ("data", {"nested": [1.0, {"value": math.nan}]}),
         ("provenance", {"metric": math.inf}),
+        ("data", {"nested": [{"values": np.array([math.nan])}]}),
+        ("provenance", {"values": np.array([[math.inf]])}),
     ],
 )
 def test_result_record_rejects_nested_non_finite_values(

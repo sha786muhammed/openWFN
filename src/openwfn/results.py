@@ -6,12 +6,18 @@ from math import isfinite
 from numbers import Real
 from typing import Any, Literal, cast
 
+import numpy as np
+
 CapabilityStatus = Literal["Stable", "Validated", "Experimental", "Unsupported"]
 ResultStatus = Literal["success", "partial", "failed"]
 RESULT_SCHEMA_VERSION = "1.0"
 
 
 def _contains_non_finite(value: Any) -> bool:
+    if isinstance(value, np.ndarray):
+        return _contains_non_finite(value.tolist())
+    if isinstance(value, np.generic):
+        return _contains_non_finite(value.item())
     if isinstance(value, Real):
         return not isfinite(value)
     if isinstance(value, Mapping):
