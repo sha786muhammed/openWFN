@@ -5,10 +5,13 @@ The workbench packages a calculation, selected derived data, interface code, and
 **Status: Experimental.** The workbench is an optional visualization and teaching surface, not a numerical reference. Preserve the corresponding JSON, CSV, or report output as the scientific record.
 
 ```bash
-openwfn water.fchk workbench water-workbench.html --open
+openwfn ./openwfn-examples/water.fchk workbench water-workbench.html --open
 ```
 
-Without `--open`, open the resulting file in a modern browser. It works through `file://`; no localhost server or openWFN process must remain running.
+This example assumes `openwfn examples install ./openwfn-examples` has already
+been run. Without `--open`, open the resulting file in a modern browser. It
+works through `file://`; no localhost server or openWFN process must remain
+running.
 
 ## What the file contains
 

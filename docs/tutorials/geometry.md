@@ -1,6 +1,8 @@
 # Tutorial: verify a molecular geometry
 
-This tutorial uses the public water fixture from a source checkout. Installed-package users can substitute their own `.fchk` path.
+This tutorial uses the public water fixture from a source checkout. Run the
+commands from the repository root. Installed-package users can first run
+`openwfn examples install ./openwfn-examples` and substitute that FCHK path.
 
 ## 1. Establish identity
 

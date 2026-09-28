@@ -53,7 +53,7 @@ reference program's printed precision.
 | Acetylene | Restricted, Psi4 producer | Total energy, HOMO, LUMO | 3 passing |
 
 The evidence records include binary, settings, input, procedure, and transcript hashes,
-plus NASAKY platform metadata. See the [Multiwfn procedure](https://github.com/sha786muhammed/openWFN/blob/main/validation/external/procedures/multiwfn.md). These comparisons validate only the named metrics and fixtures; they do not establish accuracy for every chemical system.
+plus Linux validation-platform metadata. See the [Multiwfn procedure](https://github.com/sha786muhammed/openWFN/blob/main/validation/external/procedures/multiwfn.md). These comparisons validate only the named metrics and fixtures; they do not establish accuracy for every chemical system.
 
 ## Coverage still needed
 

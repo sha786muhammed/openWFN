@@ -48,7 +48,10 @@ This procedure prevents source, citation, GitHub, and PyPI versions from divergi
    "$release_smoke/venv/bin/openwfn" "$release_smoke/examples/water.fchk" summary
    ```
 
-8. Inspect the wheel and confirm that it contains all Python modules, `assets/3Dmol-min.js`, package metadata, the license, and the console entry point:
+8. Inspect the wheel and confirm that it contains all Python modules, the
+   vendored JavaScript, its full license, `THIRD_PARTY_NOTICES.md`, the project
+   license, packaged example and provenance summary, package metadata, and the
+   console entry point:
 
    ```bash
    unzip -l dist/openwfn-0.8.0a2-py3-none-any.whl

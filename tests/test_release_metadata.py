@@ -196,7 +196,7 @@ def test_release_notes_document_capability_boundaries() -> None:
         "bounded",
         "lazy",
         "--count 10000",
-        "NASAKY",
+        "Linux validation host",
     ):
         assert required in notes
     assert (ROOT / "docs" / "releases" / "0.8.0a1.md").is_file()

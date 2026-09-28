@@ -2,6 +2,44 @@
 
 The stable import surface is declared by `openwfn.__all__`. Import from `openwfn` rather than internal modules when possible.
 
+## Public import inventory
+
+| Name | Role |
+|---|---|
+| `read_fchk` | Read FCHK records |
+| `parse_fchk_arrays` | Parse atomic arrays |
+| `parse_fchk_scalars` | Parse scalar metadata |
+| `parse_fchk_density` | Parse density matrices |
+| `parse_fchk_basis` | Parse basis data |
+| `parse_fchk_mos` | Parse molecular-orbital data |
+| `distance` | Cartesian distance |
+| `angle` | Three-point angle |
+| `dihedral` | Signed torsion |
+| `detect_bonds` | Covalent-radius bond heuristic |
+| `MolecularGraph` | Molecular graph type |
+| `build_graph` | Build connectivity and fragments |
+| `eval_s_type_gto` | Evaluate an s-type Gaussian function |
+| `compute_density` | Evaluate compatible density data |
+| `evaluate_mo` | Evaluate a molecular orbital |
+| `make_bounding_box_grid` | Build a Cartesian molecular grid |
+| `export_vtk` | Write a VTK scalar grid |
+| `export_json` | Write JSON properties |
+| `export_csv` | Write a CSV point table |
+| `export_molecule_viewer` | Write a standalone molecular viewer |
+| `OpenWFNCalculation` | High-level calculation API |
+| `MODEL_SCHEMA_VERSION` | Model schema identifier |
+| `BoundaryConditions` | Boundary-condition record |
+| `CalculationData` | Canonical calculation model |
+| `Provenance` | Input provenance record |
+| `RESULT_SCHEMA_VERSION` | Result schema identifier |
+| `ResultRecord` | Versioned analysis result |
+| `BATCH_SCHEMA_VERSION` | Batch manifest schema identifier |
+| `available_analyses` | List registered analysis names |
+| `discover_inputs` | Discover batch inputs |
+| `run_analysis` | Run one registered analysis |
+| `run_batch` | Run batch analyses |
+| `load` | Load a high-level calculation |
+
 ## Loading and models
 
 ### `load(path) -> OpenWFNCalculation`
@@ -10,9 +48,10 @@ Load a supported calculation file through the parser registry. The returned type
 
 ### `OpenWFNCalculation`
 
-Top-level calculation model used by the v0.7 analysis stack. Check optional fields before electronic analyses.
+Top-level calculation model used by the current analysis stack. Check optional
+fields before electronic analyses.
 
-### Model schema v2 foundation
+### Model schema
 
 `MODEL_SCHEMA_VERSION` is `"2.0"`. `Molecule.boundary_conditions` defaults
 to an immutable isolated-system record. Periodic construction is rejected in
@@ -20,10 +59,18 @@ v0.8 and is reserved for a later periodic implementation.
 
 `Provenance` records the source path, SHA-256 checksum, parser name, source
 format, parser version, warnings, and named transformations. These fields make
-ingestion decisions traceable without changing scientific values. The v0.8
-fields are additive, and existing v0.7 constructor forms remain supported.
+ingestion decisions traceable without changing scientific values. Existing
+constructor forms covered by the compatibility tests remain supported.
 
-## Named analyses and results
+## Registered named analyses
+
+| Name | Result |
+|---|---|
+| `beta-frontier` | Beta-spin HOMO, LUMO, and gap |
+| `frontier` | Alpha/default HOMO, LUMO, and gap |
+| `lowdin` | Löwdin populations and charges |
+| `mulliken` | Mulliken populations and charges |
+| `summary` | Molecular and calculation summary |
 
 Use `available_analyses()` to discover stable registry names. Run an analysis
 with `calculation.analyze(name)` after `load(path)`, or use
