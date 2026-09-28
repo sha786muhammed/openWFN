@@ -280,7 +280,7 @@ def main(argv: list[str] | None = None) -> int:
     p_orbitals = subparsers.add_parser("orbitals", help="Molecular orbital analysis")
     orbital_commands = p_orbitals.add_subparsers(dest="orbital_command", required=True)
     p_frontier = orbital_commands.add_parser("frontier", help="Report HOMO, LUMO, and energy gap")
-    p_frontier.add_argument("--spin", choices=["alpha", "beta"], default="alpha")
+    p_frontier.add_argument("--spin", choices=["alpha", "beta", "all"], default="alpha")
 
     p_density = subparsers.add_parser("density", help="Electron and spin-density analysis")
     density_commands = p_density.add_subparsers(dest="density_command", required=True)
@@ -346,6 +346,12 @@ def main(argv: list[str] | None = None) -> int:
     p_batch.add_argument(
         "--analyses",
         help="Comma-separated registered analyses (for example: summary,frontier)",
+    )
+    p_batch.add_argument(
+        "--spin",
+        choices=["alpha", "beta", "all"],
+        default="alpha",
+        help="Spin channel used when `frontier` is requested",
     )
     p_batch.add_argument("--workers", type=int, default=1)
     p_batch.add_argument("--output-dir", type=Path)
@@ -421,7 +427,11 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     if args.command == "orbitals":
-        analysis = "beta-frontier" if args.spin == "beta" else "frontier"
+        analysis = {
+            "alpha": "frontier",
+            "beta": "beta-frontier",
+            "all": "frontier-all",
+        }[args.spin]
         return execute(
             lambda: run_analysis(_require_calculation(Path(args.file)), analysis),
             _context(args),
@@ -497,6 +507,15 @@ def main(argv: list[str] | None = None) -> int:
                 tuple(item.strip() for item in args.analyses.split(",") if item.strip())
                 if args.analyses
                 else (args.operation,)
+            )
+            spin_analysis = {
+                "alpha": "frontier",
+                "beta": "beta-frontier",
+                "all": "frontier-all",
+            }[args.spin]
+            analyses = tuple(
+                spin_analysis if analysis == "frontier" else analysis
+                for analysis in analyses
             )
             if args.dry_run:
                 discovery = discover_inputs(
