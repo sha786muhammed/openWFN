@@ -72,19 +72,31 @@ These are the public top-level choices shown by `openwfn --help`.
 | `geometry` | `geometry angle I J K` | Three-atom angle in degrees |
 | `geometry` | `geometry dihedral I J K L` | Signed four-atom dihedral in degrees |
 
-CLI atom indices are one-based. The legacy `dist`, `angle`, and `dihedral` forms remain accepted for existing scripts.
+CLI atom indices are one-based. The legacy `dist`, `angle`, and `dihedral` forms remain accepted for existing scripts. Summary bond and fragment counts use a covalent-radius heuristic rather than authoritative FCHK connectivity; ghost centers are excluded from those physical structural summaries.
 
 ## Electronic analyses
 
 | Command | Syntax and options | Status note |
 |---|---|---|
-| `orbitals` | `orbitals frontier [--spin alpha\|beta]` | Requires MO energies; Stable |
-| `population` | `population mulliken` or `population lowdin` | Requires AO density and overlap data; Stable |
-| `density` | `density integrate [--kind total\|alpha\|beta\|spin] [--spacing BOHR] [--padding BOHR]` | Grid integration; Validated for the active set |
-| `density` | `density cube OUTPUT [grid options]` | Gaussian cube export; Validated for the active set |
-| `cube` | `cube OUTPUT [grid options]` | Convenience density-cube command |
+| `orbitals` | `orbitals frontier [--spin alpha\|beta\|all]` | Requires MO energies; `all` reports both unrestricted channels and the true overall HOMO |
+| `population` | `population mulliken` or `population lowdin` | Requires AO density and overlap data; conservation failures return `partial` with warnings |
+| `density` | `density integrate [--kind total\|alpha\|beta\|spin] [--spacing BOHR] [--padding BOHR]` | Grid integration; validation status comes from the generated grid's conservation check |
+| `density` | `density cube OUTPUT [grid options]` | Cube is written when requested; failed conservation returns `partial`/Experimental rather than a false Validated result |
+| `cube` | `cube OUTPUT [grid options]` | Convenience density-cube command with the same validation behavior |
 | `esp` | `esp point X Y Z [--component COMPONENT]` | Nuclear and charge-model components Stable; grid electronic/total Experimental |
 | `validate` | `openwfn FILE validate` | Runs default total-density conservation check |
+
+The accepted frontier selector is `--spin alpha|beta|all`. For an unrestricted calculation, use:
+
+```bash
+openwfn FILE orbitals frontier --spin all
+```
+
+The alpha-only default remains for backward compatibility and warns when a beta channel is also present. ECP and ghost-center electrostatics use effective nuclear charges from the FCHK source record when available.
+
+Post-HF calculations do not silently imply use of a correlated density. When the parsed matrix is the SCF density, population and density results name that SCF density source and emit a warning. openWFN does not claim post-SCF density support unless such a density is explicitly parsed and selected.
+
+The default density spacing is **0.15 bohr** with 6.0 bohr padding. This is an accuracy/performance starting point, not a universal convergence setting; check the result status and converge the grid for quantitative work.
 
 ESP components are `nuclear`, `mulliken`, `lowdin`, `electronic`, and `total`. Coordinates are Cartesian; consult [methods and units](../science/population-esp.md).
 
@@ -104,14 +116,21 @@ ESP components are `nuclear`, `mulliken`, `lowdin`, `electronic`, and `total`. C
 ## Batch and guided mode
 
 `batch` accepts the primary file plus additional inputs, comma-separated
-`--analyses`, `--workers`, required `--output-dir`, and optional `--fail-fast`
-and `--resume` flags. Resume requires matching input checksums and configuration
-fingerprints; failed inputs are retried.
-Inputs may be files or directories. `--recursive` scans subdirectories and
-`--dry-run` previews supported and unsupported files without requiring
-`--output-dir`. Completed runs write `batch-manifest.json`, per-input JSON
-records, and `batch-summary.csv`. Progress uses stderr and global `--quiet`
-suppresses it.
+`--analyses`, `--workers`, required `--output-dir`, and optional `--fail-fast`,
+`--resume`, and `--spin alpha|beta|all` controls. The spin selector applies to a requested `frontier` analysis; for example:
+
+```bash
+openwfn batch ./calculations \
+  --analyses frontier \
+  --spin all \
+  --output-dir ./results
+```
+
+This maps the requested frontier analysis to the spin-complete `frontier-all` result. Resume fingerprints include the frontier spin choice, so changing spin selection does not reuse incompatible cached results.
+
+Batch records preserve scientifically usable `partial` analyses. A record is `error` only when every requested analysis fails; otherwise partial values, warnings, and result data are retained in the manifest.
+
+Resume requires matching input checksums and configuration fingerprints; failed inputs are retried. Inputs may be files or directories. `--recursive` scans subdirectories and `--dry-run` previews supported and unsupported files without requiring `--output-dir`. Completed runs write `batch-manifest.json`, per-input JSON records, and `batch-summary.csv`. Progress uses stderr and global `--quiet` suppresses it.
 It writes result schema `1.0` envelopes inside batch manifest schema `1.0`.
 The older `--operation summary` form remains supported.
 
