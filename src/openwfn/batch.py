@@ -16,6 +16,7 @@ from .results import RESULT_SCHEMA_VERSION, ResultRecord
 
 BATCH_SCHEMA_VERSION = "1.0"
 ProgressCallback = Callable[[int, int, "BatchRecord"], None]
+FrontierSpin = Literal["alpha", "beta", "all"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -109,10 +110,14 @@ def _file_sha256(path: Path) -> str | None:
         return None
 
 
-def _configuration_fingerprint(analyses: tuple[str, ...]) -> str:
+def _configuration_fingerprint(
+    analyses: tuple[str, ...],
+    frontier_spin: FrontierSpin = "alpha",
+) -> str:
     payload = json.dumps(
         {
             "analyses": list(analyses),
+            "frontier_spin": frontier_spin,
             "batch_schema_version": BATCH_SCHEMA_VERSION,
             "result_schema_version": RESULT_SCHEMA_VERSION,
         },
@@ -310,13 +315,26 @@ def run_batch(
     resume: bool = False,
     recursive: bool = False,
     progress: ProgressCallback | None = None,
+    frontier_spin: FrontierSpin = "alpha",
 ) -> BatchManifest:
     if workers < 1:
         raise ValueError("workers must be at least one")
+    if frontier_spin not in {"alpha", "beta", "all"}:
+        raise ValueError("frontier spin must be 'alpha', 'beta', or 'all'")
     requested = analyses if analyses is not None else ((operation or "summary"),)
-    normalized = tuple(dict.fromkeys(name.strip().lower() for name in requested if name.strip()))
-    if not normalized:
+    normalized_requested = tuple(
+        dict.fromkeys(name.strip().lower() for name in requested if name.strip())
+    )
+    if not normalized_requested:
         raise ValueError("at least one analysis is required")
+    frontier_analysis = {
+        "alpha": "frontier",
+        "beta": "beta-frontier",
+        "all": "frontier-all",
+    }[frontier_spin]
+    normalized = tuple(
+        frontier_analysis if name == "frontier" else name for name in normalized_requested
+    )
     supported = available_analyses()
     unknown = tuple(name for name in normalized if name not in supported)
     if unknown:
@@ -328,7 +346,7 @@ def run_batch(
     paths = list(discovery.inputs)
     if not paths:
         raise ValueError("no supported input files were discovered")
-    fingerprint = _configuration_fingerprint(normalized)
+    fingerprint = _configuration_fingerprint(normalized, frontier_spin)
     records_by_index: dict[int, BatchRecord] = {}
     pending: list[tuple[int, tuple[Path, tuple[str, ...]]]] = []
     completed_count = 0
