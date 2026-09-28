@@ -3,7 +3,15 @@ import pytest
 
 from openwfn.analysis.density import density_matrix_for_kind, evaluate_density
 from openwfn.analysis.grids import molecular_grid_points
-from openwfn.model import Atom, BasisSet, BasisShell, CalculationData, CalculationMetadata, DensityMatrix, Molecule
+from openwfn.model import (
+    Atom,
+    BasisSet,
+    BasisShell,
+    CalculationData,
+    CalculationMetadata,
+    DensityMatrix,
+    Molecule,
+)
 from openwfn.services import density_grid
 
 
@@ -37,7 +45,8 @@ def test_chunked_density_grid_matches_monolithic_evaluation() -> None:
         padding_bohr=padding,
     )
     matrix = density_matrix_for_kind(data, "total")
-    expected = evaluate_density(data.molecule, data.basis, matrix, points)  # type: ignore[arg-type]
+    assert data.basis is not None
+    expected = evaluate_density(data.molecule, data.basis, matrix, points)
 
     for chunk_size in (1, 7, 65536):
         grid = density_grid(data, "total", spacing, padding, chunk_size=chunk_size)
