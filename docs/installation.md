@@ -26,6 +26,12 @@ Pin the exact release when reproducing research:
 python -m pip install openwfn==0.8.1
 ```
 
+For reproducing work created with the immediately previous stable release, use:
+
+```bash
+python -m pip install openwfn==0.8.0
+```
+
 ## Conda
 
 ```bash
