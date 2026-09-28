@@ -3,11 +3,11 @@
 import csv
 import io
 import json
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import FIRST_COMPLETED, Executor, Future, ProcessPoolExecutor, wait
 from dataclasses import dataclass, field, replace
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, Callable, Literal, cast
+from typing import Any, Callable, Iterator, Literal, cast
 
 from .analysis.registry import available_analyses, run_analysis_safe
 from .api import load
@@ -170,6 +170,38 @@ def _run_one(arguments: tuple[Path, tuple[str, ...]]) -> BatchRecord:
         )
 
 
+def _run_parallel(
+    pending: list[tuple[int, tuple[Path, tuple[str, ...]]]],
+    workers: int,
+    *,
+    runner: Callable[[tuple[Path, tuple[str, ...]]], BatchRecord] = _run_one,
+    executor_factory: type[Executor] = ProcessPoolExecutor,
+) -> Iterator[tuple[int, Path, BatchRecord]]:
+    remaining = iter(pending)
+    with executor_factory(max_workers=workers) as executor:
+        futures: dict[
+            Future[BatchRecord],
+            tuple[int, tuple[Path, tuple[str, ...]]],
+        ] = {}
+
+        def submit_next() -> bool:
+            try:
+                index, argument = next(remaining)
+            except StopIteration:
+                return False
+            futures[executor.submit(runner, argument)] = (index, argument)
+            return True
+
+        for _ in range(min(len(pending), workers * 2)):
+            submit_next()
+        while futures:
+            done, _ = wait(futures, return_when=FIRST_COMPLETED)
+            for future in done:
+                index, argument = futures.pop(future)
+                yield index, argument[0], future.result()
+                submit_next()
+
+
 def _record_payload(record: BatchRecord) -> dict[str, object]:
     return {
         "error": record.error,
@@ -325,14 +357,12 @@ def run_batch(
             if fail_fast and record.status == "error":
                 break
     else:
-        with ProcessPoolExecutor(max_workers=workers) as executor:
-            completed = executor.map(_run_one, (argument for _, argument in pending))
-            for (index, argument), record in zip(pending, completed):
-                records_by_index[index] = record
-                _write_record(record, argument[0], output_dir, fingerprint)
-                completed_count += 1
-                if progress is not None:
-                    progress(completed_count, len(paths), record)
+        for index, path, record in _run_parallel(pending, workers):
+            records_by_index[index] = record
+            _write_record(record, path, output_dir, fingerprint)
+            completed_count += 1
+            if progress is not None:
+                progress(completed_count, len(paths), record)
 
     records = [records_by_index[index] for index in sorted(records_by_index)]
 

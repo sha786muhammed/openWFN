@@ -2,6 +2,29 @@
 
 All notable changes to openWFN are documented in this file.
 
+## [0.8.0a2] - 2026-09-28
+
+### Added
+
+- Added an installed-example command and packaged water fixture so the first analysis works from a wheel without cloning the repository.
+- Added a deterministic batch-throughput benchmark with machine-readable timing, count, version, and parent-process memory evidence.
+
+### Changed
+
+- Parallel batches now use a bounded completion-driven queue, persist each finished input immediately, and retain deterministic manifest ordering.
+- Stable and pre-release installation instructions are separated throughout the README and handbook.
+- Wheel and platform CI now exercise packaged examples and real multi-worker batch execution.
+
+### Fixed
+
+- Deferred Matplotlib imports until a plotting command runs, avoiding plotting startup work for ordinary CLI commands.
+
+### Alpha limitations
+
+- Scientific support and validation boundaries are unchanged from 0.8.0a1.
+- Gaussian formatted-checkpoint files remain the primary source for full wavefunction analysis.
+- Experimental and Unsupported capabilities retain their existing labels.
+
 ## [0.8.0a1] - 2026-09-21
 
 ### Added

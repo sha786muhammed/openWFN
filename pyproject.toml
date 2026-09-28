@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openwfn"
-version = "0.8.0a1"
+version = "0.8.0a2"
 description = "Reproducible wavefunction post-processing with CLI, Python API, validation, and research exports"
 requires-python = ">=3.10"
 readme = "README.md"
@@ -69,7 +69,7 @@ package-dir = {"" = "src"}
 where = ["src"]
 
 [tool.setuptools.package-data]
-openwfn = ["assets/*.js"]
+openwfn = ["assets/*.js", "example_data/*.fchk", "example_data/*.md"]
 
 
 [tool.pytest.ini_options]

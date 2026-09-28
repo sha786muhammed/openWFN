@@ -38,27 +38,41 @@ openWFN connects scientific analysis, automation, validation evidence, and resea
 
 openWFN supports Python 3.10–3.13.
 
+Install the stable release:
+
 ```bash
-python -m pip install openwfn
+python -m pip install --upgrade openwfn
 openwfn --version
+```
+
+The current handbook documents the 0.8 pre-release. To evaluate it, use either
+the moving pre-release channel or the exact version after publication:
+
+```bash
+python -m pip install --pre --upgrade openwfn
+python -m pip install openwfn==0.8.0a2
 ```
 
 ## First analysis
 
 ```bash
-openwfn molecule.fchk doctor
+openwfn examples install ./openwfn-examples
+openwfn ./openwfn-examples/water.fchk doctor
+openwfn ./openwfn-examples/water.fchk summary
+openwfn ./openwfn-examples/water.fchk orbitals frontier
+```
+
+For your own calculation, replace the example path:
+
+```bash
 openwfn molecule.fchk summary
-openwfn molecule.fchk orbitals frontier
-openwfn molecule.fchk population mulliken
-openwfn molecule.fchk report build report.html
 ```
 
 Run a collection of calculations with resumable, structured output:
 
 ```bash
 openwfn batch ./calculations \
-  --analysis summary \
-  --analysis frontier \
+  --analyses summary,frontier \
   --output-dir ./results \
   --resume
 ```

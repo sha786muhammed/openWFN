@@ -30,6 +30,33 @@ def test_version_does_not_require_input_file() -> None:
     assert result.stdout.strip() == f"openWFN {__version__}"
 
 
+def test_version_does_not_import_matplotlib() -> None:
+    script = """
+import builtins
+real_import = builtins.__import__
+
+def guarded_import(name, *args, **kwargs):
+    if name == "matplotlib" or name.startswith("matplotlib."):
+        raise RuntimeError("matplotlib imported during CLI startup")
+    return real_import(name, *args, **kwargs)
+
+builtins.__import__ = guarded_import
+from openwfn.cli import main
+main(["--version"])
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == f"openWFN {__version__}"
+
+
 def test_nested_geometry_distance_supports_json_output() -> None:
     result = run_cli("--format", "json", str(WATER), "geometry", "distance", "1", "2")
 

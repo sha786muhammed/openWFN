@@ -2,6 +2,7 @@
 
 ```text
 openwfn [GLOBAL OPTIONS] FILE COMMAND [COMMAND OPTIONS]
+openwfn examples install DESTINATION [--overwrite]
 ```
 
 Run `openwfn --help` or `openwfn FILE COMMAND --help` for the installed release's authoritative syntax.
@@ -17,6 +18,13 @@ Run `openwfn --help` or `openwfn FILE COMMAND --help` for the installed release'
 | `--no-color`, `--plain`, `--compact` | Control terminal presentation |
 | `--overwrite` | Permit replacement of an existing output |
 | `--non-interactive` | Disable interactive behavior |
+
+## Installed examples
+
+`openwfn examples install DIRECTORY` copies maintained, redistributable inputs
+from the installed wheel. The command checks every destination before writing
+and refuses to replace existing files. Pass `--overwrite` only when replacement
+is intentional.
 
 ## Inspection and structure
 
@@ -73,6 +81,10 @@ records, and `batch-summary.csv`. Progress uses stderr and global `--quiet`
 suppresses it.
 It writes result schema `1.0` envelopes inside batch manifest schema `1.0`.
 The older `--operation summary` form remains supported.
+
+With multiple workers, openWFN keeps a bounded queue proportional to the worker
+count. Per-input records are saved as workers finish, while the final manifest
+and CSV index remain in deterministic input order.
 
 `interactive` launches the guided terminal menu. With a file but no command, a
 terminal session enters guided mode; redirected input or `--non-interactive`

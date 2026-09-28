@@ -222,3 +222,26 @@ def test_directory_batch_writes_compact_csv_index(tmp_path: Path) -> None:
     assert [row["status"] for row in rows] == ["success", "success"]
     assert [row["analysis_successes"] for row in rows] == ["1", "1"]
     assert [row["analysis_failures"] for row in rows] == ["0", "0"]
+
+
+def test_parallel_batch_is_deterministic_persistent_and_resumable(tmp_path: Path) -> None:
+    source = ROOT / "examples" / "water" / "water.fchk"
+    first = tmp_path / "first.fchk"
+    second = tmp_path / "second.fchk"
+    bad = tmp_path / "bad.xyz"
+    shutil.copyfile(source, first)
+    shutil.copyfile(source, second)
+    bad.write_text("broken", encoding="utf-8")
+    output = tmp_path / "results"
+
+    manifest = run_batch([first, second, bad], "summary", 2, output)
+    resumed = run_batch([first, second, bad], "summary", 2, output, resume=True)
+
+    assert [Path(item.input_path).name for item in manifest.records] == [
+        "first.fchk",
+        "second.fchk",
+        "bad.xyz",
+    ]
+    assert [item.status for item in manifest.records] == ["success", "success", "error"]
+    assert len(list((output / "records").glob("*.json"))) == 3
+    assert [item.skipped for item in resumed.records] == [True, True, False]

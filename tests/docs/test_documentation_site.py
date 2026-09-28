@@ -248,6 +248,38 @@ def test_homepage_and_readme_use_generalized_scale_language() -> None:
     assert not re.search(r"\b(?:1,?000|10,?000)\b", public_copy)
 
 
+def test_public_installation_copy_distinguishes_stable_and_alpha() -> None:
+    public = "\n".join(
+        (ROOT / path).read_text(encoding="utf-8")
+        for path in ("README.md", "docs/index.md", "docs/installation.md")
+    )
+
+    assert "python -m pip install --upgrade openwfn" in public
+    assert "python -m pip install --pre --upgrade openwfn" in public
+    assert "python -m pip install openwfn==0.8.0a2" in public
+    assert "pre-release" in public.lower()
+
+
+def test_first_analysis_uses_installed_example_workflow() -> None:
+    tutorial = (ROOT / "docs" / "start" / "first-analysis.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "openwfn examples install ./openwfn-examples" in tutorial
+    assert "./openwfn-examples/water.fchk summary" in tutorial
+    assert "substitute the path" not in tutorial
+
+
+def test_public_batch_examples_use_supported_analyses_option() -> None:
+    public = "\n".join(
+        (ROOT / path).read_text(encoding="utf-8")
+        for path in ("README.md", "docs/index.md")
+    )
+
+    assert "--analysis " not in public
+    assert "--analyses summary,frontier" in public
+
+
 def test_header_uses_compact_asset_and_keeps_mobile_drawer_available() -> None:
     config = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
     styles = (ROOT / "docs" / "stylesheets" / "extra.css").read_text(

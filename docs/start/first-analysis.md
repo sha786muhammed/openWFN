@@ -7,69 +7,74 @@ and creates machine-readable and portable research records.
 
 - Python 3.10 or newer
 - A terminal
-- A Gaussian formatted-checkpoint file (`.fchk`)
-
-The repository includes a redistributable water fixture under
-`examples/water/water.fchk`. If you installed from PyPI, substitute the path to your
-own formatted checkpoint.
 
 ## 1. Install openWFN
 
 ```bash
-python -m pip install --upgrade openwfn
+python -m pip install --pre --upgrade openwfn
 openwfn --version
 ```
 
 Expected version output for this handbook:
 
 ```text
-openWFN 0.8.0a1
+openWFN 0.8.0a2
 ```
 
 Use `python -m pip` so installation and execution refer to the same Python
 environment.
 
-## 2. Read the molecular summary
+## 2. Install the maintained example
 
-From a repository checkout:
+The wheel includes a redistributable water formatted-checkpoint fixture. Copy it
+into the current directory without cloning the repository:
 
 ```bash
-openwfn examples/water/water.fchk summary
+openwfn examples install ./openwfn-examples
+```
+
+The command refuses to replace an existing fixture unless you pass
+`--overwrite`.
+
+## 3. Read the molecular summary
+
+```bash
+openwfn ./openwfn-examples/water.fchk summary
 ```
 
 The public water fixture produces a molecular summary including the formula, atom count, charge, multiplicity, center of mass, energy, bond count, fragments, and status. Field presentation can vary by output mode; use `--format json` for machine-readable results.
 
 The center of mass is reported in ångströms and energy in hartree. Bond count comes from openWFN's covalent-radius perception; it is not a bond-order assignment.
 
-## 3. Measure the molecular geometry
+## 4. Measure the molecular geometry
 
 CLI atom indices are one-based:
 
 ```bash
-openwfn examples/water/water.fchk geometry distance 1 2
-openwfn examples/water/water.fchk geometry angle 2 1 3
+openwfn ./openwfn-examples/water.fchk geometry distance 1 2
+openwfn ./openwfn-examples/water.fchk geometry angle 2 1 3
 ```
 
 Confirm atom ordering from the source calculation or the guided interactive atom table before measuring
 an unfamiliar system.
 
-## 4. Save a machine-readable result
+## 5. Save a machine-readable result
 
 ```bash
 openwfn --format json --output water-summary.json \
-  examples/water/water.fchk summary
+  ./openwfn-examples/water.fchk summary
 ```
 
 The JSON result includes the analysis identity, units, validation status, warnings,
 and provenance fields needed by downstream programs.
 
-## 5. Record reproducibility information
+## 6. Record reproducibility information
 
 Record the input-file checksum, openWFN version, command, parameters, and capability
 status. The supported report workflow creates a portable human-readable record:
 
 ```bash
-openwfn examples/water/water.fchk report build water-report.html
+openwfn ./openwfn-examples/water.fchk report build water-report.html
 ```
 
 ## Troubleshooting
