@@ -63,6 +63,11 @@ test = [
 
 [tool.setuptools]
 package-dir = {"" = "src"}
+license-files = [
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "src/openwfn/assets/3Dmol-min.js.LICENSE.txt",
+]
 
 
 [tool.setuptools.packages.find]

@@ -14,6 +14,10 @@ Without `--open`, open the resulting file in a modern browser. It works through 
 
 The export can include molecular coordinates, bonds, calculation provenance, analysis properties, volumetric fields, CSS, JavaScript, and the vendored 3D rendering engine. This portability has a privacy consequence: anyone who receives the file can inspect its embedded molecular data. Do not publish a workbench generated from a confidential calculation.
 
+Molecular rendering is provided by [3Dmol.js](https://github.com/3dmol/3Dmol.js)
+under the BSD-3-Clause license. The renderer and its attribution are embedded in
+the output, so opening a workbench does not fetch the library from a CDN.
+
 ## Workspace tour
 
 ### Structure

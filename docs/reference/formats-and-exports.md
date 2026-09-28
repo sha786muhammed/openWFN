@@ -38,6 +38,10 @@ workbench is an optional Experimental visualization surface, not a numerical ref
 “Self-contained” means no openWFN server is required; it does not mean the artifact is
 free of research data.
 
+The viewer and workbench embed [3Dmol.js](https://github.com/3dmol/3Dmol.js),
+licensed under BSD-3-Clause, and retain that attribution in each generated file.
+They do not load the rendering library from a remote server.
+
 ## Units
 
 | Quantity | Presentation or control unit |

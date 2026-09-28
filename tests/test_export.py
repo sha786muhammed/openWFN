@@ -54,3 +54,14 @@ def test_export_molecule_viewer_writes_inline_viewer(tmp_path):
     assert 'data-download="png"' in content
     assert 'data-download="jpeg"' in content
     assert 'data-download="svg"' in content
+
+
+def test_viewer_html_contains_offline_3dmol_attribution(tmp_path):
+    out = tmp_path / "viewer.html"
+    export_molecule_viewer(out, [1], [(0.0, 0.0, 0.0)])
+
+    content = out.read_text(encoding="utf-8")
+    assert "Molecular rendering: 3Dmol.js (BSD-3-Clause)" in content
+    assert "https://github.com/3dmol/3Dmol.js" in content
+    assert '<script src="http' not in content
+    assert "<script src='http" not in content
