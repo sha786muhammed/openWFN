@@ -3,11 +3,11 @@ from pathlib import Path
 import pytest
 
 import openwfn
+from openwfn import scientific
 from openwfn.analysis.orbitals import frontier_orbitals
 from openwfn.analysis.registry import available_analyses
 from openwfn.model import MolecularOrbitals
 from openwfn.parsers.gaussian.fchk import parse_fchk
-from openwfn import scientific
 from openwfn.services import orbital_frontier
 
 ROOT = Path(__file__).resolve().parents[2]
