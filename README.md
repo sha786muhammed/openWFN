@@ -81,15 +81,23 @@ Use JSON when another program will consume the result:
 openwfn --format json --output summary.json molecule.fchk summary
 ```
 
+## Scientific correctness safeguards
+
+openWFN uses source-faithful electronic metadata wherever Gaussian FCHK provides it. ECP and ghost centers use the file's effective nuclear charges instead of blindly substituting atomic numbers, and density validation prefers the source electron-count records. Population and density conservation failures return partial results with warnings rather than presenting inconsistent numbers as clean successes.
+
+For unrestricted calculations, request the spin-complete frontier view with `openwfn FILE orbitals frontier --spin all`; batch workflows support the same spin selection. Post-HF files explicitly report when the available SCF density is being analyzed rather than implying that a correlated density was used.
+
+The default density spacing of **0.15 bohr** is an accuracy/performance tradeoff, not a universal convergence guarantee. Check the returned conservation status and converge spacing/padding for the system and property being reported.
+
 ## Capability map
 
 | Area | Current capability | Status |
 |---|---|---|
 | Parsing and structure | FCHK records, molecular state, geometry, topology | Stable |
-| Orbitals | Alpha/beta frontier energies and HOMO–LUMO gap | Stable |
-| Population | Mulliken and symmetric Löwdin populations and charges | Stable |
-| Density | Total, alpha, beta, and spin integration and cube export | Validated for active fixtures |
-| Electrostatic potential | Nuclear and charge-model point ESP | Stable |
+| Orbitals | Alpha/beta and spin-complete frontier energies and HOMO–LUMO information | Stable interface; fixture-backed regressions |
+| Population | Mulliken and symmetric Löwdin populations and charges | Stable interface; conservation checked and fixture-scoped |
+| Density | Total, alpha, beta, and spin integration and cube export | Validated only for the named active validation fixtures and tolerances |
+| Electrostatic potential | Nuclear and charge-model point ESP | Stable interface; special-case regressions included |
 | Grid electronic/total ESP | Numerical Coulomb evaluation | Experimental |
 | Automation | Versioned results, batch manifests, discovery, resume, JSON and CSV | Stable |
 | Research reports | HTML/Markdown reports, tables, figures, and structures | Stable |

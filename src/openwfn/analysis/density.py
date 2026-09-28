@@ -10,12 +10,19 @@ from ..errors import DataUnavailableError
 from ..model import BasisSet, CalculationData, DensityMatrix, Molecule, VolumetricGrid
 from .basis import evaluate_ao
 
+DENSITY_RELATIVE_TOLERANCE = 5e-3
+DENSITY_ZERO_ABSOLUTE_TOLERANCE = 5e-3
+DENSITY_ZERO_TARGET_EPSILON = 1e-12
+
 
 @dataclass(frozen=True, slots=True)
 class IntegrationResult:
     electron_count: float
     expected_electrons: float
-    relative_error: float
+    absolute_error: float
+    relative_error: float | None
+    error_metric: Literal["absolute", "relative"]
+    passed: bool
 
 
 def density_matrix_for_kind(
@@ -44,7 +51,16 @@ def density_matrix_for_kind(
     if total.shape != spin.shape:
         raise ValueError("total and spin density matrices must have the same shape")
     values = 0.5 * (total + spin if kind == "alpha" else total - spin)
-    return DensityMatrix(tuple(tuple(float(value) for value in row) for row in values), kind)
+    source = (
+        data.total_density.source
+        if data.total_density.source == data.spin_density.source
+        else "derived"
+    )
+    return DensityMatrix(
+        tuple(tuple(float(value) for value in row) for row in values),
+        kind,
+        source=source,
+    )
 
 
 def evaluate_density(
@@ -61,10 +77,31 @@ def evaluate_density(
 
 
 def integrate_density(grid: VolumetricGrid, expected_electrons: float) -> IntegrationResult:
-    if expected_electrons <= 0.0:
-        raise ValueError("expected electron count must be positive")
+    """Integrate a density grid and evaluate conservation against its expected integral.
+
+    Near-zero targets, which are valid for closed-shell spin densities, are
+    validated with an absolute error. Nonzero targets use relative error.
+    """
+
     axes_bohr = np.asarray(grid.axes, dtype=float) / BOHR_TO_ANGSTROM
     voxel_volume = abs(float(np.linalg.det(axes_bohr)))
     electron_count = float(np.sum(grid.values) * voxel_volume)
-    relative_error = abs(electron_count - expected_electrons) / expected_electrons
-    return IntegrationResult(electron_count, expected_electrons, relative_error)
+    absolute_error = abs(electron_count - expected_electrons)
+    if abs(expected_electrons) <= DENSITY_ZERO_TARGET_EPSILON:
+        return IntegrationResult(
+            electron_count=electron_count,
+            expected_electrons=expected_electrons,
+            absolute_error=absolute_error,
+            relative_error=None,
+            error_metric="absolute",
+            passed=absolute_error <= DENSITY_ZERO_ABSOLUTE_TOLERANCE,
+        )
+    relative_error = absolute_error / abs(expected_electrons)
+    return IntegrationResult(
+        electron_count=electron_count,
+        expected_electrons=expected_electrons,
+        absolute_error=absolute_error,
+        relative_error=relative_error,
+        error_metric="relative",
+        passed=relative_error < DENSITY_RELATIVE_TOLERANCE,
+    )

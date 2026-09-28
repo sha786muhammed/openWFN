@@ -4,6 +4,7 @@ from pathlib import Path
 
 from ..constants import BOHR_TO_ANGSTROM
 from ..model import Molecule, VolumetricGrid
+from ..scientific import effective_nuclear_charge
 
 
 def write_cube(
@@ -32,7 +33,10 @@ def format_cube(grid: VolumetricGrid, molecule: Molecule) -> str:
         )
     for atom in molecule.atoms:
         x, y, z = (value / BOHR_TO_ANGSTROM for value in atom.coordinates)
-        lines.append(f"{atom.atomic_number:5d} {float(atom.atomic_number):13.6f} {x:13.6f} {y:13.6f} {z:13.6f}")
+        nuclear_charge = effective_nuclear_charge(atom)
+        lines.append(
+            f"{atom.atomic_number:5d} {nuclear_charge:13.6f} {x:13.6f} {y:13.6f} {z:13.6f}"
+        )
     for start in range(0, len(grid.values), 6):
         lines.append(" ".join(f"{value:13.5E}" for value in grid.values[start : start + 6]))
     return "\n".join(lines) + "\n"

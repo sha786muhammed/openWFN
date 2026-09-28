@@ -8,6 +8,7 @@ from ..model import BasisSet, MolecularOrbitals, Molecule
 from .basis import evaluate_ao
 
 HARTREE_TO_EV = 27.211386245981
+OCCUPATION_THRESHOLD = 1e-8
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,18 +23,28 @@ class FrontierOrbitals:
 
 
 def frontier_orbitals(orbitals: MolecularOrbitals) -> FrontierOrbitals:
-    occupied = [index for index, occupation in enumerate(orbitals.occupations) if occupation > 0.0]
+    occupied = [
+        index
+        for index, occupation in enumerate(orbitals.occupations)
+        if occupation > OCCUPATION_THRESHOLD
+    ]
     if not occupied:
         raise ValueError("HOMO is undefined because no occupied orbitals are present")
-    homo = occupied[-1]
-    lumo = homo + 1
-    if lumo >= len(orbitals.energies):
-        raise ValueError("LUMO is unavailable because all parsed orbitals are occupied")
-    gap = orbitals.energies[lumo] - orbitals.energies[homo]
+    homo = max(occupied, key=lambda index: orbitals.energies[index])
+    homo_energy = orbitals.energies[homo]
+    virtual = [
+        index
+        for index, occupation in enumerate(orbitals.occupations)
+        if occupation <= OCCUPATION_THRESHOLD and orbitals.energies[index] > homo_energy
+    ]
+    if not virtual:
+        raise ValueError("LUMO is unavailable because no unoccupied orbital lies above the HOMO")
+    lumo = min(virtual, key=lambda index: orbitals.energies[index])
+    gap = orbitals.energies[lumo] - homo_energy
     return FrontierOrbitals(
         homo_index=homo,
         lumo_index=lumo,
-        homo_hartree=orbitals.energies[homo],
+        homo_hartree=homo_energy,
         lumo_hartree=orbitals.energies[lumo],
         gap_hartree=gap,
         gap_ev=gap * HARTREE_TO_EV,

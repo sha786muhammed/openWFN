@@ -46,10 +46,11 @@ class OpenWFNCalculation:
             "source_program_version": self.molecule.metadata.source_program_version,
             "transformations": list(source.transformations) if source else [],
         }
+        source_warnings = source.warnings if source else ()
         return replace(
             result,
             provenance=provenance,
-            warnings=source.warnings if source else (),
+            warnings=tuple(dict.fromkeys((*result.warnings, *source_warnings))),
         )
 
     def analyze_geometry(self) -> ResultRecord:
@@ -82,8 +83,8 @@ class OpenWFNCalculation:
             geometry_dihedral(self.molecule, atom_i, atom_j, atom_k, atom_l)
         )
 
-    def orbitals(self, spin: Literal["alpha", "beta"] = "alpha") -> ResultRecord:
-        """Return frontier molecular-orbital energies for one spin channel."""
+    def orbitals(self, spin: Literal["alpha", "beta", "all"] = "alpha") -> ResultRecord:
+        """Return frontier molecular-orbital energies for one or both spin channels."""
         return self._with_provenance(orbital_frontier(self.data, spin))
 
     def density(

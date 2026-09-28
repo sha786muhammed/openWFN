@@ -4,6 +4,7 @@ import numpy as np
 
 from ..constants import BOHR_TO_ANGSTROM
 from ..model import Molecule, VolumetricGrid
+from ..scientific import effective_nuclear_charge
 
 
 def point_charge_esp(
@@ -51,7 +52,9 @@ def nuclear_esp(
 
     centers = np.asarray([atom.coordinates for atom in molecule.atoms], dtype=float)
     centers /= BOHR_TO_ANGSTROM
-    charges = np.asarray([atom.atomic_number for atom in molecule.atoms], dtype=float)
+    charges = np.asarray(
+        [effective_nuclear_charge(atom) for atom in molecule.atoms], dtype=float
+    )
     return point_charge_esp(
         centers,
         charges,

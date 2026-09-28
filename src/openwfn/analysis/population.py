@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from ..model import DensityMatrix, Molecule
+from ..scientific import effective_nuclear_charge
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,7 +48,9 @@ def _result(
     populations = np.zeros(len(molecule.atoms), dtype=float)
     for population, atom_index in zip(ao_populations, ao_atom_indices, strict=True):
         populations[atom_index] += population
-    nuclear_charges = np.asarray([atom.atomic_number for atom in molecule.atoms], dtype=float)
+    nuclear_charges = np.asarray(
+        [effective_nuclear_charge(atom) for atom in molecule.atoms], dtype=float
+    )
     atomic_charges = nuclear_charges - populations
     electron_count = float(np.sum(populations))
     total_charge = float(np.sum(atomic_charges))

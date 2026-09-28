@@ -1,0 +1,18 @@
+Post-HF SCF density
+SP MP2 STO-3G
+Number of atoms I 1
+Charge I 0
+Multiplicity I 2
+Number of electrons I 1
+Number of alpha electrons I 1
+Number of beta electrons I 0
+Atomic numbers I N= 1
+1
+Nuclear charges R N= 1
+1.0
+Current cartesian coordinates R N= 3
+0.0 0.0 0.0
+Total SCF Density R N= 1
+1.0
+Spin SCF Density R N= 1
+1.0

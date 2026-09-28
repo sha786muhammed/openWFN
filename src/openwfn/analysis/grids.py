@@ -1,5 +1,7 @@
 """Regular molecular grids shared by volumetric analyses."""
 
+from collections.abc import Iterator
+
 import numpy as np
 
 from ..constants import BOHR_TO_ANGSTROM
@@ -28,6 +30,14 @@ def molecular_grid_points(
     mesh = np.meshgrid(*axes, indexing="ij")
     points = np.column_stack(tuple(component.ravel() for component in mesh))
     return points, tuple(float(value) for value in lower), tuple(len(axis) for axis in axes)
+
+
+def iter_point_chunks(points: np.ndarray, chunk_size: int) -> Iterator[np.ndarray]:
+    """Yield ordered contiguous point chunks without changing grid layout."""
+    if chunk_size <= 0:
+        raise ValueError("chunk size must be positive")
+    for start in range(0, len(points), chunk_size):
+        yield points[start : start + chunk_size]
 
 
 def scalar_grid(

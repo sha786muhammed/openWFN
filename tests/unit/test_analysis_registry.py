@@ -17,6 +17,7 @@ def test_registry_runs_summary_with_versioned_input_provenance() -> None:
     assert available_analyses() == (
         "beta-frontier",
         "frontier",
+        "frontier-all",
         "lowdin",
         "mulliken",
         "summary",

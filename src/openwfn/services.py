@@ -7,42 +7,140 @@ import numpy as np
 from .analysis.basis import ao_atom_indices, overlap_matrix
 from .analysis.density import density_matrix_for_kind, evaluate_density, integrate_density
 from .analysis.electrostatics import electronic_esp_from_grid, nuclear_esp, point_charge_esp
-from .analysis.grids import molecular_grid_points, scalar_grid
-from .analysis.orbitals import frontier_orbitals
+from .analysis.grids import iter_point_chunks, molecular_grid_points, scalar_grid
+from .analysis.orbitals import OCCUPATION_THRESHOLD, FrontierOrbitals, frontier_orbitals
 from .analysis.population import lowdin_population, mulliken_population
 from .constants import BOHR_TO_ANGSTROM
 from .errors import DataUnavailableError
 from .exporters.cube import write_cube
 from .geometry import angle, center_of_mass, detect_bonds, dihedral, distance, molecular_formula
 from .graph import build_graph
-from .model import CalculationData, Molecule
+from .model import CalculationData, DensityMatrix, MolecularOrbitals, Molecule
 from .results import ResultRecord
+from .scientific import expected_electron_count, is_ghost_atom, orbital_reference_kind
+
+POPULATION_CONSERVATION_TOLERANCE = 1e-6
+LOWDIN_MIN_EIGENVALUE_TOLERANCE = 1e-8
+LOWDIN_CONDITION_NUMBER_TOLERANCE = 1e10
+LOWDIN_RANK_TOLERANCE = 1e-12
 
 
 def _coordinates(molecule: Molecule) -> list[tuple[float, float, float]]:
     return [atom.coordinates for atom in molecule.atoms]
 
 
+def _is_post_hf_method(method: str | None) -> bool:
+    if not method:
+        return False
+    normalized = method.upper().replace("-", "")
+    return normalized.startswith(("MP2", "MP3", "MP4", "CC", "CI", "QCI"))
+
+
+def _density_source_warnings(data: CalculationData, matrix: DensityMatrix) -> tuple[str, ...]:
+    if matrix.source == "scf" and _is_post_hf_method(data.molecule.metadata.method):
+        method = data.molecule.metadata.method or "post-HF"
+        return (
+            f"{method} calculation is using the SCF density because no supported post-SCF density was selected.",
+        )
+    return ()
+
+
+def _lowdin_overlap_diagnostics(overlap: np.ndarray) -> tuple[float, float | None, bool]:
+    eigenvalues = np.linalg.eigvalsh(np.asarray(overlap, dtype=float))
+    minimum = float(np.min(eigenvalues))
+    maximum = float(np.max(eigenvalues))
+    rank_deficient = minimum <= LOWDIN_RANK_TOLERANCE
+    condition_number = None if rank_deficient else maximum / minimum
+    return minimum, condition_number, rank_deficient
+
+
+def _density_validation_warning(result) -> str:
+    if result.error_metric == "absolute":
+        detail = f"absolute error {result.absolute_error:.6g} e"
+    else:
+        detail = f"relative error {result.relative_error:.6g}"
+    return f"Density electron conservation failed: {detail} exceeds the validation tolerance."
+
+
+def _frontier_payload(frontier: FrontierOrbitals) -> dict[str, object]:
+    return {
+        "spin": frontier.spin,
+        "homo_number": frontier.homo_index + 1,
+        "lumo_number": frontier.lumo_index + 1,
+        "homo_hartree": round(frontier.homo_hartree, 10),
+        "lumo_hartree": round(frontier.lumo_hartree, 10),
+        "gap_hartree": round(frontier.gap_hartree, 10),
+        "gap_ev": round(frontier.gap_ev, 8),
+    }
+
+
+def _occupation_warnings(orbitals: MolecularOrbitals) -> tuple[str, ...]:
+    if orbitals.occupation_source != "electron-count filling":
+        return ()
+    occupied = [
+        energy
+        for energy, occupation in zip(orbitals.energies, orbitals.occupations)
+        if occupation > OCCUPATION_THRESHOLD
+    ]
+    virtual = [
+        energy
+        for energy, occupation in zip(orbitals.energies, orbitals.occupations)
+        if occupation <= OCCUPATION_THRESHOLD
+    ]
+    if occupied and virtual and min(virtual) <= max(occupied):
+        return (
+            "Orbital occupations were synthesized from electron counts, but the energy ordering is anomalous; "
+            "the ordinary frontier interpretation may be unreliable.",
+        )
+    return ()
+
+
 def molecular_summary(data: CalculationData) -> ResultRecord:
-    atomic_numbers = [atom.atomic_number for atom in data.molecule.atoms]
-    coordinates = _coordinates(data.molecule)
-    bonds = detect_bonds(atomic_numbers, coordinates)
-    fragments = build_graph(len(atomic_numbers), bonds).connected_components()
-    com = center_of_mass(atomic_numbers, coordinates)
+    centers = list(data.molecule.atoms)
+    physical_atoms = [atom for atom in centers if not is_ghost_atom(atom)]
+    ghost_count = len(centers) - len(physical_atoms)
+    warnings: list[str] = []
+
+    if physical_atoms:
+        atomic_numbers = [atom.atomic_number for atom in physical_atoms]
+        coordinates = [atom.coordinates for atom in physical_atoms]
+        bonds = detect_bonds(atomic_numbers, coordinates)
+        fragments = build_graph(len(atomic_numbers), bonds).connected_components()
+        com = center_of_mass(atomic_numbers, coordinates)
+        formula = molecular_formula(atomic_numbers)
+        center = [round(value, 6) for value in com]
+    else:
+        atomic_numbers = []
+        bonds = []
+        fragments = ()
+        formula = ""
+        center = None
+
+    if ghost_count:
+        warnings.append(
+            f"Structural summary excludes {ghost_count} ghost center(s) from formula, "
+            "center of mass, bond inference, and fragment counting."
+        )
+
     return ResultRecord(
         kind="summary",
         data={
-            "formula": molecular_formula(atomic_numbers),
-            "atoms": len(atomic_numbers),
+            "formula": formula,
+            "atoms": len(physical_atoms),
+            "centers": len(centers),
+            "physical_nuclei": len(physical_atoms),
+            "ghost_centers": ghost_count,
             "charge": data.molecule.charge,
             "multiplicity": data.molecule.multiplicity,
-            "center_of_mass": [round(value, 6) for value in com],
+            "center_of_mass": center,
             "energy_hartree": data.molecule.metadata.energy_hartree,
             "bond_count": len(bonds),
             "fragments": len(fragments),
+            "bond_source": "covalent-radius heuristic",
         },
         units={"center_of_mass": "angstrom", "energy_hartree": "hartree"},
         validation_status="Stable",
+        warnings=tuple(warnings),
     )
 
 
@@ -98,17 +196,52 @@ def population_analysis(
     mapping = ao_atom_indices(data.basis)
     if method == "mulliken":
         result = mulliken_population(data.molecule, data.total_density, overlap, mapping)
-    elif method == "lowdin":
+    else:
         result = lowdin_population(data.molecule, data.total_density, overlap, mapping)
+
+    warnings = list(_density_source_warnings(data, data.total_density))
+    partial = result.conservation_error > POPULATION_CONSERVATION_TOLERANCE
+    if partial:
+        warnings.append(
+            "Population charge conservation failed: "
+            f"error {result.conservation_error:.6g} e exceeds "
+            f"tolerance {POPULATION_CONSERVATION_TOLERANCE:.6g} e."
+        )
+
+    payload: dict[str, object] = {
+        "electron_populations": [round(value, 8) for value in result.electron_populations],
+        "atomic_charges": [round(value, 8) for value in result.atomic_charges],
+        "electron_count": round(result.electron_count, 8),
+        "total_charge": round(result.total_charge, 8),
+        "conservation_error": round(result.conservation_error, 10),
+        "density_source": data.total_density.source,
+    }
+    if method == "lowdin":
+        minimum, condition_number, rank_deficient = _lowdin_overlap_diagnostics(overlap)
+        payload.update(
+            {
+                "overlap_min_eigenvalue": minimum,
+                "overlap_condition_number": condition_number,
+                "overlap_rank_deficient": rank_deficient,
+            }
+        )
+        ill_conditioned = (
+            rank_deficient
+            or minimum < LOWDIN_MIN_EIGENVALUE_TOLERANCE
+            or (
+                condition_number is not None
+                and condition_number > LOWDIN_CONDITION_NUMBER_TOLERANCE
+            )
+        )
+        if ill_conditioned:
+            partial = True
+            warnings.append(
+                "Löwdin overlap matrix is rank deficient or ill-conditioned; atomic populations may be unreliable."
+            )
+
     return ResultRecord(
         kind=f"{method}_population",
-        data={
-            "electron_populations": [round(value, 8) for value in result.electron_populations],
-            "atomic_charges": [round(value, 8) for value in result.atomic_charges],
-            "electron_count": round(result.electron_count, 8),
-            "total_charge": round(result.total_charge, 8),
-            "conservation_error": round(result.conservation_error, 10),
-        },
+        data=payload,
         units={
             "electron_populations": "electron",
             "atomic_charges": "e",
@@ -116,36 +249,79 @@ def population_analysis(
             "total_charge": "e",
             "conservation_error": "e",
         },
-        validation_status="Stable",
+        validation_status="Experimental" if partial else "Stable",
+        status="partial" if partial else "success",
+        warnings=tuple(dict.fromkeys(warnings)),
     )
 
 
 def orbital_frontier(
     data: CalculationData,
-    spin: Literal["alpha", "beta"] = "alpha",
+    spin: Literal["alpha", "beta", "all"] = "alpha",
 ) -> ResultRecord:
-    if spin not in {"alpha", "beta"}:
-        raise ValueError("spin must be 'alpha' or 'beta'")
+    if spin not in {"alpha", "beta", "all"}:
+        raise ValueError("spin must be 'alpha', 'beta', or 'all'")
+    reference_kind = orbital_reference_kind(data)
+    warnings: list[str] = []
+
+    if data.alpha_orbitals is None:
+        raise DataUnavailableError("Molecular orbital data are not available.")
+
+    if spin == "all":
+        alpha = frontier_orbitals(data.alpha_orbitals)
+        warnings.extend(_occupation_warnings(data.alpha_orbitals))
+        alpha_payload = _frontier_payload(alpha)
+        beta_payload: dict[str, object] | None = None
+        overall = alpha
+        overall_spin = "alpha" if data.beta_orbitals is not None else alpha.spin
+        if data.beta_orbitals is not None:
+            beta = frontier_orbitals(data.beta_orbitals)
+            warnings.extend(_occupation_warnings(data.beta_orbitals))
+            beta_payload = _frontier_payload(beta)
+            if beta.homo_hartree > alpha.homo_hartree:
+                overall = beta
+                overall_spin = "beta"
+        return ResultRecord(
+            kind="frontier_orbitals",
+            data={
+                "spin": "all",
+                "reference_kind": reference_kind,
+                "occupation_source": data.alpha_orbitals.occupation_source,
+                "alpha": alpha_payload,
+                "beta": beta_payload,
+                "overall_homo_number": overall.homo_index + 1,
+                "overall_homo_hartree": round(overall.homo_hartree, 10),
+                "overall_homo_spin": overall_spin,
+            },
+            units={"overall_homo_hartree": "hartree"},
+            validation_status="Stable",
+            warnings=tuple(dict.fromkeys(warnings)),
+        )
+
     if spin == "beta":
         orbitals = data.beta_orbitals
         if orbitals is None:
             raise DataUnavailableError("Beta orbitals are not available for this calculation.")
     else:
         orbitals = data.alpha_orbitals
-        if orbitals is None:
-            raise DataUnavailableError("Molecular orbital data are not available.")
+        if data.beta_orbitals is not None:
+            warnings.append(
+                "Unrestricted calculation contains a beta orbital channel; use spin='all' "
+                "for the complete frontier view."
+            )
+
+    warnings.extend(_occupation_warnings(orbitals))
     frontier = frontier_orbitals(orbitals)
+    payload = _frontier_payload(frontier)
+    payload.update(
+        {
+            "reference_kind": reference_kind,
+            "occupation_source": orbitals.occupation_source,
+        }
+    )
     return ResultRecord(
         kind="frontier_orbitals",
-        data={
-            "spin": frontier.spin,
-            "homo_number": frontier.homo_index + 1,
-            "lumo_number": frontier.lumo_index + 1,
-            "homo_hartree": round(frontier.homo_hartree, 10),
-            "lumo_hartree": round(frontier.lumo_hartree, 10),
-            "gap_hartree": round(frontier.gap_hartree, 10),
-            "gap_ev": round(frontier.gap_ev, 8),
-        },
+        data=payload,
         units={
             "homo_hartree": "hartree",
             "lumo_hartree": "hartree",
@@ -153,22 +329,8 @@ def orbital_frontier(
             "gap_ev": "eV",
         },
         validation_status="Stable",
+        warnings=tuple(dict.fromkeys(warnings)),
     )
-
-
-def _expected_electrons(data: CalculationData, kind: str) -> float:
-    total = float(sum(atom.atomic_number for atom in data.molecule.atoms) - data.molecule.charge)
-    alpha = data.records.get("Number of alpha electrons")
-    beta = data.records.get("Number of beta electrons")
-    if kind == "total":
-        return total
-    if kind == "alpha" and isinstance(alpha, (int, float)):
-        return float(alpha)
-    if kind == "beta" and isinstance(beta, (int, float)):
-        return float(beta)
-    if kind == "spin" and isinstance(alpha, (int, float)) and isinstance(beta, (int, float)):
-        return float(alpha - beta)
-    raise DataUnavailableError(f"Expected electron count is unavailable for {kind} density.")
 
 
 def density_grid(
@@ -176,16 +338,26 @@ def density_grid(
     kind: Literal["total", "alpha", "beta", "spin"],
     spacing_bohr: float,
     padding_bohr: float,
+    *,
+    chunk_size: int = 65536,
 ):
     if kind not in {"total", "alpha", "beta", "spin"}:
         raise ValueError("density kind must be 'total', 'alpha', 'beta', or 'spin'")
+    if chunk_size <= 0:
+        raise ValueError("chunk size must be positive")
     if data.basis is None:
         raise DataUnavailableError("Density analysis requires Gaussian basis-set data.")
-    matrix = density_matrix_for_kind(data, kind)  # type: ignore[arg-type]
+    matrix = density_matrix_for_kind(data, kind)
     points, origin, shape = molecular_grid_points(
         data.molecule, spacing_bohr=spacing_bohr, padding_bohr=padding_bohr
     )
-    values = evaluate_density(data.molecule, data.basis, matrix, points)
+    values = np.empty(len(points), dtype=float)
+    offset = 0
+    for chunk in iter_point_chunks(points, chunk_size):
+        chunk_values = evaluate_density(data.molecule, data.basis, matrix, chunk)
+        stop = offset + len(chunk_values)
+        values[offset:stop] = chunk_values
+        offset = stop
     return scalar_grid(data.molecule, values, origin, shape, spacing_bohr, "electron/bohr^3")
 
 
@@ -195,25 +367,39 @@ def density_integration(
     spacing_bohr: float,
     padding_bohr: float,
 ) -> ResultRecord:
+    matrix = density_matrix_for_kind(data, kind)
+    expectation = expected_electron_count(data, kind)
     grid = density_grid(data, kind, spacing_bohr, padding_bohr)
-    result = integrate_density(grid, _expected_electrons(data, kind))
+    result = integrate_density(grid, expectation.value)
+    warnings = [*expectation.warnings, *_density_source_warnings(data, matrix)]
+    if not result.passed:
+        warnings.append(_density_validation_warning(result))
     return ResultRecord(
         kind="density_integration",
         data={
             "density_kind": kind,
             "electron_count": round(result.electron_count, 8),
             "expected_electrons": round(result.expected_electrons, 8),
-            "relative_error": round(result.relative_error, 10),
+            "absolute_error": round(result.absolute_error, 10),
+            "relative_error": (
+                round(result.relative_error, 10) if result.relative_error is not None else None
+            ),
+            "error_metric": result.error_metric,
+            "expectation_source": expectation.source,
+            "density_source": matrix.source,
             "spacing": spacing_bohr,
             "padding": padding_bohr,
         },
         units={
             "electron_count": "electron",
             "expected_electrons": "electron",
+            "absolute_error": "electron",
             "spacing": "bohr",
             "padding": "bohr",
         },
-        validation_status="Validated" if result.relative_error < 0.005 else "Experimental",
+        validation_status="Validated" if result.passed else "Experimental",
+        status="success" if result.passed else "partial",
+        warnings=tuple(dict.fromkeys(warnings)),
     )
 
 
@@ -225,16 +411,38 @@ def density_cube_export(
     output_path,
     overwrite: bool,
 ) -> ResultRecord:
+    matrix = density_matrix_for_kind(data, kind)
+    expectation = expected_electron_count(data, kind)
     grid = density_grid(data, kind, spacing_bohr, padding_bohr)
+    result = integrate_density(grid, expectation.value)
     write_cube(grid, data.molecule, output_path, overwrite=overwrite)
+    warnings = [*expectation.warnings, *_density_source_warnings(data, matrix)]
+    if not result.passed:
+        warnings.append(_density_validation_warning(result))
     return ResultRecord(
         kind="density_cube",
         data={
             "density_kind": kind,
             "output": str(output_path),
             "grid_points": len(grid.values),
+            "electron_count": round(result.electron_count, 8),
+            "expected_electrons": round(result.expected_electrons, 8),
+            "absolute_error": round(result.absolute_error, 10),
+            "relative_error": (
+                round(result.relative_error, 10) if result.relative_error is not None else None
+            ),
+            "error_metric": result.error_metric,
+            "expectation_source": expectation.source,
+            "density_source": matrix.source,
         },
-        validation_status="Validated" if kind == "total" else "Stable",
+        units={
+            "electron_count": "electron",
+            "expected_electrons": "electron",
+            "absolute_error": "electron",
+        },
+        validation_status="Validated" if result.passed else "Experimental",
+        status="success" if result.passed else "partial",
+        warnings=tuple(dict.fromkeys(warnings)),
     )
 
 
@@ -250,6 +458,8 @@ def electrostatic_potential_point(
             "ESP component must be 'nuclear', 'electronic', 'total', 'mulliken', or 'lowdin'"
         )
     point = np.asarray((coordinates_angstrom,), dtype=float) / BOHR_TO_ANGSTROM
+    warnings: list[str] = []
+    density_source: str | None = None
     if component == "nuclear":
         value = float(nuclear_esp(data.molecule, point)[0])
         status = "Stable"
@@ -258,33 +468,43 @@ def electrostatic_potential_point(
             raise DataUnavailableError(
                 "Atomic-charge ESP requires Gaussian basis and total-density data."
             )
+        matrix = data.total_density
+        density_source = matrix.source
+        warnings.extend(_density_source_warnings(data, matrix))
         overlap = overlap_matrix(data.basis, data.molecule)
         mapping = ao_atom_indices(data.basis)
         population = (
-            mulliken_population(data.molecule, data.total_density, overlap, mapping)
+            mulliken_population(data.molecule, matrix, overlap, mapping)
             if component == "mulliken"
-            else lowdin_population(data.molecule, data.total_density, overlap, mapping)
+            else lowdin_population(data.molecule, matrix, overlap, mapping)
         )
         centers = np.asarray([atom.coordinates for atom in data.molecule.atoms], dtype=float)
         centers /= BOHR_TO_ANGSTROM
         value = float(point_charge_esp(centers, np.asarray(population.atomic_charges), point)[0])
         status = "Stable"
     else:
+        matrix = density_matrix_for_kind(data, "total")
+        density_source = matrix.source
+        warnings.extend(_density_source_warnings(data, matrix))
         grid = density_grid(data, "total", spacing_bohr, padding_bohr)
         electronic = float(electronic_esp_from_grid(grid, point)[0])
         value = electronic
         if component == "total":
             value += float(nuclear_esp(data.molecule, point)[0])
         status = "Experimental"
+    payload: dict[str, object] = {
+        "component": component,
+        "x": coordinates_angstrom[0],
+        "y": coordinates_angstrom[1],
+        "z": coordinates_angstrom[2],
+        "value": round(value, 10),
+    }
+    if density_source is not None:
+        payload["density_source"] = density_source
     return ResultRecord(
         kind="electrostatic_potential",
-        data={
-            "component": component,
-            "x": coordinates_angstrom[0],
-            "y": coordinates_angstrom[1],
-            "z": coordinates_angstrom[2],
-            "value": round(value, 10),
-        },
+        data=payload,
         units={"x": "angstrom", "y": "angstrom", "z": "angstrom", "value": "hartree/e"},
         validation_status=status,  # type: ignore[arg-type]
+        warnings=tuple(dict.fromkeys(warnings)),
     )

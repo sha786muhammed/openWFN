@@ -9,13 +9,17 @@ openWFN separates implementation availability from scientific confidence.
 
 ## Internal regression and invariants
 
-The provenance-backed fixtures currently cover water, methane, and ammonia. The validation suite evaluates nine metrics across these cases, including geometry and electron-density conservation. Run it from a source checkout:
+The provenance-backed numerical validation fixtures currently cover water, methane, and ammonia. The validation suite evaluates nine metrics across these cases, including geometry and electron-density conservation. Run it from a source checkout:
 
 ```bash
 python scripts/run_validation.py
 ```
 
 Passing these cases establishes regression evidence for those fixtures and tolerances; it does not prove accuracy for every molecule, basis, charge state, or spin state.
+
+The 0.8.1 hardening branch also includes focused regression fixtures for source-faithful ECP nuclear charges, ghost centers, unrestricted and restricted-open-shell frontier behavior, post-HF files using an SCF density, zero-spin density validation, population conservation, and chunked density-grid equivalence. These special-case fixtures are designed to prevent known silent-failure modes from returning. They are **regression evidence**, not independent third-party validation of every ECP, post-HF, open-shell, or ghost-center workflow.
+
+Population and density consistency checks are part of the result contract: when a calculation produces usable values but fails the configured conservation tolerance, openWFN returns a warning and `status="partial"` rather than a clean success. Cube validation is based on the exact generated grid. Grid spacing and padding remain convergence parameters; 0.15 bohr is the default starting point, not a universal accuracy guarantee.
 
 ## Independent parser comparisons
 
@@ -58,9 +62,9 @@ plus Linux validation-platform metadata. See the [Multiwfn procedure](https://gi
 ## Coverage still needed
 
 Broader cases such as carbon dioxide, triplet oxygen with confirmed spin metadata,
-ethanol, water dimers, diffuse/polarized basis behavior, and transition-metal chemistry
-require legally shareable, provenance-documented fixtures and explicit acceptance
-criteria. Until added, extrapolation is the researcher's responsibility.
+ethanol, water dimers, diffuse/polarized basis behavior, ECP families, ghost-center workflows,
+correlated/post-SCF densities, and transition-metal chemistry require legally shareable,
+provenance-documented fixtures and explicit acceptance criteria. Until added, extrapolation is the researcher's responsibility.
 
 ## Reproduce the software checks
 

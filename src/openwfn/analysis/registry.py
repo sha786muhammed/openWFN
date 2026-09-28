@@ -27,6 +27,12 @@ _ANALYSES = {
         lambda data: orbital_frontier(data, "beta"),
     ),
     "frontier": AnalysisDefinition("frontier", "1", "frontier_orbitals", orbital_frontier),
+    "frontier-all": AnalysisDefinition(
+        "frontier-all",
+        "1",
+        "frontier_orbitals",
+        lambda data: orbital_frontier(data, "all"),
+    ),
     "lowdin": AnalysisDefinition(
         "lowdin",
         "1",
