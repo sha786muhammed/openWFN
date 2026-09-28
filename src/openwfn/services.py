@@ -184,9 +184,7 @@ def density_grid(
         data.molecule, spacing_bohr=spacing_bohr, padding_bohr=padding_bohr
     )
     values = evaluate_density(data.molecule, data.basis, matrix, points)
-    return scalar_grid(
-        data.molecule, values, origin, shape, spacing_bohr, "electron/bohr^3"
-    )
+    return scalar_grid(data.molecule, values, origin, shape, spacing_bohr, "electron/bohr^3")
 
 
 def density_integration(

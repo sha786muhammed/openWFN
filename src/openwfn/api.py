@@ -77,9 +77,7 @@ class OpenWFNCalculation:
     def geometry_angle(self, atom_i: int, atom_j: int, atom_k: int) -> ResultRecord:
         return self._with_provenance(geometry_angle(self.molecule, atom_i, atom_j, atom_k))
 
-    def geometry_dihedral(
-        self, atom_i: int, atom_j: int, atom_k: int, atom_l: int
-    ) -> ResultRecord:
+    def geometry_dihedral(self, atom_i: int, atom_j: int, atom_k: int, atom_l: int) -> ResultRecord:
         return self._with_provenance(
             geometry_dihedral(self.molecule, atom_i, atom_j, atom_k, atom_l)
         )
@@ -119,7 +117,5 @@ def load(path: str | Path) -> OpenWFNCalculation:
             f"{path} contains a volumetric grid rather than a molecular calculation."
         )
     if not isinstance(parsed, CalculationData):
-        raise DataUnavailableError(
-            f"{path} does not contain a supported molecular calculation."
-        )
+        raise DataUnavailableError(f"{path} does not contain a supported molecular calculation.")
     return OpenWFNCalculation(parsed)

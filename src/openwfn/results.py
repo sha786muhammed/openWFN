@@ -139,9 +139,7 @@ class ResultRecord:
             kind=str(payload["kind"]),
             data=dict(payload.get("data", {})),
             units=dict(payload.get("units", {})),
-            validation_status=cast(
-                CapabilityStatus, payload.get("validation_status", "Stable")
-            ),
+            validation_status=cast(CapabilityStatus, payload.get("validation_status", "Stable")),
             analysis_name=payload.get("analysis_name"),
             analysis_version=str(payload.get("analysis_version", "1")),
             status=cast(ResultStatus, payload.get("status", "success")),

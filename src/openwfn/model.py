@@ -1,5 +1,6 @@
 """Typed scientific domain objects used across openWFN."""
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from math import isfinite, prod
 from typing import Any, Literal
@@ -7,7 +8,7 @@ from typing import Any, Literal
 MODEL_SCHEMA_VERSION = "2.0"
 
 
-def _require_finite(label: str, values) -> None:
+def _require_finite(label: str, values: Iterable[float]) -> None:
     if any(not isfinite(value) for value in values):
         raise ValueError(f"{label} must contain only finite values")
 
@@ -109,7 +110,9 @@ class Molecule:
             raise ValueError("multiplicity must be at least one")
         if not self.atoms:
             raise ValueError("molecule must contain at least one atom")
-        if any(bond.atom1 >= len(self.atoms) or bond.atom2 >= len(self.atoms) for bond in self.bonds):
+        if any(
+            bond.atom1 >= len(self.atoms) or bond.atom2 >= len(self.atoms) for bond in self.bonds
+        ):
             raise ValueError("bond atom index exceeds molecule atom count")
 
 
@@ -130,7 +133,9 @@ class BasisShell:
         if self.angular_momentum < -1:
             raise ValueError("angular momentum is invalid")
         if not self.exponents or len(self.exponents) != len(self.coefficients):
-            raise ValueError("primitive exponents and coefficients must have matching nonzero lengths")
+            raise ValueError(
+                "primitive exponents and coefficients must have matching nonzero lengths"
+            )
         if self.p_coefficients is not None and len(self.p_coefficients) != len(self.exponents):
             raise ValueError("primitive p coefficients must match primitive exponents")
         _require_finite("primitive exponents", self.exponents)

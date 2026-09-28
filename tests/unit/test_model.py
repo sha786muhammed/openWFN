@@ -223,9 +223,7 @@ def test_provenance_exposes_versioned_ingestion_metadata() -> None:
         ("parser_version", "", "parser version"),
     ],
 )
-def test_provenance_rejects_blank_ingestion_metadata(
-    field: str, value: str, message: str
-) -> None:
+def test_provenance_rejects_blank_ingestion_metadata(field: str, value: str, message: str) -> None:
     arguments = {
         "source_path": "water.fchk",
         "sha256": "a" * 64,
