@@ -7,7 +7,7 @@ import numpy as np
 from .analysis.basis import ao_atom_indices, overlap_matrix
 from .analysis.density import density_matrix_for_kind, evaluate_density, integrate_density
 from .analysis.electrostatics import electronic_esp_from_grid, nuclear_esp, point_charge_esp
-from .analysis.grids import molecular_grid_points, scalar_grid
+from .analysis.grids import iter_point_chunks, molecular_grid_points, scalar_grid
 from .analysis.orbitals import FrontierOrbitals, frontier_orbitals
 from .analysis.population import lowdin_population, mulliken_population
 from .constants import BOHR_TO_ANGSTROM
@@ -313,16 +313,26 @@ def density_grid(
     kind: Literal["total", "alpha", "beta", "spin"],
     spacing_bohr: float,
     padding_bohr: float,
+    *,
+    chunk_size: int = 65536,
 ):
     if kind not in {"total", "alpha", "beta", "spin"}:
         raise ValueError("density kind must be 'total', 'alpha', 'beta', or 'spin'")
+    if chunk_size <= 0:
+        raise ValueError("chunk size must be positive")
     if data.basis is None:
         raise DataUnavailableError("Density analysis requires Gaussian basis-set data.")
     matrix = density_matrix_for_kind(data, kind)
     points, origin, shape = molecular_grid_points(
         data.molecule, spacing_bohr=spacing_bohr, padding_bohr=padding_bohr
     )
-    values = evaluate_density(data.molecule, data.basis, matrix, points)
+    values = np.empty(len(points), dtype=float)
+    offset = 0
+    for chunk in iter_point_chunks(points, chunk_size):
+        chunk_values = evaluate_density(data.molecule, data.basis, matrix, chunk)
+        stop = offset + len(chunk_values)
+        values[offset:stop] = chunk_values
+        offset = stop
     return scalar_grid(data.molecule, values, origin, shape, spacing_bohr, "electron/bohr^3")
 
 
