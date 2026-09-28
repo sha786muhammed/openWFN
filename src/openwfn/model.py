@@ -1,10 +1,15 @@
 """Typed scientific domain objects used across openWFN."""
 
 from dataclasses import dataclass, field
-from math import prod
+from math import isfinite, prod
 from typing import Any, Literal
 
 MODEL_SCHEMA_VERSION = "2.0"
+
+
+def _require_finite(label: str, values) -> None:
+    if any(not isfinite(value) for value in values):
+        raise ValueError(f"{label} must contain only finite values")
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,6 +25,7 @@ class Atom:
             raise ValueError("atomic number must be positive")
         if len(self.coordinates) != 3:
             raise ValueError("coordinates must contain exactly three values")
+        _require_finite("coordinates", self.coordinates)
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,6 +39,10 @@ class CalculationMetadata:
     energy_hartree: float | None = None
     terminated_normally: bool | None = None
     source_program_version: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.energy_hartree is not None and not isfinite(self.energy_hartree):
+            raise ValueError("energy_hartree must be finite")
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,6 +133,10 @@ class BasisShell:
             raise ValueError("primitive exponents and coefficients must have matching nonzero lengths")
         if self.p_coefficients is not None and len(self.p_coefficients) != len(self.exponents):
             raise ValueError("primitive p coefficients must match primitive exponents")
+        _require_finite("primitive exponents", self.exponents)
+        _require_finite("contraction coefficients", self.coefficients)
+        if self.p_coefficients is not None:
+            _require_finite("p contraction coefficients", self.p_coefficients)
 
     @property
     def n_functions(self) -> int:
@@ -163,6 +177,12 @@ class MolecularOrbitals:
             raise ValueError("occupations must match orbital energies")
         if not self.coefficients or any(len(row) != n_orbitals for row in self.coefficients):
             raise ValueError("coefficient matrix columns must match orbital energies")
+        _require_finite("orbital energies", self.energies)
+        _require_finite(
+            "orbital coefficients",
+            (value for row in self.coefficients for value in row),
+        )
+        _require_finite("orbital occupations", self.occupations)
 
 
 @dataclass(frozen=True, slots=True)
@@ -177,6 +197,10 @@ class DensityMatrix:
         size = len(self.values)
         if size == 0 or any(len(row) != size for row in self.values):
             raise ValueError("density matrix must be square and nonempty")
+        _require_finite(
+            "density matrix",
+            (value for row in self.values for value in row),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -195,6 +219,9 @@ class VolumetricGrid:
             raise ValueError("grid shape values must be positive")
         if len(self.values) != prod(self.shape):
             raise ValueError("grid values count must equal the product of grid shape")
+        _require_finite("grid origin", self.origin)
+        _require_finite("grid axes", (value for axis in self.axes for value in axis))
+        _require_finite("grid values", self.values)
 
 
 @dataclass(frozen=True, slots=True)

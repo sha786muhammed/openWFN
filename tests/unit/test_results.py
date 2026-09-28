@@ -1,3 +1,5 @@
+import math
+
 import pytest
 
 from openwfn.results import RESULT_SCHEMA_VERSION, ResultRecord
@@ -53,6 +55,24 @@ def test_result_record_builds_a_structured_failure_envelope() -> None:
 def test_result_record_rejects_negative_elapsed_time() -> None:
     with pytest.raises(ValueError, match="elapsed_seconds must be non-negative"):
         ResultRecord(kind="summary", data={}, elapsed_seconds=-0.1)
+
+
+@pytest.mark.parametrize(
+    ("field", "payload"),
+    [
+        ("data", {"nested": [1.0, {"value": math.nan}]}),
+        ("provenance", {"metric": math.inf}),
+    ],
+)
+def test_result_record_rejects_nested_non_finite_values(
+    field: str,
+    payload: dict[str, object],
+) -> None:
+    arguments: dict[str, object] = {"kind": "summary", "data": {}}
+    arguments[field] = payload
+
+    with pytest.raises(ValueError, match=f"{field} must contain only finite values"):
+        ResultRecord(**arguments)  # type: ignore[arg-type]
 
 
 def test_result_record_round_trips_a_failure_envelope() -> None:

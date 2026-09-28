@@ -1,12 +1,24 @@
 """Typed, renderer-independent command results."""
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from math import isfinite
+from numbers import Real
 from typing import Any, Literal, cast
 
 CapabilityStatus = Literal["Stable", "Validated", "Experimental", "Unsupported"]
 ResultStatus = Literal["success", "partial", "failed"]
 RESULT_SCHEMA_VERSION = "1.0"
+
+
+def _contains_non_finite(value: Any) -> bool:
+    if isinstance(value, Real):
+        return not isfinite(value)
+    if isinstance(value, Mapping):
+        return any(_contains_non_finite(item) for item in value.values())
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+        return any(_contains_non_finite(item) for item in value)
+    return False
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,6 +65,10 @@ class ResultRecord:
             not isfinite(self.elapsed_seconds) or self.elapsed_seconds < 0
         ):
             raise ValueError("elapsed_seconds must be non-negative and finite")
+        if _contains_non_finite(self.data):
+            raise ValueError("data must contain only finite values")
+        if _contains_non_finite(self.provenance):
+            raise ValueError("provenance must contain only finite values")
         if self.status == "failed" and self.error is None:
             raise ValueError("failed results require error details")
         if self.status != "failed" and self.error is not None:
