@@ -15,8 +15,10 @@ def test_python_api_and_service_return_same_distance() -> None:
     api_result = calculation.geometry_distance(1, 2)
     service_result = geometry_distance(calculation.molecule, 1, 2)
 
-    assert api_result == service_result
+    assert api_result.kind == service_result.kind
+    assert api_result.data == service_result.data
     assert api_result.data["value"] == pytest.approx(0.966598)
+    assert api_result.provenance["input_sha256"] == calculation.molecule.provenance.sha256
 
 
 def test_python_api_exposes_molecular_summary() -> None:
@@ -24,9 +26,12 @@ def test_python_api_exposes_molecular_summary() -> None:
 
     summary = calculation.analyze_geometry()
 
-    assert summary["atom_count"] == 3
-    assert summary["charge"] == 0
-    assert summary["multiplicity"] == 1
+    assert isinstance(summary, openwfn.ResultRecord)
+    assert summary.kind == "geometry_summary"
+    assert summary.data["atom_count"] == 3
+    assert summary.data["charge"] == 0
+    assert summary.data["multiplicity"] == 1
+    assert summary.provenance["input_sha256"] == calculation.molecule.provenance.sha256
 
 
 def test_python_api_runs_registered_analysis_with_provenance() -> None:
@@ -48,6 +53,7 @@ def test_python_api_exposes_frontier_orbitals() -> None:
     assert result.kind == "frontier_orbitals"
     assert result.data["homo_number"] == 5
     assert result.data["lumo_number"] == 6
+    assert result.provenance["input_sha256"] == calculation.molecule.provenance.sha256
 
 
 def test_python_api_rejects_unknown_spin_channel() -> None:
@@ -64,6 +70,7 @@ def test_python_api_exposes_population_analysis() -> None:
 
     assert result.kind == "mulliken_population"
     assert result.data["electron_count"] == pytest.approx(10.0, abs=1e-6)
+    assert result.provenance["input_sha256"] == calculation.molecule.provenance.sha256
 
 
 def test_python_api_rejects_unknown_population_method() -> None:
@@ -81,6 +88,7 @@ def test_python_api_exposes_density_integration() -> None:
     assert result.kind == "density_integration"
     assert result.data["density_kind"] == "total"
     assert result.data["expected_electrons"] == 10.0
+    assert result.provenance["input_sha256"] == calculation.molecule.provenance.sha256
 
 
 def test_python_api_rejects_unknown_density_kind() -> None:
