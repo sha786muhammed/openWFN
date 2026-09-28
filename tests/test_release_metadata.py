@@ -10,6 +10,7 @@ except ModuleNotFoundError:  # Python 3.10
     import tomli as tomllib
 
 import openwfn
+from scripts.sync_release_metadata import rendered_citation
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -61,6 +62,19 @@ def test_project_uses_current_spdx_license_metadata() -> None:
     assert "License :: OSI Approved :: MIT License" not in metadata["classifiers"]
 
 
+def test_project_urls_cover_public_resources() -> None:
+    urls = project_metadata()["urls"]
+
+    assert urls == {
+        "Homepage": "https://sha786muhammed.github.io/openWFN/",
+        "Documentation": "https://sha786muhammed.github.io/openWFN/",
+        "Repository": "https://github.com/sha786muhammed/openWFN",
+        "Issues": "https://github.com/sha786muhammed/openWFN/issues",
+        "Changelog": "https://github.com/sha786muhammed/openWFN/blob/main/CHANGELOG.md",
+        "Releases": "https://github.com/sha786muhammed/openWFN/releases",
+    }
+
+
 def test_sync_script_is_idempotent() -> None:
     before = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
     result = subprocess.run(
@@ -72,6 +86,90 @@ def test_sync_script_is_idempotent() -> None:
     after = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
     assert result.returncode == 0, result.stderr
     assert after == before
+
+
+def test_citation_contains_verified_software_fields() -> None:
+    citation = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
+
+    for required in (
+        "type: software",
+        'title: "openWFN: Wavefunction post-processing analysis toolkit"',
+        'version: "0.8.0a2"',
+        "date-released: 2026-09-28",
+        "family-names: Shaji",
+        "given-names: Muhammed Shah",
+        "license: MIT",
+        'repository-code: "https://github.com/sha786muhammed/openWFN"',
+        'url: "https://github.com/sha786muhammed/openWFN/releases/tag/v0.8.0a2"',
+    ):
+        assert required in citation
+
+
+def test_active_citation_omits_deferred_identity_and_paper_fields() -> None:
+    active = "\n".join(
+        (ROOT / path).read_text(encoding="utf-8")
+        for path in ("CITATION.cff", "docs/citation.md", "README.md")
+    ).lower()
+
+    for forbidden in (
+        "university of louisville",
+        "affiliation:",
+        "email:",
+        "doi:",
+        "orcid:",
+        "preferred-citation:",
+        "journal:",
+        "research-grade gaussian wavefunction analysis",
+    ):
+        assert forbidden not in active
+
+
+def test_citation_guide_matches_cff() -> None:
+    guide = (ROOT / "docs" / "citation.md").read_text(encoding="utf-8")
+
+    for field in (
+        "Muhammed Shah Shaji",
+        "openWFN: Wavefunction post-processing analysis toolkit",
+        "0.8.0a2",
+        "2026",
+        "https://github.com/sha786muhammed/openWFN/releases/tag/v0.8.0a2",
+        "@software{shaji_openwfn_2026",
+    ):
+        assert field in guide
+
+
+def test_citation_guide_records_reproducibility_fields() -> None:
+    guide = (ROOT / "docs" / "citation.md").read_text(encoding="utf-8").lower()
+
+    for field in (
+        "exact openwfn version",
+        "input sha-256",
+        "source program",
+        "method",
+        "basis",
+        "charge",
+        "multiplicity",
+        "numerical controls",
+    ):
+        assert field in guide
+    assert "archival deposit or publication" in guide
+    assert "does not determine authorship" in guide
+
+
+def test_sync_script_preserves_citation_contract() -> None:
+    original = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
+    rendered = rendered_citation(
+        original,
+        "0.8.0a3",
+        "2026-10-01",
+        "https://github.com/sha786muhammed/openWFN/releases/tag/v0.8.0a3",
+    )
+
+    assert 'version: "0.8.0a3"' in rendered
+    assert "date-released: 2026-10-01" in rendered
+    assert 'url: "https://github.com/sha786muhammed/openWFN/releases/tag/v0.8.0a3"' in rendered
+    assert "given-names: Muhammed Shah" in rendered
+    assert "affiliation:" not in rendered.lower()
 
 
 def test_readme_documents_binary_checkpoint_requirement() -> None:

@@ -143,4 +143,4 @@ Contributions should include tests, documented units and assumptions, and valida
 
 Cite the exact version used and the project repository; see the [citation guide](https://sha786muhammed.github.io/openWFN/citation/). openWFN is released under the [MIT License](LICENSE).
 
-**Author:** Muhammed Shah Shaji, University of Louisville
+**Author:** Muhammed Shah Shaji

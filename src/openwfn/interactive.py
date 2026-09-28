@@ -29,7 +29,6 @@ PRODUCT_NAME = "openWFN"
 PRODUCT_EXPANSION = "Open WaveFunction Network"
 PRODUCT_TAGLINE = "Scientific geometry, topology, and structure analysis for Gaussian formatted checkpoint data."
 AUTHOR_CREDIT = "Muhammed Shah Shaji"
-AUTHOR_AFFILIATION = "University of Louisville"
 
 
 FEATURE_ALIASES = {
