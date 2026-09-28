@@ -1,9 +1,42 @@
 # Citation
 
-For reproducibility, cite the repository, exact release, input checksum, and relevant computational method. The repository `CITATION.cff` provides machine-readable author and release metadata.
+## Cite the software release
 
-Suggested software citation text:
+Use the exact release that produced your results. The repository
+[`CITATION.cff`](https://github.com/sha786muhammed/openWFN/blob/main/CITATION.cff)
+is the machine-readable source for the software citation.
 
-> Muhammed Shah Shaji. openWFN: wavefunction analysis toolkit, version 0.8.0a2. University of Louisville. https://github.com/sha786muhammed/openWFN
+Plain text:
 
-Archive identifiers will be added after an approved archival deposit.
+> Muhammed Shah Shaji (2026). openWFN: Wavefunction post-processing analysis toolkit (Version 0.8.0a2) [Computer software]. https://github.com/sha786muhammed/openWFN/releases/tag/v0.8.0a2
+
+BibTeX:
+
+```bibtex
+@software{shaji_openwfn_2026,
+  author  = {Muhammed Shah Shaji},
+  title   = {openWFN: Wavefunction post-processing analysis toolkit},
+  year    = {2026},
+  version = {0.8.0a2},
+  url     = {https://github.com/sha786muhammed/openWFN/releases/tag/v0.8.0a2},
+  license = {MIT}
+}
+```
+
+## Record the calculation context
+
+A software citation alone is not enough to reproduce an analysis. Preserve:
+
+- the exact openWFN version;
+- the input SHA-256 checksum;
+- the source program and its version when known;
+- method, basis, charge, and multiplicity;
+- the analysis command and relevant numerical controls;
+- machine-readable results, units, warnings, and validation status.
+
+## Future paper
+
+A paper citation will be added only after an archival deposit or publication
+provides verified bibliographic metadata. Repository contribution is recorded in
+the project history and `CONTRIBUTORS.md`; contribution does not determine authorship
+of a future paper.

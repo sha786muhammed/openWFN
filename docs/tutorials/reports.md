@@ -1,6 +1,7 @@
 # Tutorial: build a reproducible analysis package
 
-The goal is not merely a pretty report. It is an evidence package another researcher can inspect and rerun.
+The goal is not merely a pretty report. It is an evidence package another
+researcher can inspect and rerun. Run these commands from the repository root.
 
 ## 1. Record identity
 

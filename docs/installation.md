@@ -27,7 +27,7 @@ Install the newest alpha:
 python -m pip install --pre --upgrade openwfn
 ```
 
-After 0.8.0a2 is published, pin it when reproducing research:
+Pin the exact published alpha when reproducing research:
 
 ```bash
 python -m pip install openwfn==0.8.0a2

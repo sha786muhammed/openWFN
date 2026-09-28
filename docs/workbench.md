@@ -5,14 +5,21 @@ The workbench packages a calculation, selected derived data, interface code, and
 **Status: Experimental.** The workbench is an optional visualization and teaching surface, not a numerical reference. Preserve the corresponding JSON, CSV, or report output as the scientific record.
 
 ```bash
-openwfn water.fchk workbench water-workbench.html --open
+openwfn ./openwfn-examples/water.fchk workbench water-workbench.html --open
 ```
 
-Without `--open`, open the resulting file in a modern browser. It works through `file://`; no localhost server or openWFN process must remain running.
+This example assumes `openwfn examples install ./openwfn-examples` has already
+been run. Without `--open`, open the resulting file in a modern browser. It
+works through `file://`; no localhost server or openWFN process must remain
+running.
 
 ## What the file contains
 
 The export can include molecular coordinates, bonds, calculation provenance, analysis properties, volumetric fields, CSS, JavaScript, and the vendored 3D rendering engine. This portability has a privacy consequence: anyone who receives the file can inspect its embedded molecular data. Do not publish a workbench generated from a confidential calculation.
+
+Molecular rendering is provided by [3Dmol.js](https://github.com/3dmol/3Dmol.js)
+under the BSD-3-Clause license. The renderer and its attribution are embedded in
+the output, so opening a workbench does not fetch the library from a CDN.
 
 ## Workspace tour
 

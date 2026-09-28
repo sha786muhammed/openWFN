@@ -3,12 +3,19 @@
 This example demonstrates basic geometry analysis using openWFN
 for a small molecule.
 
-### Files
+## Files
+
 - `water.gjf` — Gaussian input file
 - `water.fchk` — formatted checkpoint (wavefunction)
-- `water.xyz` — exported geometry
+- `water.xyz` — legacy project-generated geometry companion
 
-### Usage
+The calculation and export versions were not recorded. See
+[the corpus provenance record](../PROVENANCE.md#water) before using these files
+as evidence.
+
+## Usage
+
+From this directory:
 
 ```bash
 openwfn water.fchk

@@ -26,6 +26,39 @@ from the installed wheel. The command checks every destination before writing
 and refuses to replace existing files. Pass `--overwrite` only when replacement
 is intentional.
 
+## Command families
+
+These are the public top-level choices shown by `openwfn --help`.
+
+| Command | Purpose |
+|---|---|
+| `examples` | Install packaged example inputs |
+| `summary` | Summarize molecular identity and calculation state |
+| `info` | Show detailed FCHK metadata |
+| `dist` | Legacy distance command |
+| `angle` | Legacy angle command |
+| `dihedral` | Legacy dihedral command |
+| `bonds` | Detect bonds with the covalent-radius heuristic |
+| `xyz` | Legacy XYZ export |
+| `formchk` | Invoke Gaussian's external checkpoint converter |
+| `view` | Create a standalone local molecular viewer |
+| `interactive` | Start the guided terminal interface |
+| `graph` | Show molecular fragments |
+| `geometry` | Run distance, angle, and dihedral operations |
+| `population` | Run Mulliken or Löwdin population analysis |
+| `orbitals` | Inspect frontier orbitals |
+| `density` | Integrate or export electron and spin density |
+| `esp` | Evaluate supported electrostatic-potential components |
+| `report` | Build a research report |
+| `workbench` | Build the optional Experimental workbench |
+| `cube` | Export an electron-density cube |
+| `convert` | Convert molecular structure formats |
+| `export` | Export a registered result table |
+| `plot` | Create a supported scientific figure |
+| `batch` | Analyze multiple inputs |
+| `validate` | Run the density-conservation check |
+| `doctor` | Inspect input type and available capabilities |
+
 ## Inspection and structure
 
 | Command | Syntax | Result |

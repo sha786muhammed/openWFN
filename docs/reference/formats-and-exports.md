@@ -1,14 +1,23 @@
 # Formats, units, and exports
 
-## Inputs
+## Registered input suffixes
 
-| Format | Support | Notes |
-|---|---|---|
-| Gaussian `.fchk` | Direct | Primary analysis format |
-| Gaussian `.chk` | Via `formchk` | Requires licensed Gaussian utility in `PATH` |
-| Gaussian `.cube` | Volumetric grid | `doctor` reports grid capability; molecular analyses require FCHK data |
-| Gaussian `.log`/`.out` | Calculation metadata | `doctor` reports metadata capability; molecular analyses require FCHK data |
-| XYZ, PDB, MOL/SDF | Molecular structure | Coordinates and available connectivity only |
+The parser registry accepts these filename suffixes. Files without a suffix may
+still be recognized as single-frame XYZ when their contents match that format.
+
+| Suffix | Parsed content |
+|---|---|
+| `.chk` | Gaussian binary checkpoint via the external `formchk` utility |
+| `.cub` | Gaussian volumetric grid |
+| `.cube` | Gaussian volumetric grid |
+| `.fch` | Gaussian formatted checkpoint |
+| `.fchk` | Gaussian formatted checkpoint and primary wavefunction path |
+| `.log` | Gaussian calculation metadata |
+| `.mol` | V2000 molecular structure |
+| `.out` | Gaussian calculation metadata |
+| `.pdb` | Molecular structure and available connectivity |
+| `.sdf` | V2000 molecular structure |
+| `.xyz` | Single-frame molecular structure |
 
 `doctor` is safe to run across these input kinds. Other analysis commands fail
 cleanly when the parsed input does not provide a molecular calculation; openWFN
@@ -37,6 +46,10 @@ supported research records when preserved with their machine-readable results. T
 workbench is an optional Experimental visualization surface, not a numerical reference.
 “Self-contained” means no openWFN server is required; it does not mean the artifact is
 free of research data.
+
+The viewer and workbench embed [3Dmol.js](https://github.com/3dmol/3Dmol.js),
+licensed under BSD-3-Clause, and retain that attribution in each generated file.
+They do not load the rendering library from a remote server.
 
 ## Units
 

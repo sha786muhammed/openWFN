@@ -115,7 +115,7 @@ parsing, summary-analysis, and result-writing path. It stages structure-only XYZ
 inputs so a high input count can test orchestration without conflating throughput
 with expensive density-grid calculations.
 
-Run the full NASAKY collection with:
+Run the full Linux validation-host collection with:
 
 ```bash
 python scripts/benchmark_batch.py \
@@ -143,7 +143,7 @@ validation and external-reference comparisons.
   adjacent fixed-width exponent pair in that fixture.
 - Multiwfn `3.8(dev)` same-wavefunction frontier and population comparisons pass for
   restricted water, unrestricted LiH, and Psi4-produced acetylene: eleven comparisons with binary, settings,
-  procedure, input, and transcript hashes captured on NASAKY.
+  procedure, input, transcript, and platform hashes captured on the validation host.
 - CI runs the repository-owned external comparison and preserves external-input cases as
   pending. Maintainers run the complete matrix with `--input-root`.
 

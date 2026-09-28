@@ -1,26 +1,36 @@
 # Tests for openWFN
 
-Run the full test suite with:
+Create a clean development environment from the repository root:
 
 ```bash
-pytest -q
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e ".[test]"
+python scripts/check_repository.py --root .
 ```
 
-Install test dependencies with:
+Run a focused test while developing:
 
 ```bash
-pip install -e .[test]
+python -m pytest -q tests/test_cli.py
+python -m pytest -q tests/test_geometry.py
 ```
 
-If you only want the released package for normal use, install:
+Before opening a pull request, run the complete suite:
 
 ```bash
-pip install openwfn
+python -m pytest --strict-markers
 ```
 
-Useful focused runs:
+The repository preflight is read-only. If it finds stale source-tree package
+metadata or an editable install from another checkout, inspect and refresh it:
 
 ```bash
-pytest tests/test_cli.py -q
-pytest tests/test_geometry.py -q
+git status --ignored --short
+python -m pip install --no-build-isolation -e .
+python scripts/check_repository.py --root .
 ```
+
+For normal use of the released package, install with `python -m pip install
+openwfn` instead of using this development setup.

@@ -48,14 +48,15 @@ use deterministic input order.
 ## Throughput benchmark
 
 The repository benchmark stages deterministic XYZ inputs and runs real parsing,
-summary analysis, and result writing. For a 10,000-input NASAKY run:
+summary analysis, and result writing. Choose a count that fits the machine and
+record its hardware and load; for example:
 
 ```bash
 python scripts/benchmark_batch.py \
-  --count 10000 \
+  --count 1000 \
   --workers "$(nproc)" \
   --workspace /tmp/openwfn-benchmark \
-  --output openwfn-benchmark-10000.json
+  --output openwfn-benchmark.json
 ```
 
 The output records counts, elapsed time, files per second, parent-process peak

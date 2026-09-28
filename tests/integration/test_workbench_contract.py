@@ -58,3 +58,14 @@ def test_workbench_embeds_scientific_surface_controls_and_metadata(tmp_path: Pat
     assert "addIsosurface" in text
     assert "removeAllSurfaces" in text
     assert "validation_status" in text
+
+
+def test_workbench_html_contains_offline_3dmol_attribution(tmp_path: Path) -> None:
+    output = tmp_path / "workbench.html"
+    export_workbench(parse_fchk(WATER), output)
+
+    text = output.read_text(encoding="utf-8")
+    assert "Molecular rendering: 3Dmol.js (BSD-3-Clause)" in text
+    assert "https://github.com/3dmol/3Dmol.js" in text
+    assert '<script src="http' not in text
+    assert "<script src='http" not in text

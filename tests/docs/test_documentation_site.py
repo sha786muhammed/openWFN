@@ -1,3 +1,4 @@
+import hashlib
 import re
 import subprocess
 import sys
@@ -6,7 +7,20 @@ from pathlib import Path
 
 import pytest
 
+import openwfn
+from openwfn.analysis.registry import available_analyses
+from openwfn.parsers.registry import DEFAULT_REGISTRY
+
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def markdown_section(text: str, heading: str) -> str:
+    section = text.split(f"## {heading}\n", maxsplit=1)[1]
+    return section.split("\n## ", maxsplit=1)[0]
+
+
+def first_column_codes(section: str) -> set[str]:
+    return set(re.findall(r"(?m)^\| `([^`]+)` \|", section))
 
 
 def run_check(root: Path, markdown: str) -> subprocess.CompletedProcess[str]:
@@ -46,6 +60,37 @@ def test_check_docs_rejects_private_paths(tmp_path: Path) -> None:
 
     assert result.returncode == 1
     assert "private or machine-specific content" in result.stderr
+
+
+def test_check_docs_rejects_unverified_affiliation(tmp_path: Path) -> None:
+    result = run_check(tmp_path, markdown="affiliation: Example University")
+
+    assert result.returncode == 1
+    assert "unverified identity or publication metadata" in result.stderr
+
+
+def test_check_docs_rejects_internal_assistant_branding(tmp_path: Path) -> None:
+    internal_brand = "Chat" + "GPT"
+    result = run_check(tmp_path, markdown=f"Generated with {internal_brand}")
+
+    assert result.returncode == 1
+    assert "internal assistant branding" in result.stderr
+
+
+def test_check_docs_rejects_broken_compatibility_signpost(tmp_path: Path) -> None:
+    run_check(tmp_path, markdown="# Home")
+    (tmp_path / "docs" / "cli.md").write_text(
+        "# CLI reference\n\nOld duplicate content.\n", encoding="utf-8"
+    )
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "check_docs.py"), "--root", str(tmp_path)],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert "compatibility page" in result.stderr
 
 
 def test_mkdocs_navigation_references_existing_pages() -> None:
@@ -125,6 +170,23 @@ def test_public_images_have_provenance_and_are_bounded() -> None:
         assert f"  {image.name}:" in manifest
         assert "    alt:" in manifest
         assert "    license:" in manifest
+
+
+def test_every_public_image_has_complete_factual_provenance() -> None:
+    manifest = (ROOT / "docs" / "assets" / "data" / "asset-provenance.yml").read_text(
+        encoding="utf-8"
+    )
+    image_root = ROOT / "docs" / "assets" / "images"
+
+    for image in image_root.iterdir():
+        block = manifest.split(f"  {image.name}:", maxsplit=1)[1]
+        block = re.split(r"(?m)^  (?=\S)", block, maxsplit=1)[0]
+        digest = hashlib.sha256(image.read_bytes()).hexdigest()
+        for field in ("source: project-created", "generation_record:", "license:", "alt:"):
+            assert field in block
+        assert digest in block
+        assert "generated specifically" not in block.lower()
+        assert "approved" not in block.lower()
 
 
 def test_homepage_contains_product_paths_and_trust_links() -> None:
@@ -319,6 +381,102 @@ def test_documentation_covers_required_user_and_scientific_topics() -> None:
         assert (ROOT / "docs" / relative).is_file(), relative
 
 
+def test_compatibility_pages_point_to_authoritative_pages() -> None:
+    targets = {
+        "docs/cli.md": "reference/cli.md",
+        "docs/python-api.md": "reference/python-api.md",
+        "docs/formats.md": "reference/formats-and-exports.md",
+        "docs/validation.md": "science/validation-status.md",
+    }
+
+    for source, target in targets.items():
+        text = (ROOT / source).read_text(encoding="utf-8")
+        assert len(text.splitlines()) <= 12
+        assert target in text
+        assert "authoritative" in text.lower()
+
+
+def test_active_api_reference_uses_current_schema_language() -> None:
+    reference = (ROOT / "docs" / "reference" / "python-api.md").read_text(encoding="utf-8")
+
+    assert "v0.7" not in reference
+    assert 'MODEL_SCHEMA_VERSION` is `"2.0"' in reference
+    assert 'RESULT_SCHEMA_VERSION`, currently `"1.0"' in reference
+
+
+def test_documented_formats_equal_registered_format_families() -> None:
+    reference = (ROOT / "docs" / "reference" / "formats-and-exports.md").read_text(
+        encoding="utf-8"
+    )
+    documented = first_column_codes(markdown_section(reference, "Registered input suffixes"))
+
+    assert documented == set(DEFAULT_REGISTRY.supported_suffixes())
+
+
+def test_documented_named_analyses_equal_registry() -> None:
+    reference = (ROOT / "docs" / "reference" / "python-api.md").read_text(encoding="utf-8")
+    documented = first_column_codes(markdown_section(reference, "Registered named analyses"))
+
+    assert documented == set(available_analyses())
+
+
+def test_documented_cli_families_equal_parser_choices() -> None:
+    result = subprocess.run(
+        [sys.executable, "-m", "openwfn.cli", "--help"],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    installed = set(re.findall(r"(?m)^    ([a-z][a-z0-9-]*)\s{2,}", result.stdout))
+    reference = (ROOT / "docs" / "reference" / "cli.md").read_text(encoding="utf-8")
+    documented = first_column_codes(markdown_section(reference, "Command families"))
+
+    assert documented == installed
+
+
+def test_documented_public_imports_equal_package_contract() -> None:
+    reference = (ROOT / "docs" / "reference" / "python-api.md").read_text(encoding="utf-8")
+    documented = first_column_codes(markdown_section(reference, "Public import inventory"))
+
+    assert documented == set(openwfn.__all__)
+
+
+def test_html_docs_include_attribution_privacy_and_evidence_boundary() -> None:
+    public = "\n".join(
+        (ROOT / path).read_text(encoding="utf-8")
+        for path in (
+            "docs/workbench.md",
+            "docs/reference/formats-and-exports.md",
+            "docs/tutorials/reports.md",
+            "docs/guides/batch-and-reports.md",
+        )
+    ).lower()
+
+    assert "3dmol.js" in public
+    assert "bsd-3-clause" in public
+    assert "confidential" in public
+    assert "machine-readable" in public
+    assert "not a numerical reference" in public
+
+
+def test_documentation_contains_no_unverified_affiliation_or_private_paths() -> None:
+    public = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in (ROOT / "docs").rglob("*.md")
+        if "project/plans" not in path.as_posix()
+        and "project/specifications" not in path.as_posix()
+    ).lower()
+
+    for forbidden in (
+        "university of louisville",
+        "/users/",
+        "/home/",
+        "nasaky",
+    ):
+        assert forbidden not in public
+
+
 def test_handbook_has_complete_learning_reference_and_project_sections() -> None:
     required = (
         "learn/wavefunction-analysis.md",
@@ -362,7 +520,9 @@ def test_security_page_documents_local_processing_and_safe_reporting() -> None:
 
 
 def test_documented_capability_states_are_defined() -> None:
-    validation = (ROOT / "docs" / "validation.md").read_text(encoding="utf-8")
+    validation = (ROOT / "docs" / "science" / "validation-status.md").read_text(
+        encoding="utf-8"
+    )
     for state in ("Stable", "Validated", "Experimental", "Unsupported"):
         assert f"**{state}**" in validation
 

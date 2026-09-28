@@ -1,5 +1,27 @@
+import subprocess
+import sys
+import tarfile
+import zipfile
 from importlib.metadata import entry_points, version
 from importlib.resources import files
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).parents[1]
+
+
+@pytest.fixture(scope="module")
+def built_archives(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path]:
+    output = tmp_path_factory.mktemp("distribution")
+    subprocess.run(
+        [sys.executable, "-m", "build", "--outdir", str(output)],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return next(output.glob("*.whl")), next(output.glob("*.tar.gz"))
 
 
 def test_installed_distribution_version() -> None:
@@ -16,3 +38,50 @@ def test_distribution_contains_maintained_water_example() -> None:
 
     assert resource.is_file()
     assert "Number of atoms" in resource.read_text(encoding="utf-8")
+
+
+def test_built_wheel_contains_runtime_modules_assets_and_notices(
+    built_archives: tuple[Path, Path],
+) -> None:
+    wheel, _ = built_archives
+    with zipfile.ZipFile(wheel) as archive:
+        names = set(archive.namelist())
+
+    expected_modules = {
+        path.relative_to(ROOT / "src").as_posix()
+        for path in (ROOT / "src" / "openwfn").rglob("*.py")
+    }
+    assert expected_modules <= names
+    assert "openwfn/assets/3Dmol-min.js" in names
+    assert "openwfn/example_data/README.md" in names
+    assert "openwfn/example_data/water.fchk" in names
+
+    license_paths = {name for name in names if ".dist-info/licenses/" in name}
+    assert any(name.endswith("/LICENSE") for name in license_paths)
+    assert any(name.endswith("/THIRD_PARTY_NOTICES.md") for name in license_paths)
+    assert any(name.endswith("/3Dmol-min.js.LICENSE.txt") for name in license_paths)
+
+
+def test_source_distribution_contains_project_policies_and_provenance(
+    built_archives: tuple[Path, Path],
+) -> None:
+    _, source = built_archives
+    with tarfile.open(source, "r:gz") as archive:
+        names = {
+            Path(name).relative_to(Path(name).parts[0]).as_posix()
+            for name in archive.getnames()
+        }
+
+    assert {
+        "CITATION.cff",
+        "CODE_OF_CONDUCT.md",
+        "CONTRIBUTING.md",
+        "CONTRIBUTORS.md",
+        "LICENSE",
+        "MAINTAINERS.md",
+        "ROADMAP.md",
+        "SECURITY.md",
+        "THIRD_PARTY_NOTICES.md",
+        "examples/PROVENANCE.md",
+        "docs/assets/data/asset-provenance.yml",
+    } <= names

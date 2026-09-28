@@ -1,21 +1,17 @@
 # Quick start
 
+Install the current pre-release, copy the packaged example, and run one
+machine-readable analysis:
+
 ```bash
 python -m pip install --pre --upgrade openwfn
 openwfn examples install ./openwfn-examples
-openwfn ./openwfn-examples/water.fchk summary
-openwfn ./openwfn-examples/water.fchk geometry distance 1 2
-openwfn ./openwfn-examples/water.fchk geometry angle 2 1 3
-openwfn ./openwfn-examples/water.fchk orbitals frontier
-openwfn ./openwfn-examples/water.fchk population mulliken
-openwfn ./openwfn-examples/water.fchk density integrate
+openwfn --format json ./openwfn-examples/water.fchk summary
 ```
 
-Create portable research artifacts:
+Confirm that the result reports formula `H2O`, charge `0`, multiplicity `1`, and
+status `success`. Then follow [your first analysis](start/first-analysis.md) for
+doctor, frontier-orbital, population, validation, and report workflows.
 
-```bash
-openwfn ./openwfn-examples/water.fchk density cube water-density.cube
-openwfn ./openwfn-examples/water.fchk report build water-report.html
-```
-
-Atom indices shown in commands are one-based. Coordinates are reported in ångströms, orbital energies in Hartree and eV, and ESP in Hartree/e.
+Global flags precede the input path. CLI atom indices are one-based. Keep the
+input checksum and exact openWFN version with research results.

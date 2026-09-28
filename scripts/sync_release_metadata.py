@@ -15,6 +15,7 @@ except ModuleNotFoundError:  # Python 3.10
 
 VERSION_PATTERN = re.compile(r"(?m)^version:\s*[^\r\n]+$")
 DATE_PATTERN = re.compile(r"(?m)^date-released:\s*[^\r\n]+$")
+URL_PATTERN = re.compile(r"(?m)^url:\s*[^\r\n]+$")
 
 
 def read_project_version(project_file: Path) -> str:
@@ -23,20 +24,42 @@ def read_project_version(project_file: Path) -> str:
         return str(tomllib.load(stream)["project"]["version"])
 
 
+def read_repository_url(project_file: Path) -> str:
+    """Return the authoritative source repository URL."""
+    with project_file.open("rb") as stream:
+        return str(tomllib.load(stream)["project"]["urls"]["Repository"])
+
+
+def read_release_date(changelog_file: Path, release_version: str) -> str:
+    """Return the recorded changelog date for a release version."""
+    changelog = changelog_file.read_text(encoding="utf-8")
+    match = re.search(
+        rf"(?m)^## \[{re.escape(release_version)}\] - ([0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}})$",
+        changelog,
+    )
+    if match is None:
+        raise ValueError(f"CHANGELOG.md has no dated entry for {release_version}")
+    return match.group(1)
+
+
 def rendered_citation(
     citation_text: str,
     release_version: str,
-    release_date: str | None,
+    release_date: str,
+    release_url: str,
 ) -> str:
     """Render citation metadata with synchronized release fields."""
     version_matches = VERSION_PATTERN.findall(citation_text)
     date_matches = DATE_PATTERN.findall(citation_text)
-    if len(version_matches) != 1 or len(date_matches) != 1:
-        raise ValueError("CITATION.cff must contain one version and one date-released field")
+    url_matches = URL_PATTERN.findall(citation_text)
+    if len(version_matches) != 1 or len(date_matches) != 1 or len(url_matches) != 1:
+        raise ValueError(
+            "CITATION.cff must contain one version, date-released, and url field"
+        )
 
     rendered = VERSION_PATTERN.sub(f'version: "{release_version}"', citation_text)
-    if release_date is not None:
-        rendered = DATE_PATTERN.sub(f"date-released: {release_date}", rendered)
+    rendered = DATE_PATTERN.sub(f"date-released: {release_date}", rendered)
+    rendered = URL_PATTERN.sub(f'url: "{release_url}"', rendered)
     return rendered
 
 
@@ -49,13 +72,18 @@ def main(argv: list[str] | None = None) -> int:
     root = Path(__file__).resolve().parents[1]
     project_file = root / "pyproject.toml"
     citation_file = root / "CITATION.cff"
+    changelog_file = root / "CHANGELOG.md"
 
     try:
         current = citation_file.read_text(encoding="utf-8")
+        release_version = read_project_version(project_file)
+        release_date = args.date or read_release_date(changelog_file, release_version)
+        release_url = f"{read_repository_url(project_file)}/releases/tag/v{release_version}"
         expected = rendered_citation(
             current,
-            read_project_version(project_file),
-            args.date,
+            release_version,
+            release_date,
+            release_url,
         )
     except (KeyError, OSError, ValueError) as exc:
         print(f"release metadata error: {exc}", file=sys.stderr)

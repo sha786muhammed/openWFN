@@ -55,7 +55,7 @@ precision; never widen them to conceal an unexplained difference.
 ## Captured evidence
 
 The restricted water, unrestricted LiH, and Psi4-produced acetylene records were
-captured on NASAKY on 2026-09-24 with Multiwfn `3.8(dev)`, update date `2024-Oct-24`. The executed binary,
+captured on an Ubuntu Linux validation host on 2026-09-24 with Multiwfn `3.8(dev)`, update date `2024-Oct-24`. The executed binary,
 settings, procedure, and transcript hashes are recorded in
 `validation/external/references/`. The run used four threads, `LC_ALL=C`, and
 `OMP_STACKSIZE=1G`; it completed without runtime errors. Raw transcripts remain on the

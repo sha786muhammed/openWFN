@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import subprocess
 import sys
 from collections.abc import Iterator, Sequence
 from pathlib import Path
@@ -22,7 +23,15 @@ PRIVATE_PATTERNS = (
     (re.compile(r"BEGIN [A-Z ]*PRIVATE KEY"), "private key"),
     (re.compile(r"\bpypi-[A-Za-z0-9_-]{12,}\b"), "PyPI token"),
     (re.compile(r"\bgh[pousr]_[A-Za-z0-9_]{12,}\b"), "GitHub token"),
+    (re.compile(rf"\b{'NASA' + 'KY'}\b", re.IGNORECASE), "private host name"),
 )
+INTERNAL_BRANDS = ("Chat" + "GPT", "Co" + "dex", "Clau" + "de")
+COMPATIBILITY_PAGES = {
+    "docs/cli.md": "reference/cli.md",
+    "docs/python-api.md": "reference/python-api.md",
+    "docs/formats.md": "reference/formats-and-exports.md",
+    "docs/validation.md": "science/validation-status.md",
+}
 
 
 def iter_markdown(root: Path) -> Iterator[Path]:
@@ -122,6 +131,123 @@ def check_private_content(root: Path, files: Sequence[Path]) -> list[str]:
     return findings
 
 
+def check_public_metadata(root: Path, files: Sequence[Path]) -> list[str]:
+    """Reject deferred identity fields and internal-assistant branding."""
+    findings: list[str] = []
+    for path in files:
+        text = path.read_text(encoding="utf-8")
+        if re.search(r"(?im)^\s*(?:author-)?affiliation\s*:", text):
+            findings.append(
+                f"{_relative(path, root)}: unverified identity or publication metadata"
+            )
+        for brand in INTERNAL_BRANDS:
+            if brand.lower() in text.lower():
+                findings.append(f"{_relative(path, root)}: internal assistant branding")
+    return findings
+
+
+def check_compatibility_pages(root: Path) -> list[str]:
+    """Require retained legacy pages to point at their authoritative target."""
+    findings: list[str] = []
+    for source, target in COMPATIBILITY_PAGES.items():
+        source_path = root / source
+        if not source_path.is_file():
+            continue
+        text = source_path.read_text(encoding="utf-8")
+        target_path = source_path.parent / target
+        if target not in text or not target_path.is_file() or "authoritative" not in text.lower():
+            findings.append(
+                f"{source}: compatibility page must link to authoritative target {target}"
+            )
+    return findings
+
+
+def _markdown_section(text: str, heading: str) -> str:
+    marker = f"## {heading}\n"
+    if marker not in text:
+        return ""
+    return text.split(marker, maxsplit=1)[1].split("\n## ", maxsplit=1)[0]
+
+
+def _first_column_codes(section: str) -> set[str]:
+    return set(re.findall(r"(?m)^\| `([^`]+)` \|", section))
+
+
+def check_interface_inventories(root: Path) -> list[str]:
+    """Compare documented interfaces with the installed source checkout."""
+    cli_doc = root / "docs" / "reference" / "cli.md"
+    api_doc = root / "docs" / "reference" / "python-api.md"
+    format_doc = root / "docs" / "reference" / "formats-and-exports.md"
+    source_root = root / "src"
+    if not all(path.is_file() for path in (cli_doc, api_doc, format_doc)) or not source_root.is_dir():
+        return []
+
+    source_path = str(source_root)
+    sys.path.insert(0, source_path)
+    try:
+        import openwfn
+        from openwfn.analysis.registry import available_analyses
+        from openwfn.parsers.registry import DEFAULT_REGISTRY
+
+        result = subprocess.run(
+            [sys.executable, "-m", "openwfn.cli", "--help"],
+            cwd=root,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            return ["docs/reference/cli.md: could not read installed CLI help"]
+        actual_commands = set(
+            re.findall(r"(?m)^    ([a-z][a-z0-9-]*)\s{2,}", result.stdout)
+        )
+        checks = (
+            (
+                "docs/reference/cli.md",
+                _first_column_codes(
+                    _markdown_section(cli_doc.read_text(encoding="utf-8"), "Command families")
+                ),
+                actual_commands,
+            ),
+            (
+                "docs/reference/formats-and-exports.md",
+                _first_column_codes(
+                    _markdown_section(
+                        format_doc.read_text(encoding="utf-8"), "Registered input suffixes"
+                    )
+                ),
+                set(DEFAULT_REGISTRY.supported_suffixes()),
+            ),
+            (
+                "docs/reference/python-api.md named analyses",
+                _first_column_codes(
+                    _markdown_section(
+                        api_doc.read_text(encoding="utf-8"), "Registered named analyses"
+                    )
+                ),
+                set(available_analyses()),
+            ),
+            (
+                "docs/reference/python-api.md public imports",
+                _first_column_codes(
+                    _markdown_section(
+                        api_doc.read_text(encoding="utf-8"), "Public import inventory"
+                    )
+                ),
+                set(openwfn.__all__),
+            ),
+        )
+    finally:
+        if sys.path and sys.path[0] == source_path:
+            sys.path.pop(0)
+
+    return [
+        f"{label}: documented interface inventory does not match source"
+        for label, documented, actual in checks
+        if documented != actual
+    ]
+
+
 def check_page_contract(root: Path, files: Sequence[Path]) -> list[str]:
     """Validate section contracts added as handbook sections are introduced."""
     del root, files
@@ -136,6 +262,9 @@ def collect_findings(root: Path) -> list[str]:
         *check_release_metadata(root),
         *check_asset_provenance(root),
         *check_private_content(root, files),
+        *check_public_metadata(root, files),
+        *check_compatibility_pages(root),
+        *check_interface_inventories(root),
         *check_page_contract(root, files),
     ]
 

@@ -1,26 +1,36 @@
 assets:
   openwfn-brand.svg:
-    source: Canonical openWFN brand plate composed from the original compact header mark
+    source: project-created
+    generation_record: Exact creation tool and source-editing session not recorded
+    sha256: 1247b257565e627b2c219aab7efb1504f2c5c3fa4119764a00ebd29b793db59a
     license: MIT project asset
-    transformation: The original compact mark is embedded without redrawing on a permanent navy background so the same logo remains legible in website headers, content, GitHub light mode, and GitHub dark mode
+    transformation: Embeds the compact project mark on a navy background for consistent display
+    alt: openWFN
+  openwfn-header.png:
+    source: project-created
+    generation_record: Exact creation tool and prompt or source-editing session not recorded
+    sha256: 112fdd4d5c50358b3d4e9e1fd1b6c35f86e55a5d45092a4a46f409a24e3bfacd
+    license: MIT project asset
+    transformation: Transparent compact header mark retained as the raster source used by later brand derivatives
     alt: openWFN
   openwfn-icon-v2.svg:
-    source: Compact icon crop from the canonical openWFN header artwork
+    source: project-created
+    generation_record: Exact creation tool and source-editing session not recorded
+    sha256: ce4f202c8741bf4b0312114c252c400bc5a4f37ba3a49ac3240fe835acea9b43
     license: MIT project asset
-    transformation: The orbital symbol from the original compact mark is embedded without redrawing, centered in a square transparent viewport, and used without a background plate for browser-tab display
+    transformation: Embeds a compact crop of the project header mark in a transparent square SVG viewport
     alt: openWFN orbital symbol
   openwfn-orbital-hero.webp:
-    source: Generated specifically for the openWFN documentation redesign
+    source: project-created
+    generation_record: Exact creation tool, prompt, and conversion procedure not recorded
+    sha256: c0b9e03ce6db0d8b3dfa6a338032c3fe17f1fa92417a1b4f381ef33da286efe4
     license: MIT project asset
-    transformation: Generated from the approved Scholarly Handbook direction, reviewed, resized, converted to WebP, and stripped of metadata; retained as an archived project illustration but not used as branding
+    transformation: Archived WebP illustration; not used as the project logo
     alt: Translucent red-orange and blue molecular orbital lobes surrounding a small ball-and-stick molecule
   openwfn-wordmark.png:
-    source: Original generated openWFN Molecular Signal wordmark
+    source: project-created
+    generation_record: Exact creation tool and prompt or source-editing session not recorded
+    sha256: f87848acbeee99e3d3935c085758de534348d81acb7c6282ab4320c72efde0e1
     license: MIT project asset
-    transformation: Generated from the approved Molecular Signal direction; retained as an archived asset while the compact header mark is the canonical public logo
+    transformation: Archived wordmark; the compact header-derived mark is the current public logo
     alt: openWFN — Wavefunction Analysis
-  openwfn-header.png:
-    source: Original generated openWFN Compact Molecular Signal header mark
-    license: MIT project asset
-    transformation: Generated from the approved header concept, background removed, tightly cropped, resized, exported with transparency, and adopted as the single canonical project logo
-    alt: openWFN

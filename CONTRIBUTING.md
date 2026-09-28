@@ -1,77 +1,85 @@
 # Contributing to openWFN
 
-Thanks for your interest in improving openWFN.
+openWFN welcomes focused fixes, tests, documentation, parsers, and scientific
+methods that stay within the project's stated capability boundaries. By
+participating, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
-openWFN is a lightweight command-line toolkit for molecular geometry, connectivity, and structure exploration from Gaussian checkpoint data. Contributions that improve reliability, documentation, chemistry workflows, and usability are welcome.
-
-## Good First Contributions
-
-Useful contribution areas include:
-
-- bug fixes
-- additional tests
-- clearer error messages
-- new geometry-analysis helpers
-- parser robustness
-- viewer improvements
-- documentation and examples
-
-## Development Setup
-
-Clone the repository and install it in editable mode with test dependencies:
+## Set up a clean environment
 
 ```bash
 git clone https://github.com/sha786muhammed/openWFN.git
 cd openWFN
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[test]"
+python -m pip install --upgrade pip
+python -m pip install -e ".[test,docs]"
 ```
 
-Run the test suite:
+Use a focused branch. Do not commit virtual environments, caches, build output,
+coverage files, generated package metadata, or research data.
+
+## Run the checks
 
 ```bash
-pytest
+python scripts/check_repository.py --root .
+python -m ruff check src tests scripts
+python -m pytest --strict-markers
+python scripts/run_validation.py
+python scripts/run_external_benchmarks.py --repository-only
+python scripts/check_docs.py --root .
+python scripts/sync_release_metadata.py --check
+python -m mkdocs build --strict
 ```
 
-## Contribution Workflow
+The repository preflight checks required policy and attribution files, public
+text for private-machine or internal-tool details, source-tree package metadata,
+and the active editable install. It only reports findings; it never deletes or
+rewrites files. If it reports stale generated metadata or an editable install
+from another checkout, inspect the ignored files and refresh this environment:
 
-1. Create a focused branch.
-2. Make one logical change.
-3. Add or update tests when behavior changes.
-4. Run the test suite locally.
-5. Update documentation for user-facing changes.
-6. Open a pull request explaining what changed and why.
+```bash
+git status --ignored --short
+python -m pip install --no-build-isolation -e .
+python scripts/check_repository.py --root .
+```
 
-## Project Principles
+Run the focused test first while developing, then the complete suite before a
+pull request. Add a failing regression test before changing behavior.
 
-Please try to keep openWFN:
+## Scientific changes
 
-- lightweight
-- easy to install
-- predictable from the command line
-- explicit about chemistry calculations
-- useful without requiring a large software stack
+A scientific claim needs reviewable evidence. Include:
 
-Avoid introducing heavy dependencies unless they provide a clear scientific or usability benefit.
+- the definition, convention, equations, expected value, units, and tolerance;
+- the reference procedure and independently generated comparison where possible;
+- a minimal shareable fixture, or a synthetic substitute when the real input is
+  confidential;
+- source program, version, method, basis, charge, multiplicity, and numerical
+  controls when applicable;
+- supported and unsupported cases, warnings, and capability status;
+- fixture origin, transformation history, and redistribution permission.
 
-## Reporting Bugs
+Do not replace a reference value merely to make a test pass. Explain any
+difference and establish why the new value is authoritative.
 
-When reporting a bug, include:
+Parser changes must cite the producer documentation or format specification.
+Fixtures copied from another project require compatible license terms and
+preserved attribution. Do not copy an external implementation into openWFN;
+write project-owned code from documented methods and permitted references.
 
-- openWFN version
-- Python version
-- operating system
-- command that failed
-- minimal input or reproduction steps when possible
-- the complete error message
+## Documentation and provenance
 
-Please avoid uploading proprietary or sensitive molecular data. A small synthetic example is preferred when possible.
+Update user documentation when commands, outputs, limitations, or status change.
+Commands must run from the location stated. New examples and public assets need
+source, license, checksum, and known transformation details; record unavailable
+historical fields as `not recorded` rather than inferring them.
 
-## Feature Ideas
+## Pull requests
 
-Feature proposals are welcome. For larger changes, opening an issue before implementation can help keep the scope aligned with the project's lightweight design.
+Keep each pull request to one logical change. Describe the problem, user impact,
+scientific impact, limitations, tests run, documentation changed, provenance,
+and license review. Complete the repository pull-request checklist. A passing
+test suite is required but does not replace scientific or maintainership review.
 
-## License
-
-By contributing, you agree that your contribution will be distributed under the project's MIT License.
+Contributions are distributed under the project's [MIT License](LICENSE). See
+[MAINTAINERS.md](MAINTAINERS.md) for review and release authority.

@@ -1,0 +1,40 @@
+name: Feature proposal
+description: Propose a focused capability or workflow change
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and users
+      description: Describe the research or development problem without prescribing an implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+  - type: dropdown
+    id: boundary
+    attributes:
+      label: Capability boundary
+      options:
+        - Parser or format interoperability
+        - Scientific analysis
+        - CLI or Python workflow
+        - Validation or provenance
+        - Documentation or usability
+        - Future service layer
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Specifications, references, and fixtures
+      description: Link authoritative format or method references and describe redistribution-safe test data.
+  - type: textarea
+    id: limitations
+    attributes:
+      label: Known limitations and alternatives

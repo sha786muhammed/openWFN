@@ -4,9 +4,11 @@ This procedure prevents source, citation, GitHub, and PyPI versions from divergi
 
 ## Release gates
 
-1. Confirm that the working tree is clean:
+1. Run the read-only repository preflight, then confirm that the working tree is
+   clean:
 
    ```bash
+   python scripts/check_repository.py --root .
    git status --short
    ```
 
@@ -18,10 +20,15 @@ This procedure prevents source, citation, GitHub, and PyPI versions from divergi
    python scripts/sync_release_metadata.py --check
    ```
 
-4. Run the complete test suite:
+4. Run the static, documentation, scientific, and complete software checks:
 
    ```bash
-   pytest -v --cov=openwfn --cov-report=term-missing
+   python -m ruff check src tests scripts
+   python scripts/check_docs.py --root .
+   python -m pytest --strict-markers
+   python -m mkdocs build --strict
+   python scripts/run_validation.py
+   python scripts/run_external_benchmarks.py --repository-only
    ```
 
 5. Build and validate both distributions:
@@ -39,20 +46,35 @@ This procedure prevents source, citation, GitHub, and PyPI versions from divergi
    "$release_smoke/venv/bin/python" -m pip install dist/openwfn-0.8.0a2-py3-none-any.whl
    ```
 
-7. Verify the installed version, console entry point, and reference workflow:
+7. Verify the installed version, console entry point, and reference workflows:
 
    ```bash
    "$release_smoke/venv/bin/python" -c "import openwfn; assert openwfn.__version__ == '0.8.0a2'"
    "$release_smoke/venv/bin/openwfn" --help
    "$release_smoke/venv/bin/openwfn" examples install "$release_smoke/examples"
-   "$release_smoke/venv/bin/openwfn" "$release_smoke/examples/water.fchk" summary
+   "$release_smoke/venv/bin/openwfn" --format json --output "$release_smoke/summary.json" "$release_smoke/examples/water.fchk" summary
+   "$release_smoke/venv/bin/openwfn" "$release_smoke/examples/water.fchk" orbitals frontier
+   "$release_smoke/venv/bin/openwfn" "$release_smoke/examples/water.fchk" report build "$release_smoke/report.html"
+   "$release_smoke/venv/bin/openwfn" "$release_smoke/examples/water.fchk" workbench "$release_smoke/workbench.html"
    ```
 
-8. Inspect the wheel and confirm that it contains all Python modules, `assets/3Dmol-min.js`, package metadata, the license, and the console entry point:
+   Confirm the JSON result reports success and formula `H2O`. The report must be
+   self-contained. The workbench must contain the 3Dmol.js attribution, retain
+   its `Experimental` status, and load no remote script.
+
+8. Inspect the wheel and confirm that it contains all Python modules, the
+   vendored JavaScript, its full license, `THIRD_PARTY_NOTICES.md`, the project
+   license, packaged example and provenance summary, package metadata, and the
+   console entry point:
 
    ```bash
-   unzip -l dist/openwfn-0.8.0a2-py3-none-any.whl
+   python -m zipfile -l dist/openwfn-0.8.0a2-py3-none-any.whl
+   python -m tarfile -l dist/openwfn-0.8.0a2.tar.gz
    ```
+
+   The source archive must also contain the repository citation, conduct,
+   contribution, contributor, maintainer, roadmap, security, provenance, and
+   third-party notice files.
 
 9. Commit the verified release state. Generated `dist/` and `build/` files remain untracked.
 

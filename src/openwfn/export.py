@@ -390,7 +390,10 @@ def export_molecule_viewer(
         </div>
       </aside>
     </div>
-    <div class="note">Local 3Dmol.js viewer exported by openWFN.</div>
+    <div class="note">
+      Local 3Dmol.js viewer exported by openWFN. ·
+      <a href="https://github.com/3dmol/3Dmol.js">Molecular rendering: 3Dmol.js (BSD-3-Clause)</a>
+    </div>
   </div>
   <script>
 {viewer_js}

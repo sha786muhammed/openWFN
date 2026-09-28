@@ -12,16 +12,21 @@ cd openWFN
 ```
 
 Available example sets:
+
 - `water/` for a compact triatomic system that is ideal for distance and angle checks
 - `ammonia/` for trigonal-pyramidal geometry and fragment/bond validation
 - `methane/` for a simple tetrahedral reference
 
-Typical files in each example folder:
+Each example folder contains:
+
 - `.gjf` Gaussian input
-- `.chk` Gaussian checkpoint
 - `.fchk` formatted checkpoint for openWFN
-- `.xyz` exported Cartesian coordinates
-- `.log` Gaussian output log
+- `.xyz` legacy project-generated Cartesian companion
+- a molecule-specific `README.md`
+
+See [PROVENANCE.md](PROVENANCE.md) for checksums, calculation metadata,
+relationships between files, redistribution terms, and the generation details
+that were not recorded.
 
 Quick manual checks from the repository root:
 

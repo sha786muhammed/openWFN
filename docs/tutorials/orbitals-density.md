@@ -1,6 +1,7 @@
 # Tutorial: orbitals and density with convergence checks
 
-Electronic analyses require more FCHK records than geometry. Begin by asking the file what it contains.
+Electronic analyses require more FCHK records than geometry. Run these commands
+from the repository root and begin by asking the file what it contains.
 
 ## 1. Inspect and analyze
 
