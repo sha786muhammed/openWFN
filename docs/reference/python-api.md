@@ -88,7 +88,7 @@ Mulliken and Löwdin population results carry a conservation error. A scientific
 
 For post-HF calculations, openWFN does not claim correlated-density support unless a supported post-SCF density is actually parsed and selected. If the available matrix is the SCF density, the result names `density_source="scf"` and emits a warning that the SCF density was used.
 
-For unrestricted calculations, `calculation.orbitals(spin="all")` returns both channels plus the true overall HOMO. The corresponding registered analysis is `frontier-all`. The default alpha-only view remains available for backward compatibility but warns when a beta channel exists.
+For unrestricted calculations, select `spin="all"`; `calculation.orbitals(spin="all")` returns both channels plus the true overall HOMO. The corresponding registered analysis is `frontier-all`. The default alpha-only view remains available for backward compatibility but warns when a beta channel exists.
 
 The default density-grid spacing is **0.15 bohr** with 6.0 bohr padding. These defaults are an accuracy/performance starting point, not a convergence guarantee. Density grids are evaluated in bounded chunks to reduce peak AO-matrix memory, but researchers should still converge spacing and padding for the molecule and property being reported.
 
