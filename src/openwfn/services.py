@@ -17,6 +17,7 @@ from .geometry import angle, center_of_mass, detect_bonds, dihedral, distance, m
 from .graph import build_graph
 from .model import CalculationData, DensityMatrix, Molecule
 from .results import ResultRecord
+from .scientific import expected_electron_count
 
 POPULATION_CONSERVATION_TOLERANCE = 1e-6
 LOWDIN_MIN_EIGENVALUE_TOLERANCE = 1e-8
@@ -51,6 +52,14 @@ def _lowdin_overlap_diagnostics(overlap: np.ndarray) -> tuple[float, float | Non
     rank_deficient = minimum <= LOWDIN_RANK_TOLERANCE
     condition_number = None if rank_deficient else maximum / minimum
     return minimum, condition_number, rank_deficient
+
+
+def _density_validation_warning(result) -> str:
+    if result.error_metric == "absolute":
+        detail = f"absolute error {result.absolute_error:.6g} e"
+    else:
+        detail = f"relative error {result.relative_error:.6g}"
+    return f"Density electron conservation failed: {detail} exceeds the validation tolerance."
 
 
 def molecular_summary(data: CalculationData) -> ResultRecord:
@@ -223,21 +232,6 @@ def orbital_frontier(
     )
 
 
-def _expected_electrons(data: CalculationData, kind: str) -> float:
-    total = float(sum(atom.atomic_number for atom in data.molecule.atoms) - data.molecule.charge)
-    alpha = data.records.get("Number of alpha electrons")
-    beta = data.records.get("Number of beta electrons")
-    if kind == "total":
-        return total
-    if kind == "alpha" and isinstance(alpha, (int, float)):
-        return float(alpha)
-    if kind == "beta" and isinstance(beta, (int, float)):
-        return float(beta)
-    if kind == "spin" and isinstance(alpha, (int, float)) and isinstance(beta, (int, float)):
-        return float(alpha - beta)
-    raise DataUnavailableError(f"Expected electron count is unavailable for {kind} density.")
-
-
 def density_grid(
     data: CalculationData,
     kind: Literal["total", "alpha", "beta", "spin"],
@@ -248,7 +242,7 @@ def density_grid(
         raise ValueError("density kind must be 'total', 'alpha', 'beta', or 'spin'")
     if data.basis is None:
         raise DataUnavailableError("Density analysis requires Gaussian basis-set data.")
-    matrix = density_matrix_for_kind(data, kind)  # type: ignore[arg-type]
+    matrix = density_matrix_for_kind(data, kind)
     points, origin, shape = molecular_grid_points(
         data.molecule, spacing_bohr=spacing_bohr, padding_bohr=padding_bohr
     )
@@ -262,25 +256,39 @@ def density_integration(
     spacing_bohr: float,
     padding_bohr: float,
 ) -> ResultRecord:
+    matrix = density_matrix_for_kind(data, kind)
+    expectation = expected_electron_count(data, kind)
     grid = density_grid(data, kind, spacing_bohr, padding_bohr)
-    result = integrate_density(grid, _expected_electrons(data, kind))
+    result = integrate_density(grid, expectation.value)
+    warnings = [*expectation.warnings, *_density_source_warnings(data, matrix)]
+    if not result.passed:
+        warnings.append(_density_validation_warning(result))
     return ResultRecord(
         kind="density_integration",
         data={
             "density_kind": kind,
             "electron_count": round(result.electron_count, 8),
             "expected_electrons": round(result.expected_electrons, 8),
-            "relative_error": round(result.relative_error, 10),
+            "absolute_error": round(result.absolute_error, 10),
+            "relative_error": (
+                round(result.relative_error, 10) if result.relative_error is not None else None
+            ),
+            "error_metric": result.error_metric,
+            "expectation_source": expectation.source,
+            "density_source": matrix.source,
             "spacing": spacing_bohr,
             "padding": padding_bohr,
         },
         units={
             "electron_count": "electron",
             "expected_electrons": "electron",
+            "absolute_error": "electron",
             "spacing": "bohr",
             "padding": "bohr",
         },
-        validation_status="Validated" if result.relative_error < 0.005 else "Experimental",
+        validation_status="Validated" if result.passed else "Experimental",
+        status="success" if result.passed else "partial",
+        warnings=tuple(dict.fromkeys(warnings)),
     )
 
 
@@ -292,16 +300,38 @@ def density_cube_export(
     output_path,
     overwrite: bool,
 ) -> ResultRecord:
+    matrix = density_matrix_for_kind(data, kind)
+    expectation = expected_electron_count(data, kind)
     grid = density_grid(data, kind, spacing_bohr, padding_bohr)
+    result = integrate_density(grid, expectation.value)
     write_cube(grid, data.molecule, output_path, overwrite=overwrite)
+    warnings = [*expectation.warnings, *_density_source_warnings(data, matrix)]
+    if not result.passed:
+        warnings.append(_density_validation_warning(result))
     return ResultRecord(
         kind="density_cube",
         data={
             "density_kind": kind,
             "output": str(output_path),
             "grid_points": len(grid.values),
+            "electron_count": round(result.electron_count, 8),
+            "expected_electrons": round(result.expected_electrons, 8),
+            "absolute_error": round(result.absolute_error, 10),
+            "relative_error": (
+                round(result.relative_error, 10) if result.relative_error is not None else None
+            ),
+            "error_metric": result.error_metric,
+            "expectation_source": expectation.source,
+            "density_source": matrix.source,
         },
-        validation_status="Validated" if kind == "total" else "Stable",
+        units={
+            "electron_count": "electron",
+            "expected_electrons": "electron",
+            "absolute_error": "electron",
+        },
+        validation_status="Validated" if result.passed else "Experimental",
+        status="success" if result.passed else "partial",
+        warnings=tuple(dict.fromkeys(warnings)),
     )
 
 
