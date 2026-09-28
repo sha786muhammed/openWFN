@@ -4,7 +4,7 @@
 
 | Version | Security fixes |
 |---|---|
-| `0.8.0` | Supported |
+| `0.8.1` | Supported |
 | Earlier releases | Not supported |
 
 The current stable release is the supported line. Upgrade before reporting
