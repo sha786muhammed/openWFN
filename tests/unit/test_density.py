@@ -70,6 +70,21 @@ def test_density_channels_are_derived_from_total_and_spin_matrices() -> None:
     assert density_matrix_for_kind(data, "spin") is data.spin_density
 
 
+def test_density_matrix_rejects_unknown_kind_before_selecting_a_channel() -> None:
+    molecule = Molecule((Atom(1, (0.0, 0.0, 0.0)),), 0, 2, CalculationMetadata("fixture"))
+    data = CalculationData(
+        molecule=molecule,
+        total_density=DensityMatrix(((1.0,),), "total"),
+        spin_density=DensityMatrix(((0.0,),), "spin"),
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="density kind must be 'total', 'alpha', 'beta', or 'spin'",
+    ):
+        density_matrix_for_kind(data, "anything")  # type: ignore[arg-type]
+
+
 def test_density_channel_requires_available_source_matrices() -> None:
     molecule = Molecule((Atom(1, (0.0, 0.0, 0.0)),), 0, 2, CalculationMetadata("fixture"))
 

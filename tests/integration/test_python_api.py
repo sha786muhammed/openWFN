@@ -50,6 +50,13 @@ def test_python_api_exposes_frontier_orbitals() -> None:
     assert result.data["lumo_number"] == 6
 
 
+def test_python_api_rejects_unknown_spin_channel() -> None:
+    calculation = openwfn.load(ROOT / "examples" / "water" / "water.fchk")
+
+    with pytest.raises(ValueError, match="spin must be 'alpha' or 'beta'"):
+        calculation.orbitals("anything")
+
+
 def test_python_api_exposes_population_analysis() -> None:
     calculation = openwfn.load(ROOT / "examples" / "water" / "water.fchk")
 
@@ -57,6 +64,13 @@ def test_python_api_exposes_population_analysis() -> None:
 
     assert result.kind == "mulliken_population"
     assert result.data["electron_count"] == pytest.approx(10.0, abs=1e-6)
+
+
+def test_python_api_rejects_unknown_population_method() -> None:
+    calculation = openwfn.load(ROOT / "examples" / "water" / "water.fchk")
+
+    with pytest.raises(ValueError, match="population method must be 'mulliken' or 'lowdin'"):
+        calculation.population("anything")
 
 
 def test_python_api_exposes_density_integration() -> None:
@@ -67,6 +81,16 @@ def test_python_api_exposes_density_integration() -> None:
     assert result.kind == "density_integration"
     assert result.data["density_kind"] == "total"
     assert result.data["expected_electrons"] == 10.0
+
+
+def test_python_api_rejects_unknown_density_kind() -> None:
+    calculation = openwfn.load(ROOT / "examples" / "water" / "water.fchk")
+
+    with pytest.raises(
+        ValueError,
+        match="density kind must be 'total', 'alpha', 'beta', or 'spin'",
+    ):
+        calculation.density("anything")
 
 
 def test_v08_model_foundation_is_available_from_top_level_package() -> None:

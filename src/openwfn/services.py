@@ -1,5 +1,7 @@
 """Application services shared by direct, guided, and Python interfaces."""
 
+from typing import Literal
+
 import numpy as np
 
 from .analysis.basis import ao_atom_indices, overlap_matrix
@@ -82,7 +84,12 @@ def geometry_dihedral(
     )
 
 
-def population_analysis(data: CalculationData, method: str) -> ResultRecord:
+def population_analysis(
+    data: CalculationData,
+    method: Literal["mulliken", "lowdin"],
+) -> ResultRecord:
+    if method not in {"mulliken", "lowdin"}:
+        raise ValueError("population method must be 'mulliken' or 'lowdin'")
     if data.basis is None:
         raise DataUnavailableError("Population analysis requires Gaussian basis-set data.")
     if data.total_density is None:
@@ -93,8 +100,6 @@ def population_analysis(data: CalculationData, method: str) -> ResultRecord:
         result = mulliken_population(data.molecule, data.total_density, overlap, mapping)
     elif method == "lowdin":
         result = lowdin_population(data.molecule, data.total_density, overlap, mapping)
-    else:
-        raise ValueError(f"Unknown population method: {method}")
     return ResultRecord(
         kind=f"{method}_population",
         data={
@@ -115,7 +120,12 @@ def population_analysis(data: CalculationData, method: str) -> ResultRecord:
     )
 
 
-def orbital_frontier(data: CalculationData, spin: str = "alpha") -> ResultRecord:
+def orbital_frontier(
+    data: CalculationData,
+    spin: Literal["alpha", "beta"] = "alpha",
+) -> ResultRecord:
+    if spin not in {"alpha", "beta"}:
+        raise ValueError("spin must be 'alpha' or 'beta'")
     if spin == "beta":
         orbitals = data.beta_orbitals
         if orbitals is None:
@@ -163,7 +173,7 @@ def _expected_electrons(data: CalculationData, kind: str) -> float:
 
 def density_grid(
     data: CalculationData,
-    kind: str,
+    kind: Literal["total", "alpha", "beta", "spin"],
     spacing_bohr: float,
     padding_bohr: float,
 ):
@@ -181,7 +191,7 @@ def density_grid(
 
 def density_integration(
     data: CalculationData,
-    kind: str,
+    kind: Literal["total", "alpha", "beta", "spin"],
     spacing_bohr: float,
     padding_bohr: float,
 ) -> ResultRecord:
@@ -209,7 +219,7 @@ def density_integration(
 
 def density_cube_export(
     data: CalculationData,
-    kind: str,
+    kind: Literal["total", "alpha", "beta", "spin"],
     spacing_bohr: float,
     padding_bohr: float,
     output_path,
@@ -231,10 +241,14 @@ def density_cube_export(
 def electrostatic_potential_point(
     data: CalculationData,
     coordinates_angstrom: tuple[float, float, float],
-    component: str,
+    component: Literal["nuclear", "electronic", "total", "mulliken", "lowdin"],
     spacing_bohr: float,
     padding_bohr: float,
 ) -> ResultRecord:
+    if component not in {"nuclear", "electronic", "total", "mulliken", "lowdin"}:
+        raise ValueError(
+            "ESP component must be 'nuclear', 'electronic', 'total', 'mulliken', or 'lowdin'"
+        )
     point = np.asarray((coordinates_angstrom,), dtype=float) / BOHR_TO_ANGSTROM
     if component == "nuclear":
         value = float(nuclear_esp(data.molecule, point)[0])
