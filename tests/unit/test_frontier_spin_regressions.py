@@ -6,7 +6,7 @@ import openwfn
 from openwfn import scientific
 from openwfn.analysis.orbitals import frontier_orbitals
 from openwfn.analysis.registry import available_analyses
-from openwfn.model import MolecularOrbitals
+from openwfn.model import Atom, CalculationData, CalculationMetadata, MolecularOrbitals, Molecule
 from openwfn.parsers.gaussian.fchk import parse_fchk
 from openwfn.services import orbital_frontier
 
@@ -73,6 +73,37 @@ def test_fchk_orbitals_expose_synthesized_occupation_source() -> None:
 
     assert data.alpha_orbitals is not None
     assert data.alpha_orbitals.occupation_source == "electron-count filling"
+
+
+def test_synthesized_occupations_warn_on_anomalous_energy_ordering() -> None:
+    orbitals = MolecularOrbitals(
+        energies=(-0.8, 0.1, -0.2, 0.3),
+        coefficients=(
+            (1.0, 0.0, 0.0, 0.0),
+            (0.0, 1.0, 0.0, 0.0),
+            (0.0, 0.0, 1.0, 0.0),
+            (0.0, 0.0, 0.0, 1.0),
+        ),
+        occupations=(2.0, 2.0, 0.0, 0.0),
+        spin="restricted",
+        occupation_source="electron-count filling",
+    )
+    data = CalculationData(
+        molecule=Molecule(
+            (Atom(2, (0.0, 0.0, 0.0), nuclear_charge=2.0),),
+            0,
+            1,
+            CalculationMetadata("fixture"),
+        ),
+        alpha_orbitals=orbitals,
+    )
+
+    result = orbital_frontier(data, "alpha")
+
+    assert any(
+        "synthesized" in warning.lower() and "energy ordering" in warning.lower()
+        for warning in result.warnings
+    )
 
 
 def test_python_api_accepts_all_spin_frontier() -> None:
