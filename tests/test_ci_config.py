@@ -19,6 +19,14 @@ def test_test_workflow_has_required_quality_and_platform_gates() -> None:
     assert "macos-latest" in text
     assert "windows-latest" in text
     assert "wheel-smoke" in text
+    for required in (
+        "openwfn examples install",
+        "installed-examples/water.fchk summary",
+        "benchmark_batch.py --count 20 --workers 2",
+    ):
+        assert required in text
+    wheel_smoke = text.split("  wheel-smoke:", maxsplit=1)[1]
+    assert "examples/water/water.fchk" not in wheel_smoke
 
 
 def test_security_workflow_runs_pip_audit_without_write_permissions() -> None:

@@ -70,5 +70,7 @@ jobs:
       - run: python -m venv wheel-test
       - run: wheel-test/bin/python -m pip install dist/*.whl
       - run: wheel-test/bin/openwfn --version
-      - run: wheel-test/bin/openwfn examples/water/water.fchk summary
-      - run: wheel-test/bin/openwfn examples/water/water.fchk orbitals frontier
+      - run: wheel-test/bin/openwfn examples install installed-examples
+      - run: wheel-test/bin/openwfn installed-examples/water.fchk summary
+      - run: wheel-test/bin/openwfn installed-examples/water.fchk orbitals frontier
+      - run: wheel-test/bin/python scripts/benchmark_batch.py --count 20 --workers 2 --workspace wheel-benchmark --output wheel-benchmark.json
