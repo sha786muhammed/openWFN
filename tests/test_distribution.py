@@ -3,7 +3,7 @@ from importlib.resources import files
 
 
 def test_installed_distribution_version() -> None:
-    assert version("openwfn") == "0.8.0a1"
+    assert version("openwfn") == "0.8.0a2"
 
 
 def test_console_script_targets_cli_main() -> None:

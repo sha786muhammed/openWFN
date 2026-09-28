@@ -40,6 +40,29 @@ index containing checksums, status, skip state, analysis counts, elapsed time,
 and errors. Progress is written to stderr so JSON stdout stays machine-readable;
 use global `--quiet` to suppress progress.
 
+Multi-worker runs keep at most twice the requested worker count submitted at a
+time. Results are written as workers finish, so a slow early input does not delay
+persistence of later completed inputs. The final manifest and CSV index still
+use deterministic input order.
+
+## Throughput benchmark
+
+The repository benchmark stages deterministic XYZ inputs and runs real parsing,
+summary analysis, and result writing. For a 10,000-input NASAKY run:
+
+```bash
+python scripts/benchmark_batch.py \
+  --count 10000 \
+  --workers "$(nproc)" \
+  --workspace /tmp/openwfn-benchmark \
+  --output openwfn-benchmark-10000.json
+```
+
+The output records counts, elapsed time, files per second, parent-process peak
+Python memory, and software versions. Compare timing only on equivalent hardware
+and load. Scientific FCHK accuracy remains covered by the validation suite, not
+this structure-only orchestration benchmark.
+
 ## Research reports
 
 ```bash

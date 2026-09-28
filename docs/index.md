@@ -5,6 +5,13 @@ hide:
   - toc
 ---
 
+!!! warning "Pre-release handbook"
+
+    This site documents the current 0.8 alpha. Install it with
+    `python -m pip install --pre --upgrade openwfn`, or use
+    `python -m pip install openwfn==0.8.0a2` after publication. The stable
+    channel remains `python -m pip install --upgrade openwfn`.
+
 <div class="ow-home" markdown="1">
 
 <section class="ow-intro">
@@ -32,11 +39,11 @@ hide:
   </div>
   <div class="ow-intro__command">
     <div class="ow-command-label"><span>Quick start</span><span>Terminal</span></div>
-    <pre><code>python -m pip install openwfn
+    <pre><code>python -m pip install --pre --upgrade openwfn
+openwfn examples install ./openwfn-examples
 
-openwfn molecule.fchk doctor
-openwfn molecule.fchk orbitals frontier
-openwfn molecule.fchk report build report.html</code></pre>
+openwfn ./openwfn-examples/water.fchk doctor
+openwfn ./openwfn-examples/water.fchk orbitals frontier</code></pre>
     <a href="quick-start/">Installation and first steps →</a>
   </div>
 </section>

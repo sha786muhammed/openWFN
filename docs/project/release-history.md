@@ -1,5 +1,14 @@
 # Release history
 
+## 0.8.0a2 — installed examples and bounded batching
+
+Version 0.8.0a2 makes the alpha easier to evaluate from a built wheel, bounds
+parallel work for large collections, adds repeatable throughput evidence, and
+avoids plotting imports during ordinary CLI startup. Scientific capabilities
+and validation claims are unchanged.
+
+[Read the detailed 0.8.0a2 notes](../releases/0.8.0a2.md)
+
 ## 0.8.0a1 — reproducible analysis contracts and resilient batching
 
 Version 0.8.0a1 is an alpha release of the v0.8 foundation. It introduces the schema-2.0 calculation boundary, versioned result envelopes, named analysis execution, provenance-rich batch manifests, recursive discovery, CSV indexing, and crash-safe resume. It also establishes the redesigned documentation and unified project identity.
