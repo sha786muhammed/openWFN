@@ -8,7 +8,7 @@ from .analysis.basis import ao_atom_indices, overlap_matrix
 from .analysis.density import density_matrix_for_kind, evaluate_density, integrate_density
 from .analysis.electrostatics import electronic_esp_from_grid, nuclear_esp, point_charge_esp
 from .analysis.grids import molecular_grid_points, scalar_grid
-from .analysis.orbitals import frontier_orbitals
+from .analysis.orbitals import FrontierOrbitals, frontier_orbitals
 from .analysis.population import lowdin_population, mulliken_population
 from .constants import BOHR_TO_ANGSTROM
 from .errors import DataUnavailableError
@@ -17,7 +17,7 @@ from .geometry import angle, center_of_mass, detect_bonds, dihedral, distance, m
 from .graph import build_graph
 from .model import CalculationData, DensityMatrix, Molecule
 from .results import ResultRecord
-from .scientific import expected_electron_count, is_ghost_atom
+from .scientific import expected_electron_count, is_ghost_atom, orbital_reference_kind
 
 POPULATION_CONSERVATION_TOLERANCE = 1e-6
 LOWDIN_MIN_EIGENVALUE_TOLERANCE = 1e-8
@@ -60,6 +60,18 @@ def _density_validation_warning(result) -> str:
     else:
         detail = f"relative error {result.relative_error:.6g}"
     return f"Density electron conservation failed: {detail} exceeds the validation tolerance."
+
+
+def _frontier_payload(frontier: FrontierOrbitals) -> dict[str, object]:
+    return {
+        "spin": frontier.spin,
+        "homo_number": frontier.homo_index + 1,
+        "lumo_number": frontier.lumo_index + 1,
+        "homo_hartree": round(frontier.homo_hartree, 10),
+        "lumo_hartree": round(frontier.lumo_hartree, 10),
+        "gap_hartree": round(frontier.gap_hartree, 10),
+        "gap_ev": round(frontier.gap_ev, 8),
+    }
 
 
 def molecular_summary(data: CalculationData) -> ResultRecord:
@@ -175,7 +187,7 @@ def population_analysis(
             f"tolerance {POPULATION_CONSERVATION_TOLERANCE:.6g} e."
         )
 
-    payload = {
+    payload: dict[str, object] = {
         "electron_populations": [round(value, 8) for value in result.electron_populations],
         "atomic_charges": [round(value, 8) for value in result.atomic_charges],
         "electron_count": round(result.electron_count, 8),
@@ -224,30 +236,67 @@ def population_analysis(
 
 def orbital_frontier(
     data: CalculationData,
-    spin: Literal["alpha", "beta"] = "alpha",
+    spin: Literal["alpha", "beta", "all"] = "alpha",
 ) -> ResultRecord:
-    if spin not in {"alpha", "beta"}:
-        raise ValueError("spin must be 'alpha' or 'beta'")
+    if spin not in {"alpha", "beta", "all"}:
+        raise ValueError("spin must be 'alpha', 'beta', or 'all'")
+    reference_kind = orbital_reference_kind(data)
+    warnings: list[str] = []
+
+    if data.alpha_orbitals is None:
+        raise DataUnavailableError("Molecular orbital data are not available.")
+
+    if spin == "all":
+        alpha = frontier_orbitals(data.alpha_orbitals)
+        alpha_payload = _frontier_payload(alpha)
+        beta_payload: dict[str, object] | None = None
+        overall = alpha
+        overall_spin = "alpha" if data.beta_orbitals is not None else alpha.spin
+        if data.beta_orbitals is not None:
+            beta = frontier_orbitals(data.beta_orbitals)
+            beta_payload = _frontier_payload(beta)
+            if beta.homo_hartree > alpha.homo_hartree:
+                overall = beta
+                overall_spin = "beta"
+        return ResultRecord(
+            kind="frontier_orbitals",
+            data={
+                "spin": "all",
+                "reference_kind": reference_kind,
+                "occupation_source": data.alpha_orbitals.occupation_source,
+                "alpha": alpha_payload,
+                "beta": beta_payload,
+                "overall_homo_number": overall.homo_index + 1,
+                "overall_homo_hartree": round(overall.homo_hartree, 10),
+                "overall_homo_spin": overall_spin,
+            },
+            units={"overall_homo_hartree": "hartree"},
+            validation_status="Stable",
+        )
+
     if spin == "beta":
         orbitals = data.beta_orbitals
         if orbitals is None:
             raise DataUnavailableError("Beta orbitals are not available for this calculation.")
     else:
         orbitals = data.alpha_orbitals
-        if orbitals is None:
-            raise DataUnavailableError("Molecular orbital data are not available.")
+        if data.beta_orbitals is not None:
+            warnings.append(
+                "Unrestricted calculation contains a beta orbital channel; use spin='all' "
+                "for the complete frontier view."
+            )
+
     frontier = frontier_orbitals(orbitals)
+    payload = _frontier_payload(frontier)
+    payload.update(
+        {
+            "reference_kind": reference_kind,
+            "occupation_source": orbitals.occupation_source,
+        }
+    )
     return ResultRecord(
         kind="frontier_orbitals",
-        data={
-            "spin": frontier.spin,
-            "homo_number": frontier.homo_index + 1,
-            "lumo_number": frontier.lumo_index + 1,
-            "homo_hartree": round(frontier.homo_hartree, 10),
-            "lumo_hartree": round(frontier.lumo_hartree, 10),
-            "gap_hartree": round(frontier.gap_hartree, 10),
-            "gap_ev": round(frontier.gap_ev, 8),
-        },
+        data=payload,
         units={
             "homo_hartree": "hartree",
             "lumo_hartree": "hartree",
@@ -255,6 +304,7 @@ def orbital_frontier(
             "gap_ev": "eV",
         },
         validation_status="Stable",
+        warnings=tuple(warnings),
     )
 
 
