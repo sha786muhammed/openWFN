@@ -108,6 +108,29 @@ The stable `0.8.0` release requires:
 
 The alpha release remains the public evaluation build until these conditions are met.
 
+## Batch-throughput benchmark
+
+The repository includes a deterministic benchmark for the real batch discovery,
+parsing, summary-analysis, and result-writing path. It stages structure-only XYZ
+inputs so a high input count can test orchestration without conflating throughput
+with expensive density-grid calculations.
+
+Run the full NASAKY collection with:
+
+```bash
+python scripts/benchmark_batch.py \
+  --count 10000 \
+  --workers "$(nproc)" \
+  --workspace /tmp/openwfn-benchmark \
+  --output openwfn-benchmark-10000.json
+```
+
+The JSON result records counts, elapsed time, throughput, parent-process peak
+Python memory, and software versions. Timing is specific to the machine and its
+current load. CI runs a small correctness smoke test without a timing threshold.
+This orchestration benchmark does not replace the separate FCHK scientific
+validation and external-reference comparisons.
+
 ## Evidence checkpoint — 2026-09-24
 
 - The workbench is labeled Experimental; static reports remain supported artifacts.
