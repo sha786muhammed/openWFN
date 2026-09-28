@@ -1,14 +1,22 @@
+from dataclasses import replace
 from pathlib import Path
 
 from openwfn.parsers.gaussian.fchk import parse_fchk
 from openwfn.services import electrostatic_potential_point
 
 ROOT = Path(__file__).resolve().parents[2]
-POST_HF = ROOT / "tests" / "fixtures" / "scientific" / "post_hf_scf_density.fchk"
+WATER = ROOT / "examples" / "water" / "water.fchk"
+
+
+def _post_hf_water():
+    data = parse_fchk(WATER)
+    metadata = replace(data.molecule.metadata, method="MP2")
+    molecule = replace(data.molecule, metadata=metadata)
+    return replace(data, molecule=molecule)
 
 
 def test_post_hf_charge_model_esp_names_scf_density_and_warns() -> None:
-    data = parse_fchk(POST_HF)
+    data = _post_hf_water()
 
     result = electrostatic_potential_point(
         data,
@@ -23,7 +31,7 @@ def test_post_hf_charge_model_esp_names_scf_density_and_warns() -> None:
 
 
 def test_post_hf_grid_esp_names_scf_density_and_warns() -> None:
-    data = parse_fchk(POST_HF)
+    data = _post_hf_water()
 
     result = electrostatic_potential_point(
         data,
