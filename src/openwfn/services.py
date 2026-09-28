@@ -8,14 +8,14 @@ from .analysis.basis import ao_atom_indices, overlap_matrix
 from .analysis.density import density_matrix_for_kind, evaluate_density, integrate_density
 from .analysis.electrostatics import electronic_esp_from_grid, nuclear_esp, point_charge_esp
 from .analysis.grids import iter_point_chunks, molecular_grid_points, scalar_grid
-from .analysis.orbitals import FrontierOrbitals, frontier_orbitals
+from .analysis.orbitals import OCCUPATION_THRESHOLD, FrontierOrbitals, frontier_orbitals
 from .analysis.population import lowdin_population, mulliken_population
 from .constants import BOHR_TO_ANGSTROM
 from .errors import DataUnavailableError
 from .exporters.cube import write_cube
 from .geometry import angle, center_of_mass, detect_bonds, dihedral, distance, molecular_formula
 from .graph import build_graph
-from .model import CalculationData, DensityMatrix, Molecule
+from .model import CalculationData, DensityMatrix, MolecularOrbitals, Molecule
 from .results import ResultRecord
 from .scientific import expected_electron_count, is_ghost_atom, orbital_reference_kind
 
@@ -72,6 +72,27 @@ def _frontier_payload(frontier: FrontierOrbitals) -> dict[str, object]:
         "gap_hartree": round(frontier.gap_hartree, 10),
         "gap_ev": round(frontier.gap_ev, 8),
     }
+
+
+def _occupation_warnings(orbitals: MolecularOrbitals) -> tuple[str, ...]:
+    if orbitals.occupation_source != "electron-count filling":
+        return ()
+    occupied = [
+        energy
+        for energy, occupation in zip(orbitals.energies, orbitals.occupations)
+        if occupation > OCCUPATION_THRESHOLD
+    ]
+    virtual = [
+        energy
+        for energy, occupation in zip(orbitals.energies, orbitals.occupations)
+        if occupation <= OCCUPATION_THRESHOLD
+    ]
+    if occupied and virtual and min(virtual) <= max(occupied):
+        return (
+            "Orbital occupations were synthesized from electron counts, but the energy ordering is anomalous; "
+            "the ordinary frontier interpretation may be unreliable.",
+        )
+    return ()
 
 
 def molecular_summary(data: CalculationData) -> ResultRecord:
@@ -248,12 +269,14 @@ def orbital_frontier(
 
     if spin == "all":
         alpha = frontier_orbitals(data.alpha_orbitals)
+        warnings.extend(_occupation_warnings(data.alpha_orbitals))
         alpha_payload = _frontier_payload(alpha)
         beta_payload: dict[str, object] | None = None
         overall = alpha
         overall_spin = "alpha" if data.beta_orbitals is not None else alpha.spin
         if data.beta_orbitals is not None:
             beta = frontier_orbitals(data.beta_orbitals)
+            warnings.extend(_occupation_warnings(data.beta_orbitals))
             beta_payload = _frontier_payload(beta)
             if beta.homo_hartree > alpha.homo_hartree:
                 overall = beta
@@ -272,6 +295,7 @@ def orbital_frontier(
             },
             units={"overall_homo_hartree": "hartree"},
             validation_status="Stable",
+            warnings=tuple(dict.fromkeys(warnings)),
         )
 
     if spin == "beta":
@@ -286,6 +310,7 @@ def orbital_frontier(
                 "for the complete frontier view."
             )
 
+    warnings.extend(_occupation_warnings(orbitals))
     frontier = frontier_orbitals(orbitals)
     payload = _frontier_payload(frontier)
     payload.update(
@@ -304,7 +329,7 @@ def orbital_frontier(
             "gap_ev": "eV",
         },
         validation_status="Stable",
-        warnings=tuple(warnings),
+        warnings=tuple(dict.fromkeys(warnings)),
     )
 
 
