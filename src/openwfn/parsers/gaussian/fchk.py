@@ -240,9 +240,13 @@ def _orbitals_from_document(
     beta_electrons = int(document.scalar("Number of beta electrons"))
     has_beta = isinstance(document.records.get(beta_energy_record), tuple)
     if has_beta:
-        alpha_occupations = tuple(1.0 if index < alpha_electrons else 0.0 for index in range(orbital_count))
+        alpha_occupations = tuple(
+            1.0 if index < alpha_electrons else 0.0 for index in range(orbital_count)
+        )
         beta_values = document.array(beta_energy_record)
-        beta_occupations = tuple(1.0 if index < beta_electrons else 0.0 for index in range(len(beta_values)))
+        beta_occupations = tuple(
+            1.0 if index < beta_electrons else 0.0 for index in range(len(beta_values))
+        )
         alpha = _orbital_channel(
             document, alpha_energy_record, "Alpha MO coefficients", alpha_occupations, "alpha"
         )
@@ -267,7 +271,7 @@ def _orbitals_from_document(
 
 
 def _density_from_document(
-    document: FCHKDocument, record: str, kind: str
+    document: FCHKDocument, record: str, kind: str, *, source: str | None = None
 ) -> DensityMatrix | None:
     packed = document.records.get(record)
     if not isinstance(packed, tuple):
@@ -284,7 +288,7 @@ def _density_from_document(
             matrix[row][column] = value
             matrix[column][row] = value
             index += 1
-    return DensityMatrix(tuple(tuple(row) for row in matrix), kind=kind)  # type: ignore[arg-type]
+    return DensityMatrix(tuple(tuple(row) for row in matrix), kind=kind, source=source)  # type: ignore[arg-type]
 
 
 def parse_fchk(path: Path) -> CalculationData:
@@ -312,6 +316,20 @@ def parse_fchk(path: Path) -> CalculationData:
             "FCHK 'Number of atoms' does not match Atomic numbers and Current cartesian coordinates."
         )
 
+    nuclear_charge_record = document.records.get("Nuclear charges")
+    provenance_warnings: tuple[str, ...] = ()
+    if isinstance(nuclear_charge_record, tuple):
+        if len(nuclear_charge_record) != atom_count:
+            raise ParseError("FCHK 'Nuclear charges' does not match Number of atoms.")
+        nuclear_charges: tuple[float | None, ...] = tuple(
+            float(value) for value in nuclear_charge_record
+        )
+    else:
+        nuclear_charges = (None,) * atom_count
+        provenance_warnings = (
+            "FCHK record 'Nuclear charges' is missing; analyses requiring nuclear charge will fall back to atomic numbers.",
+        )
+
     method: str | None = None
     basis: str | None = None
     if len(lines) >= 2:
@@ -331,6 +349,7 @@ def parse_fchk(path: Path) -> CalculationData:
         source_path=str(path),
         sha256=sha256(raw).hexdigest(),
         parser="gaussian-fchk",
+        warnings=provenance_warnings,
         source_format="fchk",
         parser_version="1",
     )
@@ -340,6 +359,7 @@ def parse_fchk(path: Path) -> CalculationData:
             coordinates=tuple(
                 raw_coordinates[index * 3 + axis] * BOHR_TO_ANGSTROM for axis in range(3)
             ),  # type: ignore[arg-type]
+            nuclear_charge=nuclear_charges[index],
         )
         for index in range(atom_count)
     )
@@ -357,8 +377,12 @@ def parse_fchk(path: Path) -> CalculationData:
         bonds=inferred_bonds,
     )
     alpha_orbitals, beta_orbitals = _orbitals_from_document(document)
-    total_density = _density_from_document(document, "Total SCF Density", "total")
-    spin_density = _density_from_document(document, "Spin SCF Density", "spin")
+    total_density = _density_from_document(
+        document, "Total SCF Density", "total", source="scf"
+    )
+    spin_density = _density_from_document(
+        document, "Spin SCF Density", "spin", source="scf"
+    )
     return CalculationData(
         molecule=molecule,
         basis=_basis_from_document(document),
