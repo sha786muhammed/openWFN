@@ -1,9 +1,17 @@
 """Shared scientific semantics derived from source calculation data."""
 
 from dataclasses import dataclass
+from typing import Literal
 
 from .errors import DataUnavailableError
 from .model import Atom, CalculationData
+
+OrbitalReferenceKind = Literal[
+    "restricted_closed_shell",
+    "restricted_open_shell",
+    "unrestricted",
+    "unknown",
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,3 +74,15 @@ def expected_electron_count(data: CalculationData, kind: str) -> ElectronExpecta
         return ElectronExpectation(float(alpha - beta), "alpha-beta electron counts")
 
     raise DataUnavailableError(f"Expected electron count is unavailable for {kind} density.")
+
+
+def orbital_reference_kind(data: CalculationData) -> OrbitalReferenceKind:
+    """Classify whether orbital data are restricted closed/open shell or unrestricted."""
+
+    if data.beta_orbitals is not None:
+        return "unrestricted"
+    alpha = data.records.get("Number of alpha electrons")
+    beta = data.records.get("Number of beta electrons")
+    if isinstance(alpha, (int, float)) and isinstance(beta, (int, float)):
+        return "restricted_closed_shell" if float(alpha) == float(beta) else "restricted_open_shell"
+    return "unknown"
