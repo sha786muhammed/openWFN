@@ -15,7 +15,7 @@ ROOT = Path(__file__).parents[1]
 def built_archives(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path]:
     output = tmp_path_factory.mktemp("distribution")
     subprocess.run(
-        [sys.executable, "-m", "build", "--no-isolation", "--outdir", str(output)],
+        [sys.executable, "-m", "build", "--outdir", str(output)],
         cwd=ROOT,
         check=True,
         capture_output=True,
