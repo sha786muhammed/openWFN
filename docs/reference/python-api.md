@@ -80,6 +80,18 @@ format, parser version, warnings, and named transformations. These fields make
 ingestion decisions traceable without changing scientific values. Existing
 constructor forms covered by the compatibility tests remain supported.
 
+## Scientific result safeguards
+
+For Gaussian formatted-checkpoint inputs, openWFN preserves source electronic metadata instead of reconstructing it when the file provides the authoritative record. FCHK `Nuclear charges` supplies effective nuclear charges for ECP and ghost centers. FCHK `Number of electrons` is the preferred total-electron expectation for density conservation; alpha and beta electron records are used for spin-resolved expectations. If a required source value is absent, the deterministic fallback is recorded in result warnings.
+
+Mulliken and Löwdin population results carry a conservation error. A scientifically inconsistent but still numerically usable result is retained with `status="partial"` and a warning instead of being labeled as a clean success. Density integration and cube export use the same principle: validation status is assigned from the actual generated grid and its electron-conservation check.
+
+For post-HF calculations, openWFN does not claim correlated-density support unless a supported post-SCF density is actually parsed and selected. If the available matrix is the SCF density, the result names `density_source="scf"` and emits a warning that the SCF density was used.
+
+For unrestricted calculations, `calculation.orbitals(spin="all")` returns both channels plus the true overall HOMO. The corresponding registered analysis is `frontier-all`. The default alpha-only view remains available for backward compatibility but warns when a beta channel exists.
+
+The default density-grid spacing is **0.15 bohr** with 6.0 bohr padding. These defaults are an accuracy/performance starting point, not a convergence guarantee. Density grids are evaluated in bounded chunks to reduce peak AO-matrix memory, but researchers should still converge spacing and padding for the molecule and property being reported.
+
 ## Registered named analyses
 
 | Name | Result |
@@ -128,6 +140,8 @@ fields and Python arrays retain normal zero-based indexing: examples include
 `molecule.atoms`, `BasisShell.atom_index`, `Bond.atom1`/`Bond.atom2`, and
 orbital coefficient arrays. Each public method documents which convention it
 accepts; do not assume one convention applies to every integer field.
+
+Summary bond and fragment counts are inferred with the covalent-radius heuristic, not read as authoritative connectivity from FCHK. Ghost centers are excluded from physical formula, center-of-mass, bond, and fragment summaries while remaining represented as calculation centers.
 
 ## Basis, density, and orbitals
 
