@@ -106,6 +106,10 @@ nav:
       - Citation: citation.md
       - Security and privacy: project/security.md
       - Contributing: project/contributing.md
+      - Code of Conduct: https://github.com/sha786muhammed/openWFN/blob/main/CODE_OF_CONDUCT.md
+      - Maintainers: https://github.com/sha786muhammed/openWFN/blob/main/MAINTAINERS.md
+      - Contributors: https://github.com/sha786muhammed/openWFN/blob/main/CONTRIBUTORS.md
+      - Roadmap: https://github.com/sha786muhammed/openWFN/blob/main/ROADMAP.md
       - Release history: project/release-history.md
       - Product boundary and benchmarking: project/core-benchmarking-design.md
       - Releasing: releasing.md

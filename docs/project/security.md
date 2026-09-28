@@ -1,26 +1,32 @@
 # Security and data privacy
 
-openWFN is designed for **local processing**. Analysis commands read files on your computer and do not require an openWFN cloud account or upload service. The generated viewer and workbench run from standalone HTML files.
+The repository [security policy](https://github.com/sha786muhammed/openWFN/blob/main/SECURITY.md)
+is the authoritative source for supported versions and private vulnerability
+reporting. Do not disclose a suspected vulnerability in a public issue.
 
-## Protect private data
+## Local processing
 
-Checkpoint files, reports, cube files, tables, screenshots, and HTML workbenches may reveal unpublished geometries, energies, methods, or molecular identities. Store generated artifacts with the same access controls as the original research data. Inspect every artifact before making it public.
+openWFN analysis commands read files on your computer. They do not require an
+openWFN cloud account or upload service. The generated viewer and Experimental
+workbench run from standalone HTML files.
 
-Do not include credentials, API tokens, license-server details, personal filesystem paths, hostnames, or private data in bug reports. Create a minimal synthetic or permission-cleared reproducer whenever possible.
+Checkpoint files, reports, cube files, tables, screenshots, and HTML workbenches
+may reveal unpublished geometries, energies, methods, or molecular identities.
+Store generated artifacts with the same access controls as the original data and
+inspect them before publication. Treat every such artifact as private data until
+you have confirmed it is safe to share.
 
-## External software and browser behavior
+Do not include credentials, API tokens, license-server details, personal paths,
+hostnames, or confidential inputs in issues. Prefer a small synthetic or
+permission-cleared reproducer.
 
-- `.chk` conversion invokes Gaussian's external `formchk` executable when requested.
-- `--open` asks the operating system to open a locally generated HTML artifact.
-- Documentation may load its web theme and MathJax from the published site; scientific CLI computation remains local.
+## External behavior
 
-## Dependency and workflow controls
+- Binary `.chk` conversion invokes the external Gaussian `formchk` program.
+- `--open` asks the operating system to open a local HTML artifact.
+- Viewer and workbench files embed molecular data and the local rendering engine.
+- The published documentation site may load its theme and MathJax resources;
+  scientific CLI computation remains local.
 
-The repository uses pinned GitHub Actions, least-privilege workflow permissions, automated tests, documentation checks, and Trusted Publishing for PyPI. No publishing password is stored in the repository.
-
-## Report a vulnerability
-
-Do not disclose a suspected vulnerability in a public issue. Use GitHub's private security-advisory reporting channel for the repository. Include the affected version, impact, reproduction steps, and suggested mitigation if known—without real secrets or confidential molecular inputs.
-
-Scientific disagreements or incorrect numerical results that do not expose a security weakness can use a normal issue with a shareable fixture.
-
+Use the scientific-discrepancy issue form for numerical disagreements that do
+not create a security risk.

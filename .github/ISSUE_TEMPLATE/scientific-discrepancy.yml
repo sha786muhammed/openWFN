@@ -1,0 +1,56 @@
+name: Scientific discrepancy
+description: Report a numerical, methodological, unit, convention, or validation disagreement
+title: "[Science]: "
+labels: [scientific-review]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: openWFN version
+    validations:
+      required: true
+  - type: textarea
+    id: fixture
+    attributes:
+      label: Shareable fixture and checksum
+      description: Provide a minimal permission-cleared input and its SHA-256 checksum.
+    validations:
+      required: true
+  - type: input
+    id: expected
+    attributes:
+      label: Expected value
+    validations:
+      required: true
+  - type: input
+    id: units
+    attributes:
+      label: Units
+    validations:
+      required: true
+  - type: input
+    id: tolerance
+    attributes:
+      label: Tolerance
+    validations:
+      required: true
+  - type: textarea
+    id: reference
+    attributes:
+      label: Reference procedure
+      description: Give the independent program, version, method, basis, controls, and source citation.
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed value and command
+    validations:
+      required: true
+  - type: textarea
+    id: rights
+    attributes:
+      label: Fixture rights
+      description: State origin, transformations, license, and redistribution permission.
+    validations:
+      required: true

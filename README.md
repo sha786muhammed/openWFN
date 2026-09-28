@@ -139,6 +139,10 @@ python -m mkdocs build --strict
 
 Contributions should include tests, documented units and assumptions, and validation evidence appropriate to the claim. See [Contributing](https://sha786muhammed.github.io/openWFN/project/contributing/).
 
+Project policies: [Code of Conduct](CODE_OF_CONDUCT.md) ·
+[Security](SECURITY.md) · [Maintainers](MAINTAINERS.md) ·
+[Contributors](CONTRIBUTORS.md) · [Roadmap](ROADMAP.md)
+
 ## Citation and license
 
 Cite the exact version used and the project repository; see the [citation guide](https://sha786muhammed.github.io/openWFN/citation/). openWFN is released under the [MIT License](LICENSE).
