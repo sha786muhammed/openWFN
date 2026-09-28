@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Eliminate silent scientific-correctness failures in openWFN 0.8.0 for ECP/ghost atoms, population and density conservation, post-HF density provenance, unrestricted/ROHF frontiers, cube validation, and batch status handling while preserving current public workflows.
+**Goal:** Eliminate silent scientific-correctness failures in openWFN 0.8.0 for ECP/ghost atoms, population and density conservation, post-HF density provenance, unrestricted/ROHF frontiers, cube validation, warning propagation, and batch status handling while preserving current public workflows.
 
-**Architecture:** Extend the existing typed model with source-faithful nuclear-charge and density-source metadata, centralize scientific expectations/validation in a small helper module, and propagate validated status/warnings through the current services, registry, API, CLI, and batch layers. Keep existing public method names and result fields, add new metadata fields where needed, and pin every corrected failure mode with a regression test before implementation.
+**Architecture:** Extend the existing typed model with source-faithful nuclear-charge and density-source metadata, centralize scientific expectations/validation in `src/openwfn/scientific.py`, and propagate evidence-based status/warnings through services, registry, Python API, CLI, and batch. Keep existing public method names and result fields where possible; add metadata rather than silently guessing.
 
 **Tech Stack:** Python 3.10+, NumPy, pytest, argparse CLI, current `ResultRecord`/registry/batch architecture.
 
@@ -15,26 +15,27 @@
 - Preserve existing public calls such as `openwfn.load`, `calc.orbitals`, `calc.population`, `calc.density`, registered analyses, and current CLI command families.
 - Keep `RESULT_SCHEMA_VERSION` and `BATCH_SCHEMA_VERSION` readable by existing 0.8.0 consumers unless a schema break becomes unavoidable.
 - Use FCHK source records as authoritative where available; fallbacks must be explicit and warned.
-- Scientific consistency failures with useful numbers return `status="partial"`, not silent `success` and not hard `failed` unless the analysis cannot produce a meaningful result.
+- Scientific consistency failures with useful numbers return `status="partial"`; informational provenance warnings may remain `success`.
 - Population conservation tolerance: `1e-6 e`.
-- Density relative validation tolerance for nonzero targets: retain `5e-3` (0.5%).
+- Density relative validation tolerance for nonzero targets: `5e-3`.
 - Zero-target spin-density absolute tolerance: `5e-3 e`.
-- Ghost detection tolerance for effective nuclear charge: `1e-12`.
-- Löwdin near-linear-dependence warning threshold: smallest positive overlap eigenvalue `< 1e-8` or condition number `> 1e10`.
-- Do not claim post-SCF density support until an actual post-SCF FCHK density record is parsed and selected.
-- Keep water/benzene behavior numerically unchanged within existing test tolerances.
+- Ghost nuclear-charge tolerance: `1e-12`.
+- Löwdin warning threshold: smallest positive overlap eigenvalue `< 1e-8` or condition number `> 1e10`.
+- Do not claim post-SCF density support until a real post-SCF density record is parsed and selected.
+- Keep water/benzene behavior numerically unchanged within current tolerances.
 
 ## Review Focus
 
-- FCHK input with missing `Nuclear charges`: analyses must fall back deterministically and expose a warning rather than invent ECP/ghost semantics; Task 1 tests this.
-- Non-Aufbau/fractional occupations: current FCHK occupation synthesis must be identified as electron-count filling and unsupported cases must not be silently represented as validated; Task 5 tests the exposed metadata/warning behavior.
-- A calculation where every parsed orbital is occupied: frontier analysis must fail clearly because no LUMO exists; Task 5 retains and extends this boundary test.
-- Batch containing only `partial` analysis results: the input record must be `partial`, never `error`; Task 6 tests this exact case.
-- Chunk boundaries in large grids: chunked and unchunked density values/integrals must agree within floating-point tolerance; Task 7 tests multiple chunk sizes including a non-divisor of point count.
+- Missing `Nuclear charges`: fall back deterministically and warn; Task 1.
+- Fractional/non-Aufbau occupations: expose synthesized occupation provenance and do not silently claim support; Task 5.
+- All orbitals occupied: fail clearly because LUMO is unavailable; Task 5.
+- All analysis results are `partial`: batch record must remain `partial`, retain usable result data, and never become `error`; Task 6.
+- API convenience methods must merge source warnings with analysis warnings rather than overwrite them; Task 2.
+- Chunk boundaries must not alter density values or integrals; Task 7.
 
 ---
 
-### Task 1: Source-faithful nuclear charge, electron-count, and density-source model
+### Task 1: Source-faithful scientific metadata
 
 **Files:**
 - Modify: `src/openwfn/model.py`
@@ -47,135 +48,118 @@
 - Create: `tests/fixtures/scientific/post_hf_scf_density.fchk`
 
 **Interfaces:**
-- Produces: `Atom.nuclear_charge: float | None = None` while preserving existing `Atom(atomic_number, coordinates)` calls.
-- Produces: `DensityMatrix.source: str | None = None`; FCHK `Total SCF Density`/`Spin SCF Density` set `source="scf"`.
-- Produces: `effective_nuclear_charge(atom: Atom) -> float`, `is_ghost_atom(atom: Atom, tolerance: float = 1e-12) -> bool`.
-- Produces: `ElectronExpectation(value: float, source: str, warnings: tuple[str, ...])` and `expected_electron_count(data: CalculationData, kind: str) -> ElectronExpectation`.
-- Produces: `orbital_reference_kind(data: CalculationData) -> Literal["restricted_closed_shell", "restricted_open_shell", "unrestricted", "unknown"]`.
+- `Atom.nuclear_charge: float | None = None`, preserving `Atom(atomic_number, coordinates)`.
+- `DensityMatrix.source: str | None = None`; parsed SCF density uses `source="scf"`.
+- `effective_nuclear_charge(atom: Atom) -> float`.
+- `is_ghost_atom(atom: Atom, tolerance: float = 1e-12) -> bool`.
+- `ElectronExpectation(value: float, source: str, warnings: tuple[str, ...])`.
+- `expected_electron_count(data: CalculationData, kind: str) -> ElectronExpectation`.
+- `orbital_reference_kind(data: CalculationData) -> Literal["restricted_closed_shell", "restricted_open_shell", "unrestricted", "unknown"]`.
+- `is_post_hf_method(method: str | None) -> bool` using explicit MPn/CC/QCI/CI family matching, not broad substring guesses.
 
-- [ ] **Step 1: Write failing model/parser tests**
-  - Assert ECP fixture parses atomic number 14 with `nuclear_charge == 4.0`.
-  - Assert ghost O parses atomic number 8 with `nuclear_charge == 0.0`.
-  - Assert missing `Nuclear charges` leaves `nuclear_charge is None` and adds one provenance fallback warning.
-  - Assert FCHK `Number of electrons` is preferred by `expected_electron_count(..., "total")`.
-  - Assert alpha/beta/spin expectations come from source electron-count records.
-  - Assert SCF density matrices carry `source == "scf"`.
+- [ ] **Step 1: Write failing parser/model tests**
+  - ECP Si: atomic number 14, nuclear charge 4.
+  - Ghost O: atomic number 8, nuclear charge 0.
+  - Missing `Nuclear charges`: `None` plus provenance fallback warning.
+  - `Number of electrons` wins over reconstructed counts.
+  - Alpha/beta/spin expectations use FCHK electron records.
+  - Parsed SCF density has `source="scf"`.
 
-- [ ] **Step 2: Run focused tests and confirm failure**
-  - Run: `pytest tests/unit/test_model.py tests/parsers/test_gaussian_fchk.py -q`
-  - Expected: new nuclear-charge/source assertions fail on current 0.8.0 behavior.
+- [ ] **Step 2: Run tests and verify failure**
+  - `pytest tests/unit/test_model.py tests/parsers/test_gaussian_fchk.py -q`
 
-- [ ] **Step 3: Extend `Atom` and `DensityMatrix` without breaking positional construction**
-  - Add optional fields after current required fields and validate finite nuclear charge when present.
+- [ ] **Step 3: Add optional model fields with finite-value validation**
 
-- [ ] **Step 4: Parse `Nuclear charges` and source metadata in `parse_fchk`**
-  - Require `Nuclear charges` length to equal atom count when present.
-  - Set parser provenance warning only when the source record is absent.
-  - Tag parsed SCF density matrices with `source="scf"`.
+- [ ] **Step 4: Parse `Nuclear charges`; validate length equals atom count**
 
-- [ ] **Step 5: Implement `src/openwfn/scientific.py` helpers**
-  - Implement exact interfaces above.
-  - Total electron expectation precedence: `Number of electrons` -> sum effective nuclear charges minus net charge -> atomic-number fallback with warning.
-  - Spin expectation allows zero.
+- [ ] **Step 5: Implement `scientific.py` helpers**
+  - Total expectation precedence: FCHK `Number of electrons` -> effective charges minus molecular charge -> atomic-number fallback with warning.
+  - Zero spin expectation is valid.
 
-- [ ] **Step 6: Re-run focused tests**
-  - Run: `pytest tests/unit/test_model.py tests/parsers/test_gaussian_fchk.py -q`
-  - Expected: PASS.
+- [ ] **Step 6: Re-run focused tests; expect PASS**
 
 - [ ] **Step 7: Commit**
   - `git commit -am "fix: preserve source nuclear charges and electron metadata"`
 
 ---
 
-### Task 2: Population correctness, conservation enforcement, and Löwdin diagnostics
+### Task 2: Population correctness, Löwdin diagnostics, and warning propagation
 
 **Files:**
 - Modify: `src/openwfn/analysis/population.py`
 - Modify: `src/openwfn/services.py`
+- Modify: `src/openwfn/api.py`
 - Modify: `tests/unit/test_population.py`
 - Modify: `tests/integration/test_python_api.py`
 
 **Interfaces:**
-- Consumes: `effective_nuclear_charge`, density `source` from Task 1.
-- Produces: `PopulationResult` values computed with effective nuclear charges.
-- Produces: population `ResultRecord.data["density_source"]`.
-- Produces: Löwdin diagnostics in result data: `overlap_min_eigenvalue`, `overlap_condition_number`.
+- Population charges consume effective nuclear charges from Task 1.
+- Population result data adds `density_source`, and Löwdin adds `overlap_min_eigenvalue` and `overlap_condition_number`.
+- `OpenWFNCalculation._with_provenance(result)` merges `result.warnings` with source warnings, preserving order and removing duplicates.
 
 - [ ] **Step 1: Write failing regression tests**
-  - ECP and ghost population charges use effective nuclear charges and sum to net molecular charge when the density is consistent.
-  - A deliberately inconsistent population result with `conservation_error > 1e-6` returns `status="partial"`, `validation_status="Experimental"`, and a conservation warning.
-  - A consistent population remains `success`.
-  - A near-linearly-dependent Löwdin overlap returns values plus warning/`partial`, not silent clean success.
-  - A post-HF fixture using SCF density includes `density_source="scf"` and a warning naming SCF density.
+  - ECP/ghost atomic charges use effective nuclear charge.
+  - `conservation_error > 1e-6` -> values retained, `status="partial"`, `validation_status="Experimental"`, warning includes observed error/tolerance.
+  - Consistent population remains `success`.
+  - Near-linear Löwdin overlap -> `partial` + diagnostic warning.
+  - Post-HF fixture using SCF density reports `density_source="scf"` and warning.
+  - High-level `calc.population()` preserves both analysis warnings and parser/source warnings.
 
-- [ ] **Step 2: Run focused tests and confirm failure**
-  - Run: `pytest tests/unit/test_population.py tests/integration/test_python_api.py -q`
+- [ ] **Step 2: Run tests and verify failure**
+  - `pytest tests/unit/test_population.py tests/integration/test_python_api.py -q`
 
 - [ ] **Step 3: Replace atomic-number charge subtraction with effective nuclear charges**
-  - Keep public `mulliken_population(...)` and `lowdin_population(...)` signatures unchanged.
+  - Keep low-level public signatures unchanged.
 
-- [ ] **Step 4: Add centralized population validation in `services.population_analysis`**
-  - Use tolerance `1e-6 e`.
-  - Merge density-source/post-HF warnings without duplicates.
-  - Set `partial` only for failed scientific consistency/conditioning checks, not informational provenance warnings.
+- [ ] **Step 4: Add conservation and Löwdin-condition status logic in service layer**
 
-- [ ] **Step 5: Add Löwdin conditioning diagnostics**
-  - Calculate minimum positive eigenvalue and condition number from the overlap eigenspectrum.
-  - Warn/partial at the global thresholds.
+- [ ] **Step 5: Fix `_with_provenance` to merge rather than replace warnings**
 
-- [ ] **Step 6: Re-run focused tests**
-  - Expected: PASS.
+- [ ] **Step 6: Re-run focused tests; expect PASS**
 
 - [ ] **Step 7: Commit**
-  - `git commit -am "fix: enforce population conservation and lowdin diagnostics"`
+  - `git commit -am "fix: enforce population consistency and warning propagation"`
 
 ---
 
-### Task 3: Density validation semantics and evidence-based cube status
+### Task 3: Density validation and evidence-based cube status
 
 **Files:**
 - Modify: `src/openwfn/analysis/density.py`
 - Modify: `src/openwfn/services.py`
 - Modify: `tests/unit/test_density.py`
-- Modify: `tests/unit/test_exporters.py`
 - Modify: `tests/cli/test_commands.py`
 
 **Interfaces:**
-- Consumes: `expected_electron_count` and density source from Task 1.
-- Produces: `IntegrationResult` with `absolute_error`, `relative_error: float | None`, `error_metric: Literal["absolute", "relative"]`, and `passed: bool`.
-- Produces: density/cube result data fields `expected_electrons`, `absolute_error`, `relative_error`, `error_metric`, `density_source`.
+- Extend `IntegrationResult` with `absolute_error: float`, `relative_error: float | None`, `error_metric: Literal["absolute", "relative"]`, `passed: bool`.
+- Keep existing `integrate_density(grid, expected_electrons, ...)` call form; optional keyword tolerances may be added without breaking two-argument callers.
+- Density/cube result data adds `expectation_source`, `density_source`, `absolute_error`, `error_metric`, and nullable `relative_error`.
 
-- [ ] **Step 1: Write failing density and cube tests**
-  - Closed-shell singlet spin density with expected value 0 validates by absolute error and does not raise.
-  - Nonzero total/alpha/beta targets retain relative-error validation.
-  - Accurate cube grid is `Validated`/`success`.
-  - Intentionally coarse/truncated cube is still written but returns `Experimental`/`partial` with warning.
-  - Post-HF SCF density integration names its source and warns.
+- [ ] **Step 1: Write failing tests**
+  - Closed-shell singlet spin target 0 uses absolute error and succeeds near zero.
+  - Nonzero total/alpha/beta uses relative error.
+  - Bad density integration returns `partial`/`Experimental` with warning rather than clean validated success.
+  - Post-HF SCF density names its source and warns.
 
-- [ ] **Step 2: Run focused tests and confirm failure**
-  - Run: `pytest tests/unit/test_density.py tests/unit/test_exporters.py tests/cli/test_commands.py -q`
+- [ ] **Step 2: Run tests and verify failure**
+  - `pytest tests/unit/test_density.py tests/cli/test_commands.py -q`
 
-- [ ] **Step 3: Refactor `integrate_density` for zero-target semantics**
-  - Permit expected electron count 0 only for validation callers that request absolute-error semantics.
-  - Use `5e-3 e` absolute tolerance when target magnitude <= `1e-12`.
+- [ ] **Step 3: Implement zero-target-aware `integrate_density`**
+  - If `abs(expected) <= 1e-12`, use absolute error with `5e-3 e` tolerance; otherwise relative error with `5e-3` tolerance.
 
-- [ ] **Step 4: Replace `_expected_electrons` in `services.py` with Task 1 helper**
-  - Preserve existing result field `expected_electrons`.
-  - Add expectation source/warnings.
+- [ ] **Step 4: Replace service `_expected_electrons` with Task 1 helper and propagate warnings**
 
-- [ ] **Step 5: Validate the exact grid used by `density_cube_export` before assigning status**
-  - Do not regenerate a second grid.
-  - Write requested cube even when numerical validation is partial.
+- [ ] **Step 5: Make `density_cube_export` validate the exact generated grid before assigning `Validated`**
+  - Failed validation still writes requested cube but returns `partial`/`Experimental`.
 
-- [ ] **Step 6: Re-run focused tests**
-  - Expected: PASS.
+- [ ] **Step 6: Re-run focused tests; expect PASS**
 
 - [ ] **Step 7: Commit**
   - `git commit -am "fix: validate density and cube electron conservation"`
 
 ---
 
-### Task 4: ECP/ghost-safe ESP, cube headers, and molecular summaries
+### Task 4: ECP/ghost-safe ESP, cube headers, and summaries
 
 **Files:**
 - Modify: `src/openwfn/analysis/electrostatics.py`
@@ -186,34 +170,31 @@
 - Modify: `tests/unit/test_analysis_registry.py`
 
 **Interfaces:**
-- Consumes: `effective_nuclear_charge` / `is_ghost_atom` from Task 1.
-- Produces: summary fields `centers`, `physical_nuclei`, `ghost_centers`, `bond_source` while retaining existing `atoms`, `formula`, `bond_count`, `fragments` fields.
+- Summary adds `centers`, `physical_nuclei`, `ghost_centers`, `bond_source`; existing fields remain.
 
-- [ ] **Step 1: Write failing ECP/ghost tests**
-  - Nuclear ESP uses ECP effective charge 4 instead of atomic number 14.
+- [ ] **Step 1: Write failing tests**
+  - ECP nuclear ESP uses 4 rather than 14.
   - Ghost nuclear ESP contribution is zero.
-  - Cube atom line keeps element identity integer but writes effective charge in the cube nuclear-charge column.
-  - Ghost summary formula/COM/bond inference/fragments exclude ghost center while `centers` still counts it.
-  - Ordinary water summary values remain unchanged and report `bond_source="covalent-radius heuristic"`.
+  - Cube atom line preserves atomic-number identity but uses effective nuclear charge in charge column.
+  - Ghost summary excludes ghost from formula, COM, inferred bonds, and physical fragments while retaining center count.
+  - Water summary remains numerically unchanged and states `bond_source="covalent-radius heuristic"`.
 
-- [ ] **Step 2: Run focused tests and confirm failure**
-  - Run: `pytest tests/unit/test_electrostatics.py tests/parsers/test_gaussian_cube.py tests/unit/test_analysis_registry.py -q`
+- [ ] **Step 2: Run tests and verify failure**
+  - `pytest tests/unit/test_electrostatics.py tests/parsers/test_gaussian_cube.py tests/unit/test_analysis_registry.py -q`
 
-- [ ] **Step 3: Use effective charges in nuclear ESP and cube serialization**
+- [ ] **Step 3: Use effective charges in ESP/cube serialization**
 
-- [ ] **Step 4: Make `molecular_summary` ghost-aware**
-  - Build physical-atom arrays and remap inferred physical bonds before fragment counting.
-  - Add an informational ghost-filter warning without forcing `partial` solely because a ghost exists.
+- [ ] **Step 4: Make molecular summary ghost-aware with index remapping for physical bonds/fragments**
+  - Ghost filtering warning is informational, not automatically `partial`.
 
-- [ ] **Step 5: Re-run focused tests**
-  - Expected: PASS.
+- [ ] **Step 5: Re-run focused tests; expect PASS**
 
 - [ ] **Step 6: Commit**
   - `git commit -am "fix: make electrostatics and summaries ghost aware"`
 
 ---
 
-### Task 5: Spin-complete unrestricted/ROHF frontier analysis
+### Task 5: Spin-complete UHF/ROHF frontier handling
 
 **Files:**
 - Modify: `src/openwfn/analysis/orbitals.py`
@@ -229,42 +210,38 @@
 - Create: `tests/fixtures/scientific/rohf_open_shell.fchk`
 
 **Interfaces:**
-- Produces: `OpenWFNCalculation.orbitals(spin: Literal["alpha", "beta", "all"] = "alpha")`.
-- Produces: `orbital_frontier(data, spin="alpha"|"beta"|"all")`.
-- Produces: registered analysis `frontier-all`; retain existing `frontier` and `beta-frontier`.
-- Produces: result field `reference_kind` with restricted/unrestricted classification.
-- For `spin="all"`, produces nested alpha/beta frontier data plus `overall_homo_hartree`, `overall_homo_number`, `overall_homo_spin`.
+- `OpenWFNCalculation.orbitals(spin: Literal["alpha", "beta", "all"] = "alpha")`.
+- `orbital_frontier(data, spin="alpha"|"beta"|"all")`.
+- Add registered `frontier-all`; retain `frontier` and `beta-frontier`.
+- Result data adds `reference_kind` and `occupation_source`.
+- `spin="all"` returns alpha/beta frontier payloads plus `overall_homo_hartree`, `overall_homo_number`, `overall_homo_spin`.
 
-- [ ] **Step 1: Write failing frontier tests**
-  - UHF fixture where beta HOMO > alpha HOMO reports beta as overall HOMO in `spin="all"`.
-  - Existing explicit alpha and beta calls remain correct.
-  - Default alpha result on unrestricted data emits a warning that beta data exist and `spin="all"` is the complete view.
-  - ROHF fixture classifies as `restricted_open_shell`; closed-shell water classifies as `restricted_closed_shell`.
-  - Frontier selection uses highest-energy occupied and lowest-energy unoccupied candidates rather than array adjacency.
-  - All-occupied orbital set raises clear no-LUMO error.
-  - Synthesized FCHK occupations expose `occupation_source="electron-count filling"`; unsupported fractional/non-Aufbau source cases are not labeled as independently validated occupations.
+- [ ] **Step 1: Write failing tests**
+  - UHF fixture with beta HOMO above alpha reports beta overall HOMO.
+  - Explicit alpha/beta paths remain correct.
+  - Default alpha on UHF warns that beta exists and `all` is complete view.
+  - ROHF -> `restricted_open_shell`; water -> `restricted_closed_shell`.
+  - HOMO is highest-energy occupied; LUMO is lowest-energy unoccupied, not blindly `homo_index + 1`.
+  - All occupied -> clear no-LUMO error.
+  - FCHK synthesized occupations expose `occupation_source="electron-count filling"`; anomalous/non-Aufbau ordering produces warning rather than silent ordinary-gap interpretation.
 
-- [ ] **Step 2: Run focused tests and confirm failure**
-  - Run: `pytest tests/unit/test_orbitals.py tests/parsers/test_gaussian_fchk.py tests/integration/test_python_api.py tests/unit/test_analysis_registry.py -q`
+- [ ] **Step 2: Run tests and verify failure**
+  - `pytest tests/unit/test_orbitals.py tests/parsers/test_gaussian_fchk.py tests/integration/test_python_api.py tests/unit/test_analysis_registry.py -q`
 
-- [ ] **Step 3: Make `frontier_orbitals` occupation/energy aware**
-  - Preserve current numbering and eV conversion.
+- [ ] **Step 3: Make frontier selection occupation/energy aware**
 
-- [ ] **Step 4: Add orbital reference classification and all-spin service result**
+- [ ] **Step 4: Add reference classification and all-spin service result**
 
-- [ ] **Step 5: Extend API and registry compatibly**
-  - Keep `frontier` as alpha for backward compatibility but warn when the calculation is unrestricted.
-  - Add `frontier-all` instead of changing existing registered result meaning.
+- [ ] **Step 5: Extend API/registry compatibly; merge warnings via Task 2 behavior**
 
-- [ ] **Step 6: Re-run focused tests**
-  - Expected: PASS.
+- [ ] **Step 6: Re-run focused tests; expect PASS**
 
 - [ ] **Step 7: Commit**
   - `git commit -am "fix: report spin complete frontier orbitals"`
 
 ---
 
-### Task 6: Batch/CLI spin selection and correct partial propagation
+### Task 6: Batch/CLI spin selection and partial-result preservation
 
 **Files:**
 - Modify: `src/openwfn/batch.py`
@@ -274,31 +251,30 @@
 - Modify: `tests/cli/test_commands.py`
 
 **Interfaces:**
-- Produces: `run_batch(..., frontier_spin: Literal["alpha", "beta", "all"] = "alpha")` as a keyword-only option.
-- Produces: batch CLI `--spin alpha|beta|all` applying to requested `frontier` analysis.
-- Configuration fingerprint includes frontier spin choice.
+- Add keyword-only `frontier_spin: Literal["alpha", "beta", "all"] = "alpha"` to `run_batch`.
+- Add batch CLI `--spin alpha|beta|all` applying to requested `frontier` analysis.
+- Include frontier spin in configuration fingerprint.
 
-- [ ] **Step 1: Write failing batch tests**
-  - One analysis returning `partial` and none returning `failed` yields `BatchRecord.status == "partial"`, not `error`.
-  - `success + partial` yields `partial`.
-  - Any failed result with at least one success/partial yields `partial`; all failed yields `error`.
-  - CLI `batch --analyses frontier --spin all` produces spin-complete frontier data for UHF fixture.
-  - Resume fingerprint changes when `--spin` changes.
+- [ ] **Step 1: Write failing status tests**
+  - One/all `partial` results -> batch record `partial`, never `error`.
+  - `success + partial` -> `partial`.
+  - `success/partial + failed` -> `partial`; all failed -> `error`.
+  - All-partial record retains first usable partial `.data` in `BatchRecord.result`.
+  - CSV index counts partial analyses explicitly or otherwise does not mislabel them as failures.
 
-- [ ] **Step 2: Run focused tests and confirm the all-partial bug**
-  - Run: `pytest tests/integration/test_batch.py tests/cli/test_batch_routing.py -q`
+- [ ] **Step 2: Write failing spin-routing tests**
+  - `batch --analyses frontier --spin all` returns spin-complete UHF result.
+  - Resume fingerprint changes when spin changes.
 
-- [ ] **Step 3: Replace `_run_one` status aggregation with explicit success/partial/failed logic**
+- [ ] **Step 3: Run focused tests and confirm current all-partial bug**
+  - `pytest tests/integration/test_batch.py tests/cli/test_batch_routing.py -q`
+
+- [ ] **Step 4: Fix `_run_one` aggregation and usable-result selection**
   - `error` only when every requested analysis failed.
-  - `partial` whenever at least one analysis is partial or failed and at least one usable result exists.
 
-- [ ] **Step 4: Add batch frontier-spin dispatch and fingerprinting**
-  - Preserve existing analysis names in manifest; store spin in configuration metadata/fingerprint.
+- [ ] **Step 5: Add spin dispatch/fingerprinting and CLI option**
 
-- [ ] **Step 5: Add CLI `--spin` and route it to `run_batch`**
-
-- [ ] **Step 6: Re-run focused tests**
-  - Expected: PASS.
+- [ ] **Step 6: Re-run focused tests; expect PASS**
 
 - [ ] **Step 7: Commit**
   - `git commit -am "fix: preserve partial results and spin selection in batch"`
@@ -315,29 +291,27 @@
 - Modify: `tests/test_batch_benchmark.py`
 
 **Interfaces:**
-- Produces: chunk-capable grid iteration helper yielding ordered point slices without changing final `VolumetricGrid` ordering.
-- Produces: `density_grid(..., chunk_size: int = 65536)` internal/service keyword with existing callers retaining defaults.
+- Add ordered grid-point chunk iterator/helper.
+- Add internal/service `density_grid(..., chunk_size: int = 65536)` keyword; existing callers need no change.
 
-- [ ] **Step 1: Write failing chunk equivalence tests**
-  - Compare chunk sizes 1, 7, and 65536 against current monolithic values on a small grid.
-  - Compare integrated electron count within `1e-12` for the same grid.
+- [ ] **Step 1: Write failing chunk-equivalence tests**
+  - Chunk sizes 1, 7, 65536 match monolithic values and integral within `1e-12` on a small grid.
   - Reject nonpositive chunk size.
 
-- [ ] **Step 2: Run focused tests and confirm failure**
-  - Run: `pytest tests/unit/test_density.py tests/test_batch_benchmark.py -q`
+- [ ] **Step 2: Run tests and verify failure**
+  - `pytest tests/unit/test_density.py tests/test_batch_benchmark.py -q`
 
-- [ ] **Step 3: Implement chunked point generation/evaluation without changing grid ordering**
-  - Avoid constructing one full `(n_points, n_basis)` AO matrix.
+- [ ] **Step 3: Implement chunked point generation/evaluation preserving C-order grid layout**
+  - Avoid one monolithic `(n_points, n_basis)` AO matrix.
 
-- [ ] **Step 4: Re-run focused and benchmark-contract tests**
-  - Expected: PASS; no benchmark schema change.
+- [ ] **Step 4: Re-run focused tests; expect PASS**
 
 - [ ] **Step 5: Commit**
   - `git commit -am "perf: evaluate density grids in chunks"`
 
 ---
 
-### Task 8: Documentation, validation registry, and release-facing regression coverage
+### Task 8: Documentation and permanent regression/validation coverage
 
 **Files:**
 - Modify: `README.md`
@@ -345,69 +319,60 @@
 - Modify: `docs/reference/cli.md`
 - Modify: `CHANGELOG.md`
 - Modify: `scripts/run_validation.py`
-- Modify: validation manifest under existing validation data path if required
-- Modify: `tests/docs/*` as needed for reference consistency
-- Modify: `tests/integration/test_python_api.py`
-- Modify: `tests/cli/test_commands.py`
+- Modify existing validation manifest if appropriate
+- Modify relevant `tests/docs/*`
 
-**Interfaces:**
-- No new runtime interface; this task documents exact semantics implemented by Tasks 1-7.
+- [ ] **Step 1: Add docs regression assertions before edits**
+  - ECP/ghost effective charges.
+  - authoritative electron-count/fallback behavior.
+  - conservation partial status.
+  - SCF/post-HF density provenance.
+  - UHF/ROHF and `spin="all"`/batch `--spin` semantics.
+  - evidence-based cube validation and inferred-bond heuristic.
 
-- [ ] **Step 1: Add documentation regression assertions before editing docs**
-  - Docs state ECP/ghost effective-charge semantics.
-  - Docs state SCF/post-HF density provenance boundary.
-  - Docs state conservation `partial` behavior.
-  - Docs state unrestricted `spin="all"` / batch `--spin` behavior.
-  - Docs state inferred bond heuristic and cube validation meaning.
+- [ ] **Step 2: Update validation registry with redistribution-safe regression cases where appropriate**
+  - Keep unavailable external references pending rather than claiming validation.
 
-- [ ] **Step 2: Update scientific validation observations**
-  - Keep existing water metrics.
-  - Add redistribution-safe minimal regression cases where suitable; do not mark unavailable external references as passed.
+- [ ] **Step 3: Update README/API/CLI/CHANGELOG**
+  - Remove universal population `Stable` claims outside tested scope.
+  - Document 0.15-bohr grid spacing as accuracy/performance tradeoff rather than changing it blindly.
 
-- [ ] **Step 3: Update README/API/CLI/CHANGELOG language**
-  - Remove universal population `Stable` claims for cases outside validated scope.
-  - Document density grid spacing as an accuracy/performance tradeoff rather than blindly changing the 0.15-bohr default.
-
-- [ ] **Step 4: Run docs and validation tests**
-  - Run: `pytest tests/docs tests/integration/test_python_api.py tests/cli/test_commands.py -q`
-  - Run: `python scripts/run_validation.py`
-  - Expected: PASS.
+- [ ] **Step 4: Run docs/validation tests**
+  - `pytest tests/docs tests/integration/test_python_api.py tests/cli/test_commands.py -q`
+  - `python scripts/run_validation.py`
 
 - [ ] **Step 5: Commit**
   - `git commit -am "docs: document scientific correctness boundaries"`
 
 ---
 
-### Task 9: Whole-branch verification and compatibility gate
+### Task 9: Whole-branch verification gate
 
-**Files:**
-- No planned product-code changes; only fix failures directly attributable to Tasks 1-8.
+**Files:** No planned product changes except direct fixes for verification failures attributable to Tasks 1-8.
 
-- [ ] **Step 1: Run formatter/lint checks**
-  - Run: `ruff check src tests scripts`
-  - Expected: PASS.
+- [ ] **Step 1: Lint**
+  - `ruff check src tests scripts`
 
-- [ ] **Step 2: Run full test suite**
-  - Run: `pytest -q`
-  - Expected: PASS.
+- [ ] **Step 2: Full tests**
+  - `pytest -q`
 
-- [ ] **Step 3: Run scientific validation and external repository-only benchmarks**
-  - Run: `python scripts/run_validation.py`
-  - Run: `python scripts/run_external_benchmarks.py --repository-only`
-  - Expected: PASS or documented pending cases only, with no new failures.
+- [ ] **Step 3: Scientific validation**
+  - `python scripts/run_validation.py`
+  - `python scripts/run_external_benchmarks.py --repository-only`
 
-- [ ] **Step 4: Build and inspect distributions**
-  - Run: `python -m build`
-  - Run: `python -m twine check dist/*`
-  - Install wheel in a clean environment and smoke-test `openwfn --version`, water summary/frontier/population/density, and Python API import surface.
+- [ ] **Step 4: Distribution checks**
+  - `python -m build`
+  - `python -m twine check dist/*`
+  - Install wheel in a clean environment and smoke-test `openwfn --version`, water summary/frontier/population/density, batch, and Python API imports.
 
-- [ ] **Step 5: Verify backward-compatible ordinary workflows**
-  - Water summary/formula/frontier/population remain within existing numerical tolerances.
-  - `calc.orbitals()`, `calc.population()`, `calc.density()`, and current CLI commands still work without new required arguments.
+- [ ] **Step 5: Backward-compatibility check**
+  - Water/benzene ordinary workflows retain current numerical results within existing tolerances.
+  - Existing API/CLI calls work without new required arguments.
+  - JSON/result schema remains readable.
 
-- [ ] **Step 6: Review branch diff against spec**
-  - Confirm each spec success criterion has an explicit passing regression test.
-  - Confirm no silent scientific fallback remains in the touched paths.
+- [ ] **Step 6: Spec coverage review**
+  - Every spec success criterion must point to a passing regression test.
+  - No touched scientific fallback may remain silent.
 
-- [ ] **Step 7: Final commit if verification-only adjustments were required**
+- [ ] **Step 7: Final verification commit only if needed**
   - `git commit -am "test: complete scientific correctness regression coverage"`
