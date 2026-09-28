@@ -1,0 +1,22 @@
+UHF beta HOMO fixture
+SP UHF STO-3G
+Number of atoms I 1
+Charge I 0
+Multiplicity I 1
+Number of electrons I 2
+Number of alpha electrons I 1
+Number of beta electrons I 1
+Atomic numbers I N= 1
+2
+Nuclear charges R N= 1
+2.0
+Current cartesian coordinates R N= 3
+0.0 0.0 0.0
+Alpha Orbital Energies R N= 2
+-0.700000 0.200000
+Beta Orbital Energies R N= 2
+-0.500000 0.300000
+Alpha MO coefficients R N= 4
+1.0 0.0 0.0 1.0
+Beta MO coefficients R N= 4
+1.0 0.0 0.0 1.0
