@@ -22,6 +22,7 @@ jobs:
           python -m pytest
           tests/integration/test_interop_python_api.py
           tests/integration/test_python_api.py
+          tests/integration/test_mixed_format_batch.py
           tests/cli/test_capabilities_command.py
           tests/unit/test_capabilities.py
           tests/unit/test_analysis_registry.py
