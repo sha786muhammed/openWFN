@@ -11,6 +11,7 @@ from typing import Any, Callable, Iterator, Literal, cast
 
 from .analysis.registry import available_analyses, run_analysis_safe
 from .api import load
+from .formats import path_matches_declared_format
 from .parsers.registry import DEFAULT_REGISTRY
 from .results import RESULT_SCHEMA_VERSION, ResultRecord
 
@@ -74,7 +75,7 @@ def discover_inputs(
         identity = path.resolve()
         if identity in seen or identity in unsupported_seen or _inside(path, output_dir):
             return
-        if path.suffix.lower() in supported_suffixes:
+        if path.suffix.lower() in supported_suffixes or path_matches_declared_format(path):
             seen.add(identity)
             discovered.append(path)
         else:
@@ -155,7 +156,7 @@ def _run_one(arguments: tuple[Path, tuple[str, ...]]) -> BatchRecord:
             status = "partial"
         else:
             status = "error"
-        provenance = calculation.molecule.provenance
+        provenance = calculation.data.provenance
         checksum = provenance.sha256 if provenance else _file_sha256(path)
         errors = [result.error.message for result in results if result.error]
         return BatchRecord(
