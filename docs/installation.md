@@ -32,6 +32,12 @@ For reproducing work created with the immediately previous stable release, use:
 python -m pip install openwfn==0.8.1
 ```
 
+For older work created with openWFN 0.8.0, use:
+
+```bash
+python -m pip install openwfn==0.8.0
+```
+
 ## Conda
 
 ```bash
