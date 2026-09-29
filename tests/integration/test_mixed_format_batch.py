@@ -1,4 +1,7 @@
+import importlib.util
 from pathlib import Path
+
+import pytest
 
 from openwfn.batch import discover_inputs, run_batch
 
@@ -60,3 +63,28 @@ def test_mixed_batch_continues_and_preserves_unsupported_analysis_record(tmp_pat
 
     assert (output / "batch-manifest.json").is_file()
     assert (output / "batch-summary.csv").is_file()
+
+
+def test_process_pool_missing_backend_isolated_to_backend_record(tmp_path: Path) -> None:
+    if importlib.util.find_spec("iodata") is not None:
+        pytest.skip("core-only missing-backend contract runs only when IOData is absent")
+
+    backend_only = tmp_path / "sample.molden"
+    backend_only.write_text("[Molden Format]\n[Title]\nsynthetic\n", encoding="utf-8")
+    output = tmp_path / "parallel-results"
+
+    manifest = run_batch(
+        [WATER_FCHK, backend_only],
+        operation=None,
+        workers=2,
+        output_dir=output,
+        analyses=("summary",),
+    )
+
+    by_name = {Path(record.input_path).name: record for record in manifest.records}
+    assert by_name["water.fchk"].status == "success"
+    missing = by_name["sample.molden"]
+    assert missing.status == "error"
+    assert missing.error is not None
+    assert "openwfn[interop]" in missing.error
+    assert "ModuleNotFoundError" not in missing.error
