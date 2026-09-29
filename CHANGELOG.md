@@ -85,6 +85,7 @@ All notable changes to openWFN are documented in this file.
 - Parallel batches now use a bounded completion-driven queue, persist each finished input immediately, and retain deterministic manifest ordering.
 - Stable and pre-release installation instructions are separated throughout the README and handbook.
 - Wheel and platform CI now exercise packaged examples and real multi-worker batch execution.
+- Release smoke testing now verifies summary, frontier-orbital, report, and offline workbench workflows from the built wheel.
 
 ### Fixed
 
