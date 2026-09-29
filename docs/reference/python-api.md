@@ -31,6 +31,11 @@ The stable import surface is declared by `openwfn.__all__`. Import from `openwfn
 | `BoundaryConditions` | Boundary-condition record |
 | `CalculationData` | Canonical calculation model |
 | `Provenance` | Input provenance record |
+| `INTEROP_SCHEMA_VERSION` | Interoperability container schema identifier |
+| `OpenWFNData` | Heterogeneous canonical input container |
+| `StructureData` | Program-neutral structure record |
+| `PeriodicData` | Periodic-cell record |
+| `IntegralData` | Electronic-integral payload |
 | `RESULT_SCHEMA_VERSION` | Result schema identifier |
 | `ResultRecord` | Versioned analysis result |
 | `BATCH_SCHEMA_VERSION` | Batch manifest schema identifier |
@@ -79,6 +84,12 @@ v0.8 and is reserved for a later periodic implementation.
 format, parser version, warnings, and named transformations. These fields make
 ingestion decisions traceable without changing scientific values. Existing
 constructor forms covered by the compatibility tests remain supported.
+
+`INTEROP_SCHEMA_VERSION` is `"1.0"`. `OpenWFNData` is the openWFN-owned top-level
+container for heterogeneous scientific inputs. Existing molecular calculations
+remain represented by `CalculationData`; `OpenWFNData` adds independent typed
+slots for structure, periodic-cell, volumetric-grid, and integral payloads so
+non-molecular inputs are not forced into a molecular-wavefunction model.
 
 ## Scientific result safeguards
 
