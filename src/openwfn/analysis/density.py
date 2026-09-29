@@ -8,6 +8,7 @@ import numpy as np
 from ..constants import BOHR_TO_ANGSTROM
 from ..errors import DataUnavailableError
 from ..model import BasisSet, CalculationData, DensityMatrix, Molecule, VolumetricGrid
+from ..scientific import orbital_reference_kind
 from .basis import evaluate_ao
 
 DENSITY_RELATIVE_TOLERANCE = 5e-3
@@ -29,7 +30,7 @@ def density_matrix_for_kind(
     data: CalculationData,
     kind: Literal["total", "alpha", "beta", "spin"],
 ) -> DensityMatrix:
-    """Return a requested density channel, deriving alpha/beta when necessary."""
+    """Return a requested density channel, deriving channels when scientifically defined."""
 
     if kind not in {"total", "alpha", "beta", "spin"}:
         raise ValueError("density kind must be 'total', 'alpha', 'beta', or 'spin'")
@@ -38,14 +39,29 @@ def density_matrix_for_kind(
         if data.total_density is None:
             raise DataUnavailableError("Total density matrix is not available.")
         return data.total_density
-    if kind == "spin":
-        if data.spin_density is None:
+
+    if data.spin_density is None:
+        if (
+            data.total_density is not None
+            and orbital_reference_kind(data) == "restricted_closed_shell"
+        ):
+            total = np.asarray(data.total_density.values, dtype=float)
+            values = np.zeros_like(total) if kind == "spin" else 0.5 * total
+            return DensityMatrix(
+                tuple(tuple(float(value) for value in row) for row in values),
+                kind,
+                source=data.total_density.source,
+            )
+        if kind == "spin":
             raise DataUnavailableError("Spin density matrix is not available.")
+        if data.total_density is None:
+            raise DataUnavailableError("Total density matrix is required for spin-channel density.")
+        raise DataUnavailableError("Spin density matrix is required for alpha/beta density.")
+
+    if kind == "spin":
         return data.spin_density
     if data.total_density is None:
         raise DataUnavailableError("Total density matrix is required for spin-channel density.")
-    if data.spin_density is None:
-        raise DataUnavailableError("Spin density matrix is required for alpha/beta density.")
     total = np.asarray(data.total_density.values, dtype=float)
     spin = np.asarray(data.spin_density.values, dtype=float)
     if total.shape != spin.shape:
