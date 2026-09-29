@@ -157,6 +157,17 @@ class OpenWFNData:
     def spin_density(self) -> DensityMatrix | None:
         return self.calculation.spin_density if self.calculation is not None else None
 
+    @property
+    def records(self) -> dict[str, object]:
+        """Expose legacy calculation records for molecular inputs.
+
+        This compatibility view lets existing scientific helpers accept the
+        new canonical container without changing the authoritative
+        ``CalculationData`` object stored in ``calculation``.
+        """
+
+        return self.calculation.records if self.calculation is not None else {}
+
 
 def wrap_calculation(data: CalculationData) -> OpenWFNData:
     """Wrap existing molecular data without copying its large scientific arrays."""
