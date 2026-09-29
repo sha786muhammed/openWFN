@@ -56,7 +56,7 @@ def test_mixed_batch_continues_and_preserves_unsupported_analysis_record(tmp_pat
     assert unsupported.results[0].validation_status == "Unsupported"
     assert unsupported.results[0].error is not None
     assert unsupported.results[0].error.category == "DataUnavailableError"
-    assert "alpha orbitals" in unsupported.results[0].error.message
+    assert "alpha orbitals" in unsupported.results[0].error.message.lower()
 
     assert (output / "batch-manifest.json").is_file()
     assert (output / "batch-summary.csv").is_file()
