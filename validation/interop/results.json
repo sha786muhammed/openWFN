@@ -1,0 +1,134 @@
+{
+  "schema_version": "1.0",
+  "overall": "PASSED",
+  "passed": 25,
+  "failed": 0,
+  "total": 25,
+  "formats": [
+    {
+      "format_id": "charmm",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "chgcar",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "cp2klog",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "cube",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "extxyz",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "fchk",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "fcidump",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "gamess",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "gaussianinput",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "gaussianlog",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "gromacs",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "json_qcschema",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "locpot",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "mol2",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "molden",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "molekel",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "mwfn",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "orcalog",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "pdb",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "poscar",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "qchemlog",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "sdf",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "wfn",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "wfx",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "xyz",
+      "status": "PASSED",
+      "errors": []
+    }
+  ]
+}

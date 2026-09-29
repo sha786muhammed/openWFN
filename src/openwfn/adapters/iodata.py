@@ -231,8 +231,20 @@ def _integrals_from_loaded(loaded: Any, warnings: list[str]) -> IntegralData | N
     one = None
     two = None
     if isinstance(one_map, dict):
+        omitted = sorted(str(key) for key in one_map if key != "core_mo")
+        if omitted:
+            warnings.append(
+                "IOData one-electron integral fields not represented by openWFN were omitted: "
+                + ", ".join(omitted) + "."
+            )
         one = _as_float_array(one_map.get("core_mo"))
     if isinstance(two_map, dict):
+        omitted = sorted(str(key) for key in two_map if key != "two_mo")
+        if omitted:
+            warnings.append(
+                "IOData two-electron integral fields not represented by openWFN were omitted: "
+                + ", ".join(omitted) + "."
+            )
         two = _as_float_array(two_map.get("two_mo"))
 
     core_energy = _safe_attr(loaded, "core_energy")
@@ -244,7 +256,7 @@ def _integrals_from_loaded(loaded: Any, warnings: list[str]) -> IntegralData | N
         core = None
 
     n_electrons = _integer_like(_safe_attr(loaded, "nelec"))
-    if one is None and two is None and core is None and n_electrons is None:
+    if one is None and two is None and core is None:
         return None
 
     n_orbitals: int | None = None
@@ -311,7 +323,8 @@ def _basis_and_scales(loaded: Any) -> tuple[BasisSet, np.ndarray]:
         exponents = np.asarray(_safe_attr(shell, "exponents"), dtype=float).reshape(-1)
         coeffs = np.asarray(_safe_attr(shell, "coeffs"), dtype=float)
         angmoms = np.asarray(_safe_attr(shell, "angmoms"), dtype=int).reshape(-1)
-        kinds = tuple(str(item) for item in (_safe_attr(shell, "kinds") or ()))
+        raw_kinds = _safe_attr(shell, "kinds")
+        kinds = tuple(str(item) for item in raw_kinds) if raw_kinds is not None else ()
         if coeffs.ndim == 1:
             coeffs = coeffs.reshape(-1, 1)
         if coeffs.shape != (len(exponents), len(angmoms)) or len(kinds) != len(angmoms):

@@ -1,0 +1,25 @@
+Q-Chem openWFN synthetic validation excerpt
+$rem
+jobtype sp
+method hf
+unrestricted false
+basis sto-3g
+$end
+Standard Nuclear Orientation (Angstroms)
+Atom     X       Y       Z
+----------------------------------------
+1 O 0.000000 0.000000 0.000000
+2 H 0.000000 0.756000 0.587000
+3 H 0.000000 -0.756000 0.587000
+----------------------------------------
+Nuclear repulsion energy = 8.000000 hartrees
+There are 5 alpha and 5 beta electrons
+Basis summary
+There are 13 basis functions
+Orbital Energies (a.u.)
+-- Occupied --
+-20.0 -1.0 -0.5 -0.4 -0.3
+-- Virtual --
+0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8
+--------------------------------------------------------------
+Total energy in the final basis set = -74.960000000000
