@@ -2,15 +2,16 @@ from pathlib import Path
 
 import pytest
 
+from openwfn.data import OpenWFNData, SourceMetadata
 from openwfn.errors import ParseError
+from openwfn.ingest import load_input
+from openwfn.model import Provenance
 
 ROOT = Path(__file__).resolve().parents[2]
 WATER_FCHK = ROOT / "examples" / "water" / "water.fchk"
 
 
 def test_fchk_prefers_native_parser(monkeypatch) -> None:
-    from openwfn.ingest import load_input
-
     def unexpected_backend(*_args, **_kwargs):
         raise AssertionError("IOData backend must not be used for FCHK")
 
@@ -44,8 +45,6 @@ def test_fchk_prefers_native_parser(monkeypatch) -> None:
 def test_native_structure_formats_remain_preferred(
     monkeypatch, tmp_path: Path, filename: str, contents: str, expected_format: str
 ) -> None:
-    from openwfn.ingest import load_input
-
     def unexpected_backend(*_args, **_kwargs):
         raise AssertionError("IOData backend must not replace stronger native parser")
 
@@ -61,8 +60,6 @@ def test_native_structure_formats_remain_preferred(
 
 
 def test_native_cube_remains_preferred(monkeypatch, tmp_path: Path) -> None:
-    from openwfn.ingest import load_input
-
     def unexpected_backend(*_args, **_kwargs):
         raise AssertionError("IOData backend must not replace native cube parser")
 
@@ -82,8 +79,6 @@ def test_native_cube_remains_preferred(monkeypatch, tmp_path: Path) -> None:
 
 
 def test_gaussian_out_with_gaussian_markers_stays_native(monkeypatch, tmp_path: Path) -> None:
-    from openwfn.ingest import load_input
-
     def unexpected_backend(*_args, **_kwargs):
         raise AssertionError("Gaussian output must stay on native parser")
 
@@ -104,10 +99,6 @@ def test_gaussian_out_with_gaussian_markers_stays_native(monkeypatch, tmp_path: 
 
 
 def test_orca_out_routes_to_iodata(monkeypatch, tmp_path: Path) -> None:
-    from openwfn.data import OpenWFNData, SourceMetadata
-    from openwfn.ingest import load_input
-    from openwfn.model import Provenance
-
     calls: list[str] = []
 
     def fake_backend(path: Path, *, format_id: str) -> OpenWFNData:
@@ -141,9 +132,6 @@ def test_orca_out_routes_to_iodata(monkeypatch, tmp_path: Path) -> None:
 
 
 def test_cp2k_named_output_routes_to_cp2klog(monkeypatch, tmp_path: Path) -> None:
-    from openwfn.data import OpenWFNData, SourceMetadata
-    from openwfn.ingest import load_input
-
     calls: list[str] = []
 
     def fake_backend(_path: Path, *, format_id: str) -> OpenWFNData:
@@ -160,9 +148,6 @@ def test_cp2k_named_output_routes_to_cp2klog(monkeypatch, tmp_path: Path) -> Non
 
 
 def test_explicit_qcschema_hint_routes_to_backend(monkeypatch, tmp_path: Path) -> None:
-    from openwfn.data import OpenWFNData, SourceMetadata
-    from openwfn.ingest import load_input
-
     calls: list[str] = []
 
     def fake_backend(_path: Path, *, format_id: str) -> OpenWFNData:
@@ -180,7 +165,6 @@ def test_explicit_qcschema_hint_routes_to_backend(monkeypatch, tmp_path: Path) -
 
 def test_backend_format_without_interop_extra_has_actionable_error(tmp_path: Path) -> None:
     from openwfn.errors import MissingOptionalDependencyError
-    from openwfn.ingest import load_input
 
     source = tmp_path / "water.molden"
     source.write_text("[Molden Format]\n", encoding="utf-8")
@@ -190,8 +174,6 @@ def test_backend_format_without_interop_extra_has_actionable_error(tmp_path: Pat
 
 
 def test_unknown_format_does_not_try_arbitrary_parser(tmp_path: Path) -> None:
-    from openwfn.ingest import load_input
-
     source = tmp_path / "unknown.zzz"
     source.write_text("1\nlooks vaguely like data\nO 0 0 0\n", encoding="utf-8")
 
@@ -200,8 +182,6 @@ def test_unknown_format_does_not_try_arbitrary_parser(tmp_path: Path) -> None:
 
 
 def test_two_record_xyz_is_not_silently_concatenated(tmp_path: Path) -> None:
-    from openwfn.ingest import load_input
-
     source = tmp_path / "trajectory.xyz"
     source.write_text(
         "1\nframe 1\nH 0 0 0\n1\nframe 2\nH 1 0 0\n",
