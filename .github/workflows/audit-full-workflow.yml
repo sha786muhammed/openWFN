@@ -54,6 +54,15 @@ jobs:
           python scripts/audit_full_workflows.py \
             --input-root "$RUNNER_TEMP/openwfn-audit-inputs" \
             --output-dir audit-results/workflows
+      - name: Run focused scientific edge cases
+        id: targeted
+        continue-on-error: true
+        env:
+          MPLBACKEND: Agg
+        run: |
+          python scripts/audit_targeted_scientific_edges.py \
+            --input-root "$RUNNER_TEMP/openwfn-audit-inputs" \
+            --output-dir audit-results/targeted
       - name: Print audit evidence
         if: always()
         shell: bash
@@ -62,6 +71,8 @@ jobs:
           cat audit-results/external/report.md || true
           echo '=== workflow matrix ==='
           cat audit-results/workflows/workflow-audit.md || true
+          echo '=== targeted scientific edge cases ==='
+          cat audit-results/targeted/targeted-audit.md || true
       - name: Enforce audit result
         if: always()
         run: |
@@ -70,20 +81,17 @@ jobs:
           from pathlib import Path
 
           problems = []
-          external_path = Path("audit-results/external/results.json")
-          workflow_path = Path("audit-results/workflows/workflow-audit.json")
-          if not external_path.exists():
-              problems.append("external benchmark report was not produced")
-          else:
-              external = json.loads(external_path.read_text())
-              if external["summary"]["failed"]:
-                  problems.append(f"external benchmark failures: {external['summary']['failed']}")
-          if not workflow_path.exists():
-              problems.append("workflow audit report was not produced")
-          else:
-              workflow = json.loads(workflow_path.read_text())
-              if workflow["summary"]["failed"]:
-                  problems.append(f"workflow failures: {workflow['summary']['failed']}")
+          for label, path in (
+              ("external", Path("audit-results/external/results.json")),
+              ("workflow", Path("audit-results/workflows/workflow-audit.json")),
+              ("targeted", Path("audit-results/targeted/targeted-audit.json")),
+          ):
+              if not path.exists():
+                  problems.append(f"{label} audit report was not produced")
+                  continue
+              payload = json.loads(path.read_text())
+              if payload["summary"]["failed"]:
+                  problems.append(f"{label} failures: {payload['summary']['failed']}")
           if problems:
               raise SystemExit("; ".join(problems))
           print("Full workflow audit passed without recorded failures.")
