@@ -40,6 +40,24 @@ def test_distribution_contains_maintained_water_example() -> None:
     assert "Number of atoms" in resource.read_text(encoding="utf-8")
 
 
+def test_built_wheel_declares_optional_interop_backend(
+    built_archives: tuple[Path, Path],
+) -> None:
+    wheel, _ = built_archives
+    with zipfile.ZipFile(wheel) as archive:
+        metadata_name = next(name for name in archive.namelist() if name.endswith(".dist-info/METADATA"))
+        metadata = archive.read(metadata_name).decode("utf-8")
+
+    assert "Provides-Extra: interop" in metadata
+    assert 'Requires-Dist: qc-iodata==1.0.1; extra == "interop"' in metadata
+    base_requires = [
+        line
+        for line in metadata.splitlines()
+        if line.startswith("Requires-Dist: qc-iodata") and 'extra == "interop"' not in line
+    ]
+    assert base_requires == []
+
+
 def test_built_wheel_contains_runtime_modules_assets_and_notices(
     built_archives: tuple[Path, Path],
 ) -> None:
