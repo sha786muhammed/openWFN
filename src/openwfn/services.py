@@ -8,7 +8,12 @@ from .analysis.basis import ao_atom_indices, overlap_matrix
 from .analysis.density import density_matrix_for_kind, evaluate_density, integrate_density
 from .analysis.electrostatics import electronic_esp_from_grid, nuclear_esp, point_charge_esp
 from .analysis.grids import iter_point_chunks, molecular_grid_points, scalar_grid
-from .analysis.orbitals import OCCUPATION_THRESHOLD, FrontierOrbitals, frontier_orbitals
+from .analysis.orbitals import (
+    HARTREE_TO_EV,
+    OCCUPATION_THRESHOLD,
+    FrontierOrbitals,
+    frontier_orbitals,
+)
 from .analysis.population import lowdin_population, mulliken_population
 from .constants import BOHR_TO_ANGSTROM
 from .errors import DataUnavailableError
@@ -32,8 +37,13 @@ def _coordinates(molecule: Molecule) -> list[tuple[float, float, float]]:
 def _is_post_hf_method(method: str | None) -> bool:
     if not method:
         return False
-    normalized = method.upper().replace("-", "")
-    return normalized.startswith(("MP2", "MP3", "MP4", "CC", "CI", "QCI"))
+    normalized = method.upper().replace("-", "").replace("_", "").replace(" ", "")
+    candidates = [normalized]
+    for prefix in ("RO", "R", "U"):
+        if normalized.startswith(prefix):
+            candidates.append(normalized[len(prefix) :])
+    families = ("MP2", "MP3", "MP4", "CC", "CI", "QCI")
+    return any(candidate.startswith(families) for candidate in candidates)
 
 
 def _density_source_warnings(data: CalculationData, matrix: DensityMatrix) -> tuple[str, ...]:
@@ -72,6 +82,71 @@ def _frontier_payload(frontier: FrontierOrbitals) -> dict[str, object]:
         "gap_hartree": round(frontier.gap_hartree, 10),
         "gap_ev": round(frontier.gap_ev, 8),
     }
+
+
+def _frontier_payload_with_partial(
+    orbitals: MolecularOrbitals,
+) -> tuple[dict[str, object], bool, tuple[int, float] | None, tuple[str, ...]]:
+    try:
+        frontier = frontier_orbitals(orbitals)
+    except ValueError as exc:
+        message = str(exc)
+        if not (
+            message.startswith("HOMO is undefined")
+            or message.startswith("LUMO is unavailable")
+        ):
+            raise
+
+        occupied = [
+            index
+            for index, occupation in enumerate(orbitals.occupations)
+            if occupation > OCCUPATION_THRESHOLD
+        ]
+        homo_index = (
+            max(occupied, key=lambda index: orbitals.energies[index]) if occupied else None
+        )
+        homo_energy = orbitals.energies[homo_index] if homo_index is not None else None
+        unoccupied = [
+            index
+            for index, occupation in enumerate(orbitals.occupations)
+            if occupation <= OCCUPATION_THRESHOLD
+        ]
+        if homo_energy is None:
+            lumo_candidates = unoccupied
+        else:
+            lumo_candidates = [
+                index for index in unoccupied if orbitals.energies[index] > homo_energy
+            ]
+        lumo_index = (
+            min(lumo_candidates, key=lambda index: orbitals.energies[index])
+            if lumo_candidates
+            else None
+        )
+        lumo_energy = orbitals.energies[lumo_index] if lumo_index is not None else None
+        gap = (
+            lumo_energy - homo_energy
+            if lumo_energy is not None and homo_energy is not None
+            else None
+        )
+        payload: dict[str, object] = {
+            "spin": orbitals.spin,
+            "homo_number": homo_index + 1 if homo_index is not None else None,
+            "lumo_number": lumo_index + 1 if lumo_index is not None else None,
+            "homo_hartree": round(homo_energy, 10) if homo_energy is not None else None,
+            "lumo_hartree": round(lumo_energy, 10) if lumo_energy is not None else None,
+            "gap_hartree": round(gap, 10) if gap is not None else None,
+            "gap_ev": round(gap * HARTREE_TO_EV, 8) if gap is not None else None,
+        }
+        homo = (homo_index, homo_energy) if homo_index is not None else None
+        warning = f"{orbitals.spin.capitalize()} frontier is incomplete: {message}."
+        return payload, False, homo, (warning,)
+
+    return (
+        _frontier_payload(frontier),
+        True,
+        (frontier.homo_index, frontier.homo_hartree),
+        (),
+    )
 
 
 def _occupation_warnings(orbitals: MolecularOrbitals) -> tuple[str, ...]:
@@ -268,19 +343,36 @@ def orbital_frontier(
         raise DataUnavailableError("Molecular orbital data are not available.")
 
     if spin == "all":
-        alpha = frontier_orbitals(data.alpha_orbitals)
+        alpha_payload, alpha_complete, alpha_homo, alpha_warnings = (
+            _frontier_payload_with_partial(data.alpha_orbitals)
+        )
         warnings.extend(_occupation_warnings(data.alpha_orbitals))
-        alpha_payload = _frontier_payload(alpha)
+        warnings.extend(alpha_warnings)
         beta_payload: dict[str, object] | None = None
-        overall = alpha
-        overall_spin = "alpha" if data.beta_orbitals is not None else alpha.spin
+        complete = alpha_complete
+        homo_candidates: list[tuple[str, int, float]] = []
+        alpha_label = "alpha" if data.beta_orbitals is not None else data.alpha_orbitals.spin
+        if alpha_homo is not None:
+            homo_candidates.append((alpha_label, alpha_homo[0], alpha_homo[1]))
         if data.beta_orbitals is not None:
-            beta = frontier_orbitals(data.beta_orbitals)
+            beta_payload, beta_complete, beta_homo, beta_warnings = (
+                _frontier_payload_with_partial(data.beta_orbitals)
+            )
             warnings.extend(_occupation_warnings(data.beta_orbitals))
-            beta_payload = _frontier_payload(beta)
-            if beta.homo_hartree > alpha.homo_hartree:
-                overall = beta
-                overall_spin = "beta"
+            warnings.extend(beta_warnings)
+            complete = complete and beta_complete
+            if beta_homo is not None:
+                homo_candidates.append(("beta", beta_homo[0], beta_homo[1]))
+        if homo_candidates:
+            overall_spin, overall_index, overall_energy = max(
+                homo_candidates, key=lambda item: item[2]
+            )
+            overall_number: int | None = overall_index + 1
+            overall_hartree: float | None = round(overall_energy, 10)
+        else:
+            overall_spin = None
+            overall_number = None
+            overall_hartree = None
         return ResultRecord(
             kind="frontier_orbitals",
             data={
@@ -289,12 +381,13 @@ def orbital_frontier(
                 "occupation_source": data.alpha_orbitals.occupation_source,
                 "alpha": alpha_payload,
                 "beta": beta_payload,
-                "overall_homo_number": overall.homo_index + 1,
-                "overall_homo_hartree": round(overall.homo_hartree, 10),
+                "overall_homo_number": overall_number,
+                "overall_homo_hartree": overall_hartree,
                 "overall_homo_spin": overall_spin,
             },
             units={"overall_homo_hartree": "hartree"},
-            validation_status="Stable",
+            validation_status="Stable" if complete else "Experimental",
+            status="success" if complete else "partial",
             warnings=tuple(dict.fromkeys(warnings)),
         )
 
@@ -311,8 +404,8 @@ def orbital_frontier(
             )
 
     warnings.extend(_occupation_warnings(orbitals))
-    frontier = frontier_orbitals(orbitals)
-    payload = _frontier_payload(frontier)
+    payload, complete, _homo, partial_warnings = _frontier_payload_with_partial(orbitals)
+    warnings.extend(partial_warnings)
     payload.update(
         {
             "reference_kind": reference_kind,
@@ -328,7 +421,8 @@ def orbital_frontier(
             "gap_hartree": "hartree",
             "gap_ev": "eV",
         },
-        validation_status="Stable",
+        validation_status="Stable" if complete else "Experimental",
+        status="success" if complete else "partial",
         warnings=tuple(dict.fromkeys(warnings)),
     )
 
