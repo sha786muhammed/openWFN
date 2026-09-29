@@ -81,6 +81,7 @@ def test_importing_adapter_is_lazy_about_iodata() -> None:
 
 
 def test_load_iodata_xyz_normalizes_units_and_records_backend(tmp_path: Path) -> None:
+    pytest.importorskip("iodata", reason="optional interoperability backend is not installed")
     from openwfn.adapters.iodata import load_iodata
 
     source = tmp_path / "water.xyz"
