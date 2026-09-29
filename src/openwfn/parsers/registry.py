@@ -16,6 +16,21 @@ from .xyz import parse_xyz
 Parser = Callable[[Path], Any]
 
 
+def looks_like_gaussian_output(path: Path) -> bool:
+    """Return whether text contains conservative Gaussian output signatures."""
+
+    text = path.read_text(encoding="utf-8", errors="replace")[:131072]
+    return any(
+        marker in text
+        for marker in (
+            "SCF Done:",
+            "Normal termination of Gaussian",
+            "Entering Gaussian System",
+            "Gaussian, Inc.",
+        )
+    )
+
+
 class ParserRegistry:
     def __init__(self) -> None:
         self._parsers: dict[str, Parser] = {}
