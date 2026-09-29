@@ -8,7 +8,7 @@ is the machine-readable source for the software citation.
 
 Plain text:
 
-> Muhammed Shah Shaji (2026). openWFN: Wavefunction post-processing analysis toolkit (Version 0.8.1) [Computer software]. https://github.com/sha786muhammed/openWFN/releases/tag/v0.8.1
+> Muhammed Shah Shaji (2026). openWFN: Wavefunction post-processing analysis toolkit (Version 0.8.2) [Computer software]. https://github.com/sha786muhammed/openWFN/releases/tag/v0.8.2
 
 BibTeX:
 
@@ -17,8 +17,8 @@ BibTeX:
   author  = {Muhammed Shah Shaji},
   title   = {openWFN: Wavefunction post-processing analysis toolkit},
   year    = {2026},
-  version = {0.8.1},
-  url     = {https://github.com/sha786muhammed/openWFN/releases/tag/v0.8.1},
+  version = {0.8.2},
+  url     = {https://github.com/sha786muhammed/openWFN/releases/tag/v0.8.2},
   license = {MIT}
 }
 ```

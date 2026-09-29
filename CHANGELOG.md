@@ -2,6 +2,20 @@
 
 All notable changes to openWFN are documented in this file.
 
+## [0.8.2] - 2026-09-28
+
+### Fixed
+
+- Real Gaussian post-HF method labels such as `UMP2-FC`, `UMP3-FC`, and `UCISD-FC` now preserve the explicit warning when openWFN analyzes the available SCF density rather than a correlated post-SCF density.
+- Restricted closed-shell calculations that omit an explicit spin-density matrix can now derive the scientifically defined channels `alpha = beta = total/2` and `spin = 0`, including density integration and cube export.
+- Valid one-electron and empty-spin-channel frontier cases now return explicit partial results with unavailable quantities represented as null instead of failing the entire frontier analysis.
+
+### Validation
+
+- The patch was developed with regression tests first and then verified on Python 3.10–3.13, macOS, Windows, wheel/package smoke tests, documentation, security checks, and the repository scientific validation suite.
+- A separate post-fix audit passed the independent external benchmark corpus plus an 88-workflow CLI/API matrix and focused UHF, RHF, post-HF, ghost, and ECP edge cases.
+- This is a corrective patch release; it does not broaden the documented validation scope beyond the named fixtures, tolerances, and capability boundaries.
+
 ## [0.8.1] - 2026-09-28
 
 ### Added

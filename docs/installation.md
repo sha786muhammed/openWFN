@@ -4,7 +4,7 @@ openWFN requires Python 3.10–3.13.
 
 !!! note "Current release"
 
-    This handbook documents openWFN 0.8.1.
+    This handbook documents openWFN 0.8.2.
 
 ## Stable release
 
@@ -23,10 +23,16 @@ On Windows, activate with `.venv\Scripts\activate`.
 Pin the exact release when reproducing research:
 
 ```bash
-python -m pip install openwfn==0.8.1
+python -m pip install openwfn==0.8.2
 ```
 
 For reproducing work created with the immediately previous stable release, use:
+
+```bash
+python -m pip install openwfn==0.8.1
+```
+
+For older work created with openWFN 0.8.0, use:
 
 ```bash
 python -m pip install openwfn==0.8.0

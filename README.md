@@ -48,7 +48,7 @@ openwfn --version
 Install the exact release when reproducing research:
 
 ```bash
-python -m pip install openwfn==0.8.1
+python -m pip install openwfn==0.8.2
 ```
 
 ## First analysis
