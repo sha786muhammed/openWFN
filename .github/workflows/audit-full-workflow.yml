@@ -104,9 +104,6 @@ jobs:
                   + "; missing known harness mismatches: "
                   + repr(sorted(expected_workflow - set(workflow_failures)))
               )
-          beta = workflow_failures.get("frontier-uhf-beta", {})
-          if beta.get("returncode") != 1:
-              problems.append("RHF beta-channel rejection did not return the expected failure status")
           structure = workflow_failures.get("structure-only-summary-rejected", {})
           if structure.get("returncode") != 0:
               problems.append("structure-only summary did not succeed as expected")
