@@ -24,6 +24,7 @@ from .exporters.structures import write_structure
 from .exporters.tables import ExportRequest, write_result_table
 from .fchk import parse_fchk_arrays, parse_fchk_scalars, read_fchk  # type: ignore
 from .interactive import run_interactive  # type: ignore
+from .inspection import build_capabilities_result
 from .model import CalculationData, CalculationMetadata, VolumetricGrid
 from .parsers.registry import load as load_calculation
 from .reporting import build_report_record
@@ -184,8 +185,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="openwfn",
         description=(
-            "openWFN — reproducible Gaussian wavefunction analysis, reporting, "
-            "and offline molecular visualization."
+            "openWFN — reproducible wavefunction and scientific post-processing "
+            "across supported quantum-chemistry formats."
         ),
     )
 
@@ -366,6 +367,7 @@ def main(argv: list[str] | None = None) -> int:
     p_validate.add_argument("--spacing", type=float, default=0.15, help="Grid spacing in bohr")
     p_validate.add_argument("--padding", type=float, default=6.0, help="Padding around molecule in bohr")
 
+    subparsers.add_parser("capabilities", help="Report normalized data and analysis capabilities")
     subparsers.add_parser("doctor", help="Inspect parsed data and available analysis capabilities")
 
     p_mo = subparsers.add_parser(
@@ -495,6 +497,9 @@ def main(argv: list[str] | None = None) -> int:
         if status == 0 and args.open_workbench:
             webbrowser.open(output.resolve().as_uri())
         return status
+
+    if args.command == "capabilities":
+        return execute(lambda: build_capabilities_result(Path(args.file)), _context(args))
 
     if args.command == "doctor":
         return execute(lambda: _doctor_result(Path(args.file)), _context(args))
