@@ -3,7 +3,6 @@ import sys
 
 from openwfn.formats import IODATA_READABLE_FORMATS, iodata_format_ids
 
-
 EXPECTED_FORMAT_IDS = (
     "charmm",
     "chgcar",
