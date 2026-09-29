@@ -2,6 +2,7 @@ import subprocess
 import sys
 import tarfile
 import zipfile
+from email.parser import Parser
 from importlib.metadata import entry_points, version
 from importlib.resources import files
 from pathlib import Path
@@ -60,6 +61,26 @@ def test_built_wheel_contains_runtime_modules_assets_and_notices(
     assert any(name.endswith("/LICENSE") for name in license_paths)
     assert any(name.endswith("/THIRD_PARTY_NOTICES.md") for name in license_paths)
     assert any(name.endswith("/3Dmol-min.js.LICENSE.txt") for name in license_paths)
+
+
+def test_built_wheel_declares_interop_as_optional_extra(
+    built_archives: tuple[Path, Path],
+) -> None:
+    wheel, _ = built_archives
+    with zipfile.ZipFile(wheel) as archive:
+        metadata_name = next(name for name in archive.namelist() if name.endswith(".dist-info/METADATA"))
+        metadata = Parser().parsestr(archive.read(metadata_name).decode("utf-8"))
+
+    assert "interop" in metadata.get_all("Provides-Extra", [])
+    requirements = metadata.get_all("Requires-Dist", [])
+    assert any(
+        requirement.startswith("qc-iodata==1.0.1") and "interop" in requirement
+        for requirement in requirements
+    )
+    assert not any(
+        requirement.startswith("qc-iodata") and "interop" not in requirement
+        for requirement in requirements
+    )
 
 
 def test_source_distribution_contains_project_policies_and_provenance(
