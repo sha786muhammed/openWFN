@@ -1,5 +1,11 @@
 # Release history
 
+## 0.8.2 — post-release scientific edge hardening
+
+Version 0.8.2 is a corrective patch release for three edge cases found by the full post-0.8.1 workflow audit. It restores post-HF SCF-density provenance warnings for real Gaussian method labels, derives the scientifically defined alpha/beta/zero-spin density channels for restricted closed-shell files that omit an explicit spin-density matrix, and returns transparent partial frontier results for valid one-electron or empty-spin-channel cases instead of failing the whole analysis.
+
+[Read the detailed 0.8.2 notes](../releases/0.8.2.md)
+
 ## 0.8.1 — scientific correctness hardening
 
 Version 0.8.1 strengthens the stable 0.8 interfaces against silent scientific errors. It adds source-faithful ECP/ghost nuclear charges, conservation enforcement, explicit density provenance, spin-complete unrestricted frontier analysis, ROHF classification, occupation-aware frontier selection, safer cube validation, Löwdin conditioning diagnostics, chunked density grids, and permanent regression coverage for these cases.
