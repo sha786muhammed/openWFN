@@ -29,3 +29,9 @@ class ExternalProgramError(OpenWFNError):
     """A required external scientific program is unavailable or failed."""
 
     exit_code = 6
+
+
+class MissingOptionalDependencyError(OpenWFNError, ImportError):
+    """An explicitly optional openWFN feature dependency is not installed."""
+
+    exit_code = 7
