@@ -39,3 +39,19 @@ jobs:
             git commit -m "feat: support capability-aware mixed-format workflows"
             git push origin HEAD:work/0.9-tasks6-7-active
           fi
+  core-missing-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: work/0.9-tasks6-7-active
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e ".[test]"
+      - run: python scripts/dev_patch_task7.py
+      - run: >-
+          python -m pytest
+          tests/integration/test_mixed_format_batch.py::test_process_pool_missing_backend_isolated_to_backend_record
+          -q
