@@ -1,6 +1,8 @@
 """Pinned interoperability format inventory for openWFN 0.9."""
 
 from dataclasses import dataclass
+from fnmatch import fnmatchcase
+from pathlib import Path
 from typing import Literal
 
 
@@ -48,3 +50,18 @@ def iodata_format_ids() -> tuple[str, ...]:
     """Return the pinned IOData 1.0.1 readable-format IDs."""
 
     return tuple(item.format_id for item in IODATA_READABLE_FORMATS)
+
+
+def path_matches_declared_format(path: str | Path) -> bool:
+    """Return whether a filename matches any explicit 0.9 format pattern.
+
+    This function only decides whether a file is a plausible batch input. It
+    never decides scientific capabilities or the parser actually used.
+    """
+
+    name = Path(path).name.casefold()
+    return any(
+        fnmatchcase(name, pattern.casefold())
+        for definition in IODATA_READABLE_FORMATS
+        for pattern in definition.patterns
+    )
