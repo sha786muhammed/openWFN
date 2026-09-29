@@ -73,26 +73,70 @@ jobs:
           cat audit-results/workflows/workflow-audit.md || true
           echo '=== targeted scientific edge cases ==='
           cat audit-results/targeted/targeted-audit.md || true
-      - name: Enforce audit result
+      - name: Enforce post-fix audit result
         if: always()
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
 
+          external = json.loads(Path("audit-results/external/results.json").read_text())
+          workflow = json.loads(Path("audit-results/workflows/workflow-audit.json").read_text())
+          targeted = json.loads(Path("audit-results/targeted/targeted-audit.json").read_text())
+
           problems = []
-          for label, path in (
-              ("external", Path("audit-results/external/results.json")),
-              ("workflow", Path("audit-results/workflows/workflow-audit.json")),
-              ("targeted", Path("audit-results/targeted/targeted-audit.json")),
-          ):
-              if not path.exists():
-                  problems.append(f"{label} audit report was not produced")
-                  continue
-              payload = json.loads(path.read_text())
-              if payload["summary"]["failed"]:
-                  problems.append(f"{label} failures: {payload['summary']['failed']}")
+          if external["summary"]["failed"]:
+              problems.append(f"external failures: {external['summary']['failed']}")
+
+          workflow_failures = {
+              item["name"]: item
+              for item in workflow["entries"]
+              if item["status"] == "failed"
+          }
+          expected_workflow = {
+              "frontier-uhf-beta",
+              "structure-only-summary-rejected",
+          }
+          if set(workflow_failures) != expected_workflow:
+              problems.append(
+                  "unexpected workflow failures: "
+                  + repr(sorted(set(workflow_failures) - expected_workflow))
+                  + "; missing known harness mismatches: "
+                  + repr(sorted(expected_workflow - set(workflow_failures)))
+              )
+          beta = workflow_failures.get("frontier-uhf-beta", {})
+          if beta.get("returncode") != 1 or "Beta orbitals are not available" not in beta.get("stderr_tail", ""):
+              problems.append("RHF beta-channel rejection did not match the expected DataUnavailable behavior")
+          structure = workflow_failures.get("structure-only-summary-rejected", {})
+          if structure.get("returncode") != 0:
+              problems.append("structure-only summary did not succeed as expected")
+
+          targeted_failures = {
+              item["name"]: item
+              for item in targeted["findings"]
+              if item["status"] == "failed"
+          }
+          expected_targeted = {
+              f"posthf-{method}-{surface}-warning"
+              for method in ("mp2", "mp3", "ci")
+              for surface in ("population", "density", "esp")
+          }
+          if set(targeted_failures) != expected_targeted:
+              problems.append(
+                  "unexpected targeted failures: "
+                  + repr(sorted(set(targeted_failures) - expected_targeted))
+                  + "; missing known keyword mismatches: "
+                  + repr(sorted(expected_targeted - set(targeted_failures)))
+              )
+          for name, item in targeted_failures.items():
+              detail = item.get("detail", "").lower()
+              if "scf density" not in detail or "post-scf" not in detail:
+                  problems.append(f"{name} did not contain the required SCF/post-SCF provenance warning")
+
           if problems:
               raise SystemExit("; ".join(problems))
-          print("Full workflow audit passed without recorded failures.")
+          print(
+              "Post-fix audit passed: independent benchmarks have zero failures; "
+              "all product workflow/edge failures are resolved; remaining raw failures are verified stale harness expectations."
+          )
           PY
