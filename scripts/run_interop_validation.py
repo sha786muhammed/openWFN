@@ -98,6 +98,12 @@ def _validate_entry(entry: dict[str, Any]) -> dict[str, Any]:
             errors.append(
                 f"analysis {name}: expected success, got {result.status}/{result.validation_status}"
             )
+    for name in analyses.get("partial", []):
+        result = run_analysis_safe(data, name)
+        if result.status != "partial":
+            errors.append(
+                f"analysis {name}: expected partial, got {result.status}/{result.validation_status}"
+            )
     for name in analyses["unsupported"]:
         result = run_analysis_safe(data, name)
         if result.status != "failed" or result.validation_status != "Unsupported":

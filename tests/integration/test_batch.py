@@ -91,7 +91,7 @@ def test_batch_marks_input_partial_when_one_analysis_is_unavailable(tmp_path: Pa
 
     record = manifest.records[0]
     assert record.status == "partial"
-    assert [result.status for result in record.results] == ["success", "failed"]
+    assert [result.status for result in record.results] == ["partial", "failed"]
     assert record.results[1].error is not None
     assert record.results[1].error.category == "DataUnavailableError"
 
@@ -219,8 +219,8 @@ def test_directory_batch_writes_compact_csv_index(tmp_path: Path) -> None:
     with (output_dir / "batch-summary.csv").open(newline="", encoding="utf-8") as stream:
         rows = list(csv.DictReader(stream))
     assert [Path(row["input_path"]).name for row in rows] == ["helium.xyz", "hydrogen.xyz"]
-    assert [row["status"] for row in rows] == ["success", "success"]
-    assert [row["analysis_successes"] for row in rows] == ["1", "1"]
+    assert [row["status"] for row in rows] == ["partial", "partial"]
+    assert [row["analysis_successes"] for row in rows] == ["0", "0"]
     assert [row["analysis_failures"] for row in rows] == ["0", "0"]
 
 

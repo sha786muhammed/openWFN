@@ -130,6 +130,37 @@ def test_complete_wavefunction_maps_to_existing_calculation_model(tmp_path: Path
     assert data.molecule.atoms[0].nuclear_charge == pytest.approx(1.0)
 
 
+def test_qcschema_ghost_centers_survive_normalization() -> None:
+    pytest.importorskip("iodata")
+    from openwfn.analysis.registry import run_analysis
+    from openwfn.ingest import load_input
+
+    source = (
+        Path(__file__).resolve().parents[1]
+        / "fixtures" / "interop" / "json_qcschema" / "water_ghost_centers.qcschema.json"
+    )
+    data = load_input(source)
+
+    assert data.structure is not None
+    assert data.structure.effective_nuclear_charges == (8.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+    summary = run_analysis(data, "summary")
+    assert summary.status == "partial"
+    assert summary.data["physical_nuclei"] == 3
+    assert summary.data["ghost_centers"] == 6
+
+
+def test_structure_preserves_ecp_charge_without_wavefunction(tmp_path: Path) -> None:
+    from openwfn.adapters.iodata import adapt_iodata_object
+
+    source = tmp_path / "ecp.structure"
+    source.write_text("authored fixture\n", encoding="utf-8")
+    loaded = _fake_loaded(atnums=np.array([14]), atcorenums=np.array([4.0]))
+    data = adapt_iodata_object(loaded, source, format_id="molden", backend_version="1.0.1")
+
+    assert data.structure is not None
+    assert data.structure.effective_nuclear_charges == (4.0,)
+
+
 def test_periodic_grid_and_integral_components_are_preserved_without_fabrication(
     tmp_path: Path,
 ) -> None:

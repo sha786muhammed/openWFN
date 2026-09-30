@@ -34,7 +34,8 @@ def test_batch_benchmark_writes_machine_readable_evidence(tmp_path: Path) -> Non
     evidence = json.loads(output.read_text(encoding="utf-8"))
     assert evidence["input_count"] == 6
     assert evidence["workers"] == 2
-    assert evidence["successes"] == 6
+    assert evidence["successes"] == 0
+    assert evidence["partial"] == 6
     assert evidence["failures"] == 0
     assert evidence["files_per_second"] > 0
     assert evidence["peak_python_memory_bytes"] > 0

@@ -73,7 +73,7 @@ def test_summary_json_uses_the_registered_analysis_envelope() -> None:
     assert result.returncode == 0
     payload = json.loads(result.stdout)
     assert payload["analysis_name"] == "summary"
-    assert payload["analysis_version"] == "1"
+    assert payload["analysis_version"] == "2"
     assert payload["schema_version"] == "1.0"
     assert payload["status"] == "success"
     assert payload["provenance"]["source_format"] == "fchk"
@@ -147,7 +147,7 @@ def test_summary_rejects_non_molecular_input_cleanly(tmp_path: Path, suffix: str
     result = run_cli(str(source), "summary")
 
     assert result.returncode == 4
-    assert "does not contain a molecular calculation" in result.stderr
+    assert "requires: atomic structure" in result.stderr
     assert "Traceback" not in result.stderr
 
 

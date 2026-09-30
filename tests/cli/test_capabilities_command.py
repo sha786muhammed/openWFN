@@ -75,3 +75,13 @@ def test_cli_orbital_analysis_uses_canonical_loader() -> None:
     result = run_cli("--format", "json", str(INTEROP / "molden" / "water.molden"), "orbitals", "frontier")
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout)["status"] == "success"
+
+
+def test_cli_structure_summary_is_partial() -> None:
+    result = run_cli(
+        "--format", "json", str(INTEROP / "poscar" / "POSCAR-water"), "summary"
+    )
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "partial"
+    assert payload["data"]["scope"] == "periodic"

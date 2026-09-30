@@ -28,7 +28,6 @@ from .ingest import load_input
 from .inspection import build_capabilities_result, capability_payload
 from .interactive import run_interactive  # type: ignore
 from .model import CalculationData
-from .parsers.registry import load as load_calculation
 from .reporting import build_report_record
 from .results import ResultRecord
 from .services import (
@@ -429,8 +428,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "summary":
         def summary_operation() -> ResultRecord:
-            calculation = require_calculation()
-            return run_analysis(calculation, "summary")
+            data = load_input(Path(args.file), format_hint=args.input_format)
+            return run_analysis(data, "summary")
 
         return execute(summary_operation, _context(args))
 
@@ -717,8 +716,12 @@ def main(argv: list[str] | None = None) -> int:
         if sys.stdin.isatty():
             args.command = "interactive"  # type: ignore
         else:
-            calculation = load_calculation(Path(args.file))
-            return execute(lambda: run_analysis(calculation, "summary"), _context(args))
+            return execute(
+                lambda: run_analysis(
+                    load_input(Path(args.file), format_hint=args.input_format), "summary"
+                ),
+                _context(args),
+            )
 
     filename = args.file
     try:

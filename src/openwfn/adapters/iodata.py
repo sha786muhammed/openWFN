@@ -161,6 +161,13 @@ def _structure_from_loaded(loaded: Any, warnings: list[str]) -> StructureData | 
     charge = _integer_like(_safe_attr(loaded, "charge"))
     spinpol = _integer_like(_safe_attr(loaded, "spinpol"))
     multiplicity = abs(spinpol) + 1 if spinpol is not None else None
+    raw_charges = _safe_attr(loaded, "atcorenums")
+    charges = _as_float_array(raw_charges)
+    if raw_charges is not None and (
+        charges is None or charges.reshape(-1).size != coordinates.shape[0]
+    ):
+        warnings.append("IOData effective nuclear charges were malformed or inconsistent and were withheld.")
+        charges = None
     converted = tuple(
         tuple(float(component) * BOHR_TO_ANGSTROM for component in row)
         for row in coordinates
@@ -171,6 +178,10 @@ def _structure_from_loaded(loaded: Any, warnings: list[str]) -> StructureData | 
         bonds=tuple(bonds),
         charge=charge,
         multiplicity=multiplicity,
+        effective_nuclear_charges=(
+            tuple(float(value) for value in charges.reshape(-1))
+            if charges is not None else (None,) * len(converted)
+        ),
     )
 
 

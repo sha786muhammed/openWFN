@@ -23,7 +23,7 @@ def test_registry_runs_summary_with_versioned_input_provenance() -> None:
         "summary",
     )
     assert result.analysis_name == "summary"
-    assert result.analysis_version == "1"
+    assert result.analysis_version == "2"
     assert result.status == "success"
     assert result.elapsed_seconds is not None and result.elapsed_seconds >= 0
     assert result.provenance == {
