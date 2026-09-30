@@ -23,9 +23,10 @@ from .errors import DataUnavailableError
 from .exporters.structures import write_structure
 from .exporters.tables import ExportRequest, write_result_table
 from .fchk import parse_fchk_arrays, parse_fchk_scalars, read_fchk  # type: ignore
-from .inspection import build_capabilities_result
+from .ingest import load_input
+from .inspection import build_capabilities_result, capability_payload
 from .interactive import run_interactive  # type: ignore
-from .model import CalculationData, CalculationMetadata, VolumetricGrid
+from .model import CalculationData
 from .parsers.registry import load as load_calculation
 from .reporting import build_report_record
 from .results import ResultRecord
@@ -102,28 +103,29 @@ def _context(args: argparse.Namespace) -> CommandContext:
     )
 
 
-def _require_calculation(path: Path) -> CalculationData:
-    parsed = load_calculation(path)
-    if not isinstance(parsed, CalculationData):
+def _require_calculation(path: Path, *, format_hint: str | None = None) -> CalculationData:
+    parsed = load_input(path, format_hint=format_hint)
+    if parsed.calculation is None:
         raise DataUnavailableError(
             f"{path} does not contain a molecular calculation. "
             "Use `doctor` to inspect the input's available capabilities."
         )
-    return parsed
+    return parsed.calculation
 
 
-def _doctor_result(path: Path) -> ResultRecord:
-    parsed = load_calculation(path)
-    if isinstance(parsed, CalculationData):
+def _doctor_result(path: Path, *, format_hint: str | None = None) -> ResultRecord:
+    parsed = load_input(path, format_hint=format_hint)
+    calculation = parsed.calculation
+    if calculation is not None:
         input_kind = "molecular-calculation"
         capabilities = {
-            "basis": parsed.basis is not None,
-            "density": parsed.total_density is not None,
+            "basis": calculation.basis is not None,
+            "density": calculation.total_density is not None,
             "metadata": True,
-            "orbitals": parsed.alpha_orbitals is not None,
+            "orbitals": calculation.alpha_orbitals is not None,
             "volumetric_grid": False,
         }
-    elif isinstance(parsed, VolumetricGrid):
+    elif parsed.grids:
         input_kind = "volumetric-grid"
         capabilities = {
             "basis": False,
@@ -132,7 +134,19 @@ def _doctor_result(path: Path) -> ResultRecord:
             "orbitals": False,
             "volumetric_grid": True,
         }
-    elif isinstance(parsed, CalculationMetadata):
+    elif parsed.structure is not None:
+        input_kind = "periodic-structure" if parsed.periodic is not None else "structure-only"
+        capabilities = {
+            "basis": False, "density": False, "metadata": True,
+            "orbitals": False, "volumetric_grid": False,
+        }
+    elif parsed.integrals is not None:
+        input_kind = "integral-data"
+        capabilities = {
+            "basis": False, "density": False, "metadata": True,
+            "orbitals": False, "volumetric_grid": False,
+        }
+    else:
         input_kind = "calculation-metadata"
         capabilities = {
             "basis": False,
@@ -141,14 +155,13 @@ def _doctor_result(path: Path) -> ResultRecord:
             "orbitals": False,
             "volumetric_grid": False,
         }
-    else:
-        raise DataUnavailableError(f"Unsupported parsed input type: {type(parsed).__name__}.")
     return ResultRecord(
         kind="doctor",
         data={
             "input": str(path),
             "input_kind": input_kind,
             "capabilities": capabilities,
+            "normalized": capability_payload(parsed, input_path=path),
         },
     )
 
@@ -193,6 +206,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--version", action="version", version=f"openWFN {__version__}")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--format", choices=["table", "plain", "json", "csv"], default="table")
+    parser.add_argument("--input-format", metavar="FORMAT_ID", help="Explicit input parser format ID")
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--verbose", action="store_true")
     parser.add_argument("--debug", action="store_true")
@@ -397,9 +411,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.file is None:
         parser.error("an input file is required unless --version is used")
 
+    def require_calculation() -> CalculationData:
+        return _require_calculation(Path(args.file), format_hint=args.input_format)
+
     if args.command == "summary":
         def summary_operation() -> ResultRecord:
-            calculation = _require_calculation(Path(args.file))
+            calculation = require_calculation()
             return run_analysis(calculation, "summary")
 
         return execute(summary_operation, _context(args))
@@ -408,7 +425,7 @@ def main(argv: list[str] | None = None) -> int:
         context = _context(args)
 
         def geometry_operation() -> ResultRecord:
-            calculation = _require_calculation(Path(args.file))
+            calculation = require_calculation()
             operations = {
                 "distance": lambda: geometry_distance(calculation.molecule, args.i, args.j),
                 "angle": lambda: geometry_angle(calculation.molecule, args.i, args.j, args.k),
@@ -423,7 +440,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "population":
         return execute(
             lambda: run_analysis(
-                _require_calculation(Path(args.file)), args.population_method
+                require_calculation(), args.population_method
             ),
             _context(args),
         )
@@ -435,7 +452,7 @@ def main(argv: list[str] | None = None) -> int:
             "all": "frontier-all",
         }[args.spin]
         return execute(
-            lambda: run_analysis(_require_calculation(Path(args.file)), analysis),
+            lambda: run_analysis(require_calculation(), analysis),
             _context(args),
         )
 
@@ -443,7 +460,7 @@ def main(argv: list[str] | None = None) -> int:
         context = _context(args)
 
         def density_operation() -> ResultRecord:
-            calculation = _require_calculation(Path(args.file))
+            calculation = require_calculation()
             if args.density_command == "integrate":
                 return density_integration(
                     calculation, args.kind, args.spacing, args.padding
@@ -462,7 +479,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "esp":
         return execute(
             lambda: electrostatic_potential_point(
-                _require_calculation(Path(args.file)),
+                require_calculation(),
                 (args.x, args.y, args.z),
                 args.component,
                 args.spacing,
@@ -476,7 +493,7 @@ def main(argv: list[str] | None = None) -> int:
         command = "openwfn " + " ".join(raw_arguments)
         return execute(
             lambda: build_report_record(
-                _require_calculation(Path(args.file)),
+                require_calculation(),
                 analyses,
                 args.report_output,
                 args.report_format,
@@ -490,7 +507,7 @@ def main(argv: list[str] | None = None) -> int:
         output = args.workbench_output or Path(f"{Path(args.file).stem}-workbench.html")
         status = execute(
             lambda: export_workbench_record(
-                _require_calculation(Path(args.file)), output, overwrite=args.overwrite
+                require_calculation(), output, overwrite=args.overwrite
             ),
             _context(args),
         )
@@ -499,10 +516,16 @@ def main(argv: list[str] | None = None) -> int:
         return status
 
     if args.command == "capabilities":
-        return execute(lambda: build_capabilities_result(Path(args.file)), _context(args))
+        return execute(
+            lambda: build_capabilities_result(Path(args.file), format_hint=args.input_format),
+            _context(args),
+        )
 
     if args.command == "doctor":
-        return execute(lambda: _doctor_result(Path(args.file)), _context(args))
+        return execute(
+            lambda: _doctor_result(Path(args.file), format_hint=args.input_format),
+            _context(args),
+        )
 
     if args.command in {"cube", "convert", "export", "plot", "batch", "validate"}:
         context = _context(args)
@@ -589,7 +612,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "cube":
             return execute(
                 lambda: density_cube_export(
-                    _require_calculation(Path(args.file)),
+                    require_calculation(),
                     args.kind,
                     args.spacing,
                     args.padding,
@@ -601,7 +624,7 @@ def main(argv: list[str] | None = None) -> int:
 
         if args.command == "convert":
             def convert_operation() -> ResultRecord:
-                calculation = _require_calculation(Path(args.file))
+                calculation = require_calculation()
                 write_structure(
                     calculation.molecule, args.convert_output, args.to, args.overwrite
                 )
@@ -614,7 +637,7 @@ def main(argv: list[str] | None = None) -> int:
 
         if args.command == "export":
             def export_operation() -> ResultRecord:
-                calculation = _require_calculation(Path(args.file))
+                calculation = require_calculation()
                 result = run_analysis(calculation, args.analysis)
                 output_format = args.export_output.suffix.lstrip(".").lower()
                 write_result_table(
@@ -632,7 +655,7 @@ def main(argv: list[str] | None = None) -> int:
             def plot_operation() -> ResultRecord:
                 from .exporters.images import write_frontier_diagram
 
-                calculation = _require_calculation(Path(args.file))
+                calculation = require_calculation()
                 if calculation.alpha_orbitals is None:
                     raise ValueError("Molecular orbital data are not available.")
                 frontier = frontier_orbitals(calculation.alpha_orbitals)
@@ -651,7 +674,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "validate":
             return execute(
                 lambda: density_integration(
-                    _require_calculation(Path(args.file)),
+                    require_calculation(),
                     "total",
                     args.spacing,
                     args.padding,

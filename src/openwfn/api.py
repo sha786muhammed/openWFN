@@ -157,7 +157,7 @@ class OpenWFNCalculation:
         return run_analysis_safe(self.data, method)
 
 
-def load(path: str | Path) -> OpenWFNCalculation:
+def load(path: str | Path, *, format_hint: str | None = None) -> OpenWFNCalculation:
     """Load any successfully normalized native or interoperability input."""
 
-    return OpenWFNCalculation(load_input(Path(path)))
+    return OpenWFNCalculation(load_input(Path(path), format_hint=format_hint))

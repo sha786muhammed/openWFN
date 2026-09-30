@@ -38,8 +38,8 @@ def capability_payload(data: OpenWFNData, *, input_path: Path | None = None) -> 
     }
 
 
-def build_capabilities_result(path: Path) -> ResultRecord:
+def build_capabilities_result(path: Path, *, format_hint: str | None = None) -> ResultRecord:
     """Load one input and report data/analysis capabilities without running analyses."""
 
-    data = load_input(path)
+    data = load_input(path, format_hint=format_hint)
     return ResultRecord(kind="capabilities", data=capability_payload(data, input_path=path))

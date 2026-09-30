@@ -6,6 +6,7 @@ import openwfn
 
 ROOT = Path(__file__).resolve().parents[2]
 WATER = ROOT / "examples" / "water" / "water.fchk"
+GAMESS = ROOT / "tests" / "fixtures" / "interop" / "gamess" / "water.dat"
 
 
 def test_fchk_load_returns_interop_container_without_breaking_convenience_api() -> None:
@@ -40,3 +41,10 @@ def test_invalid_direct_api_parameters_still_raise_value_error() -> None:
 
     with pytest.raises(ValueError, match="spin must be"):
         calculation.orbitals("invalid")
+
+
+def test_public_load_accepts_gamess_hint() -> None:
+    calculation = openwfn.load(GAMESS, format_hint="gamess")
+
+    assert calculation.data.provenance is not None
+    assert calculation.data.provenance.source_format == "gamess"
