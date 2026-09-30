@@ -72,7 +72,7 @@ fields before electronic analyses.
 | Method | Contract |
 |---|---|
 | `analyze(name)` | Preferred reproducible route for a registered named analysis |
-| `capabilities()` | States (`available`, `derived`, `missing`, `unsupported`) for this loaded file |
+| `capabilities()` | Inferred component states (`available`, `derived`, or `missing`) for this loaded file |
 | `analyze_geometry()` | Basic atom count, charge, and multiplicity |
 | `geometry_distance(i, j)` | Distance in ångströms; one-based atom numbers |
 | `geometry_angle(i, j, k)` | Angle in degrees; one-based atom numbers |

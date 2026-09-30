@@ -26,10 +26,12 @@ capability, and which registered analyses have their requirements met. Use
 `available` means the relevant data are directly present. `derived` means
 openWFN can calculate the component from present data; for example, AO overlap
 may be derived from a supported basis. `missing` means the file does not
-provide it. `unsupported` means openWFN does not currently offer the operation
-for that input class. These states describe what can be attempted, not an
-independent accuracy certification. A `missing` wavefunction must not be
-filled in from atomic electron counts alone.
+provide it. These are the states currently returned for listed components.
+`unsupported` is reserved in the capability type for unrecognized requirements;
+an analysis lacking required components returns a structured Unsupported
+result. Capability states describe what can be attempted, not an independent
+accuracy certification. A `missing` wavefunction must not be filled in from
+atomic electron counts alone.
 
 Only one record is ingested from a multi-record file. Periodic structures,
 stored volumetric grids, and FCIDUMP integrals remain distinct canonical
