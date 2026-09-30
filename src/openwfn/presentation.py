@@ -34,8 +34,20 @@ def render(result: ResultRecord, context: CommandContext) -> str:
         writer.writerow([*result.data.values(), result.validation_status])
         return stream.getvalue()
 
+    if result.kind == "viewer_export":
+        lines = [f"Standalone molecule viewer exported to: {result.data['output']}"]
+        if result.data.get("browser_opened"):
+            lines.append("Viewer opened in your default browser.")
+        else:
+            lines.append("Use this HTML file directly or share it for download; no extra viewer assets are required.")
+        lines.extend(result.warnings)
+        return "\n".join(lines) + "\n"
+
     lines = [_display_name(result.kind)]
     for key, value in result.data.items():
         lines.append(f"{_display_name(key)}: {_plain_value(key, value, result.units)}")
     lines.append(f"Status: {result.validation_status}")
+    if result.status != "success":
+        lines.append(f"Result: {result.status}")
+    lines.extend(f"Warning: {warning}" for warning in result.warnings)
     return "\n".join(lines) + "\n"

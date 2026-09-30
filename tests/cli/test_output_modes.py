@@ -83,3 +83,19 @@ def test_cli_convert_warns_on_ghost_centers(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
     assert any("ghost" in warning.lower() for warning in payload["warnings"])
+
+
+def test_quiet_json_keeps_final_result() -> None:
+    import os
+    import subprocess
+    import sys
+
+    root = Path(__file__).resolve().parents[2]
+    source = root / "examples" / "water" / "water.fchk"
+    result = subprocess.run(
+        [sys.executable, "-m", "openwfn.cli", "--quiet", "--format", "json", str(source), "summary"],
+        capture_output=True, text=True, env={**os.environ, "PYTHONPATH": str(root / "src")},
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)["kind"] == "summary"
