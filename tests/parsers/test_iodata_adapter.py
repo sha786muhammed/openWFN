@@ -22,6 +22,19 @@ def _fake_shell() -> SimpleNamespace:
     )
 
 
+def test_nonintegral_atomic_number_is_withheld_instead_of_truncated() -> None:
+    from openwfn.adapters.iodata import _structure_from_loaded
+
+    loaded = SimpleNamespace(atcoords=np.array([[0.0, 0.0, 0.0]]), atnums=np.array([8.5]))
+    warnings: list[str] = []
+
+    structure = _structure_from_loaded(loaded, warnings)
+
+    assert structure is not None
+    assert structure.atomic_numbers == (None,)
+    assert any("atomic numbers were inconsistent" in warning for warning in warnings)
+
+
 def _fake_basis() -> SimpleNamespace:
     return SimpleNamespace(
         shells=[_fake_shell()],

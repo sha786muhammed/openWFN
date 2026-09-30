@@ -130,8 +130,11 @@ def _structure_from_loaded(loaded: Any, warnings: list[str]) -> StructureData | 
             values = np.asarray(atnums).reshape(-1)
             if len(values) != coordinates.shape[0]:
                 raise ValueError
+            integer_numbers = tuple(_integer_like(value) for value in values)
+            if any(number is None for number in integer_numbers):
+                raise ValueError
             atomic_numbers = tuple(
-                int(value) if int(value) > 0 else None for value in values
+                number if number > 0 else None for number in integer_numbers
             )
         except (TypeError, ValueError, OverflowError):
             warnings.append("IOData atomic numbers were inconsistent with coordinates; they were withheld.")
