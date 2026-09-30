@@ -646,12 +646,13 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "convert":
             def convert_operation() -> ResultRecord:
                 calculation = require_calculation()
-                write_structure(
+                warnings = write_structure(
                     calculation.molecule, args.convert_output, args.to, args.overwrite
                 )
                 return ResultRecord(
                     kind="structure_export",
                     data={"format": args.to, "output": str(args.convert_output)},
+                    warnings=warnings,
                 )
 
             return execute(convert_operation, context)

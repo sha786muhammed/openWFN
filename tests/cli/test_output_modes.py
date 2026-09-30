@@ -65,3 +65,21 @@ def test_execute_writes_rendered_result_to_requested_output(tmp_path: Path) -> N
 
     assert status == 0
     assert json.loads(output.read_text(encoding="utf-8"))["kind"] == "distance"
+
+
+def test_cli_convert_warns_on_ghost_centers(tmp_path: Path) -> None:
+    import os
+    import subprocess
+    import sys
+
+    root = Path(__file__).resolve().parents[2]
+    source = root / "tests" / "fixtures" / "scientific" / "ghost_minimal.fchk"
+    result = subprocess.run(
+        [sys.executable, "-m", "openwfn.cli", "--format", "json", str(source),
+         "convert", "--to", "xyz", "--output", str(tmp_path / "ghost.xyz")],
+        capture_output=True, text=True,
+        env={**os.environ, "PYTHONPATH": str(root / "src")}, check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert any("ghost" in warning.lower() for warning in payload["warnings"])
