@@ -17,6 +17,7 @@ from openwfn.analysis.registry import run_analysis_safe  # noqa: E402
 from openwfn.capabilities import infer_capabilities  # noqa: E402
 from openwfn.formats import iodata_format_ids  # noqa: E402
 from openwfn.ingest import load_input  # noqa: E402
+from openwfn.services import density_integration  # noqa: E402
 
 
 def _component_states(data: Any) -> set[str]:
@@ -106,7 +107,88 @@ def _validate_entry(entry: dict[str, Any]) -> dict[str, Any]:
     return {"format_id": format_id, "status": "PASSED" if not errors else "FAILED", "errors": errors}
 
 
-def run(manifest_path: Path, *, output_dir: Path | None = None) -> dict[str, object]:
+def _observation(data: Any, name: str, grid: dict[str, float]) -> Any:
+    if name == "atomic_numbers":
+        return list(data.structure.atomic_numbers)
+    if name == "coordinates_angstrom":
+        return [list(row) for row in data.structure.coordinates]
+    if name == "energy_hartree":
+        return data.metadata.energy_hartree
+    calc = data.calculation
+    if calc is None:
+        raise ValueError(f"{name} requires a complete wavefunction")
+    if name == "electron_count":
+        return sum(calc.alpha_orbitals.occupations) + (
+            sum(calc.beta_orbitals.occupations) if calc.beta_orbitals else 0
+        )
+    if name == "basis_functions":
+        return calc.basis.n_functions
+    if name == "alpha_energies_hartree":
+        return list(calc.alpha_orbitals.energies)
+    if name == "alpha_occupations":
+        return list(calc.alpha_orbitals.occupations)
+    if name == "frontier_gap_hartree":
+        result = run_analysis_safe(data, "frontier")
+        if result.status != "success":
+            raise ValueError("frontier analysis did not succeed")
+        return result.data["gap_hartree"]
+    if name == "mulliken_charges":
+        result = run_analysis_safe(data, "mulliken")
+        if result.status != "success":
+            raise ValueError("Mulliken analysis did not succeed")
+        return result.data["atomic_charges"]
+    if name == "density_integral_electrons":
+        result = density_integration(calc, "total", grid["spacing_bohr"], grid["padding_bohr"])
+        return result.data["electron_count"]
+    raise ValueError(f"unknown validation metric: {name}")
+
+
+def _absolute_error(expected: Any, observed: Any) -> float:
+    if isinstance(expected, list):
+        if not isinstance(observed, (list, tuple)) or len(expected) != len(observed):
+            raise ValueError("reference and observation have different shapes")
+        return max((_absolute_error(left, right) for left, right in zip(expected, observed)), default=0.0)
+    if observed is None:
+        raise ValueError("reference value is unavailable")
+    return abs(float(expected) - float(observed))
+
+
+def run_cross_format_validation(manifest_path: Path) -> dict[str, object]:
+    """Compare pinned fixtures to explicit numerical references."""
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+    results: list[dict[str, object]] = []
+    for group in ("equivalent_water", "program_references"):
+        for case in manifest[group]:
+            source = ROOT / case["path"]
+            try:
+                if sha256(source.read_bytes()).hexdigest() != case["sha256"]:
+                    raise ValueError("fixture SHA-256 differs from cross-format manifest")
+                data = load_input(source, format_hint=case["format_id"])
+                for metric in case["metrics"]:
+                    observed = _observation(data, metric["name"], manifest["density_grid"])
+                    if metric["name"] in {"alpha_energies_hartree", "alpha_occupations"}:
+                        observed = observed[:len(metric["expected"])]
+                    error = _absolute_error(metric["expected"], observed)
+                    tolerance = float(metric["absolute_tolerance"])
+                    results.append({
+                        "group": group, "format_id": case["format_id"], "metric": metric["name"],
+                        "expected": metric["expected"], "observed": observed,
+                        "absolute_error": error, "tolerance": tolerance,
+                        "status": "PASSED" if error <= tolerance else "FAILED",
+                    })
+            except Exception as exc:
+                results.append({"group": group, "format_id": case["format_id"],
+                                "metric": "ingestion", "status": "FAILED",
+                                "error": f"{type(exc).__name__}: {exc}"})
+    failed = sum(item["status"] == "FAILED" for item in results)
+    return {"status": "PASSED" if failed == 0 else "FAILED", "passed": len(results) - failed,
+            "failed": failed, "total": len(results), "results": results}
+
+
+def run(
+    manifest_path: Path, *, output_dir: Path | None = None,
+    cross_manifest_path: Path | None = None,
+) -> dict[str, object]:
     """Run the deterministic 25-format contract and write machine/human reports."""
     manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
     entries = manifest["formats"]
@@ -115,13 +197,16 @@ def run(manifest_path: Path, *, output_dir: Path | None = None) -> dict[str, obj
         raise ValueError("Manifest does not contain the exact pinned 25-format inventory")
     results = [_validate_entry(entry) for entry in entries]
     passed = sum(item["status"] == "PASSED" for item in results)
+    cross_path = cross_manifest_path or ROOT / "validation/interop/cross_format_manifest.json"
+    cross = run_cross_format_validation(cross_path)
     report: dict[str, object] = {
         "schema_version": "1.0",
-        "overall": "PASSED" if passed == len(results) else "FAILED",
+        "overall": "PASSED" if passed == len(results) and cross["status"] == "PASSED" else "FAILED",
         "passed": passed,
         "failed": len(results) - passed,
         "total": len(results),
         "formats": results,
+        "cross_format": cross,
     }
     output = Path(output_dir) if output_dir is not None else ROOT / "validation" / "interop"
     output.mkdir(parents=True, exist_ok=True)
@@ -138,6 +223,19 @@ def run(manifest_path: Path, *, output_dir: Path | None = None) -> dict[str, obj
         if item["errors"]:
             lines.extend(["", f"## {item['format_id']}", ""])
             lines.extend(f"- {error}" for error in item["errors"])
+    lines.extend(["", "## Cross-format scientific equivalence", "",
+                  f"Status: **{cross['status']}** ({cross['passed']}/{cross['total']} metrics)", "",
+                  "| Format | Metric | Expected | Observed | Absolute error | Tolerance | Status |",
+                  "|---|---|---|---|---:|---:|---|"])
+    for item in cross["results"]:
+        if "error" in item:
+            lines.append(f"| `{item['format_id']}` | {item['metric']} | — | {item['error']} | — | — | FAILED |")
+        else:
+            lines.append(
+                f"| `{item['format_id']}` | {item['metric']} | {item['expected']} | "
+                f"{item['observed']} | {item['absolute_error']:.3g} | "
+                f"{item['tolerance']:.3g} | {item['status']} |"
+            )
     (output / "report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     return report
 
