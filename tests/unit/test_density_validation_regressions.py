@@ -9,6 +9,7 @@ from openwfn.model import (
     CalculationData,
     CalculationMetadata,
     DensityMatrix,
+    MolecularOrbitals,
     Molecule,
     VolumetricGrid,
 )
@@ -62,6 +63,30 @@ def test_spin_density_with_zero_expected_integral_is_valid() -> None:
     assert result.data["expected_electrons"] == 0.0
     assert result.data["error_metric"] == "absolute"
     assert result.status == "success"
+
+
+def test_spin_density_integration_uses_unrestricted_occupations_without_count_records() -> None:
+    molecule = Molecule(
+        (Atom(1, (0.0, 0.0, 0.0), nuclear_charge=1.0),),
+        0,
+        2,
+        CalculationMetadata("fixture"),
+    )
+    alpha = MolecularOrbitals((-0.5,), ((1.0,),), (1.0,), spin="alpha")
+    beta = MolecularOrbitals((-0.2,), ((1.0,),), (0.0,), spin="beta")
+    data = CalculationData(
+        molecule=molecule,
+        basis=_one_s_basis(),
+        alpha_orbitals=alpha,
+        beta_orbitals=beta,
+        spin_density=DensityMatrix(((1.0,),), "spin", source="orbitals"),
+    )
+
+    result = density_integration(data, "spin", spacing_bohr=0.25, padding_bohr=4.0)
+
+    assert result.data["expected_electrons"] == 1.0
+    assert result.data["expectation_source"] == "alpha-beta orbital occupations"
+    assert result.data["electron_count"] > 0.0
 
 
 def test_density_uses_fchk_total_electron_count_for_ecp_system() -> None:
