@@ -44,6 +44,7 @@ def test_invalid_direct_api_parameters_still_raise_value_error() -> None:
 
 
 def test_public_load_accepts_gamess_hint() -> None:
+    pytest.importorskip("iodata", reason="requires the optional interoperability backend")
     calculation = openwfn.load(GAMESS, format_hint="gamess")
 
     assert calculation.data.provenance is not None
@@ -65,6 +66,7 @@ def test_structure_summary_unknown_charge_is_partial(tmp_path: Path) -> None:
 
 
 def test_periodic_summary_has_no_isolated_capability() -> None:
+    pytest.importorskip("iodata", reason="requires the optional interoperability backend")
     source = ROOT / "tests" / "fixtures" / "interop" / "poscar" / "POSCAR-water"
     calculation = openwfn.load(source)
 

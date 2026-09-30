@@ -4,6 +4,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 WATER = ROOT / "examples" / "water" / "water.fchk"
 
@@ -164,6 +166,7 @@ def test_batch_progress_uses_stderr_and_quiet_suppresses_it(tmp_path: Path) -> N
 
 
 def test_cli_batch_format_map_paths_are_relative_to_map(tmp_path: Path) -> None:
+    pytest.importorskip("iodata", reason="requires the optional interoperability backend")
     fixture = ROOT / "tests" / "fixtures" / "interop" / "gamess" / "water.dat"
     source = tmp_path / "water.dat"
     source.write_bytes(fixture.read_bytes())

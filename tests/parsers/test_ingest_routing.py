@@ -200,7 +200,10 @@ def test_two_record_xyz_is_not_silently_concatenated(tmp_path: Path) -> None:
 
     with pytest.raises(ParseError, match=r"sequence/trajectory ingestion is not part of the 0.9 load\(\) API"):
         load_input(source)
+
+
 def test_suffixed_vasp_fixtures_route() -> None:
+    pytest.importorskip("iodata", reason="requires the optional interoperability backend")
     root = Path(__file__).resolve().parents[1] / "fixtures" / "interop"
     for directory, filename, expected in (
         ("chgcar", "CHGCAR-water", "chgcar"),
