@@ -163,8 +163,18 @@ def test_explicit_qcschema_hint_routes_to_backend(monkeypatch, tmp_path: Path) -
     assert calls == ["json_qcschema"]
 
 
-def test_backend_format_without_interop_extra_has_actionable_error(tmp_path: Path) -> None:
+def test_backend_format_without_interop_extra_has_actionable_error(monkeypatch, tmp_path: Path) -> None:
+    from openwfn import ingest
     from openwfn.errors import MissingOptionalDependencyError
+
+    actual_import = ingest.import_module
+
+    def import_without_backend(name: str):
+        if name == "iodata":
+            raise ModuleNotFoundError("No module named 'iodata'")
+        return actual_import(name)
+
+    monkeypatch.setattr(ingest, "import_module", import_without_backend)
 
     source = tmp_path / "water.molden"
     source.write_text("[Molden Format]\n", encoding="utf-8")
@@ -188,5 +198,5 @@ def test_two_record_xyz_is_not_silently_concatenated(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    with pytest.raises(ParseError, match="sequence/trajectory ingestion is not part of the 0.9 load\(\) API"):
+    with pytest.raises(ParseError, match=r"sequence/trajectory ingestion is not part of the 0.9 load\(\) API"):
         load_input(source)

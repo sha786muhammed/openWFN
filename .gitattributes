@@ -1,0 +1,2 @@
+# Preserve the exact bytes of pinned scientific fixtures, including format whitespace.
+tests/fixtures/interop/** -whitespace

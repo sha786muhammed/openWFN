@@ -1,7 +1,22 @@
 # Limitations
 
-- Full quantitative wavefunction analysis is currently Gaussian FCHK-centered.
-  Native ORCA, Q-Chem, and Psi4 wavefunction inputs are unsupported.
+- Native FCHK remains the preferred source for full quantitative wavefunction
+  analysis. The optional IOData 1.0.1 adapter can ingest the 25 listed
+  formats, but the available analyses depend on the records in each file.
+  Ingestion validation is fixture-scoped, not a claim of universal coverage
+  across program versions or every job type.
+- The cross-format water checks compare files derived from one originating
+  FCHK calculation. They test conversion consistency, not independent
+  scientific agreement with external calculations or experiment.
+- ORCA, Q-Chem, and GAMESS output fixtures used in this branch are constructed
+  program-output examples with geometry/energy fields; incomplete orbitals
+  are not interpreted as a wavefunction. Broader native program coverage and
+  independent reference corpora remain open work.
+- Multi-record trajectories are not yet a sequence API: one record is loaded,
+  and multi-frame XYZ is rejected rather than silently concatenated.
+- Periodic cells, volumetric grids, and integral-only records can be ingested,
+  but isolated-molecule frontier, population, and density analyses are not
+  inferred from those components.
 - Binary CHK files require Gaussian `formchk` and are not decoded internally.
 - Gaussian real spherical 5D, 7F, 9G, and 11H shells are supported; pure spherical shells above H (`l > 5`) are rejected explicitly.
 - ECP and ghost centers are handled with effective nuclear charges from the FCHK `Nuclear charges` record when present, and regression tests cover those semantics. This is source-faithful handling, not broad independent validation of every ECP family, basis set, or ghost-center workflow.

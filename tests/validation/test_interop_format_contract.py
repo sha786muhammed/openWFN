@@ -1,4 +1,5 @@
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
 
@@ -7,6 +8,11 @@ import pytest
 from openwfn.errors import ParseError
 from openwfn.formats import iodata_format_ids
 from openwfn.ingest import load_input
+
+pytestmark = pytest.mark.skipif(
+    importlib.util.find_spec("iodata") is None,
+    reason="optional interoperability backend is not installed",
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "validation" / "interop" / "manifest.json"

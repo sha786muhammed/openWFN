@@ -296,14 +296,14 @@ C1
 O 8.0 0.000000 0.000000 0.000000
 H 1.0 0.000000 1.428633 1.109269
 H 1.0 0.000000 -1.428633 1.109269
- $END      
+ $END
  COORDINATES OF SYMMETRY UNIQUE ATOMS (ANGS)
  Header line one
  Header line two
  O 8.0 0.000000 0.000000 0.000000
  H 1.0 0.000000 0.756000 0.587000
  H 1.0 0.000000 -0.756000 0.587000
-""")
+""".replace(" $END\n", " $END      \n"))
 
     put("qchemlog", "water.qchemlog", """Q-Chem openWFN synthetic validation excerpt
 $rem

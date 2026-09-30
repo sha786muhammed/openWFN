@@ -1,5 +1,8 @@
 # Python API reference
 
+The interoperability sections below describe an unreleased development branch;
+the published stable package remains 0.8.2.
+
 The stable import surface is declared by `openwfn.__all__`. Import from `openwfn` rather than internal modules when possible.
 
 ## Public import inventory
@@ -27,6 +30,16 @@ The stable import surface is declared by `openwfn.__all__`. Import from `openwfn
 | `export_csv` | Write a CSV point table |
 | `export_molecule_viewer` | Write a standalone molecular viewer |
 | `OpenWFNCalculation` | High-level calculation API |
+| `OpenWFNData` | Canonical interoperable input record |
+| `StructureData` | Atomic structure component |
+| `PeriodicData` | Periodic-cell component |
+| `IntegralData` | Explicit integral collection |
+| `IntegralTerm` | Integral entry |
+| `SourceMetadata` | Normalized source metadata |
+| `INTEROP_SCHEMA_VERSION` | Interoperability model schema identifier |
+| `Capability` | Inferred data-availability record |
+| `CapabilityRequirement` | Named requirement for an analysis |
+| `infer_capabilities` | Inspect canonical data components |
 | `MODEL_SCHEMA_VERSION` | Model schema identifier |
 | `BoundaryConditions` | Boundary-condition record |
 | `CalculationData` | Canonical calculation model |
@@ -44,7 +57,12 @@ The stable import surface is declared by `openwfn.__all__`. Import from `openwfn
 
 ### `load(path) -> OpenWFNCalculation`
 
-Load a supported calculation file through the parser registry. The returned typed model contains molecular structure and optional basis, orbital, and density data.
+Load a supported file through native ingestion or the optional IOData 1.0.1
+adapter. The returned object exposes `OpenWFNData` via `.data`; it may hold
+structure, a full isolated calculation, periodic data, grids, integrals, and
+metadata as separate optional components. Only use molecular analysis methods
+when their required records are present. Check `calculation.capabilities()`
+or the [capability reference](capabilities.md) first for mixed inputs.
 
 ### `OpenWFNCalculation`
 
@@ -54,6 +72,7 @@ fields before electronic analyses.
 | Method | Contract |
 |---|---|
 | `analyze(name)` | Preferred reproducible route for a registered named analysis |
+| `capabilities()` | States (`available`, `derived`, `missing`, `unsupported`) for this loaded file |
 | `analyze_geometry()` | Basic atom count, charge, and multiplicity |
 | `geometry_distance(i, j)` | Distance in ångströms; one-based atom numbers |
 | `geometry_angle(i, j, k)` | Angle in degrees; one-based atom numbers |
@@ -79,6 +98,18 @@ v0.8 and is reserved for a later periodic implementation.
 format, parser version, warnings, and named transformations. These fields make
 ingestion decisions traceable without changing scientific values. Existing
 constructor forms covered by the compatibility tests remain supported.
+
+### Migration from 0.8
+
+The high-level `.data` property now exposes `OpenWFNData`, not just
+`CalculationData`. For a complete FCHK wavefunction, `.data.calculation`
+contains the prior canonical calculation, and the high-level `.molecule`
+property still provides the same molecule. Existing FCHK CLI commands retain
+their meaning and native FCHK remains the preferred parser. Scripts that
+access `.data.molecule`, `.data.basis`, or `.data.alpha_orbitals` directly
+should migrate to `.data.calculation` or use the high-level methods. Structure-
+only, periodic, grid-only, and integral-only files do not fabricate a complete
+wavefunction. Pin the exact package version when reproducing published work.
 
 ## Scientific result safeguards
 

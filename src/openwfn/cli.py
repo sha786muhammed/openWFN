@@ -23,8 +23,8 @@ from .errors import DataUnavailableError
 from .exporters.structures import write_structure
 from .exporters.tables import ExportRequest, write_result_table
 from .fchk import parse_fchk_arrays, parse_fchk_scalars, read_fchk  # type: ignore
-from .interactive import run_interactive  # type: ignore
 from .inspection import build_capabilities_result
+from .interactive import run_interactive  # type: ignore
 from .model import CalculationData, CalculationMetadata, VolumetricGrid
 from .parsers.registry import load as load_calculation
 from .reporting import build_report_record

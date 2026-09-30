@@ -107,9 +107,23 @@ The default density spacing of **0.15 bohr** is an accuracy/performance tradeoff
 
 ## Input support
 
-Gaussian formatted-checkpoint (`.fchk`) data currently provides the full electronic wavefunction record used by openWFN analyses. Gaussian `.chk` is a proprietary binary format; openWFN calls Gaussian's separately installed `formchk` utility and does not decode it directly.
+The published stable release is 0.8.2. This development branch adds optional
+interoperability support; it is not a published 0.9 release. For its source
+checkout, install `python -m pip install -e ".[interop]"`. The optional reader
+is pinned to IOData 1.0.1 and has a [25-format ingestion matrix](docs/reference/formats-and-exports.md)
+with [capability discovery](docs/reference/capabilities.md). Format ingestion
+does not imply that every file has orbitals, density, or an applicable
+analysis. The [cross-format validation](validation/interop/report.md) compares
+five water representations from one originating calculation; it is not broad
+independent scientific validation.
 
-XYZ, MOL/SDF, and PDB inputs provide structure-only records. Additional quantum-chemistry parsers will be listed as supported only after their implementation and validation evidence are available.
+Gaussian formatted-checkpoint (`.fchk`) remains the preferred full-wavefunction
+path. Gaussian `.chk` is a proprietary binary format; openWFN calls Gaussian's
+separately installed `formchk` utility and does not decode it directly.
+
+XYZ, MOL/SDF, and PDB inputs provide structure-only records. The optional
+backend also reads structure, periodic, grid, and integral-only formats; use
+`openwfn FILE capabilities` to check the actual data before analysis.
 
 ```bash
 openwfn calculation.chk formchk calculation.fchk

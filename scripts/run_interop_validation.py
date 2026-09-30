@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT / "src") not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
 
+from openwfn.analysis.basis import ao_atom_indices  # noqa: E402
 from openwfn.analysis.registry import run_analysis_safe  # noqa: E402
 from openwfn.capabilities import infer_capabilities  # noqa: E402
 from openwfn.formats import iodata_format_ids  # noqa: E402
@@ -123,6 +124,8 @@ def _observation(data: Any, name: str, grid: dict[str, float]) -> Any:
         )
     if name == "basis_functions":
         return calc.basis.n_functions
+    if name == "ao_atom_indices":
+        return list(ao_atom_indices(calc.basis))
     if name == "alpha_energies_hartree":
         return list(calc.alpha_orbitals.energies)
     if name == "alpha_occupations":
@@ -181,7 +184,8 @@ def run_cross_format_validation(manifest_path: Path) -> dict[str, object]:
                                 "metric": "ingestion", "status": "FAILED",
                                 "error": f"{type(exc).__name__}: {exc}"})
     failed = sum(item["status"] == "FAILED" for item in results)
-    return {"status": "PASSED" if failed == 0 else "FAILED", "passed": len(results) - failed,
+    return {"status": "PASSED" if failed == 0 else "FAILED",
+            "reference_note": manifest["reference_note"], "passed": len(results) - failed,
             "failed": failed, "total": len(results), "results": results}
 
 
@@ -225,6 +229,7 @@ def run(
             lines.extend(f"- {error}" for error in item["errors"])
     lines.extend(["", "## Cross-format scientific equivalence", "",
                   f"Status: **{cross['status']}** ({cross['passed']}/{cross['total']} metrics)", "",
+                  str(cross["reference_note"]), "",
                   "| Format | Metric | Expected | Observed | Absolute error | Tolerance | Status |",
                   "|---|---|---|---|---:|---:|---|"])
     for item in cross["results"]:

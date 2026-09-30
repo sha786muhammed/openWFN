@@ -1,9 +1,17 @@
 """Independent numerical references for equivalent and program-output fixtures."""
 
+import importlib.util
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.run_interop_validation import run
+
+pytestmark = pytest.mark.skipif(
+    importlib.util.find_spec("iodata") is None,
+    reason="optional interoperability backend is not installed",
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "validation/interop/cross_format_manifest.json"
@@ -24,6 +32,8 @@ def test_cross_format_manifest_has_explicit_reference_and_tolerances() -> None:
         assert all("expected" in metric and "absolute_tolerance" in metric
                    for metric in case["metrics"])
         assert all(metric["absolute_tolerance"] >= 0 for metric in case["metrics"])
+    for case in payload["equivalent_water"]:
+        assert "ao_atom_indices" in {metric["name"] for metric in case["metrics"]}
 
 
 def test_cross_format_report_passes_and_is_a_separate_release_gate(tmp_path: Path) -> None:
@@ -32,6 +42,7 @@ def test_cross_format_report_passes_and_is_a_separate_release_gate(tmp_path: Pat
     assert cross["status"] == "PASSED"
     assert cross["failed"] == 0
     assert cross["results"]
+    assert "same project-owned FCHK" in cross["reference_note"]
     assert all({"expected", "observed", "absolute_error", "tolerance", "status"} <= set(item)
                for item in cross["results"])
     assert "Cross-format scientific equivalence" in (tmp_path / "report.md").read_text()
