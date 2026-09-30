@@ -6,16 +6,21 @@ import json
 from concurrent.futures import FIRST_COMPLETED, Executor, Future, ProcessPoolExecutor, wait
 from dataclasses import dataclass, field, replace
 from hashlib import sha256
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any, Callable, Iterator, Literal, cast
 
-from .analysis.registry import available_analyses, run_analysis_safe
+from . import __version__
+from .analysis.registry import _resolve, available_analyses, run_analysis_safe
 from .api import load
+from .data import INTEROP_SCHEMA_VERSION
 from .formats import iodata_format_ids, path_matches_declared_format
+from .model import MODEL_SCHEMA_VERSION
 from .parsers.registry import DEFAULT_REGISTRY
 from .results import RESULT_SCHEMA_VERSION, ResultRecord
 
 BATCH_SCHEMA_VERSION = "1.0"
+BATCH_IMPLEMENTATION_TOKEN = "0.9-workflow-hardening-1"
 ProgressCallback = Callable[[int, int, "BatchRecord"], None]
 FrontierSpin = Literal["alpha", "beta", "all"]
 
@@ -142,16 +147,38 @@ def _file_sha256(path: Path) -> str | None:
         return None
 
 
+def _backend_version() -> str | None:
+    try:
+        return version("qc-iodata")
+    except PackageNotFoundError:
+        return None
+
+
 def _configuration_fingerprint(
     analyses: tuple[str, ...],
     frontier_spin: FrontierSpin = "alpha",
+    *,
+    format_hint: str | None = None,
+    format_hints: dict[Path, str] | None = None,
 ) -> str:
     payload = json.dumps(
         {
             "analyses": list(analyses),
+            "analysis_versions": {name: _resolve(name).version for name in analyses},
             "frontier_spin": frontier_spin,
+            "openwfn_version": __version__,
+            "implementation_token": BATCH_IMPLEMENTATION_TOKEN,
             "batch_schema_version": BATCH_SCHEMA_VERSION,
             "result_schema_version": RESULT_SCHEMA_VERSION,
+            "model_schema_version": MODEL_SCHEMA_VERSION,
+            "interop_schema_version": INTEROP_SCHEMA_VERSION,
+            "backend_version": _backend_version(),
+            "format_hint": format_hint,
+            "format_hints": {
+                str(path): hint for path, hint in sorted(
+                    (format_hints or {}).items(), key=lambda item: str(item[0])
+                )
+            },
         },
         sort_keys=True,
         separators=(",", ":"),
@@ -411,7 +438,10 @@ def run_batch(
         )
     if not paths and not discovery.unsupported:
         raise ValueError("no input files were discovered")
-    fingerprint = _configuration_fingerprint(normalized, frontier_spin)
+    fingerprint = _configuration_fingerprint(
+        normalized, frontier_spin,
+        format_hint=global_hint, format_hints=resolved_hints,
+    )
     records_by_index: dict[int, BatchRecord] = {}
     pending: list[tuple[int, tuple[Path, tuple[str, ...], str | None]]] = []
     completed_count = 0
@@ -474,6 +504,13 @@ def run_batch(
         "operation": operation_name,
         "records": [_record_payload(record) for record in records],
         "schema_version": BATCH_SCHEMA_VERSION,
+        "openwfn_version": __version__,
+        "implementation_token": BATCH_IMPLEMENTATION_TOKEN,
+        "model_schema_version": MODEL_SCHEMA_VERSION,
+        "interop_schema_version": INTEROP_SCHEMA_VERSION,
+        "result_schema_version": RESULT_SCHEMA_VERSION,
+        "backend_version": _backend_version(),
+        "analysis_versions": {name: _resolve(name).version for name in normalized},
         "unsupported_inputs": list(manifest.unsupported_inputs),
         "unsupported_details": [
             {"path": item.path, "reason": item.reason, "sha256": item.sha256}

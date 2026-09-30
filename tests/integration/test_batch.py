@@ -245,3 +245,54 @@ def test_parallel_batch_is_deterministic_persistent_and_resumable(tmp_path: Path
     assert [item.status for item in manifest.records] == ["success", "success", "error"]
     assert len(list((output / "records").glob("*.json"))) == 3
     assert [item.skipped for item in resumed.records] == [True, True, False]
+
+
+def test_resume_invalidates_on_implementation_token_and_format_hint(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import openwfn.batch as batch_module
+
+    source = tmp_path / "water.xyz"
+    source.write_text("1\nwater\nH 0 0 0\n", encoding="utf-8")
+    output = tmp_path / "results"
+    first = run_batch([source], "summary", 1, output)
+    same = run_batch([source], "summary", 1, output, resume=True)
+    assert first.records[0].skipped is False
+    assert same.records[0].skipped is True
+
+    hinted = run_batch([source], "summary", 1, output, resume=True, format_hint="xyz")
+    assert hinted.records[0].skipped is False
+    assert hinted.configuration_fingerprint != same.configuration_fingerprint
+
+    monkeypatch.setattr(batch_module, "BATCH_IMPLEMENTATION_TOKEN", "changed-test-token")
+    changed = run_batch([source], "summary", 1, output, resume=True, format_hint="xyz")
+    assert changed.records[0].skipped is False
+    assert changed.configuration_fingerprint != hinted.configuration_fingerprint
+
+
+def test_resume_invalidates_on_backend_and_analysis_version(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dataclasses import replace
+
+    import openwfn.batch as batch_module
+    from openwfn.analysis import registry
+
+    source = ROOT / "examples" / "water" / "water.fchk"
+    output = tmp_path / "results"
+    first = run_batch([source], "summary", 1, output)
+    monkeypatch.setattr(batch_module, "_backend_version", lambda: "changed-backend")
+    changed_backend = run_batch([source], "summary", 1, output, resume=True)
+    assert changed_backend.records[0].skipped is False
+    assert changed_backend.configuration_fingerprint != first.configuration_fingerprint
+
+    original = registry._ANALYSES["summary"]
+    monkeypatch.setitem(registry._ANALYSES, "summary", replace(original, version="test-version"))
+    changed_analysis = run_batch([source], "summary", 1, output, resume=True)
+    assert changed_analysis.records[0].skipped is False
+    assert changed_analysis.configuration_fingerprint != changed_backend.configuration_fingerprint
+
+    saved = json.loads((output / "batch-manifest.json").read_text())
+    assert saved["openwfn_version"]
+    assert saved["backend_version"] == "changed-backend"
+    assert saved["analysis_versions"]["summary"] == "test-version"
