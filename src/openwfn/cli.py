@@ -31,7 +31,7 @@ from .inspection import build_capabilities_result, capability_payload
 from .interactive import run_interactive  # type: ignore
 from .model import CalculationData
 from .reporting import build_report_record
-from .results import ResultRecord
+from .results import ResultError, ResultRecord
 from .services import (
     density_cube_export,
     density_integration,
@@ -631,8 +631,10 @@ def main(argv: list[str] | None = None) -> int:
             try:
                 format_hints = _read_format_map(args.format_map)
             except (OSError, ValueError, json.JSONDecodeError) as exc:
-                context.error_stream.write(f"Error: Invalid format map: {exc}\n")
-                return 1
+                return execute(
+                    lambda error=exc: (_ for _ in ()).throw(ValueError(f"Invalid format map: {error}")),
+                    context,
+                )
             analyses = (
                 tuple(item.strip() for item in args.analyses.split(",") if item.strip())
                 if args.analyses
@@ -665,6 +667,10 @@ def main(argv: list[str] | None = None) -> int:
                             "unsupported": len(discovery.unsupported),
                             "unsupported_inputs": [
                                 str(path) for path in discovery.unsupported
+                            ],
+                            "unsupported_details": [
+                                {"path": item.path, "reason": item.reason, "sha256": item.sha256}
+                                for item in discovery.unsupported_details
                             ],
                         },
                     ),
@@ -708,9 +714,23 @@ def main(argv: list[str] | None = None) -> int:
                         "skipped": skipped,
                         "configuration_fingerprint": manifest.configuration_fingerprint,
                         "unsupported": len(manifest.unsupported_inputs),
+                        "unsupported_details": [
+                            {"path": item.path, "reason": item.reason, "sha256": item.sha256}
+                            for item in manifest.unsupported_details
+                        ],
+                        "attempted": manifest.attempted_count,
+                        "stopped_early": manifest.stopped_early,
                         "manifest": str(args.output_dir / "batch-manifest.json"),
                         "csv_index": str(args.output_dir / "batch-summary.csv"),
                     },
+                    status=manifest.status,
+                    error=(
+                        ResultError(
+                            "BatchError",
+                            f"Batch contains {errors} failed record(s) and {len(manifest.unsupported_inputs)} unsupported input(s).",
+                        )
+                        if manifest.status == "failed" else None
+                    ),
                 )
 
             return execute(batch_operation, context)

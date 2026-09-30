@@ -21,9 +21,17 @@ FrontierSpin = Literal["alpha", "beta", "all"]
 
 
 @dataclass(frozen=True, slots=True)
+class UnsupportedInput:
+    path: str
+    reason: str
+    sha256: str | None
+
+
+@dataclass(frozen=True, slots=True)
 class InputDiscovery:
     inputs: tuple[Path, ...]
     unsupported: tuple[Path, ...] = ()
+    unsupported_details: tuple[UnsupportedInput, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,6 +53,10 @@ class BatchManifest:
     analyses: tuple[str, ...] = ()
     configuration_fingerprint: str = ""
     unsupported_inputs: tuple[str, ...] = ()
+    unsupported_details: tuple[UnsupportedInput, ...] = ()
+    attempted_count: int = 0
+    stopped_early: bool = False
+    status: Literal["success", "partial", "failed"] = "success"
     schema_version: str = field(default=BATCH_SCHEMA_VERSION, init=False)
 
 
@@ -106,7 +118,17 @@ def discover_inputs(
                 add(candidate)
         else:
             add(path)
-    return InputDiscovery(tuple(discovered), tuple(unsupported))
+    return InputDiscovery(
+        tuple(discovered), tuple(unsupported),
+        tuple(
+            UnsupportedInput(
+                path=str(path),
+                reason="No registered filename pattern matches; provide an explicit format hint if this is a supported input.",
+                sha256=_file_sha256(path),
+            )
+            for path in unsupported
+        ),
+    )
 
 
 def _file_sha256(path: Path) -> str | None:
@@ -387,8 +409,8 @@ def run_batch(
             "Format map path is not among discovered input files: "
             + ", ".join(str(path) for path in sorted(unknown_paths))
         )
-    if not paths:
-        raise ValueError("no supported input files were discovered")
+    if not paths and not discovery.unsupported:
+        raise ValueError("no input files were discovered")
     fingerprint = _configuration_fingerprint(normalized, frontier_spin)
     records_by_index: dict[int, BatchRecord] = {}
     pending: list[tuple[int, tuple[Path, tuple[str, ...], str | None]]] = []
@@ -426,6 +448,13 @@ def run_batch(
                 progress(completed_count, len(paths), record)
 
     records = [records_by_index[index] for index in sorted(records_by_index)]
+    stopped_early = bool(fail_fast and len(records) < len(paths))
+    if discovery.unsupported or any(record.status == "error" for record in records):
+        aggregate_status: Literal["success", "partial", "failed"] = "failed"
+    elif any(record.status == "partial" for record in records):
+        aggregate_status = "partial"
+    else:
+        aggregate_status = "success"
 
     operation_name = normalized[0] if len(normalized) == 1 else "multiple"
     manifest = BatchManifest(
@@ -434,6 +463,10 @@ def run_batch(
         analyses=normalized,
         configuration_fingerprint=fingerprint,
         unsupported_inputs=tuple(str(path) for path in discovery.unsupported),
+        unsupported_details=discovery.unsupported_details,
+        attempted_count=len(records),
+        stopped_early=stopped_early,
+        status=aggregate_status,
     )
     payload = {
         "analyses": list(normalized),
@@ -442,6 +475,13 @@ def run_batch(
         "records": [_record_payload(record) for record in records],
         "schema_version": BATCH_SCHEMA_VERSION,
         "unsupported_inputs": list(manifest.unsupported_inputs),
+        "unsupported_details": [
+            {"path": item.path, "reason": item.reason, "sha256": item.sha256}
+            for item in manifest.unsupported_details
+        ],
+        "attempted_count": manifest.attempted_count,
+        "stopped_early": manifest.stopped_early,
+        "status": manifest.status,
     }
     _atomic_write_json(output_dir / "batch-manifest.json", payload)
     _write_csv_index(records, output_dir)
