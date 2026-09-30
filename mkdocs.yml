@@ -72,6 +72,7 @@ nav:
   - Get Started:
       - Overview: start/index.md
       - Installation: installation.md
+      - Interoperability preview: interoperability.md
       - Your first analysis: start/first-analysis.md
       - Quick start: quick-start.md
       - Learning paths: start/learning-paths.md
@@ -94,6 +95,7 @@ nav:
       - Complete CLI: reference/cli.md
       - Python API: reference/python-api.md
       - Formats, units, and exports: reference/formats-and-exports.md
+      - Capabilities: reference/capabilities.md
   - Science:
       - Geometry and topology: science/geometry-topology.md
       - Orbitals and density: science/orbitals-density.md

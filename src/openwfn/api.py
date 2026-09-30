@@ -4,65 +4,96 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Literal
 
-from .analysis.registry import run_analysis
+from .analysis.registry import run_analysis, run_analysis_safe
+from .capabilities import Capability, infer_capabilities
+from .data import INTEROP_SCHEMA_VERSION, OpenWFNData
 from .errors import DataUnavailableError
-from .model import (
-    MODEL_SCHEMA_VERSION,
-    CalculationData,
-    CalculationMetadata,
-    Molecule,
-    VolumetricGrid,
-)
-from .parsers.registry import load as parse_input
+from .ingest import load_input
+from .model import MODEL_SCHEMA_VERSION, Molecule
 from .results import ResultRecord
 from .services import (
     density_integration,
     geometry_angle,
     geometry_dihedral,
     geometry_distance,
-    orbital_frontier,
-    population_analysis,
 )
 
 
 @dataclass(frozen=True, slots=True)
 class OpenWFNCalculation:
-    data: CalculationData
+    data: OpenWFNData
 
     @property
     def molecule(self) -> Molecule:
-        return self.data.molecule
+        if self.data.calculation is None:
+            raise DataUnavailableError("This input does not contain a complete isolated molecular calculation.")
+        return self.data.calculation.molecule
 
-    def _with_provenance(self, result: ResultRecord) -> ResultRecord:
-        source = self.molecule.provenance
-        provenance = {
+    def capabilities(self) -> dict[str, Capability]:
+        """Return capabilities inferred from normalized data actually present."""
+
+        return infer_capabilities(self.data)
+
+    def _provenance_payload(self) -> dict[str, object]:
+        source = self.data.provenance
+        return {
             "input_sha256": source.sha256 if source else None,
+            "interop_schema_version": INTEROP_SCHEMA_VERSION,
             "model_schema_version": MODEL_SCHEMA_VERSION,
             "parser": source.parser if source else None,
             "parser_version": source.parser_version if source else None,
+            "backend": getattr(source, "backend", None) if source else None,
+            "backend_version": getattr(source, "backend_version", None) if source else None,
             "source_format": source.source_format if source else None,
             "source_path": source.source_path if source else None,
-            "source_program": self.molecule.metadata.source_program,
-            "source_program_version": self.molecule.metadata.source_program_version,
+            "source_program": self.data.metadata.source_program,
+            "source_program_version": self.data.metadata.source_program_version,
             "transformations": list(source.transformations) if source else [],
         }
+
+    def _with_provenance(self, result: ResultRecord) -> ResultRecord:
+        source = self.data.provenance
         source_warnings = source.warnings if source else ()
         return replace(
             result,
-            provenance=provenance,
+            provenance=self._provenance_payload(),
             warnings=tuple(dict.fromkeys((*result.warnings, *source_warnings))),
         )
 
-    def analyze_geometry(self) -> ResultRecord:
-        """Return basic molecular geometry metadata in the standard result envelope."""
+    def _unavailable(self, kind: str, analysis_name: str, message: str) -> ResultRecord:
+        return self._with_provenance(
+            ResultRecord.failure(
+                kind=kind,
+                analysis_name=analysis_name,
+                analysis_version="1",
+                exception=DataUnavailableError(message),
+                elapsed_seconds=0.0,
+            )
+        )
 
+    def analyze_geometry(self) -> ResultRecord:
+        """Return basic geometry metadata in the standard result envelope."""
+
+        if self.data.calculation is not None:
+            structure = self.data.calculation.molecule
+            atom_count = len(structure.atoms)
+            charge = structure.charge
+            multiplicity = structure.multiplicity
+        elif self.data.structure is not None:
+            atom_count = len(self.data.structure.coordinates)
+            charge = self.data.structure.charge
+            multiplicity = self.data.structure.multiplicity
+        else:
+            return self._unavailable(
+                "geometry_summary", "geometry_summary", "Atomic structure is not available for this input."
+            )
         return self._with_provenance(
             ResultRecord(
                 kind="geometry_summary",
                 data={
-                    "atom_count": len(self.molecule.atoms),
-                    "charge": self.molecule.charge,
-                    "multiplicity": self.molecule.multiplicity,
+                    "atom_count": atom_count,
+                    "charge": charge,
+                    "multiplicity": multiplicity,
                 },
             )
         )
@@ -85,7 +116,11 @@ class OpenWFNCalculation:
 
     def orbitals(self, spin: Literal["alpha", "beta", "all"] = "alpha") -> ResultRecord:
         """Return frontier molecular-orbital energies for one or both spin channels."""
-        return self._with_provenance(orbital_frontier(self.data, spin))
+
+        if spin not in {"alpha", "beta", "all"}:
+            raise ValueError("spin must be 'alpha', 'beta', or 'all'")
+        analysis = {"alpha": "frontier", "beta": "beta-frontier", "all": "frontier-all"}[spin]
+        return run_analysis_safe(self.data, analysis)
 
     def density(
         self,
@@ -95,28 +130,34 @@ class OpenWFNCalculation:
         padding_bohr: float = 6.0,
     ) -> ResultRecord:
         """Integrate an electron-density component on a molecular grid."""
-        return self._with_provenance(
-            density_integration(self.data, kind, spacing_bohr, padding_bohr)
-        )
+
+        if kind not in {"total", "alpha", "beta", "spin"}:
+            raise ValueError("density kind must be 'total', 'alpha', 'beta', or 'spin'")
+        if self.data.calculation is None:
+            return self._unavailable(
+                "density_integration",
+                f"density-{kind}",
+                "Density analysis requires a complete molecular wavefunction.",
+            )
+        try:
+            return self._with_provenance(
+                density_integration(self.data.calculation, kind, spacing_bohr, padding_bohr)
+            )
+        except DataUnavailableError as exc:
+            return self._unavailable("density_integration", f"density-{kind}", str(exc))
 
     def population(
         self,
         method: Literal["mulliken", "lowdin"] = "mulliken",
     ) -> ResultRecord:
         """Return Mulliken or symmetric Löwdin atomic populations."""
-        return self._with_provenance(population_analysis(self.data, method))
+
+        if method not in {"mulliken", "lowdin"}:
+            raise ValueError("population method must be 'mulliken' or 'lowdin'")
+        return run_analysis_safe(self.data, method)
 
 
 def load(path: str | Path) -> OpenWFNCalculation:
-    parsed = parse_input(Path(path))
-    if isinstance(parsed, CalculationMetadata):
-        raise DataUnavailableError(
-            f"{path} contains calculation metadata rather than a molecular calculation."
-        )
-    if isinstance(parsed, VolumetricGrid):
-        raise DataUnavailableError(
-            f"{path} contains a volumetric grid rather than a molecular calculation."
-        )
-    if not isinstance(parsed, CalculationData):
-        raise DataUnavailableError(f"{path} does not contain a supported molecular calculation.")
-    return OpenWFNCalculation(parsed)
+    """Load any successfully normalized native or interoperability input."""
+
+    return OpenWFNCalculation(load_input(Path(path)))

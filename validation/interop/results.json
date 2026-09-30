@@ -1,0 +1,1483 @@
+{
+  "schema_version": "1.0",
+  "overall": "PASSED",
+  "passed": 25,
+  "failed": 0,
+  "total": 25,
+  "formats": [
+    {
+      "format_id": "charmm",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "chgcar",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "cp2klog",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "cube",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "extxyz",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "fchk",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "fcidump",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "gamess",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "gaussianinput",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "gaussianlog",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "gromacs",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "json_qcschema",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "locpot",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "mol2",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "molden",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "molekel",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "mwfn",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "orcalog",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "pdb",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "poscar",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "qchemlog",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "sdf",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "wfn",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "wfx",
+      "status": "PASSED",
+      "errors": []
+    },
+    {
+      "format_id": "xyz",
+      "status": "PASSED",
+      "errors": []
+    }
+  ],
+  "cross_format": {
+    "status": "PASSED",
+    "reference_note": "Five water wavefunction files were derived from the same project-owned FCHK. Numerical targets are the native FCHK baseline, not independent external experimental results. Program outputs are separately constructed format fixtures.",
+    "passed": 64,
+    "failed": 0,
+    "total": 64,
+    "results": [
+      {
+        "group": "equivalent_water",
+        "format_id": "fchk",
+        "metric": "atomic_numbers",
+        "expected": [
+          8,
+          1,
+          1
+        ],
+        "observed": [
+          8,
+          1,
+          1
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 0.0,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "fchk",
+        "metric": "coordinates_angstrom",
+        "expected": [
+          [
+            0,
+            0,
+            0.1140487477
+          ],
+          [
+            0,
+            0.7804708052,
+            -0.4561949903
+          ],
+          [
+            0,
+            -0.7804708052,
+            -0.4561949903
+          ]
+        ],
+        "observed": [
+          [
+            2.0765610629969862e-32,
+            8.926428534125518e-32,
+            0.11404874769861381
+          ],
+          [
+            -8.361943085079024e-31,
+            0.7804708051752508,
+            -0.45619499026527804
+          ],
+          [
+            -9.558010743042007e-17,
+            -0.7804708051752508,
+            -0.45619499026527804
+          ]
+        ],
+        "absolute_error": 3.4721947539395615e-11,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "fchk",
+        "metric": "electron_count",
+        "expected": 10,
+        "observed": 10.0,
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "fchk",
+        "metric": "basis_functions",
+        "expected": 13,
+        "observed": 13,
+        "absolute_error": 0.0,
+        "tolerance": 0.0,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "fchk",
+        "metric": "ao_atom_indices",
+        "expected": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          2,
+          2
+        ],
+        "observed": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          2,
+          2
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 0.0,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "fchk",
+        "metric": "alpha_energies_hartree",
+        "expected": [
+          -20.4271908,
+          -1.32098683,
+          -0.685590948,
+          -0.52981661,
+          -0.477228505,
+          0.261094828
+        ],
+        "observed": [
+          -20.4271908,
+          -1.32098683,
+          -0.685590948,
+          -0.52981661,
+          -0.477228505,
+          0.261094828
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "fchk",
+        "metric": "alpha_occupations",
+        "expected": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          0
+        ],
+        "observed": [
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          0.0
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "fchk",
+        "metric": "frontier_gap_hartree",
+        "expected": 0.738323333,
+        "observed": 0.738323333,
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "fchk",
+        "metric": "mulliken_charges",
+        "expected": [
+          -0.73288863,
+          0.36644432,
+          0.36644432
+        ],
+        "observed": [
+          -0.73288863,
+          0.36644432,
+          0.36644432
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "fchk",
+        "metric": "density_integral_electrons",
+        "expected": 10.02148372,
+        "observed": 10.02148372,
+        "absolute_error": 0.0,
+        "tolerance": 0.0002,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "molden",
+        "metric": "atomic_numbers",
+        "expected": [
+          8,
+          1,
+          1
+        ],
+        "observed": [
+          8,
+          1,
+          1
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 0.0,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "molden",
+        "metric": "coordinates_angstrom",
+        "expected": [
+          [
+            0,
+            0,
+            0.1140487477
+          ],
+          [
+            0,
+            0.7804708052,
+            -0.4561949903
+          ],
+          [
+            0,
+            -0.7804708052,
+            -0.4561949903
+          ]
+        ],
+        "observed": [
+          [
+            0.0,
+            0.0,
+            0.11404874769861381
+          ],
+          [
+            -0.0,
+            0.7804708051752508,
+            -0.45619499026527804
+          ],
+          [
+            -9.578107517652001e-17,
+            -0.7804708051752508,
+            -0.45619499026527804
+          ]
+        ],
+        "absolute_error": 3.4721947539395615e-11,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "molden",
+        "metric": "electron_count",
+        "expected": 10,
+        "observed": 10.0,
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "molden",
+        "metric": "basis_functions",
+        "expected": 13,
+        "observed": 13,
+        "absolute_error": 0.0,
+        "tolerance": 0.0,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "molden",
+        "metric": "ao_atom_indices",
+        "expected": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          2,
+          2
+        ],
+        "observed": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          2,
+          2
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 0.0,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "molden",
+        "metric": "alpha_energies_hartree",
+        "expected": [
+          -20.4271908,
+          -1.32098683,
+          -0.685590948,
+          -0.52981661,
+          -0.477228505,
+          0.261094828
+        ],
+        "observed": [
+          -20.4271908,
+          -1.32098683,
+          -0.685590948,
+          -0.52981661,
+          -0.477228505,
+          0.261094828
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "molden",
+        "metric": "alpha_occupations",
+        "expected": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          0
+        ],
+        "observed": [
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          0.0
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "molden",
+        "metric": "frontier_gap_hartree",
+        "expected": 0.738323333,
+        "observed": 0.738323333,
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "molden",
+        "metric": "mulliken_charges",
+        "expected": [
+          -0.73288863,
+          0.36644432,
+          0.36644432
+        ],
+        "observed": [
+          -0.73288863,
+          0.36644432,
+          0.36644432
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "molden",
+        "metric": "density_integral_electrons",
+        "expected": 10.02148372,
+        "observed": 10.02148373,
+        "absolute_error": 9.99999905104687e-09,
+        "tolerance": 0.0002,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "wfn",
+        "metric": "atomic_numbers",
+        "expected": [
+          8,
+          1,
+          1
+        ],
+        "observed": [
+          8,
+          1,
+          1
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 0.0,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "wfn",
+        "metric": "coordinates_angstrom",
+        "expected": [
+          [
+            0,
+            0,
+            0.1140487477
+          ],
+          [
+            0,
+            0.7804708052,
+            -0.4561949903
+          ],
+          [
+            0,
+            -0.7804708052,
+            -0.4561949903
+          ]
+        ],
+        "observed": [
+          [
+            0.0,
+            0.0,
+            0.11404874875696823
+          ],
+          [
+            -0.0,
+            0.7804708051752508,
+            -0.45619498973610084
+          ],
+          [
+            -0.0,
+            -0.7804708051752508,
+            -0.45619498973610084
+          ]
+        ],
+        "absolute_error": 1.0569682351579957e-09,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "wfn",
+        "metric": "electron_count",
+        "expected": 10,
+        "observed": 10.0,
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "wfn",
+        "metric": "basis_functions",
+        "expected": 21,
+        "observed": 21,
+        "absolute_error": 0.0,
+        "tolerance": 0.0,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "wfn",
+        "metric": "ao_atom_indices",
+        "expected": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          2,
+          2,
+          2
+        ],
+        "observed": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          2,
+          2,
+          2
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 0.0,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "wfn",
+        "metric": "alpha_energies_hartree",
+        "expected": [
+          -20.4271908,
+          -1.32098683,
+          -0.685590948,
+          -0.52981661,
+          -0.477228505,
+          0.261094828
+        ],
+        "observed": [
+          -20.427191,
+          -1.320987,
+          -0.685591,
+          -0.529817,
+          -0.477229,
+          0.261095
+        ],
+        "absolute_error": 4.94999999989254e-07,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "wfn",
+        "metric": "alpha_occupations",
+        "expected": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          0
+        ],
+        "observed": [
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          0.0
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "wfn",
+        "metric": "frontier_gap_hartree",
+        "expected": 0.738323333,
+        "observed": 0.738324,
+        "absolute_error": 6.670000000097431e-07,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "wfn",
+        "metric": "mulliken_charges",
+        "expected": [
+          -0.73288863,
+          0.36644432,
+          0.36644432
+        ],
+        "observed": [
+          -0.73288862,
+          0.36644432,
+          0.36644432
+        ],
+        "absolute_error": 1.0000000050247593e-08,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "wfn",
+        "metric": "density_integral_electrons",
+        "expected": 10.02148372,
+        "observed": 10.02148371,
+        "absolute_error": 1.000000082740371e-08,
+        "tolerance": 0.0002,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "wfx",
+        "metric": "atomic_numbers",
+        "expected": [
+          8,
+          1,
+          1
+        ],
+        "observed": [
+          8,
+          1,
+          1
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 0.0,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "wfx",
+        "metric": "coordinates_angstrom",
+        "expected": [
+          [
+            0,
+            0,
+            0.1140487477
+          ],
+          [
+            0,
+            0.7804708052,
+            -0.4561949903
+          ],
+          [
+            0,
+            -0.7804708052,
+            -0.4561949903
+          ]
+        ],
+        "observed": [
+          [
+            2.0765610629969862e-32,
+            8.926428534125518e-32,
+            0.11404874769861381
+          ],
+          [
+            -8.361943085079024e-31,
+            0.7804708051752508,
+            -0.45619499026527804
+          ],
+          [
+            -9.558010743042007e-17,
+            -0.7804708051752508,
+            -0.45619499026527804
+          ]
+        ],
+        "absolute_error": 3.4721947539395615e-11,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "wfx",
+        "metric": "electron_count",
+        "expected": 10,
+        "observed": 10.0,
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "wfx",
+        "metric": "basis_functions",
+        "expected": 21,
+        "observed": 21,
+        "absolute_error": 0.0,
+        "tolerance": 0.0,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "wfx",
+        "metric": "ao_atom_indices",
+        "expected": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          2,
+          2,
+          2
+        ],
+        "observed": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          2,
+          2,
+          2
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 0.0,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "wfx",
+        "metric": "alpha_energies_hartree",
+        "expected": [
+          -20.4271908,
+          -1.32098683,
+          -0.685590948,
+          -0.52981661,
+          -0.477228505,
+          0.261094828
+        ],
+        "observed": [
+          -20.4271908,
+          -1.32098683,
+          -0.685590948,
+          -0.52981661,
+          -0.477228505,
+          0.261094828
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "wfx",
+        "metric": "alpha_occupations",
+        "expected": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          0
+        ],
+        "observed": [
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          0.0
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "wfx",
+        "metric": "frontier_gap_hartree",
+        "expected": 0.738323333,
+        "observed": 0.738323333,
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "wfx",
+        "metric": "mulliken_charges",
+        "expected": [
+          -0.73288863,
+          0.36644432,
+          0.36644432
+        ],
+        "observed": [
+          -0.73288863,
+          0.36644432,
+          0.36644432
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "wfx",
+        "metric": "density_integral_electrons",
+        "expected": 10.02148372,
+        "observed": 10.02148373,
+        "absolute_error": 9.99999905104687e-09,
+        "tolerance": 0.0002,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "mwfn",
+        "metric": "atomic_numbers",
+        "expected": [
+          8,
+          1,
+          1
+        ],
+        "observed": [
+          8,
+          1,
+          1
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 0.0,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "mwfn",
+        "metric": "coordinates_angstrom",
+        "expected": [
+          [
+            0,
+            0,
+            0.1140487477
+          ],
+          [
+            0,
+            0.7804708052,
+            -0.4561949903
+          ],
+          [
+            0,
+            -0.7804708052,
+            -0.4561949903
+          ]
+        ],
+        "observed": [
+          [
+            0.0,
+            0.0,
+            0.11404874769903588
+          ],
+          [
+            -0.0,
+            0.7804708051755536,
+            -0.4561949902651435
+          ],
+          [
+            -0.0,
+            -0.7804708051755536,
+            -0.4561949902651435
+          ]
+        ],
+        "absolute_error": 3.4856506569980183e-11,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "mwfn",
+        "metric": "electron_count",
+        "expected": 10,
+        "observed": 10.0,
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "mwfn",
+        "metric": "basis_functions",
+        "expected": 13,
+        "observed": 13,
+        "absolute_error": 0.0,
+        "tolerance": 0.0,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "mwfn",
+        "metric": "ao_atom_indices",
+        "expected": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          2,
+          2
+        ],
+        "observed": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          2,
+          2
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 0.0,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "mwfn",
+        "metric": "alpha_energies_hartree",
+        "expected": [
+          -20.4271908,
+          -1.32098683,
+          -0.685590948,
+          -0.52981661,
+          -0.477228505,
+          0.261094828
+        ],
+        "observed": [
+          -20.4271908,
+          -1.32098683,
+          -0.685590948,
+          -0.52981661,
+          -0.477228505,
+          0.261094828
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "mwfn",
+        "metric": "alpha_occupations",
+        "expected": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          0
+        ],
+        "observed": [
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          0.0
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "mwfn",
+        "metric": "frontier_gap_hartree",
+        "expected": 0.738323333,
+        "observed": 0.738323333,
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "mwfn",
+        "metric": "mulliken_charges",
+        "expected": [
+          -0.73288863,
+          0.36644432,
+          0.36644432
+        ],
+        "observed": [
+          -0.73288863,
+          0.36644432,
+          0.36644432
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "equivalent_water",
+        "format_id": "mwfn",
+        "metric": "density_integral_electrons",
+        "expected": 10.02148372,
+        "observed": 10.02148373,
+        "absolute_error": 9.99999905104687e-09,
+        "tolerance": 0.0002,
+        "status": "PASSED"
+      },
+      {
+        "group": "program_references",
+        "format_id": "orcalog",
+        "metric": "atomic_numbers",
+        "expected": [
+          8,
+          1,
+          1
+        ],
+        "observed": [
+          8,
+          1,
+          1
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 0.0,
+        "status": "PASSED"
+      },
+      {
+        "group": "program_references",
+        "format_id": "orcalog",
+        "metric": "coordinates_angstrom",
+        "expected": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0.756,
+            0.587
+          ],
+          [
+            0,
+            -0.756,
+            0.587
+          ]
+        ],
+        "observed": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.7560000263682725,
+            0.5869998755800175
+          ],
+          [
+            0.0,
+            -0.7560000263682725,
+            0.5869998755800175
+          ]
+        ],
+        "absolute_error": 1.2441998242795904e-07,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "program_references",
+        "format_id": "orcalog",
+        "metric": "energy_hartree",
+        "expected": -74.96,
+        "observed": -74.96,
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "program_references",
+        "format_id": "qchemlog",
+        "metric": "atomic_numbers",
+        "expected": [
+          8,
+          1,
+          1
+        ],
+        "observed": [
+          8,
+          1,
+          1
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 0.0,
+        "status": "PASSED"
+      },
+      {
+        "group": "program_references",
+        "format_id": "qchemlog",
+        "metric": "coordinates_angstrom",
+        "expected": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0.756,
+            0.587
+          ],
+          [
+            0,
+            -0.756,
+            0.587
+          ]
+        ],
+        "observed": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.7560000005371661,
+            0.5870000004170852
+          ],
+          [
+            0.0,
+            -0.7560000005371661,
+            0.5870000004170852
+          ]
+        ],
+        "absolute_error": 5.371660893871422e-10,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "program_references",
+        "format_id": "qchemlog",
+        "metric": "energy_hartree",
+        "expected": -74.96,
+        "observed": -74.96,
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "program_references",
+        "format_id": "gamess",
+        "metric": "atomic_numbers",
+        "expected": [
+          8,
+          1,
+          1
+        ],
+        "observed": [
+          8,
+          1,
+          1
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 0.0,
+        "status": "PASSED"
+      },
+      {
+        "group": "program_references",
+        "format_id": "gamess",
+        "metric": "coordinates_angstrom",
+        "expected": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0.756,
+            0.587
+          ],
+          [
+            0,
+            -0.756,
+            0.587
+          ]
+        ],
+        "observed": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.7560000005371661,
+            0.5870000004170852
+          ],
+          [
+            0.0,
+            -0.7560000005371661,
+            0.5870000004170852
+          ]
+        ],
+        "absolute_error": 5.371660893871422e-10,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "program_references",
+        "format_id": "cp2klog",
+        "metric": "atomic_numbers",
+        "expected": [
+          2
+        ],
+        "observed": [
+          2
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 0.0,
+        "status": "PASSED"
+      },
+      {
+        "group": "program_references",
+        "format_id": "cp2klog",
+        "metric": "coordinates_angstrom",
+        "expected": [
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "observed": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "program_references",
+        "format_id": "cp2klog",
+        "metric": "energy_hartree",
+        "expected": -2.0,
+        "observed": -2.0,
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "program_references",
+        "format_id": "cp2klog",
+        "metric": "basis_functions",
+        "expected": 2,
+        "observed": 2,
+        "absolute_error": 0.0,
+        "tolerance": 0.0,
+        "status": "PASSED"
+      },
+      {
+        "group": "program_references",
+        "format_id": "cp2klog",
+        "metric": "alpha_energies_hartree",
+        "expected": [
+          -0.5,
+          0.1
+        ],
+        "observed": [
+          -0.5,
+          0.1
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      },
+      {
+        "group": "program_references",
+        "format_id": "cp2klog",
+        "metric": "alpha_occupations",
+        "expected": [
+          2,
+          0
+        ],
+        "observed": [
+          2.0,
+          0.0
+        ],
+        "absolute_error": 0.0,
+        "tolerance": 1e-06,
+        "status": "PASSED"
+      }
+    ]
+  }
+}

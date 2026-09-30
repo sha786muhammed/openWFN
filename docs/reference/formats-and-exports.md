@@ -23,6 +23,54 @@ still be recognized as single-frame XYZ when their contents match that format.
 cleanly when the parsed input does not provide a molecular calculation; openWFN
 does not infer missing wavefunction records.
 
+## Stable interoperability formats
+
+This section describes the unreleased interoperability branch, not the
+published 0.8.2 wheel. Install the branch checkout with
+`python -m pip install -e ".[interop]"` for the IOData-backed entries. This is the
+pinned IOData 1.0.1 readable-format inventory. “Stable” means ingestion passed
+the project fixture contract; it does not mean every analysis is available,
+or that all real-world variants have been independently validated. Native
+FCHK remains the preferred path for Gaussian formatted checkpoints. The
+“components” column describes the pinned fixture, not a promise about every
+file in that format. `calculation` can be structure-only and does not imply
+that orbitals or a basis are present.
+
+| Format ID | Typical filename | Preferred path | Fixture components | Ingestion status |
+|---|---|---|---|---|
+| `charmm` | `.crd`, `.psf` | IOData | metadata, structure | Stable |
+| `chgcar` | `CHGCAR`, `.chgcar` | IOData | grids, metadata, periodic, structure | Stable |
+| `cp2klog` | CP2K `.out` | IOData; detected from content | calculation, metadata, structure | Stable |
+| `cube` | `.cube`, `.cub` | Native | grids | Stable |
+| `extxyz` | `.extxyz` | IOData | metadata, structure | Stable |
+| `fchk` | `.fchk`, `.fch` | Native | calculation, metadata, structure | Stable |
+| `fcidump` | `FCIDUMP`, `.fcidump` | IOData | integrals | Stable |
+| `gamess` | GAMESS `.dat` or `.out` | IOData; explicit hint may be needed | metadata, structure | Stable |
+| `gaussianinput` | `.gjf`, `.com` | IOData | metadata, structure | Stable |
+| `gaussianlog` | Gaussian `.log` | Native by default; IOData with explicit hint | metadata | Stable |
+| `gromacs` | `.gro` | IOData | metadata, periodic, structure | Stable |
+| `json_qcschema` | `.qcschema.json` | IOData | metadata, structure | Stable |
+| `locpot` | `LOCPOT`, `.locpot` | IOData | grids, metadata, periodic, structure | Stable |
+| `mol2` | `.mol2` | IOData | metadata, structure | Stable |
+| `molden` | `.molden` | IOData | calculation, metadata, structure | Stable |
+| `molekel` | `.mkl` | IOData | calculation, structure | Stable |
+| `mwfn` | `.mwfn` | IOData | calculation, metadata, structure | Stable |
+| `orcalog` | ORCA `.out` | IOData; detected from content | metadata, structure | Stable |
+| `pdb` | `.pdb` | Native | calculation, metadata, structure | Stable |
+| `poscar` | `POSCAR`, `.poscar`, `.vasp` | IOData | metadata, periodic, structure | Stable |
+| `qchemlog` | Q-Chem `.out` | IOData; detected from content | metadata, structure | Stable |
+| `sdf` | `.sdf`, `.mol` | Native | calculation, metadata, structure | Stable |
+| `wfn` | `.wfn` | IOData | calculation, metadata, structure | Stable |
+| `wfx` | `.wfx` | IOData | calculation, metadata, structure | Stable |
+| `xyz` | `.xyz` | Native | calculation, metadata, structure | Stable |
+
+The 25 fixture contracts and cross-format numerical checks are recorded in
+[`validation/interop`](https://github.com/sha786muhammed/openWFN/tree/main/validation/interop).
+The five water wavefunction representations share one originating calculation;
+their agreement is a cross-format regression, not independent experimental
+confirmation. WFN/WFX expose 21 primitive functions where the contracted
+FCHK/Molden/MWFN representations expose 13 basis functions.
+
 ## Structure outputs
 
 `convert` writes XYZ, PDB, MOL, or SDF. These formats primarily carry structure and connectivity; they do not preserve the full wavefunction. The legacy `xyz` command writes atom symbols and Cartesian coordinates.

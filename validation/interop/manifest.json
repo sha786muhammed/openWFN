@@ -1,0 +1,1252 @@
+{
+  "schema_version": "1.0",
+  "formats": [
+    {
+      "format_id": "charmm",
+      "path": "tests/fixtures/interop/charmm/water.crd",
+      "sha256": "f6c94af5be9f9d19bf93abb74c2b42f0cc1119b097b5e9acf18d04a4e1bce214",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Constructed specifically for openWFN from the published format layout",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "charmm",
+        "backend": "iodata",
+        "backend_version": "1.0.1"
+      },
+      "expected_components": [
+        "metadata",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "missing",
+        "periodic_cell": "missing",
+        "basis": "missing",
+        "alpha_orbitals": "missing",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "missing",
+        "total_density": "missing",
+        "spin_density": "missing",
+        "ao_overlap": "missing",
+        "volumetric_grid": "missing",
+        "electronic_energy": "missing",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [],
+        "unsupported": [
+          "beta-frontier",
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ]
+      },
+      "expected_atom_count": 3
+    },
+    {
+      "format_id": "chgcar",
+      "path": "tests/fixtures/interop/chgcar/CHGCAR-water",
+      "sha256": "a783473820030e1a638a1c484f9418358f8e907662a4064279314d130adaef64",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Constructed specifically for openWFN from the published format layout",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "chgcar",
+        "backend": "iodata",
+        "backend_version": "1.0.1"
+      },
+      "expected_components": [
+        "grids",
+        "metadata",
+        "periodic",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "missing",
+        "periodic_cell": "available",
+        "basis": "missing",
+        "alpha_orbitals": "missing",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "missing",
+        "total_density": "missing",
+        "spin_density": "missing",
+        "ao_overlap": "missing",
+        "volumetric_grid": "available",
+        "electronic_energy": "missing",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [],
+        "unsupported": [
+          "beta-frontier",
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ]
+      },
+      "expected_atom_count": 1
+    },
+    {
+      "format_id": "cp2klog",
+      "path": "tests/fixtures/interop/cp2klog/helium.cp2k.out",
+      "sha256": "4a0d80a2a8151a1500bb79a51257aa142a39a3a64a4ad89436873978d25a24e4",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Constructed specifically for openWFN from the published format layout",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "cp2klog",
+        "backend": "iodata",
+        "backend_version": "1.0.1"
+      },
+      "expected_components": [
+        "calculation",
+        "metadata",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "available",
+        "periodic_cell": "missing",
+        "basis": "available",
+        "alpha_orbitals": "available",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "available",
+        "total_density": "available",
+        "spin_density": "missing",
+        "ao_overlap": "derived",
+        "volumetric_grid": "missing",
+        "electronic_energy": "available",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ],
+        "unsupported": [
+          "beta-frontier"
+        ]
+      },
+      "expected_atom_count": 1
+    },
+    {
+      "format_id": "cube",
+      "path": "tests/fixtures/interop/cube/water.cube",
+      "sha256": "9d0c6d68c9408990b0b519423ca8378ff9c5a5567cdc7b47081785a0546135db",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Constructed specifically for openWFN from the published format layout",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "cube",
+        "backend": "native",
+        "backend_version": null
+      },
+      "expected_components": [
+        "grids"
+      ],
+      "expected_capabilities": {
+        "structure": "missing",
+        "molecular_metadata": "missing",
+        "isolated_molecule": "missing",
+        "periodic_cell": "missing",
+        "basis": "missing",
+        "alpha_orbitals": "missing",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "missing",
+        "total_density": "missing",
+        "spin_density": "missing",
+        "ao_overlap": "missing",
+        "volumetric_grid": "available",
+        "electronic_energy": "missing",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [],
+        "unsupported": [
+          "beta-frontier",
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ]
+      },
+      "expected_atom_count": null
+    },
+    {
+      "format_id": "extxyz",
+      "path": "tests/fixtures/interop/extxyz/water.extxyz",
+      "sha256": "761abae6cb15fcabaad70b32ecc936642cfcc6fabbbad3c00a6357293ab21cdd",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Constructed specifically for openWFN from the published format layout",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "extxyz",
+        "backend": "iodata",
+        "backend_version": "1.0.1"
+      },
+      "expected_components": [
+        "metadata",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "missing",
+        "periodic_cell": "missing",
+        "basis": "missing",
+        "alpha_orbitals": "missing",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "missing",
+        "total_density": "missing",
+        "spin_density": "missing",
+        "ao_overlap": "missing",
+        "volumetric_grid": "missing",
+        "electronic_energy": "missing",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [],
+        "unsupported": [
+          "beta-frontier",
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ]
+      },
+      "expected_atom_count": 3
+    },
+    {
+      "format_id": "fchk",
+      "path": "tests/fixtures/interop/fchk/water.fchk",
+      "sha256": "f3c6cb5e1f9f205e49b439339bb0833160f56be68f40e1c1097db3f30f52dcf2",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Converted from the openWFN-owned examples/water/water.fchk calculation",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "fchk",
+        "backend": "native",
+        "backend_version": null
+      },
+      "expected_components": [
+        "calculation",
+        "metadata",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "available",
+        "periodic_cell": "missing",
+        "basis": "available",
+        "alpha_orbitals": "available",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "available",
+        "total_density": "available",
+        "spin_density": "missing",
+        "ao_overlap": "derived",
+        "volumetric_grid": "missing",
+        "electronic_energy": "available",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ],
+        "unsupported": [
+          "beta-frontier"
+        ]
+      },
+      "expected_atom_count": 3
+    },
+    {
+      "format_id": "fcidump",
+      "path": "tests/fixtures/interop/fcidump/water.FCIDUMP",
+      "sha256": "716dd10985baa75538b53648f9d970c4508aae8d83270cd4c2541e9480c400b1",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Constructed specifically for openWFN from the published format layout",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "fcidump",
+        "backend": "iodata",
+        "backend_version": "1.0.1"
+      },
+      "expected_components": [
+        "integrals"
+      ],
+      "expected_capabilities": {
+        "structure": "missing",
+        "molecular_metadata": "missing",
+        "isolated_molecule": "missing",
+        "periodic_cell": "missing",
+        "basis": "missing",
+        "alpha_orbitals": "missing",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "missing",
+        "total_density": "missing",
+        "spin_density": "missing",
+        "ao_overlap": "missing",
+        "volumetric_grid": "missing",
+        "electronic_energy": "missing",
+        "integrals": "available"
+      },
+      "expected_analyses": {
+        "available": [],
+        "unsupported": [
+          "beta-frontier",
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ]
+      },
+      "expected_atom_count": null
+    },
+    {
+      "format_id": "gamess",
+      "path": "tests/fixtures/interop/gamess/water.dat",
+      "sha256": "8c9d1e89d677a182cba6611422284eb358e1c1534985d5850e06643ac4d7099c",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Constructed specifically for openWFN from the published format layout",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "gamess",
+        "backend": "iodata",
+        "backend_version": "1.0.1"
+      },
+      "expected_components": [
+        "metadata",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "missing",
+        "periodic_cell": "missing",
+        "basis": "missing",
+        "alpha_orbitals": "missing",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "missing",
+        "total_density": "missing",
+        "spin_density": "missing",
+        "ao_overlap": "missing",
+        "volumetric_grid": "missing",
+        "electronic_energy": "missing",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [],
+        "unsupported": [
+          "beta-frontier",
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ]
+      },
+      "expected_atom_count": 3
+    },
+    {
+      "format_id": "gaussianinput",
+      "path": "tests/fixtures/interop/gaussianinput/water.gjf",
+      "sha256": "00bc1fc3d6de93066a4db76e42f002e4f082ef9cf8a326424ef1773af8146524",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Constructed specifically for openWFN from the published format layout",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "gaussianinput",
+        "backend": "iodata",
+        "backend_version": "1.0.1"
+      },
+      "expected_components": [
+        "metadata",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "missing",
+        "periodic_cell": "missing",
+        "basis": "missing",
+        "alpha_orbitals": "missing",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "missing",
+        "total_density": "missing",
+        "spin_density": "missing",
+        "ao_overlap": "missing",
+        "volumetric_grid": "missing",
+        "electronic_energy": "missing",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [],
+        "unsupported": [
+          "beta-frontier",
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ]
+      },
+      "expected_atom_count": 3
+    },
+    {
+      "format_id": "gaussianlog",
+      "path": "tests/fixtures/interop/gaussianlog/water.log",
+      "sha256": "43577bcfbafb91e2b4830be8807f31fbe9f7139cbcf818d3d1b4fe7be282ac5a",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Constructed specifically for openWFN from the published format layout",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "gaussianlog",
+        "backend": "iodata",
+        "backend_version": "1.0.1"
+      },
+      "expected_components": [
+        "metadata"
+      ],
+      "expected_capabilities": {
+        "structure": "missing",
+        "molecular_metadata": "available",
+        "isolated_molecule": "missing",
+        "periodic_cell": "missing",
+        "basis": "missing",
+        "alpha_orbitals": "missing",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "missing",
+        "total_density": "missing",
+        "spin_density": "missing",
+        "ao_overlap": "missing",
+        "volumetric_grid": "missing",
+        "electronic_energy": "missing",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [],
+        "unsupported": [
+          "beta-frontier",
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ]
+      },
+      "expected_atom_count": null
+    },
+    {
+      "format_id": "gromacs",
+      "path": "tests/fixtures/interop/gromacs/water.gro",
+      "sha256": "19f637f1b69cd5c9acbbec94686cf5ff9e01d47db52aa5e6971c3d39f1488037",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Constructed specifically for openWFN from the published format layout",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "gromacs",
+        "backend": "iodata",
+        "backend_version": "1.0.1"
+      },
+      "expected_components": [
+        "metadata",
+        "periodic",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "missing",
+        "periodic_cell": "available",
+        "basis": "missing",
+        "alpha_orbitals": "missing",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "missing",
+        "total_density": "missing",
+        "spin_density": "missing",
+        "ao_overlap": "missing",
+        "volumetric_grid": "missing",
+        "electronic_energy": "missing",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [],
+        "unsupported": [
+          "beta-frontier",
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ]
+      },
+      "expected_atom_count": 3
+    },
+    {
+      "format_id": "json_qcschema",
+      "path": "tests/fixtures/interop/json_qcschema/water.qcschema.json",
+      "sha256": "eb9eebbcbc2b7cbc10789b6d0730f5bf34742bfeef7e33b94c44ea3bb908c3d1",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Constructed specifically for openWFN from the published format layout",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "json_qcschema",
+        "backend": "iodata",
+        "backend_version": "1.0.1"
+      },
+      "expected_components": [
+        "metadata",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "missing",
+        "periodic_cell": "missing",
+        "basis": "missing",
+        "alpha_orbitals": "missing",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "missing",
+        "total_density": "missing",
+        "spin_density": "missing",
+        "ao_overlap": "missing",
+        "volumetric_grid": "missing",
+        "electronic_energy": "missing",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [],
+        "unsupported": [
+          "beta-frontier",
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ]
+      },
+      "expected_atom_count": 3
+    },
+    {
+      "format_id": "locpot",
+      "path": "tests/fixtures/interop/locpot/LOCPOT-water",
+      "sha256": "a783473820030e1a638a1c484f9418358f8e907662a4064279314d130adaef64",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Constructed specifically for openWFN from the published format layout",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "locpot",
+        "backend": "iodata",
+        "backend_version": "1.0.1"
+      },
+      "expected_components": [
+        "grids",
+        "metadata",
+        "periodic",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "missing",
+        "periodic_cell": "available",
+        "basis": "missing",
+        "alpha_orbitals": "missing",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "missing",
+        "total_density": "missing",
+        "spin_density": "missing",
+        "ao_overlap": "missing",
+        "volumetric_grid": "available",
+        "electronic_energy": "missing",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [],
+        "unsupported": [
+          "beta-frontier",
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ]
+      },
+      "expected_atom_count": 1
+    },
+    {
+      "format_id": "mol2",
+      "path": "tests/fixtures/interop/mol2/water.mol2",
+      "sha256": "8aa34dd25221c2a795ecd73e3ad7d50d3cdc2d22842d43133106c51c889c827b",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Converted from the openWFN-owned examples/water/water.fchk calculation",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "mol2",
+        "backend": "iodata",
+        "backend_version": "1.0.1"
+      },
+      "expected_components": [
+        "metadata",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "missing",
+        "periodic_cell": "missing",
+        "basis": "missing",
+        "alpha_orbitals": "missing",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "missing",
+        "total_density": "missing",
+        "spin_density": "missing",
+        "ao_overlap": "missing",
+        "volumetric_grid": "missing",
+        "electronic_energy": "missing",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [],
+        "unsupported": [
+          "beta-frontier",
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ]
+      },
+      "expected_atom_count": 3
+    },
+    {
+      "format_id": "molden",
+      "path": "tests/fixtures/interop/molden/water.molden",
+      "sha256": "d449f7a957e1b14700fcfbf6d48d5957a4a87468cf1ed154baa234fbc7998ef9",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Converted from the openWFN-owned examples/water/water.fchk calculation",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "molden",
+        "backend": "iodata",
+        "backend_version": "1.0.1"
+      },
+      "expected_components": [
+        "calculation",
+        "metadata",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "available",
+        "periodic_cell": "missing",
+        "basis": "available",
+        "alpha_orbitals": "available",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "available",
+        "total_density": "available",
+        "spin_density": "missing",
+        "ao_overlap": "derived",
+        "volumetric_grid": "missing",
+        "electronic_energy": "missing",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ],
+        "unsupported": [
+          "beta-frontier"
+        ]
+      },
+      "expected_atom_count": 3
+    },
+    {
+      "format_id": "molekel",
+      "path": "tests/fixtures/interop/molekel/water.mkl",
+      "sha256": "b301a668c1f351a0b29777f2f8ab6a0e59d8c5d78ae197200607dfd506b874bc",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Converted from the openWFN-owned examples/water/water.fchk calculation",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "molekel",
+        "backend": "iodata",
+        "backend_version": "1.0.1"
+      },
+      "expected_components": [
+        "calculation",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "available",
+        "periodic_cell": "missing",
+        "basis": "available",
+        "alpha_orbitals": "available",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "available",
+        "total_density": "available",
+        "spin_density": "missing",
+        "ao_overlap": "derived",
+        "volumetric_grid": "missing",
+        "electronic_energy": "missing",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ],
+        "unsupported": [
+          "beta-frontier"
+        ]
+      },
+      "expected_atom_count": 3
+    },
+    {
+      "format_id": "mwfn",
+      "path": "tests/fixtures/interop/mwfn/water.mwfn",
+      "sha256": "6400419eba65f39fadc03cebe58ab8fea4b1f19a0fd8834fc2ab69aca04d3185",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Converted from the openWFN-owned examples/water/water.fchk calculation",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "mwfn",
+        "backend": "iodata",
+        "backend_version": "1.0.1"
+      },
+      "expected_components": [
+        "calculation",
+        "metadata",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "available",
+        "periodic_cell": "missing",
+        "basis": "available",
+        "alpha_orbitals": "available",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "available",
+        "total_density": "available",
+        "spin_density": "missing",
+        "ao_overlap": "derived",
+        "volumetric_grid": "missing",
+        "electronic_energy": "available",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ],
+        "unsupported": [
+          "beta-frontier"
+        ]
+      },
+      "expected_atom_count": 3
+    },
+    {
+      "format_id": "orcalog",
+      "path": "tests/fixtures/interop/orcalog/water.out",
+      "sha256": "7538248d291bd3b405752266c57dc94dcde333a6746a1bacbf517a70101d6906",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Constructed specifically for openWFN from the published format layout",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "orcalog",
+        "backend": "iodata",
+        "backend_version": "1.0.1"
+      },
+      "expected_components": [
+        "metadata",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "missing",
+        "periodic_cell": "missing",
+        "basis": "missing",
+        "alpha_orbitals": "missing",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "missing",
+        "total_density": "missing",
+        "spin_density": "missing",
+        "ao_overlap": "missing",
+        "volumetric_grid": "missing",
+        "electronic_energy": "available",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [],
+        "unsupported": [
+          "beta-frontier",
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ]
+      },
+      "expected_atom_count": 3
+    },
+    {
+      "format_id": "pdb",
+      "path": "tests/fixtures/interop/pdb/water.pdb",
+      "sha256": "7f4301e0fbd431acd117ec9be206fe3a7093ddf58c54310a36cc91a3bc6311fc",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Converted from the openWFN-owned examples/water/water.fchk calculation",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "pdb",
+        "backend": "native",
+        "backend_version": null
+      },
+      "expected_components": [
+        "calculation",
+        "metadata",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "available",
+        "periodic_cell": "missing",
+        "basis": "missing",
+        "alpha_orbitals": "missing",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "missing",
+        "total_density": "missing",
+        "spin_density": "missing",
+        "ao_overlap": "missing",
+        "volumetric_grid": "missing",
+        "electronic_energy": "missing",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [
+          "summary"
+        ],
+        "unsupported": [
+          "beta-frontier",
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken"
+        ]
+      },
+      "expected_atom_count": 3
+    },
+    {
+      "format_id": "poscar",
+      "path": "tests/fixtures/interop/poscar/POSCAR-water",
+      "sha256": "73725dd870b81b741282157388ebe89d6b3dc09d8c66f048d01d9dcce72045fb",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Constructed specifically for openWFN from the published format layout",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "poscar",
+        "backend": "iodata",
+        "backend_version": "1.0.1"
+      },
+      "expected_components": [
+        "metadata",
+        "periodic",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "missing",
+        "periodic_cell": "available",
+        "basis": "missing",
+        "alpha_orbitals": "missing",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "missing",
+        "total_density": "missing",
+        "spin_density": "missing",
+        "ao_overlap": "missing",
+        "volumetric_grid": "missing",
+        "electronic_energy": "missing",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [],
+        "unsupported": [
+          "beta-frontier",
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ]
+      },
+      "expected_atom_count": 1
+    },
+    {
+      "format_id": "qchemlog",
+      "path": "tests/fixtures/interop/qchemlog/water.qchemlog",
+      "sha256": "ea70f927ab9c5aa5ddc05a3e8c619443dee625d93249ce06873c3e9904680be3",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Constructed specifically for openWFN from the published format layout",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "qchemlog",
+        "backend": "iodata",
+        "backend_version": "1.0.1"
+      },
+      "expected_components": [
+        "metadata",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "missing",
+        "periodic_cell": "missing",
+        "basis": "missing",
+        "alpha_orbitals": "missing",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "missing",
+        "total_density": "missing",
+        "spin_density": "missing",
+        "ao_overlap": "missing",
+        "volumetric_grid": "missing",
+        "electronic_energy": "available",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [],
+        "unsupported": [
+          "beta-frontier",
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ]
+      },
+      "expected_atom_count": 3
+    },
+    {
+      "format_id": "sdf",
+      "path": "tests/fixtures/interop/sdf/water.sdf",
+      "sha256": "5fc223bd0f8f783dece0f4cd46dfd6d0118621fd44ea8e24ce3819b93c0ac965",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Converted from the openWFN-owned examples/water/water.fchk calculation",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "sdf",
+        "backend": "native",
+        "backend_version": null
+      },
+      "expected_components": [
+        "calculation",
+        "metadata",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "available",
+        "periodic_cell": "missing",
+        "basis": "missing",
+        "alpha_orbitals": "missing",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "missing",
+        "total_density": "missing",
+        "spin_density": "missing",
+        "ao_overlap": "missing",
+        "volumetric_grid": "missing",
+        "electronic_energy": "missing",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [
+          "summary"
+        ],
+        "unsupported": [
+          "beta-frontier",
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken"
+        ]
+      },
+      "expected_atom_count": 3
+    },
+    {
+      "format_id": "wfn",
+      "path": "tests/fixtures/interop/wfn/water.wfn",
+      "sha256": "6ccf343d39b7c4980c7a3cc618b6a92ee198756f2d5ea247574e65975edd7aca",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Converted from the openWFN-owned examples/water/water.fchk calculation",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "wfn",
+        "backend": "iodata",
+        "backend_version": "1.0.1"
+      },
+      "expected_components": [
+        "calculation",
+        "metadata",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "available",
+        "periodic_cell": "missing",
+        "basis": "available",
+        "alpha_orbitals": "available",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "available",
+        "total_density": "available",
+        "spin_density": "missing",
+        "ao_overlap": "derived",
+        "volumetric_grid": "missing",
+        "electronic_energy": "available",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ],
+        "unsupported": [
+          "beta-frontier"
+        ]
+      },
+      "expected_atom_count": 3
+    },
+    {
+      "format_id": "wfx",
+      "path": "tests/fixtures/interop/wfx/water.wfx",
+      "sha256": "170b2d8edb6ea7ebdb5af801101765f0903c0e82e7072c095be9434eb372a701",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Converted from the openWFN-owned examples/water/water.fchk calculation",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "wfx",
+        "backend": "iodata",
+        "backend_version": "1.0.1"
+      },
+      "expected_components": [
+        "calculation",
+        "metadata",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "available",
+        "periodic_cell": "missing",
+        "basis": "available",
+        "alpha_orbitals": "available",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "available",
+        "total_density": "available",
+        "spin_density": "missing",
+        "ao_overlap": "derived",
+        "volumetric_grid": "missing",
+        "electronic_energy": "available",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken",
+          "summary"
+        ],
+        "unsupported": [
+          "beta-frontier"
+        ]
+      },
+      "expected_atom_count": 3
+    },
+    {
+      "format_id": "xyz",
+      "path": "tests/fixtures/interop/xyz/water.xyz",
+      "sha256": "aa28ed82cf7e120e9b6058f86918306784b9183ccab35f3b7e8fede3bdf27db6",
+      "status": "Stable",
+      "provenance": {
+        "origin": "Converted from the openWFN-owned examples/water/water.fchk calculation",
+        "license": "MIT (openWFN project fixture)",
+        "redistribution_safe": true,
+        "generation": "scripts/generate_interop_fixtures.py"
+      },
+      "expected_source": {
+        "format": "xyz",
+        "backend": "native",
+        "backend_version": null
+      },
+      "expected_components": [
+        "calculation",
+        "metadata",
+        "structure"
+      ],
+      "expected_capabilities": {
+        "structure": "available",
+        "molecular_metadata": "available",
+        "isolated_molecule": "available",
+        "periodic_cell": "missing",
+        "basis": "missing",
+        "alpha_orbitals": "missing",
+        "beta_orbitals": "missing",
+        "orbital_occupations": "missing",
+        "total_density": "missing",
+        "spin_density": "missing",
+        "ao_overlap": "missing",
+        "volumetric_grid": "missing",
+        "electronic_energy": "missing",
+        "integrals": "missing"
+      },
+      "expected_analyses": {
+        "available": [
+          "summary"
+        ],
+        "unsupported": [
+          "beta-frontier",
+          "frontier",
+          "frontier-all",
+          "lowdin",
+          "mulliken"
+        ]
+      },
+      "expected_atom_count": 3
+    }
+  ]
+}

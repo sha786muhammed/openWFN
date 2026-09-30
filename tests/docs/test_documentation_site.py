@@ -9,6 +9,7 @@ import pytest
 
 import openwfn
 from openwfn.analysis.registry import available_analyses
+from openwfn.formats import iodata_format_ids
 from openwfn.parsers.registry import DEFAULT_REGISTRY
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -100,6 +101,18 @@ def test_mkdocs_navigation_references_existing_pages() -> None:
     assert referenced
     for relative in referenced:
         assert (ROOT / "docs" / relative).is_file(), relative
+
+
+def test_stable_interop_table_matches_pinned_inventory_and_validation_manifest() -> None:
+    import json
+
+    text = (ROOT / "docs/reference/formats-and-exports.md").read_text(encoding="utf-8")
+    section = markdown_section(text, "Stable interoperability formats")
+    documented = first_column_codes(section)
+    manifest = json.loads((ROOT / "validation/interop/manifest.json").read_text())
+    fixture_ids = {item["format_id"] for item in manifest["formats"]}
+    assert documented == set(iodata_format_ids()) == fixture_ids
+    assert len(documented) == 25
 
 
 def test_mkdocs_loads_scholarly_theme_and_mathjax() -> None:

@@ -1,0 +1,91 @@
+{
+  "schema_version": "1.0",
+  "reference_note": "Five water wavefunction files were derived from the same project-owned FCHK. Numerical targets are the native FCHK baseline, not independent external experimental results. Program outputs are separately constructed format fixtures.",
+  "density_grid": {"spacing_bohr": 0.15, "padding_bohr": 5.0},
+  "equivalent_water": [
+    {"format_id": "fchk", "path": "tests/fixtures/interop/fchk/water.fchk", "sha256": "f3c6cb5e1f9f205e49b439339bb0833160f56be68f40e1c1097db3f30f52dcf2", "metrics": [
+      {"name": "atomic_numbers", "expected": [8, 1, 1], "absolute_tolerance": 0},
+      {"name": "coordinates_angstrom", "expected": [[0, 0, 0.1140487477], [0, 0.7804708052, -0.4561949903], [0, -0.7804708052, -0.4561949903]], "absolute_tolerance": 0.000001},
+      {"name": "electron_count", "expected": 10, "absolute_tolerance": 0.000001},
+      {"name": "basis_functions", "expected": 13, "absolute_tolerance": 0},
+      {"name": "ao_atom_indices", "expected": [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2], "absolute_tolerance": 0},
+      {"name": "alpha_energies_hartree", "expected": [-20.4271908, -1.32098683, -0.685590948, -0.52981661, -0.477228505, 0.261094828], "absolute_tolerance": 0.000001},
+      {"name": "alpha_occupations", "expected": [2, 2, 2, 2, 2, 0], "absolute_tolerance": 0.000001},
+      {"name": "frontier_gap_hartree", "expected": 0.738323333, "absolute_tolerance": 0.000001},
+      {"name": "mulliken_charges", "expected": [-0.73288863, 0.36644432, 0.36644432], "absolute_tolerance": 0.000001},
+      {"name": "density_integral_electrons", "expected": 10.02148372, "absolute_tolerance": 0.0002}
+    ]},
+    {"format_id": "molden", "path": "tests/fixtures/interop/molden/water.molden", "sha256": "d449f7a957e1b14700fcfbf6d48d5957a4a87468cf1ed154baa234fbc7998ef9", "metrics": [
+      {"name": "atomic_numbers", "expected": [8, 1, 1], "absolute_tolerance": 0},
+      {"name": "coordinates_angstrom", "expected": [[0, 0, 0.1140487477], [0, 0.7804708052, -0.4561949903], [0, -0.7804708052, -0.4561949903]], "absolute_tolerance": 0.000001},
+      {"name": "electron_count", "expected": 10, "absolute_tolerance": 0.000001},
+      {"name": "basis_functions", "expected": 13, "absolute_tolerance": 0},
+      {"name": "ao_atom_indices", "expected": [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2], "absolute_tolerance": 0},
+      {"name": "alpha_energies_hartree", "expected": [-20.4271908, -1.32098683, -0.685590948, -0.52981661, -0.477228505, 0.261094828], "absolute_tolerance": 0.000001},
+      {"name": "alpha_occupations", "expected": [2, 2, 2, 2, 2, 0], "absolute_tolerance": 0.000001},
+      {"name": "frontier_gap_hartree", "expected": 0.738323333, "absolute_tolerance": 0.000001},
+      {"name": "mulliken_charges", "expected": [-0.73288863, 0.36644432, 0.36644432], "absolute_tolerance": 0.000001},
+      {"name": "density_integral_electrons", "expected": 10.02148372, "absolute_tolerance": 0.0002}
+    ]},
+    {"format_id": "wfn", "path": "tests/fixtures/interop/wfn/water.wfn", "sha256": "6ccf343d39b7c4980c7a3cc618b6a92ee198756f2d5ea247574e65975edd7aca", "metrics": [
+      {"name": "atomic_numbers", "expected": [8, 1, 1], "absolute_tolerance": 0},
+      {"name": "coordinates_angstrom", "expected": [[0, 0, 0.1140487477], [0, 0.7804708052, -0.4561949903], [0, -0.7804708052, -0.4561949903]], "absolute_tolerance": 0.000001},
+      {"name": "electron_count", "expected": 10, "absolute_tolerance": 0.000001},
+      {"name": "basis_functions", "expected": 21, "absolute_tolerance": 0},
+      {"name": "ao_atom_indices", "expected": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2], "absolute_tolerance": 0},
+      {"name": "alpha_energies_hartree", "expected": [-20.4271908, -1.32098683, -0.685590948, -0.52981661, -0.477228505, 0.261094828], "absolute_tolerance": 0.000001},
+      {"name": "alpha_occupations", "expected": [2, 2, 2, 2, 2, 0], "absolute_tolerance": 0.000001},
+      {"name": "frontier_gap_hartree", "expected": 0.738323333, "absolute_tolerance": 0.000001},
+      {"name": "mulliken_charges", "expected": [-0.73288863, 0.36644432, 0.36644432], "absolute_tolerance": 0.000001},
+      {"name": "density_integral_electrons", "expected": 10.02148372, "absolute_tolerance": 0.0002}
+    ]},
+    {"format_id": "wfx", "path": "tests/fixtures/interop/wfx/water.wfx", "sha256": "170b2d8edb6ea7ebdb5af801101765f0903c0e82e7072c095be9434eb372a701", "metrics": [
+      {"name": "atomic_numbers", "expected": [8, 1, 1], "absolute_tolerance": 0},
+      {"name": "coordinates_angstrom", "expected": [[0, 0, 0.1140487477], [0, 0.7804708052, -0.4561949903], [0, -0.7804708052, -0.4561949903]], "absolute_tolerance": 0.000001},
+      {"name": "electron_count", "expected": 10, "absolute_tolerance": 0.000001},
+      {"name": "basis_functions", "expected": 21, "absolute_tolerance": 0},
+      {"name": "ao_atom_indices", "expected": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2], "absolute_tolerance": 0},
+      {"name": "alpha_energies_hartree", "expected": [-20.4271908, -1.32098683, -0.685590948, -0.52981661, -0.477228505, 0.261094828], "absolute_tolerance": 0.000001},
+      {"name": "alpha_occupations", "expected": [2, 2, 2, 2, 2, 0], "absolute_tolerance": 0.000001},
+      {"name": "frontier_gap_hartree", "expected": 0.738323333, "absolute_tolerance": 0.000001},
+      {"name": "mulliken_charges", "expected": [-0.73288863, 0.36644432, 0.36644432], "absolute_tolerance": 0.000001},
+      {"name": "density_integral_electrons", "expected": 10.02148372, "absolute_tolerance": 0.0002}
+    ]},
+    {"format_id": "mwfn", "path": "tests/fixtures/interop/mwfn/water.mwfn", "sha256": "6400419eba65f39fadc03cebe58ab8fea4b1f19a0fd8834fc2ab69aca04d3185", "metrics": [
+      {"name": "atomic_numbers", "expected": [8, 1, 1], "absolute_tolerance": 0},
+      {"name": "coordinates_angstrom", "expected": [[0, 0, 0.1140487477], [0, 0.7804708052, -0.4561949903], [0, -0.7804708052, -0.4561949903]], "absolute_tolerance": 0.000001},
+      {"name": "electron_count", "expected": 10, "absolute_tolerance": 0.000001},
+      {"name": "basis_functions", "expected": 13, "absolute_tolerance": 0},
+      {"name": "ao_atom_indices", "expected": [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2], "absolute_tolerance": 0},
+      {"name": "alpha_energies_hartree", "expected": [-20.4271908, -1.32098683, -0.685590948, -0.52981661, -0.477228505, 0.261094828], "absolute_tolerance": 0.000001},
+      {"name": "alpha_occupations", "expected": [2, 2, 2, 2, 2, 0], "absolute_tolerance": 0.000001},
+      {"name": "frontier_gap_hartree", "expected": 0.738323333, "absolute_tolerance": 0.000001},
+      {"name": "mulliken_charges", "expected": [-0.73288863, 0.36644432, 0.36644432], "absolute_tolerance": 0.000001},
+      {"name": "density_integral_electrons", "expected": 10.02148372, "absolute_tolerance": 0.0002}
+    ]}
+  ],
+  "program_references": [
+    {"format_id": "orcalog", "path": "tests/fixtures/interop/orcalog/water.out", "sha256": "7538248d291bd3b405752266c57dc94dcde333a6746a1bacbf517a70101d6906", "metrics": [
+      {"name": "atomic_numbers", "expected": [8, 1, 1], "absolute_tolerance": 0},
+      {"name": "coordinates_angstrom", "expected": [[0, 0, 0], [0, 0.756, 0.587], [0, -0.756, 0.587]], "absolute_tolerance": 0.000001},
+      {"name": "energy_hartree", "expected": -74.96, "absolute_tolerance": 0.000001}
+    ]},
+    {"format_id": "qchemlog", "path": "tests/fixtures/interop/qchemlog/water.qchemlog", "sha256": "ea70f927ab9c5aa5ddc05a3e8c619443dee625d93249ce06873c3e9904680be3", "metrics": [
+      {"name": "atomic_numbers", "expected": [8, 1, 1], "absolute_tolerance": 0},
+      {"name": "coordinates_angstrom", "expected": [[0, 0, 0], [0, 0.756, 0.587], [0, -0.756, 0.587]], "absolute_tolerance": 0.000001},
+      {"name": "energy_hartree", "expected": -74.96, "absolute_tolerance": 0.000001}
+    ]},
+    {"format_id": "gamess", "path": "tests/fixtures/interop/gamess/water.dat", "sha256": "8c9d1e89d677a182cba6611422284eb358e1c1534985d5850e06643ac4d7099c", "metrics": [
+      {"name": "atomic_numbers", "expected": [8, 1, 1], "absolute_tolerance": 0},
+      {"name": "coordinates_angstrom", "expected": [[0, 0, 0], [0, 0.756, 0.587], [0, -0.756, 0.587]], "absolute_tolerance": 0.000001}
+    ]},
+    {"format_id": "cp2klog", "path": "tests/fixtures/interop/cp2klog/helium.cp2k.out", "sha256": "4a0d80a2a8151a1500bb79a51257aa142a39a3a64a4ad89436873978d25a24e4", "metrics": [
+      {"name": "atomic_numbers", "expected": [2], "absolute_tolerance": 0},
+      {"name": "coordinates_angstrom", "expected": [[0, 0, 0]], "absolute_tolerance": 0.000001},
+      {"name": "energy_hartree", "expected": -2.0, "absolute_tolerance": 0.000001},
+      {"name": "basis_functions", "expected": 2, "absolute_tolerance": 0},
+      {"name": "alpha_energies_hartree", "expected": [-0.5, 0.1], "absolute_tolerance": 0.000001},
+      {"name": "alpha_occupations", "expected": [2, 0], "absolute_tolerance": 0.000001}
+    ]}
+  ]
+}

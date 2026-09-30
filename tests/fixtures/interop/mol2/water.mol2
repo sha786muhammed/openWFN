@@ -1,0 +1,17 @@
+# Mol2 file created with Iodata
+
+
+
+
+
+
+@<TRIPOS>MOLECULE
+Water molecule - openWFN example
+    3      2      0      0
+@<TRIPOS>ATOM
+      1 O           0.0000    0.0000    0.1140 O         1 XXX         0.0000
+      2 H          -0.0000    0.7805   -0.4562 H         1 XXX         0.0000
+      3 H          -0.0000   -0.7805   -0.4562 H         1 XXX         0.0000
+@<TRIPOS>BOND
+     1    1    2 1 
+     2    1    3 1 

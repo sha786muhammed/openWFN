@@ -56,3 +56,19 @@ def test_documentation_workflow_runs_repository_preflight_after_install() -> Non
     install = text.index("python -m pip install .[test,docs]")
     preflight = text.index("python scripts/check_repository.py --root .")
     assert preflight > install
+
+
+def test_interop_ci_keeps_core_isolated_and_checks_multiple_platforms() -> None:
+    text = _workflow("tests.yml")
+    assert "  interop:" in text
+    assert 'python -m pip install -e ".[test,interop]"' in text
+    assert "scripts/run_interop_validation.py" in text
+    assert "tests/validation/test_cross_format_equivalence.py" in text
+    assert "matrix.os" in text and "macos-latest" in text and "windows-latest" in text
+    assert "molden/water.molden capabilities" in text
+    core = text.split("  wheel-smoke:", 1)[1].split("  interop-wheel-smoke:", 1)[0]
+    assert "dist/*.whl" in core
+    assert "qc-iodata" not in core
+    assert "importlib.util.find_spec('iodata') is None" in core
+    assert "  interop-wheel-smoke:" in text
+    assert '"${wheel_file}[interop]"' in text

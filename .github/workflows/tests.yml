@@ -47,6 +47,19 @@ jobs:
           cache: pip
       - run: python -m pip install -e ".[test]"
       - run: python -m pytest --strict-markers tests/cli tests/integration
+      - run: python -m pip install -e ".[interop]"
+      - run: python -m openwfn.cli tests/fixtures/interop/molden/water.molden capabilities
+  interop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e ".[test,interop]"
+      - run: python -m pytest tests/parsers/test_iodata_adapter.py tests/integration/test_interop_python_api.py tests/cli/test_capabilities_command.py tests/validation/test_interop_format_contract.py tests/validation/test_cross_format_equivalence.py -q
+      - run: python scripts/run_interop_validation.py
   scientific-validation:
     runs-on: ubuntu-latest
     steps:
@@ -71,6 +84,7 @@ jobs:
       - run: python -m twine check dist/*
       - run: python -m venv wheel-test
       - run: wheel-test/bin/python -m pip install dist/*.whl
+      - run: wheel-test/bin/python -c "import importlib.util; assert importlib.util.find_spec('iodata') is None"
       - run: wheel-test/bin/openwfn --version
       - run: wheel-test/bin/openwfn examples install installed-examples
       - run: wheel-test/bin/openwfn --format json --output summary.json installed-examples/water.fchk summary
@@ -95,3 +109,26 @@ jobs:
           assert "<script src='http" not in workbench
           PY
       - run: wheel-test/bin/python scripts/benchmark_batch.py --count 20 --workers 2 --workspace wheel-benchmark --output wheel-benchmark.json
+  interop-wheel-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install build
+      - run: python -m build
+      - run: python -m venv interop-wheel-test
+      - run: |
+          wheel_file=$(find dist -name '*.whl' -print -quit)
+          interop-wheel-test/bin/python -m pip install "${wheel_file}[interop]"
+      - run: interop-wheel-test/bin/openwfn tests/fixtures/interop/molden/water.molden capabilities
+      - run: |
+          interop-wheel-test/bin/python - <<'PY'
+          from pathlib import Path
+          from openwfn.ingest import load_input
+          data = load_input(Path('tests/fixtures/interop/molden/water.molden'))
+          assert data.provenance.backend == 'iodata'
+          assert data.provenance.backend_version == '1.0.1'
+          PY

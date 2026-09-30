@@ -12,9 +12,13 @@ documentation, provenance, and validation evidence are ready.
 
 ## Interoperability
 
-- Evaluate additional quantum-chemistry formats from published specifications.
-- Separate parser coverage from analysis capability in public documentation.
-- Require redistribution-safe fixtures for every parser claim.
+- Maintain the pinned 25-format IOData ingestion contract with
+  redistribution-safe fixtures and capability-based analysis gating.
+- Expand cross-format validation from the current same-calculation water set
+  to independent calculations, unrestricted cases, larger systems, and
+  program/version variants.
+- Investigate multi-record trajectories only with an explicit sequence model;
+  do not silently reinterpret the single-record API.
 
 ## Validation
 

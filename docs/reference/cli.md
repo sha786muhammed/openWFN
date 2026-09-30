@@ -7,6 +7,20 @@ openwfn examples install DESTINATION [--overwrite]
 
 Run `openwfn --help` or `openwfn FILE COMMAND --help` for the installed release's authoritative syntax.
 
+For interoperable inputs in this development branch, install
+`openwfn[interop]`, then inspect capabilities before an analysis:
+
+```bash
+openwfn molecule.molden capabilities
+openwfn molecule.wfx orbitals frontier
+openwfn calculation.out summary
+openwfn batch ./calculations --analyses summary,frontier --output-dir ./results
+```
+
+Some output files contain geometry and energy but no complete wavefunction.
+`capabilities` shows which analyses have their required fields; a Stable
+format-ingestion status alone does not guarantee a `frontier` result.
+
 ## Global options
 
 | Option | Purpose |
@@ -58,6 +72,7 @@ These are the public top-level choices shown by `openwfn --help`.
 | `batch` | Analyze multiple inputs |
 | `validate` | Run the density-conservation check |
 | `doctor` | Inspect input type and available capabilities |
+| `capabilities` | Report normalized component and analysis availability |
 
 ## Inspection and structure
 
@@ -66,6 +81,7 @@ These are the public top-level choices shown by `openwfn --help`.
 | `summary` | `openwfn FILE summary` | Formula, state, energy, center of mass, bonds, fragments |
 | `info` | `openwfn FILE info` | Parsed FCHK scalar metadata |
 | `doctor` | `openwfn FILE doctor` | Input kind and availability of metadata, grid, basis, orbitals, and density |
+| `capabilities` | `openwfn FILE capabilities` | Component states, parser/backend provenance, and registered-analysis requirements |
 | `bonds` | `openwfn FILE bonds` | Covalent-radius bond heuristic |
 | `graph` | `openwfn FILE graph` | Connected molecular fragments |
 | `geometry` | `geometry distance I J` | Interatomic distance in ångströms |

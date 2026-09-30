@@ -14,6 +14,16 @@ from .analysis.registry import available_analyses, run_analysis
 from .api import OpenWFNCalculation, load
 from .basis import eval_s_type_gto  # type: ignore
 from .batch import BATCH_SCHEMA_VERSION, discover_inputs, run_batch
+from .capabilities import Capability, CapabilityRequirement, infer_capabilities
+from .data import (
+    INTEROP_SCHEMA_VERSION,
+    IntegralData,
+    IntegralTerm,
+    OpenWFNData,
+    PeriodicData,
+    SourceMetadata,
+    StructureData,
+)
 from .density import compute_density  # type: ignore
 from .export import export_csv, export_json, export_molecule_viewer, export_vtk  # type: ignore
 from .fchk import (  # type: ignore
@@ -58,6 +68,16 @@ __all__ = [
     "export_csv",
     "export_molecule_viewer",
     "OpenWFNCalculation",
+    "OpenWFNData",
+    "StructureData",
+    "PeriodicData",
+    "IntegralData",
+    "IntegralTerm",
+    "SourceMetadata",
+    "INTEROP_SCHEMA_VERSION",
+    "Capability",
+    "CapabilityRequirement",
+    "infer_capabilities",
     "MODEL_SCHEMA_VERSION",
     "BoundaryConditions",
     "CalculationData",

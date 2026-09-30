@@ -1,0 +1,5 @@
+3
+Properties=species:S:1:pos:R:3 pbc="F F F" comment="openWFN water"
+O 0.000000 0.000000 0.000000
+H 0.000000 0.756000 0.587000
+H 0.000000 -0.756000 0.587000
