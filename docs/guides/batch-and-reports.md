@@ -13,7 +13,7 @@ openwfn first.fchk batch second.fchk third.fchk \
 ```
 
 An input is `success` when every analysis succeeds, `partial` when some analyses
-are unavailable, and `error` when parsing fails or every analysis fails. Invalid
+are unavailable or a structure-only summary is returned, and `error` when parsing fails or every analysis fails. Invalid
 analysis names are rejected before output is created. Add `--fail-fast` when the
 first erroneous input should stop the run. The older `--operation summary` form
 remains supported.
@@ -24,6 +24,9 @@ error records are retried. Changing the requested analyses or input contents
 invalidates the corresponding cache. Both per-input records in `records/` and
 `batch-manifest.json` are replaced atomically so interruption cannot leave a
 partially written JSON document.
+The fingerprint includes openWFN, parser-backend, model, result, batch, and
+requested-analysis versions, plus effective format hints. A version or hint
+change recomputes the record.
 
 Files and directories can be mixed. Add `--recursive` to scan subdirectories;
 registered parser suffixes are selected in stable order, duplicates are removed,
@@ -34,6 +37,29 @@ performing analysis or requiring an output directory:
 openwfn batch calculations/ --recursive --dry-run \
   --analyses summary,frontier
 ```
+
+For mixed ambiguous files, place a JSON map outside the scanned directory:
+
+```json
+{
+  "calculations/water.dat": "gamess",
+  "calculations/structure.qcschema.json": "json_qcschema"
+}
+```
+
+Map keys are relative to the map file. Run
+`openwfn batch calculations/ --format-map formats.json --output-dir results/`.
+For one homogeneous batch, `openwfn --input-format FORMAT_ID batch ...` is
+shorter. Unknown IDs, missing map targets, and conflicting hints stop before
+analysis records are written.
+
+Top-level `success` and `partial` batches exit 0; `failed` batches exit
+nonzero. Any parse/analysis error or unsupported discovered file makes the
+batch failed. An all-unsupported directory still writes a manifest. Inspect
+`unsupported_details` for paths, reasons, and readable checksums. For
+`--fail-fast`, `attempted_count` and `stopped_early` distinguish the attempted
+subset from all discovered files. Successful per-file analyses remain in the
+manifest even when another input fails.
 
 Each completed run also writes `batch-summary.csv`, a compact one-row-per-input
 index containing checksums, status, skip state, analysis counts, elapsed time,
@@ -48,7 +74,7 @@ use deterministic input order.
 ## Throughput benchmark
 
 The repository benchmark stages deterministic XYZ inputs and runs real parsing,
-summary analysis, and result writing. Choose a count that fits the machine and
+partial structure-summary analysis, and result writing. Choose a count that fits the machine and
 record its hardware and load; for example:
 
 ```bash

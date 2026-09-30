@@ -19,9 +19,9 @@ still be recognized as single-frame XYZ when their contents match that format.
 | `.sdf` | V2000 molecular structure |
 | `.xyz` | Single-frame molecular structure |
 
-`doctor` is safe to run across these input kinds. Other analysis commands fail
-cleanly when the parsed input does not provide a molecular calculation; openWFN
-does not infer missing wavefunction records.
+`doctor` uses the canonical loader across these input kinds. `summary` returns
+a partial structure record when geometry exists but a full wavefunction does
+not. Electronic analyses fail cleanly when required records are absent.
 
 ## Stable interoperability formats
 
@@ -39,7 +39,7 @@ that orbitals or a basis are present.
 | Format ID | Typical filename | Preferred path | Fixture components | Ingestion status |
 |---|---|---|---|---|
 | `charmm` | `.crd`, `.psf` | IOData | metadata, structure | Stable |
-| `chgcar` | `CHGCAR`, `.chgcar` | IOData | grids, metadata, periodic, structure | Stable |
+| `chgcar` | `CHGCAR`, `CHGCAR-*`, `.chgcar` | IOData | grids, metadata, periodic, structure | Stable |
 | `cp2klog` | CP2K `.out` | IOData; detected from content | calculation, metadata, structure | Stable |
 | `cube` | `.cube`, `.cub` | Native | grids | Stable |
 | `extxyz` | `.extxyz` | IOData | metadata, structure | Stable |
@@ -50,14 +50,14 @@ that orbitals or a basis are present.
 | `gaussianlog` | Gaussian `.log` | Native by default; IOData with explicit hint | metadata | Stable |
 | `gromacs` | `.gro` | IOData | metadata, periodic, structure | Stable |
 | `json_qcschema` | `.qcschema.json` | IOData | metadata, structure | Stable |
-| `locpot` | `LOCPOT`, `.locpot` | IOData | grids, metadata, periodic, structure | Stable |
+| `locpot` | `LOCPOT`, `LOCPOT-*`, `.locpot` | IOData | grids, metadata, periodic, structure | Stable |
 | `mol2` | `.mol2` | IOData | metadata, structure | Stable |
 | `molden` | `.molden` | IOData | calculation, metadata, structure | Stable |
 | `molekel` | `.mkl` | IOData | calculation, structure | Stable |
 | `mwfn` | `.mwfn` | IOData | calculation, metadata, structure | Stable |
 | `orcalog` | ORCA `.out` | IOData; detected from content | metadata, structure | Stable |
 | `pdb` | `.pdb` | Native | calculation, metadata, structure | Stable |
-| `poscar` | `POSCAR`, `.poscar`, `.vasp` | IOData | metadata, periodic, structure | Stable |
+| `poscar` | `POSCAR`, `POSCAR-*`, `.poscar`, `.vasp` | IOData | metadata, periodic, structure | Stable |
 | `qchemlog` | Q-Chem `.out` | IOData; detected from content | metadata, structure | Stable |
 | `sdf` | `.sdf`, `.mol` | Native | calculation, metadata, structure | Stable |
 | `wfn` | `.wfn` | IOData | calculation, metadata, structure | Stable |
@@ -74,6 +74,10 @@ FCHK/Molden/MWFN representations expose 13 basis functions.
 ## Structure outputs
 
 `convert` writes XYZ, PDB, MOL, or SDF. These formats primarily carry structure and connectivity; they do not preserve the full wavefunction. The legacy `xyz` command writes atom symbols and Cartesian coordinates.
+When a source contains ghost or ECP effective nuclear charges, these outputs
+warn that the charges cannot survive the conversion. The direct Python
+`write_structure` function returns the same warning strings. Cube headers
+retain effective nuclear charges.
 
 ```bash
 openwfn molecule.fchk convert --to sdf --output molecule.sdf

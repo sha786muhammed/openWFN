@@ -250,3 +250,21 @@ def test_invalid_format_map_is_one_json_failure(tmp_path: Path) -> None:
     payload = json.loads(result.stdout)
     assert payload["status"] == "failed"
     assert "Invalid format map" in payload["error"]["message"]
+
+
+def test_format_map_rejects_aliases_with_conflicting_hints(tmp_path: Path) -> None:
+    fixture = ROOT / "tests" / "fixtures" / "interop" / "gamess" / "water.dat"
+    source = tmp_path / "water.dat"
+    source.write_bytes(fixture.read_bytes())
+    mapping = tmp_path / "formats.json"
+    mapping.write_text(json.dumps({"water.dat": "gamess", "./water.dat": "molden"}), encoding="utf-8")
+    output = tmp_path / "results"
+
+    result = run_cli(
+        "--format", "json", "batch", str(source),
+        "--format-map", str(mapping), "--output-dir", str(output),
+    )
+
+    assert result.returncode != 0
+    assert "conflict" in json.loads(result.stdout)["error"]["message"].lower()
+    assert not output.exists()

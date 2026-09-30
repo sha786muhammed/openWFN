@@ -176,7 +176,13 @@ def _read_format_map(path: Path | None) -> dict[Path, str]:
         isinstance(key, str) and isinstance(value, str) for key, value in payload.items()
     ):
         raise ValueError("Format map must be a JSON object from file paths to format IDs.")
-    return {(path.parent / key).resolve(): value for key, value in payload.items()}
+    resolved: dict[Path, str] = {}
+    for key, value in payload.items():
+        target = (path.parent / key).resolve()
+        if target in resolved and resolved[target].strip().lower() != value.strip().lower():
+            raise ValueError(f"Format map conflict for resolved path {target}.")
+        resolved[target] = value
+    return resolved
 
 
 def _legacy_result(args: argparse.Namespace) -> ResultRecord:

@@ -67,6 +67,19 @@ def test_execute_writes_rendered_result_to_requested_output(tmp_path: Path) -> N
     assert json.loads(output.read_text(encoding="utf-8"))["kind"] == "distance"
 
 
+def test_json_output_file_also_leaves_one_stdout_envelope(tmp_path: Path) -> None:
+    output = tmp_path / "distance.json"
+    stream = io.StringIO()
+
+    status = execute(
+        _distance_result,
+        CommandContext(output_path=output, format="json", quiet=True, output_stream=stream),
+    )
+
+    assert status == 0
+    assert json.loads(stream.getvalue()) == json.loads(output.read_text(encoding="utf-8"))
+
+
 def test_cli_convert_warns_on_ghost_centers(tmp_path: Path) -> None:
     import os
     import subprocess

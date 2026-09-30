@@ -445,37 +445,48 @@ def run_batch(
     records_by_index: dict[int, BatchRecord] = {}
     pending: list[tuple[int, tuple[Path, tuple[str, ...], str | None]]] = []
     completed_count = 0
-    for index, path in enumerate(paths):
-        cached = (
-            _load_completed_record(path, output_dir, _file_sha256(path), fingerprint)
-            if resume
-            else None
-        )
-        if cached is not None:
-            records_by_index[index] = cached
-            completed_count += 1
-            if progress is not None:
-                progress(completed_count, len(paths), cached)
-        else:
-            pending.append((index, (path, normalized, resolved_hints.get(path.resolve(), global_hint))))
 
-    if workers == 1 or fail_fast:
-        for index, argument in pending:
+    def accept(index: int, path: Path, record: BatchRecord, *, write: bool) -> None:
+        nonlocal completed_count
+        records_by_index[index] = record
+        if write:
+            _write_record(record, path, output_dir, fingerprint)
+        completed_count += 1
+        if progress is not None:
+            progress(completed_count, len(paths), record)
+
+    if fail_fast:
+        for index, path in enumerate(paths):
+            cached = (
+                _load_completed_record(path, output_dir, _file_sha256(path), fingerprint)
+                if resume else None
+            )
+            if cached is not None:
+                accept(index, path, cached, write=False)
+                continue
+            argument = (path, normalized, resolved_hints.get(path.resolve(), global_hint))
             record = _run_one(argument)
-            records_by_index[index] = record
-            _write_record(record, argument[0], output_dir, fingerprint)
-            completed_count += 1
-            if progress is not None:
-                progress(completed_count, len(paths), record)
-            if fail_fast and record.status == "error":
+            accept(index, path, record, write=True)
+            if record.status == "error":
                 break
     else:
+        for index, path in enumerate(paths):
+            cached = (
+                _load_completed_record(path, output_dir, _file_sha256(path), fingerprint)
+                if resume else None
+            )
+            if cached is not None:
+                accept(index, path, cached, write=False)
+            else:
+                pending.append((index, (path, normalized, resolved_hints.get(path.resolve(), global_hint))))
+
+    if not fail_fast and workers == 1:
+        for index, argument in pending:
+            record = _run_one(argument)
+            accept(index, argument[0], record, write=True)
+    elif not fail_fast:
         for index, path, record in _run_parallel(pending, workers):
-            records_by_index[index] = record
-            _write_record(record, path, output_dir, fingerprint)
-            completed_count += 1
-            if progress is not None:
-                progress(completed_count, len(paths), record)
+            accept(index, path, record, write=True)
 
     records = [records_by_index[index] for index in sorted(records_by_index)]
     stopped_early = bool(fail_fast and len(records) < len(paths))

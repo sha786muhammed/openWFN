@@ -30,5 +30,14 @@
 - Multiwfn same-wavefunction comparisons validate frontier orbitals, Mulliken charges, and Löwdin charges only for restricted water and unrestricted LiH; broader chemical coverage remains pending.
 - Synthetic/special-case regression fixtures for ECP, ghost, UHF, ROHF, and post-HF behavior protect implementation contracts but are not a substitute for an independently reproduced validation corpus.
 - XYZ files provide geometry only.
+- Structure-only and periodic summaries are partial by design: missing
+  effective charges, electron counts, orbitals, and energies are not guessed.
+  A known zero effective nuclear charge identifies a ghost center; an absent
+  charge remains unknown. XYZ/PDB/MOL/SDF exports cannot retain ghost/ECP
+  effective charges and emit explicit loss warnings.
+- Batch processing accounts for supported, partial, failed, and unsupported
+  discovered inputs. An unsupported file makes the top-level batch fail, even
+  if other files succeed. Format hints help with ambiguous filenames; they
+  cannot make a damaged or unrecognized scientific record valid.
 
 Always record the openWFN version, source-file checksum, grid spacing, padding, units, warnings, execution status, and validation status in research outputs.

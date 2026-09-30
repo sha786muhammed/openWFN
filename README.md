@@ -125,6 +125,14 @@ XYZ, MOL/SDF, and PDB inputs provide structure-only records. The optional
 backend also reads structure, periodic, grid, and integral-only formats; use
 `openwfn FILE capabilities` to check the actual data before analysis.
 
+In this unreleased 0.9 source branch, use `--input-format FORMAT_ID` when a
+filename is ambiguous (for example, a GAMESS `.dat`). A structure without a
+complete wavefunction gets a partial `summary`; it does not get inferred
+orbitals, density, or electron counts. Mixed batches can use `--format-map`
+and record unsupported files with reasons in the manifest. A batch exits
+nonzero if any input fails or is unsupported. See the
+[batch guide](docs/guides/batch-and-reports.md) for the exact contract.
+
 ```bash
 openwfn calculation.chk formchk calculation.fchk
 openwfn calculation.fchk convert --to sdf --output molecule.sdf

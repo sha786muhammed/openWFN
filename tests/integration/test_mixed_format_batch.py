@@ -114,6 +114,7 @@ def test_format_map_preflight_rejects_conflicts_and_unknown_paths(tmp_path: Path
         ({gamess: "not-a-format"}, None, "Unknown"),
         ({missing: "gamess"}, None, "not among"),
         ({gamess: "gamess"}, "molden", "conflict"),
+        ({gamess: "gamess", Path("tests/fixtures/interop/gamess/water.dat"): "molden"}, None, "conflict"),
     ):
         with pytest.raises(ValueError, match=pattern):
             run_batch([gamess], "summary", 1, output, format_hint=global_hint, format_hints=mapping)

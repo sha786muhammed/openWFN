@@ -43,6 +43,8 @@ def execute(operation: Callable[[], ResultRecord | int | None], context: Command
                     )
                 context.output_path.parent.mkdir(parents=True, exist_ok=True)
                 context.output_path.write_text(rendered, encoding="utf-8")
+                if context.format == "json":
+                    context.output_stream.write(rendered)
             elif not context.quiet or context.format == "json":
                 context.output_stream.write(rendered)
         if isinstance(result, int):

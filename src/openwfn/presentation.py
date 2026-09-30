@@ -49,5 +49,7 @@ def render(result: ResultRecord, context: CommandContext) -> str:
     lines.append(f"Status: {result.validation_status}")
     if result.status != "success":
         lines.append(f"Result: {result.status}")
+    if result.error is not None:
+        lines.append(f"Error: {result.error.message}")
     lines.extend(f"Warning: {warning}" for warning in result.warnings)
     return "\n".join(lines) + "\n"

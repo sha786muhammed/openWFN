@@ -45,6 +45,21 @@ def test_batch_fail_fast_stops_after_first_error(tmp_path: Path) -> None:
     assert manifest.records[0].status == "error"
 
 
+def test_fail_fast_resume_does_not_count_later_cached_record(tmp_path: Path) -> None:
+    bad = tmp_path / "bad.xyz"
+    bad.write_text("broken\n", encoding="utf-8")
+    good = ROOT / "examples" / "water" / "water.fchk"
+    output = tmp_path / "results"
+    run_batch([good], "summary", 1, output)
+
+    manifest = run_batch([bad, good], "summary", 1, output, fail_fast=True, resume=True)
+
+    assert len(manifest.records) == 1
+    assert manifest.records[0].input_path == str(bad)
+    assert manifest.attempted_count == 1
+    assert manifest.stopped_early is True
+
+
 def test_batch_manifest_records_multiple_versioned_analysis_results(tmp_path: Path) -> None:
     water = ROOT / "examples" / "water" / "water.fchk"
     output_dir = tmp_path / "results"
