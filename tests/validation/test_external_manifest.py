@@ -14,6 +14,9 @@ REQUIRED_CASES = {
     "helium-high-l",
     "water-multiwfn",
     "lih-multiwfn",
+    "h2-open-shell-wfx",
+    "oxygen-open-shell-wfn",
+    "lih-cation-open-shell-wfx",
 }
 
 
@@ -93,3 +96,22 @@ def test_multiwfn_references_are_active_complete_and_match_manifest() -> None:
             for metric in evidence["metrics"]
         }
         assert evidence_tolerances == manifest_tolerances
+
+
+def test_open_shell_cases_cover_each_spin_channel_and_independent_pointwise_density() -> None:
+    payload = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    cases = {case["id"]: case for case in payload["cases"]}
+
+    for case_id in ("h2-open-shell-wfx", "oxygen-open-shell-wfn", "lih-cation-open-shell-wfx"):
+        case = cases[case_id]
+        assert case["status"] == "active"
+        assert case["input_scope"] == "external"
+        assert case["reference"]["program"] == "qc-iodata + qc-gbasis"
+        assert {
+            (metric["kind"], metric["density_kind"])
+            for metric in case["metrics"]
+        } == {
+            (kind, channel)
+            for kind in ("density_integral", "gbasis_pointwise_density")
+            for channel in ("alpha", "beta", "spin")
+        }

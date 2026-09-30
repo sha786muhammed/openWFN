@@ -12,12 +12,16 @@ from hashlib import sha256
 from pathlib import Path
 from typing import TypeAlias
 
+import numpy as np
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from openwfn.analysis.basis import ao_atom_indices, overlap_matrix
+from openwfn.analysis.density import density_matrix_for_kind, evaluate_density
 from openwfn.analysis.orbitals import frontier_orbitals
 from openwfn.analysis.population import lowdin_population, mulliken_population
+from openwfn.ingest import load_input
 from openwfn.parsers.gaussian.fchk import parse_fchk
 from openwfn.services import density_integration
 from openwfn.validation.convergence import GridPoint, assess_convergence
@@ -145,6 +149,37 @@ def _grid_convergence(source: Path, metric: dict[str, object]) -> dict[str, obje
     }
 
 
+def _pointwise_gbasis_error(source: Path, data: object, metric: dict[str, object]) -> float:
+    """Compare openWFN AO density with GBasis at fixed points in bohr."""
+
+    from gbasis.evals.density import evaluate_density as reference_density
+    from gbasis.wrappers import from_iodata
+    from iodata import load_one
+
+    points = np.asarray(metric["points_bohr"], dtype=float)
+    if points.ndim != 2 or points.shape[1] != 3 or not np.all(np.isfinite(points)):
+        raise ValueError("pointwise benchmark points must be finite 3D coordinates")
+    raw = load_one(str(source))
+    orbitals = raw.mo
+    if orbitals is None:
+        raise ValueError("reference orbital data are unavailable")
+    basis = from_iodata(raw)
+    alpha = (orbitals.coeffsa * orbitals.occsa[None, :]) @ orbitals.coeffsa.T
+    beta = (orbitals.coeffsb * orbitals.occsb[None, :]) @ orbitals.coeffsb.T
+    alpha_values = reference_density(alpha, basis, points)
+    beta_values = reference_density(beta, basis, points)
+    kind = str(metric["density_kind"])
+    reference = {
+        "total": alpha_values + beta_values,
+        "alpha": alpha_values,
+        "beta": beta_values,
+        "spin": alpha_values - beta_values,
+    }[kind]
+    matrix = density_matrix_for_kind(data, kind)
+    observed = evaluate_density(data.molecule, data.basis, matrix, points)
+    return float(np.max(np.abs(observed - reference)))
+
+
 def run(
     manifest_path: Path,
     input_root: Path | None = None,
@@ -180,12 +215,50 @@ def run(
             digest = sha256(source.read_bytes()).hexdigest()
             if digest != case["sha256"]:
                 raise ValueError("SHA-256 mismatch")
-            observed = observations(source)
+            special = {"density_integral", "gbasis_pointwise_density"}
+            observed = (
+                observations(source)
+                if any(metric.get("kind") not in special for metric in case["metrics"])
+                else {}
+            )
+            calculation = None
             for metric in case["metrics"]:
                 if metric.get("kind") == "grid_convergence":
                     item = {"case": case_id, **_grid_convergence(source, metric)}
                     counts[str(item["status"])] += 1
                     results.append(item)
+                    continue
+                if metric.get("kind") in special:
+                    if calculation is None:
+                        calculation = load_input(source).calculation
+                        if calculation is None:
+                            raise ValueError("complete molecular wavefunction is unavailable")
+                    kind = str(metric["kind"])
+                    if kind == "density_integral":
+                        spacing = float(metric["spacing_bohr"])
+                        padding = float(metric["padding_bohr"])
+                        value = float(density_integration(
+                            calculation, str(metric["density_kind"]), spacing, padding
+                        ).data["electron_count"])
+                        details = {"spacing_bohr": spacing, "padding_bohr": padding}
+                    else:
+                        value = _pointwise_gbasis_error(source, calculation, metric)
+                        details = {"point_count": len(metric["points_bohr"])}
+                    tolerance = float(metric["absolute_tolerance"])
+                    error, status = compare_metric(metric["expected"], value, tolerance)
+                    counts[status] += 1
+                    results.append({
+                        "case": case_id,
+                        "metric": str(metric["name"]),
+                        "unit": str(metric["unit"]),
+                        "density_kind": str(metric["density_kind"]),
+                        "expected": metric["expected"],
+                        "observed": value,
+                        "absolute_error": error,
+                        "tolerance": tolerance,
+                        "status": status,
+                        **details,
+                    })
                     continue
                 name = str(metric["name"])
                 if name not in observed:
@@ -209,7 +282,7 @@ def run(
                         "status": status,
                     }
                 )
-        except (KeyError, OSError, TypeError, ValueError) as exc:
+        except (ImportError, KeyError, OSError, TypeError, ValueError) as exc:
             counts["failed"] += 1
             results.append({"case": case_id, "status": "failed", "error": str(exc)})
 

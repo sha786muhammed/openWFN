@@ -195,6 +195,72 @@
         {"name": "mulliken_atomic_charges", "expected": [0.92949, 0.07051], "unit": "elementary_charge", "max_absolute_tolerance": 5e-6},
         {"name": "lowdin_atomic_charges", "expected": [0.85993, 0.14007], "unit": "elementary_charge", "max_absolute_tolerance": 5e-6}
       ]
+    },
+    {
+      "id": "h2-open-shell-wfx",
+      "status": "active",
+      "input_scope": "external",
+      "input": "iodata/iodata/test/data/h2_ub3lyp_ccpvtz.wfx",
+      "sha256": "1a65ca7ee966e95c38f6548abb8eb15fcf0ed735846ad0ec355c840d953cd41f",
+      "provenance": {
+        "origin": "https://github.com/theochem/iodata",
+        "generation_procedure": "validation/external/procedures/open-shell-density.md",
+        "upstream_commit": "9f7e800fc414b086d677b5f2882dd0c1dfa919f3",
+        "redistribution_status": "External fixture; supplied through --input-root and not redistributed here; file-specific terms not independently reviewed"
+      },
+      "reference": {"program": "qc-iodata + qc-gbasis", "version": "1.0.1 + 0.1.0", "procedure": "validation/external/procedures/open-shell-density.md"},
+      "metrics": [
+        {"kind": "density_integral", "name": "alpha_grid_electrons", "density_kind": "alpha", "spacing_bohr": 0.30, "padding_bohr": 4.0, "expected": 1.0, "unit": "electron", "absolute_tolerance": 0.001},
+        {"kind": "density_integral", "name": "beta_grid_electrons", "density_kind": "beta", "spacing_bohr": 0.30, "padding_bohr": 4.0, "expected": 1.0, "unit": "electron", "absolute_tolerance": 0.001},
+        {"kind": "density_integral", "name": "spin_grid_electrons", "density_kind": "spin", "spacing_bohr": 0.30, "padding_bohr": 4.0, "expected": 0.0, "unit": "electron", "absolute_tolerance": 0.001},
+        {"kind": "gbasis_pointwise_density", "name": "alpha_pointwise_gbasis", "density_kind": "alpha", "points_bohr": [[0,0,0],[0.3,0,0],[0,0.5,0],[0.2,-0.4,0.3],[-0.8,0.1,-0.2]], "expected": 0.0, "unit": "electron/bohr^3", "absolute_tolerance": 2e-9},
+        {"kind": "gbasis_pointwise_density", "name": "beta_pointwise_gbasis", "density_kind": "beta", "points_bohr": [[0,0,0],[0.3,0,0],[0,0.5,0],[0.2,-0.4,0.3],[-0.8,0.1,-0.2]], "expected": 0.0, "unit": "electron/bohr^3", "absolute_tolerance": 2e-9},
+        {"kind": "gbasis_pointwise_density", "name": "spin_pointwise_gbasis", "density_kind": "spin", "points_bohr": [[0,0,0],[0.3,0,0],[0,0.5,0],[0.2,-0.4,0.3],[-0.8,0.1,-0.2]], "expected": 0.0, "unit": "electron/bohr^3", "absolute_tolerance": 2e-9}
+      ]
+    },
+    {
+      "id": "oxygen-open-shell-wfn",
+      "status": "active",
+      "input_scope": "external",
+      "input": "iodata/iodata/test/data/o2_uhf.wfn",
+      "sha256": "5405b851afbe7d55347a5c4ece0bfca2b9bbc1508e9374129693e0ed46aebb96",
+      "provenance": {
+        "origin": "https://github.com/theochem/iodata",
+        "generation_procedure": "validation/external/procedures/open-shell-density.md",
+        "upstream_commit": "9f7e800fc414b086d677b5f2882dd0c1dfa919f3",
+        "redistribution_status": "External fixture; supplied through --input-root and not redistributed here; file-specific terms not independently reviewed"
+      },
+      "reference": {"program": "qc-iodata + qc-gbasis", "version": "1.0.1 + 0.1.0", "procedure": "validation/external/procedures/open-shell-density.md"},
+      "metrics": [
+        {"kind": "density_integral", "name": "alpha_grid_electrons", "density_kind": "alpha", "spacing_bohr": 0.20, "padding_bohr": 4.0, "expected": 9.0, "unit": "electron", "absolute_tolerance": 0.04},
+        {"kind": "density_integral", "name": "beta_grid_electrons", "density_kind": "beta", "spacing_bohr": 0.20, "padding_bohr": 4.0, "expected": 7.0, "unit": "electron", "absolute_tolerance": 0.04},
+        {"kind": "density_integral", "name": "spin_grid_electrons", "density_kind": "spin", "spacing_bohr": 0.20, "padding_bohr": 4.0, "expected": 2.0, "unit": "electron", "absolute_tolerance": 0.04},
+        {"kind": "gbasis_pointwise_density", "name": "alpha_pointwise_gbasis", "density_kind": "alpha", "points_bohr": [[0,0,0],[0.3,0,0],[0,0.5,0],[0.2,-0.4,0.3],[-0.8,0.1,-0.2]], "expected": 0.0, "unit": "electron/bohr^3", "absolute_tolerance": 2e-9},
+        {"kind": "gbasis_pointwise_density", "name": "beta_pointwise_gbasis", "density_kind": "beta", "points_bohr": [[0,0,0],[0.3,0,0],[0,0.5,0],[0.2,-0.4,0.3],[-0.8,0.1,-0.2]], "expected": 0.0, "unit": "electron/bohr^3", "absolute_tolerance": 2e-9},
+        {"kind": "gbasis_pointwise_density", "name": "spin_pointwise_gbasis", "density_kind": "spin", "points_bohr": [[0,0,0],[0.3,0,0],[0,0.5,0],[0.2,-0.4,0.3],[-0.8,0.1,-0.2]], "expected": 0.0, "unit": "electron/bohr^3", "absolute_tolerance": 2e-9}
+      ]
+    },
+    {
+      "id": "lih-cation-open-shell-wfx",
+      "status": "active",
+      "input_scope": "external",
+      "input": "iodata/iodata/test/data/lih_cation_uhf.wfx",
+      "sha256": "28b3d6a999ce5eed73f0033c9e31d63bb509b4efb8785dbf624a98668b23bb6e",
+      "provenance": {
+        "origin": "https://github.com/theochem/iodata",
+        "generation_procedure": "validation/external/procedures/open-shell-density.md",
+        "upstream_commit": "9f7e800fc414b086d677b5f2882dd0c1dfa919f3",
+        "redistribution_status": "External fixture; supplied through --input-root and not redistributed here; file-specific terms not independently reviewed"
+      },
+      "reference": {"program": "qc-iodata + qc-gbasis", "version": "1.0.1 + 0.1.0", "procedure": "validation/external/procedures/open-shell-density.md"},
+      "metrics": [
+        {"kind": "density_integral", "name": "alpha_grid_electrons", "density_kind": "alpha", "spacing_bohr": 0.20, "padding_bohr": 4.0, "expected": 2.0, "unit": "electron", "absolute_tolerance": 0.002},
+        {"kind": "density_integral", "name": "beta_grid_electrons", "density_kind": "beta", "spacing_bohr": 0.20, "padding_bohr": 4.0, "expected": 1.0, "unit": "electron", "absolute_tolerance": 0.002},
+        {"kind": "density_integral", "name": "spin_grid_electrons", "density_kind": "spin", "spacing_bohr": 0.20, "padding_bohr": 4.0, "expected": 1.0, "unit": "electron", "absolute_tolerance": 0.002},
+        {"kind": "gbasis_pointwise_density", "name": "alpha_pointwise_gbasis", "density_kind": "alpha", "points_bohr": [[0,0,0],[0.3,0,0],[0,0.5,0],[0.2,-0.4,0.3],[-0.8,0.1,-0.2]], "expected": 0.0, "unit": "electron/bohr^3", "absolute_tolerance": 2e-9},
+        {"kind": "gbasis_pointwise_density", "name": "beta_pointwise_gbasis", "density_kind": "beta", "points_bohr": [[0,0,0],[0.3,0,0],[0,0.5,0],[0.2,-0.4,0.3],[-0.8,0.1,-0.2]], "expected": 0.0, "unit": "electron/bohr^3", "absolute_tolerance": 2e-9},
+        {"kind": "gbasis_pointwise_density", "name": "spin_pointwise_gbasis", "density_kind": "spin", "points_bohr": [[0,0,0],[0.3,0,0],[0,0.5,0],[0.2,-0.4,0.3],[-0.8,0.1,-0.2]], "expected": 0.0, "unit": "electron/bohr^3", "absolute_tolerance": 2e-9}
+      ]
     }
   ]
 }

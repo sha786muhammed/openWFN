@@ -48,3 +48,8 @@ python scripts/run_external_benchmarks.py \
 The runner verifies every active input checksum before parsing it. A checkout mismatch,
 missing fixture, or numerical disagreement is a failure; unavailable reference evidence
 remains pending.
+
+The pinned WFX/WFN open-shell cases additionally need `qc-gbasis==0.1.0` in the
+benchmark environment. See the [open-shell density procedure](procedures/open-shell-density.md)
+for what the pointwise comparison and fixed-grid checks do—and what they do not
+establish. `--repository-only` skips these external cases without requiring GBasis.

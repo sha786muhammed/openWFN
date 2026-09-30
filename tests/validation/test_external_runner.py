@@ -191,3 +191,51 @@ def test_runner_records_grid_points_and_convergence_decision(tmp_path: Path) -> 
     assert result["points"][0]["spacing"] == 0.5
     assert result["points"][1]["spacing"] == 0.4
     assert result["status"] == "passed"
+
+
+def test_runner_checks_density_integral_on_named_grid(tmp_path: Path) -> None:
+    case = active_case()
+    case["metrics"] = [{
+        "kind": "density_integral",
+        "name": "total_grid_electrons",
+        "density_kind": "total",
+        "spacing_bohr": 0.15,
+        "padding_bohr": 6.0,
+        "expected": 10.0,
+        "unit": "electron",
+        "absolute_tolerance": 0.1,
+    }]
+
+    payload = run(write_manifest(tmp_path, [case]))
+
+    result = payload["results"][0]
+    assert result["status"] == "passed"
+    assert result["metric"] == "total_grid_electrons"
+    assert result["expected"] == 10.0
+    assert result["spacing_bohr"] == 0.15
+    assert result["padding_bohr"] == 6.0
+
+
+def test_runner_compares_pointwise_density_with_gbasis(tmp_path: Path) -> None:
+    pytest.importorskip("iodata")
+    pytest.importorskip("gbasis")
+    source = ROOT / "tests" / "fixtures" / "interop" / "wfx" / "water.wfx"
+    case = active_case(digest=sha256(source.read_bytes()).hexdigest())
+    case["input"] = str(source.relative_to(ROOT))
+    case["metrics"] = [{
+        "kind": "gbasis_pointwise_density",
+        "name": "total_pointwise_gbasis",
+        "density_kind": "total",
+        "points_bohr": [[0.0, 0.0, 0.0], [0.3, 0.0, 0.0]],
+        "expected": 0.0,
+        "unit": "electron/bohr^3",
+        "absolute_tolerance": 2e-9,
+    }]
+
+    payload = run(write_manifest(tmp_path, [case]))
+
+    result = payload["results"][0]
+    assert result["status"] == "passed"
+    assert result["metric"] == "total_pointwise_gbasis"
+    assert result["observed"] < 2e-9
+    assert result["point_count"] == 2
