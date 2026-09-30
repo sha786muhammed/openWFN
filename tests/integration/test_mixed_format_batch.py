@@ -88,3 +88,43 @@ def test_process_pool_missing_backend_isolated_to_backend_record(tmp_path: Path)
     assert missing.error is not None
     assert "openwfn[interop]" in missing.error
     assert "ModuleNotFoundError" not in missing.error
+
+
+@pytest.mark.parametrize("workers", [1, 2])
+def test_mixed_batch_format_map(tmp_path: Path, workers: int) -> None:
+    fixtures = ROOT / "tests" / "fixtures" / "interop"
+    gamess = fixtures / "gamess" / "water.dat"
+    structure = fixtures / "poscar" / "POSCAR-water"
+    manifest = run_batch(
+        [gamess, structure], "summary", workers, tmp_path / "results",
+        format_hints={gamess: "gamess", structure: "poscar"},
+    )
+
+    assert len(manifest.records) == 2
+    assert {record.source_format for record in manifest.records} == {"gamess", "poscar"}
+    assert all("Unsupported input format" not in (record.error or "") for record in manifest.records)
+
+
+def test_format_map_preflight_rejects_conflicts_and_unknown_paths(tmp_path: Path) -> None:
+    gamess = ROOT / "tests" / "fixtures" / "interop" / "gamess" / "water.dat"
+    missing = tmp_path / "missing.dat"
+    output = tmp_path / "results"
+
+    for mapping, global_hint, pattern in (
+        ({gamess: "not-a-format"}, None, "Unknown"),
+        ({missing: "gamess"}, None, "not among"),
+        ({gamess: "gamess"}, "molden", "conflict"),
+    ):
+        with pytest.raises(ValueError, match=pattern):
+            run_batch([gamess], "summary", 1, output, format_hint=global_hint, format_hints=mapping)
+        assert not output.exists()
+
+
+def test_ambiguous_input_is_accounted_for_and_deduplicated(tmp_path: Path) -> None:
+    ambiguous = tmp_path / "wavefunction.dat"
+    ambiguous.write_text("unknown format\n", encoding="utf-8")
+
+    discovery = discover_inputs([tmp_path, ambiguous])
+
+    assert discovery.inputs == ()
+    assert discovery.unsupported == (ambiguous,)

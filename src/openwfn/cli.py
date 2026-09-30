@@ -1,6 +1,7 @@
 # src/openwfn/cli.py
 
 import argparse
+import json
 import os
 import shutil
 import subprocess
@@ -164,6 +165,17 @@ def _doctor_result(path: Path, *, format_hint: str | None = None) -> ResultRecor
             "normalized": capability_payload(parsed, input_path=path),
         },
     )
+
+
+def _read_format_map(path: Path | None) -> dict[Path, str]:
+    if path is None:
+        return {}
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict) or not all(
+        isinstance(key, str) and isinstance(value, str) for key, value in payload.items()
+    ):
+        raise ValueError("Format map must be a JSON object from file paths to format IDs.")
+    return {(path.parent / key).resolve(): value for key, value in payload.items()}
 
 
 def _run_examples_command(arguments: list[str]) -> int:
@@ -373,6 +385,7 @@ def main(argv: list[str] | None = None) -> int:
     p_batch.add_argument("--fail-fast", action="store_true")
     p_batch.add_argument("--resume", action="store_true", help="Reuse matching completed inputs")
     p_batch.add_argument("--recursive", action="store_true", help="Discover inputs recursively")
+    p_batch.add_argument("--format-map", type=Path, help="JSON map of input paths to format IDs")
     p_batch.add_argument("--dry-run", action="store_true", help="List inputs without analysis")
 
     p_validate = subparsers.add_parser(
@@ -531,6 +544,11 @@ def main(argv: list[str] | None = None) -> int:
         context = _context(args)
         if args.command == "batch":
             inputs = [Path(args.file), *args.inputs]
+            try:
+                format_hints = _read_format_map(args.format_map)
+            except (OSError, ValueError, json.JSONDecodeError) as exc:
+                context.error_stream.write(f"Error: Invalid format map: {exc}\n")
+                return 1
             analyses = (
                 tuple(item.strip() for item in args.analyses.split(",") if item.strip())
                 if args.analyses
@@ -550,6 +568,8 @@ def main(argv: list[str] | None = None) -> int:
                     inputs,
                     recursive=args.recursive,
                     output_dir=args.output_dir,
+                    format_hint=args.input_format,
+                    format_hints=format_hints,
                 )
                 return execute(
                     lambda: ResultRecord(
@@ -584,6 +604,8 @@ def main(argv: list[str] | None = None) -> int:
                     analyses=analyses,
                     resume=args.resume,
                     recursive=args.recursive,
+                    format_hint=args.input_format,
+                    format_hints=format_hints,
                     progress=None if context.quiet else report_progress,
                 )
                 successes = sum(record.status == "success" for record in manifest.records)

@@ -161,3 +161,21 @@ def test_batch_progress_uses_stderr_and_quiet_suppresses_it(tmp_path: Path) -> N
     assert "Batch 1/1: success" in visible.stderr
     assert "Batch 1/1:" not in quiet.stderr
     assert json.loads(visible.stdout)["kind"] == "batch"
+
+
+def test_cli_batch_format_map_paths_are_relative_to_map(tmp_path: Path) -> None:
+    fixture = ROOT / "tests" / "fixtures" / "interop" / "gamess" / "water.dat"
+    source = tmp_path / "water.dat"
+    source.write_bytes(fixture.read_bytes())
+    mapping = tmp_path / "formats.json"
+    mapping.write_text(json.dumps({"water.dat": "gamess"}), encoding="utf-8")
+
+    result = run_cli(
+        "--format", "json", "batch", str(source),
+        "--format-map", str(mapping), "--output-dir", str(tmp_path / "results"),
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)["data"]["inputs"] == 1
+    manifest = json.loads((tmp_path / "results" / "batch-manifest.json").read_text())
+    assert manifest["records"][0]["source_format"] == "gamess"
