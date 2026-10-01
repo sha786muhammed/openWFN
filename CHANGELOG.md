@@ -2,6 +2,15 @@
 
 All notable changes to openWFN are documented in this file.
 
+## [0.9.2] - 2026-10-01
+
+### Fixed
+
+- Structure-only summaries retain element composition and atom counts when effective nuclear charges are absent, without inventing electron counts or ghost/ECP classification.
+- Human-readable CLI output separates analysis validation, result status, and source-job termination. FCHK inputs explicitly leave source convergence unknown.
+- Point ESP reports specific singularity errors; zero-charge ghost centers no longer create a spurious nuclear singularity.
+- Human-readable output properties abbreviate long arrays while keeping diagnostics and warnings. `--verbose`, JSON, CSV, and the Python API retain full values.
+
 ## [0.9.1] - 2026-10-01
 
 ### Fixed

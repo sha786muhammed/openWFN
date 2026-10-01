@@ -1,6 +1,6 @@
 # Releasing openWFN
 
-This guide targets the 0.9.1 release. Do not execute tagging or
+This guide targets the 0.9.2 release. Do not execute tagging or
 publication steps without separate owner approval.
 
 For a future release whose changelog entry is `Unreleased`,
@@ -18,7 +18,7 @@ at this stage. Do not invent a release date to make them match.
    git status --short
    ```
 
-2. Confirm that `[project].version` in `pyproject.toml` is `0.9.1`.
+2. Confirm that `[project].version` in `pyproject.toml` is `0.9.2`.
 
 3. Only after the release date is finalized, replace the `Unreleased` changelog
    heading with that approved date, synchronize `CITATION.cff`, and update the
@@ -53,13 +53,13 @@ at this stage. Do not invent a release date to make them match.
    ```bash
    release_smoke="$(mktemp -d)"
    python -m venv "$release_smoke/venv"
-   "$release_smoke/venv/bin/python" -m pip install dist/openwfn-0.9.1-py3-none-any.whl
+   "$release_smoke/venv/bin/python" -m pip install dist/openwfn-0.9.2-py3-none-any.whl
    ```
 
 7. Verify the installed version, console entry point, and reference workflows:
 
    ```bash
-   "$release_smoke/venv/bin/python" -c "import openwfn; assert openwfn.__version__ == '0.9.1'"
+   "$release_smoke/venv/bin/python" -c "import openwfn; assert openwfn.__version__ == '0.9.2'"
    "$release_smoke/venv/bin/openwfn" --help
    "$release_smoke/venv/bin/openwfn" examples install "$release_smoke/examples"
    "$release_smoke/venv/bin/openwfn" --format json --output "$release_smoke/summary.json" "$release_smoke/examples/water.fchk" summary
@@ -78,8 +78,8 @@ at this stage. Do not invent a release date to make them match.
    console entry point:
 
    ```bash
-   python -m zipfile -l dist/openwfn-0.9.1-py3-none-any.whl
-   python -m tarfile -l dist/openwfn-0.9.1.tar.gz
+   python -m zipfile -l dist/openwfn-0.9.2-py3-none-any.whl
+   python -m tarfile -l dist/openwfn-0.9.2.tar.gz
    ```
 
    The source archive must also contain the repository citation, conduct,
@@ -91,7 +91,7 @@ at this stage. Do not invent a release date to make them match.
 10. Create the annotated release tag:
 
     ```bash
-    git tag -a v0.9.1 -m "openWFN 0.9.1"
+    git tag -a v0.9.2 -m "openWFN 0.9.2"
     ```
 
 11. Push the reviewed branch and tag only after explicit repository-owner approval.
@@ -104,8 +104,8 @@ at this stage. Do not invent a release date to make them match.
 13. Verify PyPI from another clean environment:
 
     ```bash
-    python -m pip install --no-cache-dir openwfn==0.9.1
-    python -c "import openwfn; assert openwfn.__version__ == '0.9.1'"
+    python -m pip install --no-cache-dir openwfn==0.9.2
+    python -c "import openwfn; assert openwfn.__version__ == '0.9.2'"
     ```
 
 14. Create or verify the GitHub release notes, confirm the public tag points to the reviewed commit, and add the approved repository topics through GitHub settings or the GitHub API.

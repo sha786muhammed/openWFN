@@ -29,24 +29,27 @@ def structure_summary(data: OpenWFNData) -> ResultRecord:
     counts = center_counts(structure)
     charges = structure.effective_nuclear_charges or (None,) * len(structure.coordinates)
     complete_identity = counts["unknown_effective_charges"] == 0
-    physical_numbers = [
+    included_numbers = [
         number for number, charge in zip(structure.atomic_numbers, charges, strict=True)
-        if charge is not None and charge > 0 and number is not None
+        if charge != 0
     ]
     formula = (
-        molecular_formula(physical_numbers)
-        if complete_identity and len(physical_numbers) == counts["physical_nuclei"]
+        molecular_formula(included_numbers)
+        if all(number is not None for number in included_numbers)
         else None
     )
     warnings = ["No complete molecular wavefunction is available; electronic properties were not inferred."]
     if not complete_identity:
-        warnings.append("Some center identities are unknown because effective nuclear charges were absent.")
+        warnings.append(
+            "Some effective nuclear charges are unknown; ghost/ECP classification is incomplete. "
+            "Element composition uses reported atomic numbers, excluding explicitly identified ghost centers."
+        )
     return ResultRecord(
         kind="summary",
         status="partial",
         data={
             **counts,
-            "atoms": counts["physical_nuclei"],
+            "atoms": len(included_numbers) if formula is not None else counts["physical_nuclei"],
             "formula": formula,
             "scope": "periodic" if data.periodic is not None else "isolated-structure",
             "charge": structure.charge,

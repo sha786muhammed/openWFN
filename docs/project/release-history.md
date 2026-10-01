@@ -1,5 +1,13 @@
 # Release history
 
+## 0.9.2 — summary and CLI clarity
+
+This patch retains element composition in structure-only summaries, separates
+analysis validation from source-job status, explains ESP singularities, and
+abbreviates long property arrays in human-readable output.
+
+[Read the 0.9.2 release notes](../releases/0.9.2.md)
+
 ## 0.9.1 — resource and export safety
 
 This patch bounds molecular grid allocation, fixes Molden detection and

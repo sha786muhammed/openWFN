@@ -22,6 +22,10 @@ still be recognized as single-frame XYZ when their contents match that format.
 `doctor` uses the canonical loader across these input kinds. `summary` returns
 a partial structure record when geometry exists but a full wavefunction does
 not. Electronic analyses fail cleanly when required records are absent.
+Element symbols can still provide a formula and atom count when effective
+nuclear charges are missing. Explicit ghost centers are excluded. In that case,
+the formula describes the reported element composition; physical-nucleus and
+ghost/ECP classification remain unconfirmed and are not inferred from symbols.
 
 ## Stable interoperability formats
 
