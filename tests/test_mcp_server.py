@@ -102,6 +102,29 @@ def test_file_size_limit(inputs):
     asyncio.run(check())
 
 
+def test_checkpoint_is_rejected_even_with_existing_sidecar(inputs):
+    from mcp import Client
+
+    from openwfn.mcp_server import create_server
+
+    (inputs / "binary.CHK").write_bytes(b"binary checkpoint placeholder")
+    shutil.copyfile(inputs / "water molecule.fchk", inputs / "binary.fchk")
+
+    async def check():
+        async with Client(create_server(inputs)) as client:
+            for tool, arguments in (
+                ("inspect_file", {"path": "binary.CHK"}),
+                ("inspect_file", {"path": "binary.CHK", "format_hint": "fchk"}),
+                ("run_analysis", {"path": "binary.CHK", "analysis": "summary"}),
+                ("output_properties", {"path": "binary.CHK"}),
+            ):
+                result = await client.call_tool(tool, arguments)
+                assert result.is_error
+                assert any(".fchk" in item.text for item in result.content)
+
+    asyncio.run(check())
+
+
 def test_invalid_configuration(inputs):
     from openwfn.mcp_server import create_server
 

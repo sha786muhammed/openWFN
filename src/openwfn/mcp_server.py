@@ -55,6 +55,11 @@ def create_server(data_root: str | Path, *, max_file_bytes: int = 100 * 1024 * 1
             raise ToolError("Input must be inside the configured data root")
         if not candidate.is_file():
             raise ToolError("Input must be an existing regular file")
+        if candidate.suffix.casefold() == ".chk":
+            raise ToolError(
+                "Binary .chk inputs are disabled in the read-only MCP adapter. "
+                "Convert to .fchk outside MCP, then provide that file."
+            )
         if candidate.stat().st_size > max_file_bytes:
             raise ToolError("Input exceeds the configured file-size limit")
         return candidate

@@ -48,6 +48,11 @@ Standard output is reserved for protocol messages.
 | `output_properties(path)` | Extract source-reported QC output properties with cclib. |
 
 Paths can be relative to the data root. Absolute paths must also be inside it.
+Binary Gaussian `.chk` files are rejected by every file-reading MCP tool,
+including when a format hint or an existing `.fchk` sidecar is provided.
+Convert them outside MCP with Gaussian's `formchk`, then supply the `.fchk`
+file. The existing CLI/API checkpoint workflow is unchanged.
+
 The supported registry currently includes `summary`, `frontier`, `beta-frontier`,
 `frontier-all`, `mulliken`, and `lowdin`. Availability depends on the file's data.
 Geometry measurements, density grids, ESP, exports, and batch execution are not
