@@ -1,11 +1,10 @@
-# Interoperability preview
+# Interoperability
 
-This page describes the unreleased 0.9.0 source checkout. The last published
-release documented here is 0.8.2. From the source checkout, install the
+Version 0.9.0 provides optional capability-aware ingestion. Install the
 optional format reader with:
 
 ```bash
-python -m pip install -e ".[interop]"
+python -m pip install "openwfn[interop]==0.9.0"
 ```
 
 The base install still works without IOData. Gaussian FCHK continues through

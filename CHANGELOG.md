@@ -2,7 +2,7 @@
 
 All notable changes to openWFN are documented in this file.
 
-## [0.9.0] - Unreleased
+## [0.9.0] - 2026-10-01
 
 ### Added
 
@@ -28,7 +28,7 @@ All notable changes to openWFN are documented in this file.
 - Five water representations check conversion consistency from one originating calculation, not independent validation across arbitrary programs and molecules.
 - Selected real ORCA, Q-Chem, and Gaussian outputs were compared with source values; a Gaussian CASSCF example retained a missing SCF energy rather than substituting another energy.
 - Ingestion support does not imply a complete wavefunction or availability of every analysis. MCP and source-reported output extraction remain Experimental. General correlated-density and periodic electronic analysis are not claimed.
-- No release date, tag, DOI, or PyPI publication is claimed by these preparation notes.
+- Release metadata identifies version 0.9.0 and date 2026-10-01. No paper, DOI, or affiliation is claimed.
 
 ## [0.8.2] - 2026-09-28
 

@@ -1,7 +1,7 @@
 # Python API reference
 
-The interoperability sections below describe the unreleased 0.9.0 source;
-the last published release documented here is 0.8.2.
+This reference describes openWFN 0.9.0. Optional output extraction remains
+Experimental; ingestion support does not imply every analysis is available.
 
 The stable import surface is declared by `openwfn.__all__`. Import from `openwfn` rather than internal modules when possible.
 

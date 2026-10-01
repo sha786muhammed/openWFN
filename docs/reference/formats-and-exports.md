@@ -25,9 +25,8 @@ not. Electronic analyses fail cleanly when required records are absent.
 
 ## Stable interoperability formats
 
-This section describes the unreleased 0.9.0 source checkout, not the
-published 0.8.2 wheel. Install the branch checkout with
-`python -m pip install -e ".[interop]"` for the IOData-backed entries. This is the
+This section describes openWFN 0.9.0. Install
+`python -m pip install "openwfn[interop]==0.9.0"` for the IOData-backed entries. This is the
 pinned IOData 1.0.1 readable-format inventory. “Stable” means ingestion passed
 the project fixture contract; it does not mean every analysis is available,
 or that all real-world variants have been independently validated. Native
