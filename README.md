@@ -102,13 +102,17 @@ The default density spacing of **0.15 bohr** is an accuracy/performance tradeoff
 | Automation | Versioned results, batch manifests, discovery, resume, JSON and CSV | Stable |
 | Research reports | HTML/Markdown reports, tables, figures, and structures | Stable |
 | Interactive workbench | Optional visualization and teaching surface | Experimental |
+| Additional input formats | Optional IOData ingestion and file-specific capabilities | Stable fixture contract; source-only until 0.9.0 publication |
+| QC output properties | Source-reported extraction with optional cclib | Experimental; not a complete wavefunction |
+| Local MCP | Read-only stdio tools for selected analyses | Experimental; no remote service |
 
 “Validated” is deliberately scoped. Review the [validation evidence](https://sha786muhammed.github.io/openWFN/science/validation-status/) and [limitations](https://sha786muhammed.github.io/openWFN/limitations/) before research use.
 
 ## Input support
 
-The published stable release is 0.8.2. This development branch adds optional
-interoperability support; it is not a published 0.9 release. For its source
+The last published release documented here is 0.8.2. The source now targets
+unreleased 0.9.0 with optional interoperability; this is not a PyPI release.
+See the [0.9.0 preparation notes](docs/releases/0.9.0.md). For the source
 checkout, install `python -m pip install -e ".[interop]"`. The optional reader
 is pinned to IOData 1.0.1 and has a [25-format ingestion matrix](docs/reference/formats-and-exports.md)
 with [capability discovery](docs/reference/capabilities.md). Format ingestion
@@ -125,7 +129,7 @@ XYZ, MOL/SDF, and PDB inputs provide structure-only records. The optional
 backend also reads structure, periodic, grid, and integral-only formats; use
 `openwfn FILE capabilities` to check the actual data before analysis.
 
-In this unreleased 0.9 source branch, use `--input-format FORMAT_ID` when a
+In the unreleased 0.9.0 source checkout, use `--input-format FORMAT_ID` when a
 filename is ambiguous (for example, a GAMESS `.dat`). A structure without a
 complete wavefunction gets a partial `summary`; it does not get inferred
 orbitals, density, or electron counts. Mixed batches can use `--format-map`

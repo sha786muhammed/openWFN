@@ -1,6 +1,6 @@
 # Capability discovery
 
-These commands describe the unreleased interoperability branch. In a source
+These commands describe the unreleased 0.9.0 source checkout. In a source
 checkout, use `python -m pip install -e ".[interop]"`; after a release that
 includes this feature, the package-index install will be:
 

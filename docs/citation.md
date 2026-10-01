@@ -1,5 +1,9 @@
 # Citation
 
+The source targets unreleased 0.9.0. `CITATION.cff` and the example below still
+identify published 0.8.2; update them when the 0.9.0 release details are finalized.
+For source-checkout work, also record the exact commit and input checksums.
+
 ## Cite the software release
 
 Use the exact release that produced your results. The repository

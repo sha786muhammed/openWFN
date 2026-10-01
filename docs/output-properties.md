@@ -32,7 +32,8 @@ It is not yet registered as a batch analysis.
 Mulliken/Löwdin charges here are values reported by the source program, whereas
 the existing population commands recompute values from a complete wavefunction.
 Density, populations and ESP are not reconstructed from insufficient output.
-The preview is Experimental; an ORCA 5.0.3 example has been checked, and other
-programs and job types still need their own source comparisons before a stable
-support claim. Input contents and complete parser metadata are not embedded in
+The preview is Experimental. Selected ORCA 5.0.3, Q-Chem, and Gaussian outputs
+were compared with source values. A Gaussian CASSCF example correctly retained
+an unavailable SCF energy. These checks do not establish coverage for every
+program version or job type. Input contents and complete parser metadata are not embedded in
 the result. Provenance includes the input hash and local source path.

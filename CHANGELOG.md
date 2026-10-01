@@ -2,6 +2,34 @@
 
 All notable changes to openWFN are documented in this file.
 
+## [0.9.0] - Unreleased
+
+### Added
+
+- Optional IOData 1.0.1 ingestion with a pinned 25-format fixture contract and file-specific capability discovery.
+- Canonical `OpenWFNData` components for structure, isolated calculations, periodic cells, volumetric grids, integrals, and metadata.
+- Explicit CLI/API format hints and mixed-batch format maps; discovered unsupported inputs receive records rather than disappearing from results.
+- Experimental source-reported output extraction through `read_output()` and the `properties` CLI command, using optional cclib 1.8.1.
+- Experimental local stdio MCP tools for capability inspection, registered analyses, and output properties, using optional MCP SDK 2.2.0.
+
+### Changed and fixed
+
+- `load(...).data` now exposes `OpenWFNData`; direct access to the isolated molecular calculation moves to `.data.calculation`. Existing high-level analysis methods remain the recommended interface.
+- Structure-only summaries return partial results without inferring electronic properties. Ghost and effective nuclear charges are retained where the source provides them.
+- Structure exports warn when their destination format cannot retain ghost/ECP effective charges.
+- CLI JSON failures and quiet-mode results use structured envelopes. Batch routing, failure reporting, and resume checks retain input identity and effective format hints.
+- Expected open-shell density electron counts can use explicit orbital occupations when source electron-count records are unavailable.
+- MCP rejects binary `.chk` files to avoid automatic conversion and file writes. Convert them outside MCP and supply `.fchk` instead.
+- Archived internal planning documents are removed from the current documentation tree. Git history is unchanged.
+
+### Evidence and boundaries
+
+- Local verification recorded 570 passing tests and two skips with the optional interfaces installed. PR and post-merge CI passed Python 3.10–3.13, macOS/Windows smoke checks, interoperability, scientific validation, package checks, and optional-interface tests.
+- Five water representations check conversion consistency from one originating calculation, not independent validation across arbitrary programs and molecules.
+- Selected real ORCA, Q-Chem, and Gaussian outputs were compared with source values; a Gaussian CASSCF example retained a missing SCF energy rather than substituting another energy.
+- Ingestion support does not imply a complete wavefunction or availability of every analysis. MCP and source-reported output extraction remain Experimental. General correlated-density and periodic electronic analysis are not claimed.
+- No release date, tag, DOI, or PyPI publication is claimed by these preparation notes.
+
 ## [0.8.2] - 2026-09-28
 
 ### Fixed

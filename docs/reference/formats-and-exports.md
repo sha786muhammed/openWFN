@@ -25,7 +25,7 @@ not. Electronic analyses fail cleanly when required records are absent.
 
 ## Stable interoperability formats
 
-This section describes the unreleased interoperability branch, not the
+This section describes the unreleased 0.9.0 source checkout, not the
 published 0.8.2 wheel. Install the branch checkout with
 `python -m pip install -e ".[interop]"` for the IOData-backed entries. This is the
 pinned IOData 1.0.1 readable-format inventory. “Stable” means ingestion passed

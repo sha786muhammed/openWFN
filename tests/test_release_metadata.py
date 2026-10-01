@@ -10,7 +10,7 @@ except ModuleNotFoundError:  # Python 3.10
     import tomli as tomllib
 
 import openwfn
-from scripts.sync_release_metadata import rendered_citation
+from scripts.sync_release_metadata import citation_release_version, rendered_citation
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -39,16 +39,43 @@ def citation_release_date() -> str:
     return match.group(1)
 
 
-def test_release_version_is_082() -> None:
-    assert project_version() == "0.8.2"
+def test_source_version_targets_090() -> None:
+    assert project_version() == "0.9.0"
 
 
 def test_runtime_version_matches_project() -> None:
     assert openwfn.__version__ == project_version()
 
 
-def test_citation_version_matches_project() -> None:
-    assert citation_version() == project_version()
+def test_citation_version_matches_release_state() -> None:
+    assert citation_version() == citation_release_version(ROOT / "CHANGELOG.md", project_version())
+
+
+def test_pending_source_cites_latest_dated_release(tmp_path) -> None:
+    changelog = tmp_path / "CHANGELOG.md"
+    changelog.write_text(
+        "## [0.9.0] - Unreleased\n\n## [0.8.2] - 2026-09-28\n", encoding="utf-8"
+    )
+    assert citation_release_version(changelog, "0.9.0") == "0.8.2"
+
+
+def test_dated_source_cites_its_own_release(tmp_path) -> None:
+    changelog = tmp_path / "CHANGELOG.md"
+    changelog.write_text(
+        "## [0.9.0] - 2026-10-01\n\n## [0.8.2] - 2026-09-28\n", encoding="utf-8"
+    )
+    assert citation_release_version(changelog, "0.9.0") == "0.9.0"
+
+
+def test_pending_source_without_published_history_is_rejected(tmp_path) -> None:
+    changelog = tmp_path / "CHANGELOG.md"
+    changelog.write_text("## [0.9.0] - Unreleased\n", encoding="utf-8")
+    try:
+        citation_release_version(changelog, "0.9.0")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("No published citation may be invented for an unreleased source")
 
 
 def test_citation_release_date_is_valid_iso_date() -> None:
