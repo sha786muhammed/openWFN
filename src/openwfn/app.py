@@ -43,19 +43,35 @@ def execute(operation: Callable[[], ResultRecord | int | None], context: Command
                     )
                 context.output_path.parent.mkdir(parents=True, exist_ok=True)
                 context.output_path.write_text(rendered, encoding="utf-8")
-            elif not context.quiet:
+                if context.format == "json":
+                    context.output_stream.write(rendered)
+            elif not context.quiet or context.format == "json":
                 context.output_stream.write(rendered)
-        return result if isinstance(result, int) else 0
+        if isinstance(result, int):
+            return result
+        return 1 if isinstance(result, ResultRecord) and result.status == "failed" else 0
     except OpenWFNError as exc:
-        context.error_stream.write(f"Error: {exc}\n")
+        _report_failure(exc, context)
         return exc.exit_code
     except FileExistsError as exc:
         message = str(exc).replace("overwrite=True", "--overwrite")
-        context.error_stream.write(f"Error: {message}\n")
+        _report_failure(FileExistsError(message), context)
         return 1
     except Exception as exc:  # application boundary intentionally catches unknown failures
         if context.debug:
             traceback.print_exc(file=context.error_stream)
-        else:
-            context.error_stream.write(f"Error: {exc}\n")
+        _report_failure(exc, context)
         return 1
+
+
+def _report_failure(exc: Exception, context: CommandContext) -> None:
+    if context.format == "json":
+        from .presentation import render
+
+        failure = ResultRecord.failure(
+            kind="command", analysis_name="command", analysis_version="1",
+            exception=exc, elapsed_seconds=0.0,
+        )
+        context.output_stream.write(render(failure, context))
+    else:
+        context.error_stream.write(f"Error: {exc}\n")

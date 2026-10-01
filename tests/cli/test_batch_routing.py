@@ -4,6 +4,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 WATER = ROOT / "examples" / "water" / "water.fchk"
 
@@ -161,3 +163,111 @@ def test_batch_progress_uses_stderr_and_quiet_suppresses_it(tmp_path: Path) -> N
     assert "Batch 1/1: success" in visible.stderr
     assert "Batch 1/1:" not in quiet.stderr
     assert json.loads(visible.stdout)["kind"] == "batch"
+
+
+def test_cli_batch_format_map_paths_are_relative_to_map(tmp_path: Path) -> None:
+    pytest.importorskip("iodata", reason="requires the optional interoperability backend")
+    fixture = ROOT / "tests" / "fixtures" / "interop" / "gamess" / "water.dat"
+    source = tmp_path / "water.dat"
+    source.write_bytes(fixture.read_bytes())
+    mapping = tmp_path / "formats.json"
+    mapping.write_text(json.dumps({"water.dat": "gamess"}), encoding="utf-8")
+
+    result = run_cli(
+        "--format", "json", "batch", str(source),
+        "--format-map", str(mapping), "--output-dir", str(tmp_path / "results"),
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)["data"]["inputs"] == 1
+    manifest = json.loads((tmp_path / "results" / "batch-manifest.json").read_text())
+    assert manifest["records"][0]["source_format"] == "gamess"
+
+
+def test_batch_exit_reflects_records(tmp_path: Path) -> None:
+    bad = tmp_path / "bad.xyz"
+    bad.write_text("not xyz\n", encoding="utf-8")
+    failed = run_cli(
+        "--format", "json", "batch", str(WATER), str(bad),
+        "--output-dir", str(tmp_path / "failed"),
+    )
+    assert failed.returncode != 0
+    failed_payload = json.loads(failed.stdout)
+    assert failed_payload["status"] == "failed"
+    assert failed_payload["data"]["successes"] == 1
+    assert failed_payload["data"]["errors"] == 1
+
+    partial_xyz = tmp_path / "structure.xyz"
+    partial_xyz.write_text("1\nH\nH 0 0 0\n", encoding="utf-8")
+    partial = run_cli(
+        "--format", "json", "batch", str(partial_xyz),
+        "--output-dir", str(tmp_path / "partial"),
+    )
+    assert partial.returncode == 0, partial.stderr
+    assert json.loads(partial.stdout)["status"] == "partial"
+
+
+def test_all_unsupported_writes_manifest(tmp_path: Path) -> None:
+    directory = tmp_path / "inputs"
+    directory.mkdir()
+    source = directory / "ambiguous.dat"
+    source.write_text("not recognized\n", encoding="utf-8")
+    output = tmp_path / "results"
+
+    result = run_cli("--format", "json", "batch", str(directory), "--output-dir", str(output))
+
+    assert result.returncode != 0
+    assert json.loads(result.stdout)["status"] == "failed"
+    manifest = json.loads((output / "batch-manifest.json").read_text())
+    assert manifest["records"] == []
+    assert manifest["unsupported_details"][0]["path"] == str(source)
+    assert manifest["unsupported_details"][0]["reason"]
+    assert len(manifest["unsupported_details"][0]["sha256"]) == 64
+
+
+def test_fail_fast_reports_attempted_subset(tmp_path: Path) -> None:
+    first = tmp_path / "bad.xyz"
+    first.write_text("broken\n", encoding="utf-8")
+    output = tmp_path / "results"
+    result = run_cli(
+        "--format", "json", "batch", str(first), str(WATER),
+        "--fail-fast", "--output-dir", str(output),
+    )
+    assert result.returncode != 0
+    payload = json.loads(result.stdout)
+    assert payload["data"]["attempted"] == 1
+    assert payload["data"]["stopped_early"] is True
+    manifest = json.loads((output / "batch-manifest.json").read_text())
+    assert manifest["attempted_count"] == 1
+    assert manifest["stopped_early"] is True
+
+
+def test_invalid_format_map_is_one_json_failure(tmp_path: Path) -> None:
+    mapping = tmp_path / "invalid.json"
+    mapping.write_text("[not a map]", encoding="utf-8")
+    result = run_cli(
+        "--format", "json", "batch", str(WATER), "--format-map", str(mapping),
+        "--output-dir", str(tmp_path / "results"),
+    )
+    assert result.returncode != 0
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "failed"
+    assert "Invalid format map" in payload["error"]["message"]
+
+
+def test_format_map_rejects_aliases_with_conflicting_hints(tmp_path: Path) -> None:
+    fixture = ROOT / "tests" / "fixtures" / "interop" / "gamess" / "water.dat"
+    source = tmp_path / "water.dat"
+    source.write_bytes(fixture.read_bytes())
+    mapping = tmp_path / "formats.json"
+    mapping.write_text(json.dumps({"water.dat": "gamess", "./water.dat": "molden"}), encoding="utf-8")
+    output = tmp_path / "results"
+
+    result = run_cli(
+        "--format", "json", "batch", str(source),
+        "--format-map", str(mapping), "--output-dir", str(output),
+    )
+
+    assert result.returncode != 0
+    assert "conflict" in json.loads(result.stdout)["error"]["message"].lower()
+    assert not output.exists()

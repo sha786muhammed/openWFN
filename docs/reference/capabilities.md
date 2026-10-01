@@ -33,6 +33,13 @@ result. Capability states describe what can be attempted, not an independent
 accuracy certification. A `missing` wavefunction must not be filled in from
 atomic electron counts alone.
 
+For ambiguous inputs such as GAMESS `.dat`, use
+`openwfn --input-format gamess FILE capabilities` or
+`load(path, format_hint="gamess")`. `doctor` includes the same normalized
+capability and analysis report. An available `summary` requirement means the
+file has structure; a geometry-only or periodic summary is still marked
+`partial` because electronic fields are unavailable.
+
 Only one record is ingested from a multi-record file. Periodic structures,
 stored volumetric grids, and FCIDUMP integrals remain distinct canonical
 components; the molecular frontier/population/density methods do not become

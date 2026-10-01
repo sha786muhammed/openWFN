@@ -136,7 +136,7 @@ def test_requirement_evaluation_accepts_available_or_derived_alternatives() -> N
     assert availability.missing_requirements == ()
 
 
-def test_periodic_structure_cannot_run_existing_isolated_summary() -> None:
+def test_periodic_structure_gets_partial_structure_summary() -> None:
     from openwfn.analysis.registry import run_analysis_safe
 
     data = _container(
@@ -149,11 +149,9 @@ def test_periodic_structure_cannot_run_existing_isolated_summary() -> None:
 
     result = run_analysis_safe(data, "summary")
 
-    assert result.status == "failed"
-    assert result.validation_status == "Unsupported"
-    assert result.error is not None
-    assert result.error.category == "DataUnavailableError"
-    assert "isolated molecule" in result.error.message.lower()
+    assert result.status == "partial"
+    assert result.data["scope"] == "periodic"
+    assert result.data["electron_count"] is None
 
 
 def test_grid_only_frontier_is_structured_unsupported_result() -> None:

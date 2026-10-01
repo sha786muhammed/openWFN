@@ -63,6 +63,12 @@ docs = [
 interop = [
     "qc-iodata==1.0.1",
 ]
+outputs = [
+    "cclib==1.8.1",
+]
+mcp = [
+    "mcp==2.2.0",
+]
 test = [
     "build",
     "pytest",

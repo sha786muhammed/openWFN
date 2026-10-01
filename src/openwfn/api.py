@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Literal
 
 from .analysis.registry import run_analysis, run_analysis_safe
+from .analysis.structure_summary import center_counts
 from .capabilities import Capability, infer_capabilities
 from .data import INTEROP_SCHEMA_VERSION, OpenWFNData
 from .errors import DataUnavailableError
@@ -87,6 +88,7 @@ class OpenWFNCalculation:
             return self._unavailable(
                 "geometry_summary", "geometry_summary", "Atomic structure is not available for this input."
             )
+        counts = center_counts(self.data.structure) if self.data.structure is not None else {}
         return self._with_provenance(
             ResultRecord(
                 kind="geometry_summary",
@@ -94,6 +96,7 @@ class OpenWFNCalculation:
                     "atom_count": atom_count,
                     "charge": charge,
                     "multiplicity": multiplicity,
+                    **counts,
                 },
             )
         )
@@ -157,7 +160,7 @@ class OpenWFNCalculation:
         return run_analysis_safe(self.data, method)
 
 
-def load(path: str | Path) -> OpenWFNCalculation:
+def load(path: str | Path, *, format_hint: str | None = None) -> OpenWFNCalculation:
     """Load any successfully normalized native or interoperability input."""
 
-    return OpenWFNCalculation(load_input(Path(path)))
+    return OpenWFNCalculation(load_input(Path(path), format_hint=format_hint))

@@ -27,6 +27,7 @@ format-ingestion status alone does not guarantee a `frontier` result.
 |---|---|
 | `--version` | Print the installed version without requiring a file |
 | `--format table\|plain\|json\|csv` | Select result rendering |
+| `--input-format FORMAT_ID` | Select a registered parser for one ambiguous input or a homogeneous batch; place before `FILE` or `batch` |
 | `--output PATH` | Write supported rendered output to a file |
 | `--quiet`, `--verbose`, `--debug` | Control diagnostic detail |
 | `--no-color`, `--plain`, `--compact` | Control terminal presentation |
@@ -73,14 +74,34 @@ These are the public top-level choices shown by `openwfn --help`.
 | `validate` | Run the density-conservation check |
 | `doctor` | Inspect input type and available capabilities |
 | `capabilities` | Report normalized component and analysis availability |
+| `properties` | Extract source-reported QC output properties using the optional cclib reader |
+
+## Source-reported output properties
+
+Install the `outputs` extra from this development checkout, then run:
+
+```bash
+python -m pip install -e ".[outputs]"
+python -m openwfn.cli --format json calculation.out properties
+```
+
+The command detects the program from file contents; omit `--input-format`.
+It reports available geometry, charge/multiplicity, SCF energy, frontier
+orbital energies, dipole, printed atomic charges and normal termination.
+Printed charges are source-reported values, separate from recalculated
+`population` results. Missing fields remain null or empty; warnings mark the
+result partial. Normal termination does not prove optimization convergence.
+This Experimental preview is separate from `load()` and is not yet a
+registered batch analysis. See [output properties](../output-properties.md)
+for units, provenance and the validation boundary.
 
 ## Inspection and structure
 
 | Command | Syntax | Result |
 |---|---|---|
-| `summary` | `openwfn FILE summary` | Formula, state, energy, center of mass, bonds, fragments |
+| `summary` | `openwfn FILE summary` | Full calculation summary when data permit; otherwise a partial structure summary with unknown fields explicit |
 | `info` | `openwfn FILE info` | Parsed FCHK scalar metadata |
-| `doctor` | `openwfn FILE doctor` | Input kind and availability of metadata, grid, basis, orbitals, and density |
+| `doctor` | `openwfn FILE doctor` | Input kind, legacy availability fields, and normalized capability/analysis report |
 | `capabilities` | `openwfn FILE capabilities` | Component states, parser/backend provenance, and registered-analysis requirements |
 | `bonds` | `openwfn FILE bonds` | Covalent-radius bond heuristic |
 | `graph` | `openwfn FILE graph` | Connected molecular fragments |
@@ -133,7 +154,7 @@ ESP components are `nuclear`, `mulliken`, `lowdin`, `electronic`, and `total`. C
 
 `batch` accepts the primary file plus additional inputs, comma-separated
 `--analyses`, `--workers`, required `--output-dir`, and optional `--fail-fast`,
-`--resume`, and `--spin alpha|beta|all` controls. The spin selector applies to a requested `frontier` analysis; for example:
+`--resume`, `--format-map MAP.json`, and `--spin alpha|beta|all` controls. The spin selector applies to a requested `frontier` analysis; for example:
 
 ```bash
 openwfn batch ./calculations \
@@ -146,9 +167,23 @@ This maps the requested frontier analysis to the spin-complete `frontier-all` re
 
 Batch records preserve scientifically usable `partial` analyses. A record is `error` only when every requested analysis fails; otherwise partial values, warnings, and result data are retained in the manifest.
 
-Resume requires matching input checksums and configuration fingerprints; failed inputs are retried. Inputs may be files or directories. `--recursive` scans subdirectories and `--dry-run` previews supported and unsupported files without requiring `--output-dir`. Completed runs write `batch-manifest.json`, per-input JSON records, and `batch-summary.csv`. Progress uses stderr and global `--quiet` suppresses it.
+The top-level batch result is `success`/exit 0 only when every input succeeds,
+`partial`/exit 0 when at least one record is partial and none fail, and
+`failed`/nonzero when an input errors or discovery finds an unsupported file.
+An all-unsupported directory still writes a manifest. Its `unsupported_details`
+list includes paths, reasons, and checksums when readable; `attempted_count`
+and `stopped_early` describe fail-fast runs. A JSON format map resolves keys
+relative to the map file, and unknown or conflicting format hints fail before
+analysis records are written.
+
+Resume requires matching input checksums and configuration fingerprints, including software, backend, analysis versions, and effective format hints; failed inputs are retried. Inputs may be files or directories. `--recursive` scans subdirectories and `--dry-run` previews supported and unsupported files without requiring `--output-dir`. Completed runs write `batch-manifest.json`, per-input JSON records, and `batch-summary.csv`. Progress uses stderr and global `--quiet` suppresses it, but `--quiet --format json` still emits the final result.
 It writes result schema `1.0` envelopes inside batch manifest schema `1.0`.
 The older `--operation summary` form remains supported.
+
+With `--format json`, parsed commands emit one result envelope on stdout.
+Runtime/input failures have `status="failed"`, structured error details, and
+a nonzero exit code. `--output PATH` also saves that envelope to the requested
+file. Help and argument-syntax errors remain ordinary text.
 
 With multiple workers, openWFN keeps a bounded queue proportional to the worker
 count. Per-input records are saved as workers finish, while the final manifest

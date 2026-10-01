@@ -39,13 +39,15 @@
       },
       "expected_analyses": {
         "available": [],
+        "partial": [
+          "summary"
+        ],
         "unsupported": [
           "beta-frontier",
           "frontier",
           "frontier-all",
           "lowdin",
-          "mulliken",
-          "summary"
+          "mulliken"
         ]
       },
       "expected_atom_count": 3
@@ -90,13 +92,15 @@
       },
       "expected_analyses": {
         "available": [],
+        "partial": [
+          "summary"
+        ],
         "unsupported": [
           "beta-frontier",
           "frontier",
           "frontier-all",
           "lowdin",
-          "mulliken",
-          "summary"
+          "mulliken"
         ]
       },
       "expected_atom_count": 1
@@ -238,13 +242,15 @@
       },
       "expected_analyses": {
         "available": [],
+        "partial": [
+          "summary"
+        ],
         "unsupported": [
           "beta-frontier",
           "frontier",
           "frontier-all",
           "lowdin",
-          "mulliken",
-          "summary"
+          "mulliken"
         ]
       },
       "expected_atom_count": 3
@@ -386,13 +392,15 @@
       },
       "expected_analyses": {
         "available": [],
+        "partial": [
+          "summary"
+        ],
         "unsupported": [
           "beta-frontier",
           "frontier",
           "frontier-all",
           "lowdin",
-          "mulliken",
-          "summary"
+          "mulliken"
         ]
       },
       "expected_atom_count": 3
@@ -435,13 +443,15 @@
       },
       "expected_analyses": {
         "available": [],
+        "partial": [
+          "summary"
+        ],
         "unsupported": [
           "beta-frontier",
           "frontier",
           "frontier-all",
           "lowdin",
-          "mulliken",
-          "summary"
+          "mulliken"
         ]
       },
       "expected_atom_count": 3
@@ -533,13 +543,15 @@
       },
       "expected_analyses": {
         "available": [],
+        "partial": [
+          "summary"
+        ],
         "unsupported": [
           "beta-frontier",
           "frontier",
           "frontier-all",
           "lowdin",
-          "mulliken",
-          "summary"
+          "mulliken"
         ]
       },
       "expected_atom_count": 3
@@ -582,13 +594,15 @@
       },
       "expected_analyses": {
         "available": [],
+        "partial": [
+          "summary"
+        ],
         "unsupported": [
           "beta-frontier",
           "frontier",
           "frontier-all",
           "lowdin",
-          "mulliken",
-          "summary"
+          "mulliken"
         ]
       },
       "expected_atom_count": 3
@@ -633,13 +647,15 @@
       },
       "expected_analyses": {
         "available": [],
+        "partial": [
+          "summary"
+        ],
         "unsupported": [
           "beta-frontier",
           "frontier",
           "frontier-all",
           "lowdin",
-          "mulliken",
-          "summary"
+          "mulliken"
         ]
       },
       "expected_atom_count": 1
@@ -682,13 +698,15 @@
       },
       "expected_analyses": {
         "available": [],
+        "partial": [
+          "summary"
+        ],
         "unsupported": [
           "beta-frontier",
           "frontier",
           "frontier-all",
           "lowdin",
-          "mulliken",
-          "summary"
+          "mulliken"
         ]
       },
       "expected_atom_count": 3
@@ -883,13 +901,15 @@
       },
       "expected_analyses": {
         "available": [],
+        "partial": [
+          "summary"
+        ],
         "unsupported": [
           "beta-frontier",
           "frontier",
           "frontier-all",
           "lowdin",
-          "mulliken",
-          "summary"
+          "mulliken"
         ]
       },
       "expected_atom_count": 3
@@ -932,7 +952,8 @@
         "integrals": "missing"
       },
       "expected_analyses": {
-        "available": [
+        "available": [],
+        "partial": [
           "summary"
         ],
         "unsupported": [
@@ -984,13 +1005,15 @@
       },
       "expected_analyses": {
         "available": [],
+        "partial": [
+          "summary"
+        ],
         "unsupported": [
           "beta-frontier",
           "frontier",
           "frontier-all",
           "lowdin",
-          "mulliken",
-          "summary"
+          "mulliken"
         ]
       },
       "expected_atom_count": 1
@@ -1033,13 +1056,15 @@
       },
       "expected_analyses": {
         "available": [],
+        "partial": [
+          "summary"
+        ],
         "unsupported": [
           "beta-frontier",
           "frontier",
           "frontier-all",
           "lowdin",
-          "mulliken",
-          "summary"
+          "mulliken"
         ]
       },
       "expected_atom_count": 3
@@ -1082,7 +1107,8 @@
         "integrals": "missing"
       },
       "expected_analyses": {
-        "available": [
+        "available": [],
+        "partial": [
           "summary"
         ],
         "unsupported": [
@@ -1235,7 +1261,8 @@
         "integrals": "missing"
       },
       "expected_analyses": {
-        "available": [
+        "available": [],
+        "partial": [
           "summary"
         ],
         "unsupported": [

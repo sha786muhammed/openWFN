@@ -6,24 +6,37 @@ import json
 from concurrent.futures import FIRST_COMPLETED, Executor, Future, ProcessPoolExecutor, wait
 from dataclasses import dataclass, field, replace
 from hashlib import sha256
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any, Callable, Iterator, Literal, cast
 
-from .analysis.registry import available_analyses, run_analysis_safe
+from . import __version__
+from .analysis.registry import _resolve, available_analyses, run_analysis_safe
 from .api import load
-from .formats import path_matches_declared_format
+from .data import INTEROP_SCHEMA_VERSION
+from .formats import iodata_format_ids, path_matches_declared_format
+from .model import MODEL_SCHEMA_VERSION
 from .parsers.registry import DEFAULT_REGISTRY
 from .results import RESULT_SCHEMA_VERSION, ResultRecord
 
 BATCH_SCHEMA_VERSION = "1.0"
+BATCH_IMPLEMENTATION_TOKEN = "0.9-workflow-hardening-1"
 ProgressCallback = Callable[[int, int, "BatchRecord"], None]
 FrontierSpin = Literal["alpha", "beta", "all"]
+
+
+@dataclass(frozen=True, slots=True)
+class UnsupportedInput:
+    path: str
+    reason: str
+    sha256: str | None
 
 
 @dataclass(frozen=True, slots=True)
 class InputDiscovery:
     inputs: tuple[Path, ...]
     unsupported: tuple[Path, ...] = ()
+    unsupported_details: tuple[UnsupportedInput, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,6 +48,7 @@ class BatchRecord:
     input_sha256: str | None = None
     results: tuple[ResultRecord, ...] = ()
     skipped: bool = False
+    source_format: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,6 +58,10 @@ class BatchManifest:
     analyses: tuple[str, ...] = ()
     configuration_fingerprint: str = ""
     unsupported_inputs: tuple[str, ...] = ()
+    unsupported_details: tuple[UnsupportedInput, ...] = ()
+    attempted_count: int = 0
+    stopped_early: bool = False
+    status: Literal["success", "partial", "failed"] = "success"
     schema_version: str = field(default=BATCH_SCHEMA_VERSION, init=False)
 
 
@@ -62,10 +80,13 @@ def discover_inputs(
     *,
     recursive: bool = False,
     output_dir: Path | None = None,
+    format_hint: str | None = None,
+    format_hints: dict[Path, str] | None = None,
 ) -> InputDiscovery:
     """Expand files and directories into supported, deduplicated inputs."""
 
     supported_suffixes = set(DEFAULT_REGISTRY.supported_suffixes())
+    hinted_paths = {key.resolve() for key in (format_hints or {})}
     discovered: list[Path] = []
     unsupported: list[Path] = []
     seen: set[Path] = set()
@@ -75,7 +96,12 @@ def discover_inputs(
         identity = path.resolve()
         if identity in seen or identity in unsupported_seen or _inside(path, output_dir):
             return
-        if path.suffix.lower() in supported_suffixes or path_matches_declared_format(path):
+        if (
+            format_hint is not None
+            or identity in hinted_paths
+            or path.suffix.lower() in supported_suffixes
+            or path_matches_declared_format(path)
+        ):
             seen.add(identity)
             discovered.append(path)
         else:
@@ -97,7 +123,17 @@ def discover_inputs(
                 add(candidate)
         else:
             add(path)
-    return InputDiscovery(tuple(discovered), tuple(unsupported))
+    return InputDiscovery(
+        tuple(discovered), tuple(unsupported),
+        tuple(
+            UnsupportedInput(
+                path=str(path),
+                reason="No registered filename pattern matches; provide an explicit format hint if this is a supported input.",
+                sha256=_file_sha256(path),
+            )
+            for path in unsupported
+        ),
+    )
 
 
 def _file_sha256(path: Path) -> str | None:
@@ -111,16 +147,38 @@ def _file_sha256(path: Path) -> str | None:
         return None
 
 
+def _backend_version() -> str | None:
+    try:
+        return version("qc-iodata")
+    except PackageNotFoundError:
+        return None
+
+
 def _configuration_fingerprint(
     analyses: tuple[str, ...],
     frontier_spin: FrontierSpin = "alpha",
+    *,
+    format_hint: str | None = None,
+    format_hints: dict[Path, str] | None = None,
 ) -> str:
     payload = json.dumps(
         {
             "analyses": list(analyses),
+            "analysis_versions": {name: _resolve(name).version for name in analyses},
             "frontier_spin": frontier_spin,
+            "openwfn_version": __version__,
+            "implementation_token": BATCH_IMPLEMENTATION_TOKEN,
             "batch_schema_version": BATCH_SCHEMA_VERSION,
             "result_schema_version": RESULT_SCHEMA_VERSION,
+            "model_schema_version": MODEL_SCHEMA_VERSION,
+            "interop_schema_version": INTEROP_SCHEMA_VERSION,
+            "backend_version": _backend_version(),
+            "format_hint": format_hint,
+            "format_hints": {
+                str(path): hint for path, hint in sorted(
+                    (format_hints or {}).items(), key=lambda item: str(item[0])
+                )
+            },
         },
         sort_keys=True,
         separators=(",", ":"),
@@ -144,10 +202,13 @@ def _atomic_write_json(path: Path, payload: dict[str, object]) -> None:
     _atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True) + "\n")
 
 
-def _run_one(arguments: tuple[Path, tuple[str, ...]]) -> BatchRecord:
-    path, analyses = arguments
+def _run_one(
+    arguments: tuple[Path, tuple[str, ...]] | tuple[Path, tuple[str, ...], str | None],
+) -> BatchRecord:
+    path, analyses = arguments[:2]
+    format_hint = arguments[2] if len(arguments) == 3 else None
     try:
-        calculation = load(path)
+        calculation = load(path, format_hint=format_hint)
         results = tuple(run_analysis_safe(calculation.data, name) for name in analyses)
         usable = [result for result in results if result.status in {"success", "partial"}]
         if results and all(result.status == "success" for result in results):
@@ -166,6 +227,7 @@ def _run_one(arguments: tuple[Path, tuple[str, ...]]) -> BatchRecord:
             error="; ".join(errors) if status == "error" else None,
             input_sha256=checksum,
             results=results,
+            source_format=provenance.source_format if provenance else format_hint,
         )
     except Exception as exc:
         return BatchRecord(
@@ -173,21 +235,22 @@ def _run_one(arguments: tuple[Path, tuple[str, ...]]) -> BatchRecord:
             "error",
             error=str(exc),
             input_sha256=_file_sha256(path),
+            source_format=format_hint,
         )
 
 
 def _run_parallel(
-    pending: list[tuple[int, tuple[Path, tuple[str, ...]]]],
+    pending: list[tuple[int, tuple[Path, tuple[str, ...]] | tuple[Path, tuple[str, ...], str | None]]],
     workers: int,
     *,
-    runner: Callable[[tuple[Path, tuple[str, ...]]], BatchRecord] = _run_one,
+    runner: Callable[[tuple[Path, tuple[str, ...]] | tuple[Path, tuple[str, ...], str | None]], BatchRecord] = _run_one,
     executor_factory: type[Executor] = ProcessPoolExecutor,
 ) -> Iterator[tuple[int, Path, BatchRecord]]:
     remaining = iter(pending)
     with executor_factory(max_workers=workers) as executor:
         futures: dict[
             Future[BatchRecord],
-            tuple[int, tuple[Path, tuple[str, ...]]],
+            tuple[int, tuple[Path, tuple[str, ...]] | tuple[Path, tuple[str, ...], str | None]],
         ] = {}
 
         def submit_next() -> bool:
@@ -216,6 +279,7 @@ def _record_payload(record: BatchRecord) -> dict[str, object]:
         "result": record.result,
         "results": [result.as_dict() for result in record.results],
         "skipped": record.skipped,
+        "source_format": record.source_format,
         "status": record.status,
     }
 
@@ -229,6 +293,7 @@ def _record_from_payload(payload: dict[str, Any]) -> BatchRecord:
         input_sha256=payload.get("input_sha256"),
         results=tuple(ResultRecord.from_dict(item) for item in payload.get("results", ())),
         skipped=bool(payload.get("skipped", False)),
+        source_format=payload.get("source_format"),
     )
 
 
@@ -317,6 +382,8 @@ def run_batch(
     recursive: bool = False,
     progress: ProgressCallback | None = None,
     frontier_spin: FrontierSpin = "alpha",
+    format_hint: str | None = None,
+    format_hints: dict[Path, str] | None = None,
 ) -> BatchManifest:
     if workers < 1:
         raise ValueError("workers must be at least one")
@@ -343,47 +410,92 @@ def run_batch(
             f"Unknown batch analyses: {', '.join(unknown)}. Available analyses: "
             f"{', '.join(supported)}"
         )
-    discovery = discover_inputs(inputs, recursive=recursive, output_dir=output_dir)
+    known_formats = set(iodata_format_ids())
+    global_hint = format_hint.strip().lower() if format_hint is not None else None
+    if global_hint is not None and global_hint not in known_formats:
+        raise ValueError(f"Unknown input format hint '{format_hint}'.")
+    resolved_hints: dict[Path, str] = {}
+    for key, value in (format_hints or {}).items():
+        identity = Path(key).resolve()
+        normalized_hint = value.strip().lower()
+        if normalized_hint not in known_formats:
+            raise ValueError(f"Unknown input format hint '{value}' for {key}.")
+        if global_hint is not None and normalized_hint != global_hint:
+            raise ValueError(f"Format map conflict for {key}: {normalized_hint} != {global_hint}.")
+        if identity in resolved_hints and resolved_hints[identity] != normalized_hint:
+            raise ValueError(f"Format map conflict for resolved path {identity}.")
+        resolved_hints[identity] = normalized_hint
+    discovery = discover_inputs(
+        inputs, recursive=recursive, output_dir=output_dir,
+        format_hint=global_hint, format_hints=resolved_hints,
+    )
     paths = list(discovery.inputs)
-    if not paths:
-        raise ValueError("no supported input files were discovered")
-    fingerprint = _configuration_fingerprint(normalized, frontier_spin)
-    records_by_index: dict[int, BatchRecord] = {}
-    pending: list[tuple[int, tuple[Path, tuple[str, ...]]]] = []
-    completed_count = 0
-    for index, path in enumerate(paths):
-        cached = (
-            _load_completed_record(path, output_dir, _file_sha256(path), fingerprint)
-            if resume
-            else None
+    unknown_paths = resolved_hints.keys() - {path.resolve() for path in paths}
+    if unknown_paths:
+        raise ValueError(
+            "Format map path is not among discovered input files: "
+            + ", ".join(str(path) for path in sorted(unknown_paths))
         )
-        if cached is not None:
-            records_by_index[index] = cached
-            completed_count += 1
-            if progress is not None:
-                progress(completed_count, len(paths), cached)
-        else:
-            pending.append((index, (path, normalized)))
+    if not paths and not discovery.unsupported:
+        raise ValueError("no input files were discovered")
+    fingerprint = _configuration_fingerprint(
+        normalized, frontier_spin,
+        format_hint=global_hint, format_hints=resolved_hints,
+    )
+    records_by_index: dict[int, BatchRecord] = {}
+    pending: list[tuple[int, tuple[Path, tuple[str, ...], str | None]]] = []
+    completed_count = 0
 
-    if workers == 1 or fail_fast:
-        for index, argument in pending:
+    def accept(index: int, path: Path, record: BatchRecord, *, write: bool) -> None:
+        nonlocal completed_count
+        records_by_index[index] = record
+        if write:
+            _write_record(record, path, output_dir, fingerprint)
+        completed_count += 1
+        if progress is not None:
+            progress(completed_count, len(paths), record)
+
+    if fail_fast:
+        for index, path in enumerate(paths):
+            cached = (
+                _load_completed_record(path, output_dir, _file_sha256(path), fingerprint)
+                if resume else None
+            )
+            if cached is not None:
+                accept(index, path, cached, write=False)
+                continue
+            argument = (path, normalized, resolved_hints.get(path.resolve(), global_hint))
             record = _run_one(argument)
-            records_by_index[index] = record
-            _write_record(record, argument[0], output_dir, fingerprint)
-            completed_count += 1
-            if progress is not None:
-                progress(completed_count, len(paths), record)
-            if fail_fast and record.status == "error":
+            accept(index, path, record, write=True)
+            if record.status == "error":
                 break
     else:
+        for index, path in enumerate(paths):
+            cached = (
+                _load_completed_record(path, output_dir, _file_sha256(path), fingerprint)
+                if resume else None
+            )
+            if cached is not None:
+                accept(index, path, cached, write=False)
+            else:
+                pending.append((index, (path, normalized, resolved_hints.get(path.resolve(), global_hint))))
+
+    if not fail_fast and workers == 1:
+        for index, argument in pending:
+            record = _run_one(argument)
+            accept(index, argument[0], record, write=True)
+    elif not fail_fast:
         for index, path, record in _run_parallel(pending, workers):
-            records_by_index[index] = record
-            _write_record(record, path, output_dir, fingerprint)
-            completed_count += 1
-            if progress is not None:
-                progress(completed_count, len(paths), record)
+            accept(index, path, record, write=True)
 
     records = [records_by_index[index] for index in sorted(records_by_index)]
+    stopped_early = bool(fail_fast and len(records) < len(paths))
+    if discovery.unsupported or any(record.status == "error" for record in records):
+        aggregate_status: Literal["success", "partial", "failed"] = "failed"
+    elif any(record.status == "partial" for record in records):
+        aggregate_status = "partial"
+    else:
+        aggregate_status = "success"
 
     operation_name = normalized[0] if len(normalized) == 1 else "multiple"
     manifest = BatchManifest(
@@ -392,6 +504,10 @@ def run_batch(
         analyses=normalized,
         configuration_fingerprint=fingerprint,
         unsupported_inputs=tuple(str(path) for path in discovery.unsupported),
+        unsupported_details=discovery.unsupported_details,
+        attempted_count=len(records),
+        stopped_early=stopped_early,
+        status=aggregate_status,
     )
     payload = {
         "analyses": list(normalized),
@@ -399,7 +515,21 @@ def run_batch(
         "operation": operation_name,
         "records": [_record_payload(record) for record in records],
         "schema_version": BATCH_SCHEMA_VERSION,
+        "openwfn_version": __version__,
+        "implementation_token": BATCH_IMPLEMENTATION_TOKEN,
+        "model_schema_version": MODEL_SCHEMA_VERSION,
+        "interop_schema_version": INTEROP_SCHEMA_VERSION,
+        "result_schema_version": RESULT_SCHEMA_VERSION,
+        "backend_version": _backend_version(),
+        "analysis_versions": {name: _resolve(name).version for name in normalized},
         "unsupported_inputs": list(manifest.unsupported_inputs),
+        "unsupported_details": [
+            {"path": item.path, "reason": item.reason, "sha256": item.sha256}
+            for item in manifest.unsupported_details
+        ],
+        "attempted_count": manifest.attempted_count,
+        "stopped_early": manifest.stopped_early,
+        "status": manifest.status,
     }
     _atomic_write_json(output_dir / "batch-manifest.json", payload)
     _write_csv_index(records, output_dir)

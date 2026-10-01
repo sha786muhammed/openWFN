@@ -212,3 +212,36 @@ def test_bonded_structure_round_trip_preserves_atoms_coordinates_and_bonds(
     assert restored.provenance is not None
     assert restored.provenance.source_format == format
     assert restored.provenance.parser_version == "1"
+
+
+def test_lossy_structure_exports_warn_and_cube_preserves_effective_charge(tmp_path: Path) -> None:
+    from openwfn.exporters.cube import format_cube
+    from openwfn.model import Atom, CalculationMetadata, Molecule, VolumetricGrid
+
+    molecule = Molecule(
+        atoms=(
+            Atom(8, (0.0, 0.0, 0.0), nuclear_charge=0.0),
+            Atom(14, (1.0, 0.0, 0.0), nuclear_charge=4.0),
+        ),
+        charge=0,
+        multiplicity=1,
+        metadata=CalculationMetadata(source_program="authored-test"),
+    )
+    warnings = write_structure(molecule, tmp_path / "centers.xyz", "xyz")
+    assert any("ghost" in warning.lower() for warning in warnings)
+    assert any("ECP" in warning for warning in warnings)
+
+    ordinary = Molecule(
+        atoms=(Atom(1, (0.0, 0.0, 0.0), nuclear_charge=1.0),), charge=0,
+        multiplicity=2, metadata=CalculationMetadata(source_program="authored-test"),
+    )
+    assert write_structure(ordinary, tmp_path / "ordinary.xyz", "xyz") == ()
+
+    grid = VolumetricGrid(
+        origin=(0.0, 0.0, 0.0),
+        axes=((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)),
+        shape=(1, 1, 1), values=(0.0,), value_unit="electron/angstrom^3",
+    )
+    cube = format_cube(grid, molecule).splitlines()
+    assert float(cube[6].split()[1]) == 0.0
+    assert float(cube[7].split()[1]) == 4.0

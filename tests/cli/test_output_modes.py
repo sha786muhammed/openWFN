@@ -65,3 +65,50 @@ def test_execute_writes_rendered_result_to_requested_output(tmp_path: Path) -> N
 
     assert status == 0
     assert json.loads(output.read_text(encoding="utf-8"))["kind"] == "distance"
+
+
+def test_json_output_file_also_leaves_one_stdout_envelope(tmp_path: Path) -> None:
+    output = tmp_path / "distance.json"
+    stream = io.StringIO()
+
+    status = execute(
+        _distance_result,
+        CommandContext(output_path=output, format="json", quiet=True, output_stream=stream),
+    )
+
+    assert status == 0
+    assert json.loads(stream.getvalue()) == json.loads(output.read_text(encoding="utf-8"))
+
+
+def test_cli_convert_warns_on_ghost_centers(tmp_path: Path) -> None:
+    import os
+    import subprocess
+    import sys
+
+    root = Path(__file__).resolve().parents[2]
+    source = root / "tests" / "fixtures" / "scientific" / "ghost_minimal.fchk"
+    result = subprocess.run(
+        [sys.executable, "-m", "openwfn.cli", "--format", "json", str(source),
+         "convert", "--to", "xyz", "--output", str(tmp_path / "ghost.xyz")],
+        capture_output=True, text=True,
+        env={**os.environ, "PYTHONPATH": str(root / "src")}, check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert any("ghost" in warning.lower() for warning in payload["warnings"])
+
+
+def test_quiet_json_keeps_final_result() -> None:
+    import os
+    import subprocess
+    import sys
+
+    root = Path(__file__).resolve().parents[2]
+    source = root / "examples" / "water" / "water.fchk"
+    result = subprocess.run(
+        [sys.executable, "-m", "openwfn.cli", "--quiet", "--format", "json", str(source), "summary"],
+        capture_output=True, text=True, env={**os.environ, "PYTHONPATH": str(root / "src")},
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)["kind"] == "summary"

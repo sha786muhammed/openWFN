@@ -138,3 +138,39 @@ def test_structure_and_periodic_values_must_be_finite_and_shape_consistent() -> 
         PeriodicData(
             cell_vectors=((float("inf"), 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))
         )
+
+
+def test_structure_effective_charges_are_validated_and_classified() -> None:
+    from openwfn.data import StructureData
+
+    structure = StructureData(
+        coordinates=((0.0, 0.0, 0.0), (1.0, 0.0, 0.0), (2.0, 0.0, 0.0)),
+        atomic_numbers=(8, 8, 14),
+        effective_nuclear_charges=(8.0, 0.0, 4.0),
+    )
+    assert structure.effective_nuclear_charges == (8.0, 0.0, 4.0)
+
+    for charges, pattern in (
+        ((8.0,), "same number"),
+        ((8.0, float("nan"), 4.0), "finite"),
+        ((8.0, -1.0, 4.0), "non-negative"),
+    ):
+        with pytest.raises(ValueError, match=pattern):
+            StructureData(
+                coordinates=structure.coordinates,
+                atomic_numbers=structure.atomic_numbers,
+                effective_nuclear_charges=charges,
+            )
+
+
+def test_native_ghost_and_ecp_charges_survive_wrapping() -> None:
+    from openwfn.data import wrap_calculation
+
+    scientific = ROOT / "tests" / "fixtures" / "scientific"
+    ghost = wrap_calculation(parse_fchk(scientific / "ghost_minimal.fchk"))
+    ecp = wrap_calculation(parse_fchk(scientific / "ecp_minimal.fchk"))
+
+    assert ghost.structure is not None
+    assert ecp.structure is not None
+    assert ghost.structure.effective_nuclear_charges[1] == 0.0
+    assert ecp.structure.effective_nuclear_charges[0] == 4.0

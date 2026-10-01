@@ -52,10 +52,40 @@ The stable import surface is declared by `openwfn.__all__`. Import from `openwfn
 | `run_analysis` | Run one registered analysis |
 | `run_batch` | Run batch analyses |
 | `load` | Load a high-level calculation |
+| `read_output` | Extract source-reported QC text-output properties into a ResultRecord |
+
+## Source-reported output properties
+
+### `read_output(path) -> ResultRecord`
+
+This Experimental function requires the `outputs` extra (`cclib==1.8.1`).
+It reads QC text output directly, independently of `load()` and the
+wavefunction-analysis registry:
+
+```python
+from openwfn import read_output
+
+result = read_output("calculation.out")
+print(result.as_dict())
+```
+
+Coordinates and dipole origin are in angstrom; SCF energy in hartree; dipole
+in Debye; frontier energies in eV; atomic charges in elementary-charge units.
+Orbital indices are 1-based. Missing fields remain null or empty. Printed
+atomic charges are source-reported, not recalculated population results.
+SCF energy is not substituted for correlated or thermal energy, and normal
+termination does not establish optimization convergence. Unconfirmed
+termination, missing SCF energy, or diagnostic warnings return a partial result.
+
+The function raises `DataUnavailableError` when the optional reader is absent
+or the output is unrecognized, `ValueError` for malformed/nonfinite selected
+properties, and filesystem exceptions for unreadable paths. Provenance records
+the input hash, parser/software versions and source path. See
+[output properties](../output-properties.md) for current evidence and limits.
 
 ## Loading and models
 
-### `load(path) -> OpenWFNCalculation`
+### `load(path, *, format_hint=None) -> OpenWFNCalculation`
 
 Load a supported file through native ingestion or the optional IOData 1.0.1
 adapter. The returned object exposes `OpenWFNData` via `.data`; it may hold
@@ -63,6 +93,14 @@ structure, a full isolated calculation, periodic data, grids, integrals, and
 metadata as separate optional components. Only use molecular analysis methods
 when their required records are present. Check `calculation.capabilities()`
 or the [capability reference](capabilities.md) first for mixed inputs.
+For an ambiguous filename, pass a registered format ID explicitly:
+
+```python
+from openwfn import load
+
+calculation = load("water.dat", format_hint="gamess")
+print(calculation.capabilities())
+```
 
 ### `OpenWFNCalculation`
 
@@ -87,6 +125,9 @@ elapsed time are important to an automated workflow. Every high-level result
 includes available source provenance and parser warnings. Unsupported option
 values raise `ValueError`; requests requiring records absent from the input
 raise `DataUnavailableError`.
+`analyze_geometry()` also reports known physical nuclei, ghosts, and unknown
+effective-charge centers. A structure-only `analyze("summary")` returns a
+partial result; missing electronic values remain `None`.
 
 ### Model schema
 
@@ -98,6 +139,9 @@ v0.8 and is reserved for a later periodic implementation.
 format, parser version, warnings, and named transformations. These fields make
 ingestion decisions traceable without changing scientific values. Existing
 constructor forms covered by the compatibility tests remain supported.
+`StructureData.effective_nuclear_charges` preserves source-provided zero ghost
+charges and modified ECP charges separately from atomic numbers. An absent
+charge stays unknown and is never inferred from the element symbol.
 
 ### Migration from 0.8
 
@@ -132,7 +176,7 @@ The default density-grid spacing is **0.15 bohr** with 6.0 bohr padding. These d
 | `frontier-all` | Alpha and beta frontiers plus the true overall HOMO for unrestricted calculations |
 | `lowdin` | Löwdin populations and charges |
 | `mulliken` | Mulliken populations and charges |
-| `summary` | Molecular and calculation summary |
+| `summary` | Version 2: complete molecular summary or partial structure-only/periodic summary |
 
 Use `available_analyses()` to discover registered names. Run an analysis
 with `calculation.analyze(name)` after `load(path)`, or use
@@ -148,9 +192,14 @@ construction remains supported.
 
 ## Batch API
 
-`run_batch(...)` accepts the existing `inputs`, `operation`, `workers`, and `output_dir` arguments plus optional named analyses, resume/discovery controls, and `frontier_spin="alpha"|"beta"|"all"`. The `frontier_spin` selector applies when `frontier` is requested: alpha preserves the historical analysis, beta maps it to `beta-frontier`, and all maps it to the spin-complete `frontier-all` analysis. The spin selection participates in the configuration fingerprint so resume does not reuse incompatible frontier results.
+`run_batch(...)` accepts the existing `inputs`, `operation`, `workers`, and `output_dir` arguments plus optional named analyses, resume/discovery controls, `format_hint`, `format_hints={Path(...): "format_id"}`, and `frontier_spin="alpha"|"beta"|"all"`. The spin selector applies when `frontier` is requested: alpha preserves the historical analysis, beta maps it to `beta-frontier`, and all maps it to the spin-complete `frontier-all` analysis.
 
 Batch records preserve usable `partial` analyses and their warnings/data. A record becomes `error` only when every requested analysis failed.
+`BatchManifest.status` is `success`, `partial`, or `failed`; unsupported paths
+have reasons and readable checksums in `unsupported_details`. The manifest
+also reports attempted count and whether fail-fast stopped early. Resume
+fingerprints include input checksums, analysis/backend/software versions, and
+effective format hints; cached error records are retried.
 
 ## FCHK parsing
 

@@ -57,6 +57,42 @@ main(["--version"])
     assert result.stdout.strip() == f"openWFN {__version__}"
 
 
+@pytest.mark.parametrize("command", ["info", "bonds", "graph"])
+def test_legacy_commands_emit_json(command: str) -> None:
+    result = run_cli("--format", "json", str(WATER), command)
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "success"
+    assert "\x1b[" not in result.stdout
+
+
+def test_legacy_file_exports_emit_json(tmp_path: Path) -> None:
+    for command in (
+        ("xyz", str(tmp_path / "water.xyz")),
+        ("view", "--save", str(tmp_path / "water.html")),
+    ):
+        result = run_cli("--format", "json", str(WATER), *command)
+        assert result.returncode == 0, result.stderr
+        assert json.loads(result.stdout)["status"] == "success"
+        assert (tmp_path / ("water.xyz" if command[0] == "xyz" else "water.html")).is_file()
+
+
+def test_cli_missing_file_emits_failed_json(tmp_path: Path) -> None:
+    result = run_cli("--format", "json", str(tmp_path / "missing.fchk"), "summary")
+    assert result.returncode != 0
+    assert json.loads(result.stdout)["status"] == "failed"
+
+
+def test_cli_unavailable_density_emits_failed_json(tmp_path: Path) -> None:
+    source = tmp_path / "hydrogen.xyz"
+    source.write_text("1\nhydrogen\nH 0 0 0\n", encoding="utf-8")
+    result = run_cli("--format", "json", str(source), "density", "integrate")
+    assert result.returncode != 0
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "failed"
+    assert "density matrix is not available" in payload["error"]["message"]
+
+
 def test_nested_geometry_distance_supports_json_output() -> None:
     result = run_cli("--format", "json", str(WATER), "geometry", "distance", "1", "2")
 
@@ -73,7 +109,7 @@ def test_summary_json_uses_the_registered_analysis_envelope() -> None:
     assert result.returncode == 0
     payload = json.loads(result.stdout)
     assert payload["analysis_name"] == "summary"
-    assert payload["analysis_version"] == "1"
+    assert payload["analysis_version"] == "2"
     assert payload["schema_version"] == "1.0"
     assert payload["status"] == "success"
     assert payload["provenance"]["source_format"] == "fchk"
@@ -147,7 +183,7 @@ def test_summary_rejects_non_molecular_input_cleanly(tmp_path: Path, suffix: str
     result = run_cli(str(source), "summary")
 
     assert result.returncode == 4
-    assert "does not contain a molecular calculation" in result.stderr
+    assert "requires: atomic structure" in result.stderr
     assert "Traceback" not in result.stderr
 
 

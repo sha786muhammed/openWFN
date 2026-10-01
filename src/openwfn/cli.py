@@ -1,6 +1,7 @@
 # src/openwfn/cli.py
 
 import argparse
+import json
 import os
 import shutil
 import subprocess
@@ -13,22 +14,24 @@ from . import (
     __version__,
     utils,  # type: ignore
 )
-from . import commands as cmd  # type: ignore
 from .analysis.orbitals import frontier_orbitals
 from .analysis.registry import run_analysis
 from .app import CommandContext, execute
 from .batch import discover_inputs, run_batch
 from .compat import complete_implicit_command, translate_legacy_args
 from .errors import DataUnavailableError
+from .export import export_molecule_viewer
 from .exporters.structures import write_structure
 from .exporters.tables import ExportRequest, write_result_table
 from .fchk import parse_fchk_arrays, parse_fchk_scalars, read_fchk  # type: ignore
-from .inspection import build_capabilities_result
+from .geometry import detect_bonds, molecular_formula
+from .graph import build_graph
+from .ingest import load_input
+from .inspection import build_capabilities_result, capability_payload
 from .interactive import run_interactive  # type: ignore
-from .model import CalculationData, CalculationMetadata, VolumetricGrid
-from .parsers.registry import load as load_calculation
+from .model import CalculationData
 from .reporting import build_report_record
-from .results import ResultRecord
+from .results import ResultError, ResultRecord
 from .services import (
     density_cube_export,
     density_integration,
@@ -102,28 +105,29 @@ def _context(args: argparse.Namespace) -> CommandContext:
     )
 
 
-def _require_calculation(path: Path) -> CalculationData:
-    parsed = load_calculation(path)
-    if not isinstance(parsed, CalculationData):
+def _require_calculation(path: Path, *, format_hint: str | None = None) -> CalculationData:
+    parsed = load_input(path, format_hint=format_hint)
+    if parsed.calculation is None:
         raise DataUnavailableError(
             f"{path} does not contain a molecular calculation. "
             "Use `doctor` to inspect the input's available capabilities."
         )
-    return parsed
+    return parsed.calculation
 
 
-def _doctor_result(path: Path) -> ResultRecord:
-    parsed = load_calculation(path)
-    if isinstance(parsed, CalculationData):
+def _doctor_result(path: Path, *, format_hint: str | None = None) -> ResultRecord:
+    parsed = load_input(path, format_hint=format_hint)
+    calculation = parsed.calculation
+    if calculation is not None:
         input_kind = "molecular-calculation"
         capabilities = {
-            "basis": parsed.basis is not None,
-            "density": parsed.total_density is not None,
+            "basis": calculation.basis is not None,
+            "density": calculation.total_density is not None,
             "metadata": True,
-            "orbitals": parsed.alpha_orbitals is not None,
+            "orbitals": calculation.alpha_orbitals is not None,
             "volumetric_grid": False,
         }
-    elif isinstance(parsed, VolumetricGrid):
+    elif parsed.grids:
         input_kind = "volumetric-grid"
         capabilities = {
             "basis": False,
@@ -132,7 +136,19 @@ def _doctor_result(path: Path) -> ResultRecord:
             "orbitals": False,
             "volumetric_grid": True,
         }
-    elif isinstance(parsed, CalculationMetadata):
+    elif parsed.structure is not None:
+        input_kind = "periodic-structure" if parsed.periodic is not None else "structure-only"
+        capabilities = {
+            "basis": False, "density": False, "metadata": True,
+            "orbitals": False, "volumetric_grid": False,
+        }
+    elif parsed.integrals is not None:
+        input_kind = "integral-data"
+        capabilities = {
+            "basis": False, "density": False, "metadata": True,
+            "orbitals": False, "volumetric_grid": False,
+        }
+    else:
         input_kind = "calculation-metadata"
         capabilities = {
             "basis": False,
@@ -141,16 +157,107 @@ def _doctor_result(path: Path) -> ResultRecord:
             "orbitals": False,
             "volumetric_grid": False,
         }
-    else:
-        raise DataUnavailableError(f"Unsupported parsed input type: {type(parsed).__name__}.")
     return ResultRecord(
         kind="doctor",
         data={
             "input": str(path),
             "input_kind": input_kind,
             "capabilities": capabilities,
+            "normalized": capability_payload(parsed, input_path=path),
         },
     )
+
+
+def _read_format_map(path: Path | None) -> dict[Path, str]:
+    if path is None:
+        return {}
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict) or not all(
+        isinstance(key, str) and isinstance(value, str) for key, value in payload.items()
+    ):
+        raise ValueError("Format map must be a JSON object from file paths to format IDs.")
+    resolved: dict[Path, str] = {}
+    for key, value in payload.items():
+        target = (path.parent / key).resolve()
+        if target in resolved and resolved[target].strip().lower() != value.strip().lower():
+            raise ValueError(f"Format map conflict for resolved path {target}.")
+        resolved[target] = value
+    return resolved
+
+
+def _legacy_result(args: argparse.Namespace) -> ResultRecord:
+    """Adapt older command names to the structured output contract."""
+
+    command = args.command
+    if command == "formchk":
+        output = convert_chk_to_fchk(args.file, args.output, quiet=True)
+        return ResultRecord(kind="checkpoint_export", data={"output": output})
+    if command == "mo":
+        raise DataUnavailableError("Molecular orbital grid evaluation is not implemented yet.")
+    if command == "interactive":
+        raise DataUnavailableError("Interactive mode cannot produce one JSON result; use a specific command.")
+
+    source = Path(args.file)
+    normalized = load_input(source, format_hint=args.input_format)
+    calculation = normalized.calculation
+    if command == "info":
+        if source.suffix.lower() in {".fchk", ".fch"}:
+            return ResultRecord(kind="fchk_metadata", data=parse_fchk_scalars(read_fchk(str(source))))
+        return ResultRecord(
+            kind="input_metadata",
+            data={
+                "source_format": normalized.provenance.source_format if normalized.provenance else None,
+                "source_program": normalized.metadata.source_program,
+                "energy_hartree": normalized.metadata.energy_hartree,
+            },
+        )
+    if calculation is None:
+        raise DataUnavailableError(f"{source} does not contain a molecular calculation.")
+    molecule = calculation.molecule
+    coordinates = [atom.coordinates for atom in molecule.atoms]
+    atomic_numbers = [atom.atomic_number for atom in molecule.atoms]
+    if command == "dist":
+        return geometry_distance(molecule, args.i, args.j)
+    if command == "angle":
+        return geometry_angle(molecule, args.i, args.j, args.k)
+    if command == "dihedral":
+        return geometry_dihedral(molecule, args.i, args.j, args.k, args.l)
+    if command in {"bonds", "graph"}:
+        bonds = detect_bonds(atomic_numbers, coordinates)
+        if command == "bonds":
+            return ResultRecord(
+                kind="bonds",
+                data={"count": len(bonds), "bonds": [
+                    {"atom_i": i, "atom_j": j, "distance_angstrom": distance}
+                    for i, j, distance in bonds
+                ]},
+                units={"distance_angstrom": "angstrom"},
+            )
+        fragments = build_graph(len(atomic_numbers), bonds).connected_components()
+        return ResultRecord(
+            kind="graph",
+            data={"fragments": [
+                {"atoms": group, "formula": molecular_formula([atomic_numbers[i - 1] for i in group])}
+                for group in fragments
+            ]},
+        )
+    if command == "xyz":
+        output = Path(args.output)
+        warnings = write_structure(molecule, output, "xyz", args.overwrite)
+        return ResultRecord(
+            kind="structure_export", data={"format": "xyz", "output": str(output)},
+            warnings=warnings,
+        )
+    if command == "view":
+        output = Path(args.save or f"{source.stem}_viewer.html")
+        export_molecule_viewer(
+            output, atomic_numbers, coordinates,
+            show_labels=not args.no_labels, style=args.style,
+        )
+        opened = webbrowser.open(output.resolve().as_uri()) if args.open and not args.no_open else False
+        warnings = ("Viewer file was created, but the browser did not open.",) if args.open and not args.no_open and not opened else ()
+        return ResultRecord(kind="viewer_export", data={"output": str(output), "browser_opened": opened}, warnings=warnings)
+    raise ValueError(f"Unsupported legacy command: {command}")
 
 
 def _run_examples_command(arguments: list[str]) -> int:
@@ -193,6 +300,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--version", action="version", version=f"openWFN {__version__}")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--format", choices=["table", "plain", "json", "csv"], default="table")
+    parser.add_argument("--input-format", metavar="FORMAT_ID", help="Explicit input parser format ID")
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--verbose", action="store_true")
     parser.add_argument("--debug", action="store_true")
@@ -359,6 +467,7 @@ def main(argv: list[str] | None = None) -> int:
     p_batch.add_argument("--fail-fast", action="store_true")
     p_batch.add_argument("--resume", action="store_true", help="Reuse matching completed inputs")
     p_batch.add_argument("--recursive", action="store_true", help="Discover inputs recursively")
+    p_batch.add_argument("--format-map", type=Path, help="JSON map of input paths to format IDs")
     p_batch.add_argument("--dry-run", action="store_true", help="List inputs without analysis")
 
     p_validate = subparsers.add_parser(
@@ -369,6 +478,7 @@ def main(argv: list[str] | None = None) -> int:
 
     subparsers.add_parser("capabilities", help="Report normalized data and analysis capabilities")
     subparsers.add_parser("doctor", help="Inspect parsed data and available analysis capabilities")
+    subparsers.add_parser("properties", help="Extract source-reported properties from QC output (outputs extra)")
 
     p_mo = subparsers.add_parser(
         "mo",
@@ -397,10 +507,33 @@ def main(argv: list[str] | None = None) -> int:
     if args.file is None:
         parser.error("an input file is required unless --version is used")
 
+    if args.command in {
+        "formchk", "info", "dist", "angle", "dihedral", "bonds", "graph", "mo", "xyz", "view"
+    } or (args.command == "interactive" and args.format == "json"):
+        context = _context(args)
+        if args.command in {"formchk", "xyz"}:
+            context.output_path = None
+        return execute(lambda: _legacy_result(args), context)
+
+    def require_calculation() -> CalculationData:
+        return _require_calculation(Path(args.file), format_hint=args.input_format)
+
+    if args.command == "properties":
+        from .output_properties import read_output
+
+        if args.input_format is not None:
+            return execute(
+                lambda: (_ for _ in ()).throw(ValueError(
+                    "properties uses cclib program detection; omit --input-format."
+                )),
+                _context(args),
+            )
+        return execute(lambda: read_output(Path(args.file)), _context(args))
+
     if args.command == "summary":
         def summary_operation() -> ResultRecord:
-            calculation = _require_calculation(Path(args.file))
-            return run_analysis(calculation, "summary")
+            data = load_input(Path(args.file), format_hint=args.input_format)
+            return run_analysis(data, "summary")
 
         return execute(summary_operation, _context(args))
 
@@ -408,7 +541,7 @@ def main(argv: list[str] | None = None) -> int:
         context = _context(args)
 
         def geometry_operation() -> ResultRecord:
-            calculation = _require_calculation(Path(args.file))
+            calculation = require_calculation()
             operations = {
                 "distance": lambda: geometry_distance(calculation.molecule, args.i, args.j),
                 "angle": lambda: geometry_angle(calculation.molecule, args.i, args.j, args.k),
@@ -423,7 +556,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "population":
         return execute(
             lambda: run_analysis(
-                _require_calculation(Path(args.file)), args.population_method
+                require_calculation(), args.population_method
             ),
             _context(args),
         )
@@ -435,7 +568,7 @@ def main(argv: list[str] | None = None) -> int:
             "all": "frontier-all",
         }[args.spin]
         return execute(
-            lambda: run_analysis(_require_calculation(Path(args.file)), analysis),
+            lambda: run_analysis(require_calculation(), analysis),
             _context(args),
         )
 
@@ -443,7 +576,7 @@ def main(argv: list[str] | None = None) -> int:
         context = _context(args)
 
         def density_operation() -> ResultRecord:
-            calculation = _require_calculation(Path(args.file))
+            calculation = require_calculation()
             if args.density_command == "integrate":
                 return density_integration(
                     calculation, args.kind, args.spacing, args.padding
@@ -462,7 +595,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "esp":
         return execute(
             lambda: electrostatic_potential_point(
-                _require_calculation(Path(args.file)),
+                require_calculation(),
                 (args.x, args.y, args.z),
                 args.component,
                 args.spacing,
@@ -476,7 +609,7 @@ def main(argv: list[str] | None = None) -> int:
         command = "openwfn " + " ".join(raw_arguments)
         return execute(
             lambda: build_report_record(
-                _require_calculation(Path(args.file)),
+                require_calculation(),
                 analyses,
                 args.report_output,
                 args.report_format,
@@ -490,7 +623,7 @@ def main(argv: list[str] | None = None) -> int:
         output = args.workbench_output or Path(f"{Path(args.file).stem}-workbench.html")
         status = execute(
             lambda: export_workbench_record(
-                _require_calculation(Path(args.file)), output, overwrite=args.overwrite
+                require_calculation(), output, overwrite=args.overwrite
             ),
             _context(args),
         )
@@ -499,15 +632,28 @@ def main(argv: list[str] | None = None) -> int:
         return status
 
     if args.command == "capabilities":
-        return execute(lambda: build_capabilities_result(Path(args.file)), _context(args))
+        return execute(
+            lambda: build_capabilities_result(Path(args.file), format_hint=args.input_format),
+            _context(args),
+        )
 
     if args.command == "doctor":
-        return execute(lambda: _doctor_result(Path(args.file)), _context(args))
+        return execute(
+            lambda: _doctor_result(Path(args.file), format_hint=args.input_format),
+            _context(args),
+        )
 
     if args.command in {"cube", "convert", "export", "plot", "batch", "validate"}:
         context = _context(args)
         if args.command == "batch":
             inputs = [Path(args.file), *args.inputs]
+            try:
+                format_hints = _read_format_map(args.format_map)
+            except (OSError, ValueError, json.JSONDecodeError) as exc:
+                return execute(
+                    lambda error=exc: (_ for _ in ()).throw(ValueError(f"Invalid format map: {error}")),
+                    context,
+                )
             analyses = (
                 tuple(item.strip() for item in args.analyses.split(",") if item.strip())
                 if args.analyses
@@ -527,6 +673,8 @@ def main(argv: list[str] | None = None) -> int:
                     inputs,
                     recursive=args.recursive,
                     output_dir=args.output_dir,
+                    format_hint=args.input_format,
+                    format_hints=format_hints,
                 )
                 return execute(
                     lambda: ResultRecord(
@@ -538,6 +686,10 @@ def main(argv: list[str] | None = None) -> int:
                             "unsupported": len(discovery.unsupported),
                             "unsupported_inputs": [
                                 str(path) for path in discovery.unsupported
+                            ],
+                            "unsupported_details": [
+                                {"path": item.path, "reason": item.reason, "sha256": item.sha256}
+                                for item in discovery.unsupported_details
                             ],
                         },
                     ),
@@ -561,6 +713,8 @@ def main(argv: list[str] | None = None) -> int:
                     analyses=analyses,
                     resume=args.resume,
                     recursive=args.recursive,
+                    format_hint=args.input_format,
+                    format_hints=format_hints,
                     progress=None if context.quiet else report_progress,
                 )
                 successes = sum(record.status == "success" for record in manifest.records)
@@ -579,9 +733,23 @@ def main(argv: list[str] | None = None) -> int:
                         "skipped": skipped,
                         "configuration_fingerprint": manifest.configuration_fingerprint,
                         "unsupported": len(manifest.unsupported_inputs),
+                        "unsupported_details": [
+                            {"path": item.path, "reason": item.reason, "sha256": item.sha256}
+                            for item in manifest.unsupported_details
+                        ],
+                        "attempted": manifest.attempted_count,
+                        "stopped_early": manifest.stopped_early,
                         "manifest": str(args.output_dir / "batch-manifest.json"),
                         "csv_index": str(args.output_dir / "batch-summary.csv"),
                     },
+                    status=manifest.status,
+                    error=(
+                        ResultError(
+                            "BatchError",
+                            f"Batch contains {errors} failed record(s) and {len(manifest.unsupported_inputs)} unsupported input(s).",
+                        )
+                        if manifest.status == "failed" else None
+                    ),
                 )
 
             return execute(batch_operation, context)
@@ -589,7 +757,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "cube":
             return execute(
                 lambda: density_cube_export(
-                    _require_calculation(Path(args.file)),
+                    require_calculation(),
                     args.kind,
                     args.spacing,
                     args.padding,
@@ -601,20 +769,21 @@ def main(argv: list[str] | None = None) -> int:
 
         if args.command == "convert":
             def convert_operation() -> ResultRecord:
-                calculation = _require_calculation(Path(args.file))
-                write_structure(
+                calculation = require_calculation()
+                warnings = write_structure(
                     calculation.molecule, args.convert_output, args.to, args.overwrite
                 )
                 return ResultRecord(
                     kind="structure_export",
                     data={"format": args.to, "output": str(args.convert_output)},
+                    warnings=warnings,
                 )
 
             return execute(convert_operation, context)
 
         if args.command == "export":
             def export_operation() -> ResultRecord:
-                calculation = _require_calculation(Path(args.file))
+                calculation = require_calculation()
                 result = run_analysis(calculation, args.analysis)
                 output_format = args.export_output.suffix.lstrip(".").lower()
                 write_result_table(
@@ -632,7 +801,7 @@ def main(argv: list[str] | None = None) -> int:
             def plot_operation() -> ResultRecord:
                 from .exporters.images import write_frontier_diagram
 
-                calculation = _require_calculation(Path(args.file))
+                calculation = require_calculation()
                 if calculation.alpha_orbitals is None:
                     raise ValueError("Molecular orbital data are not available.")
                 frontier = frontier_orbitals(calculation.alpha_orbitals)
@@ -651,7 +820,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "validate":
             return execute(
                 lambda: density_integration(
-                    _require_calculation(Path(args.file)),
+                    require_calculation(),
                     "total",
                     args.spacing,
                     args.padding,
@@ -659,73 +828,26 @@ def main(argv: list[str] | None = None) -> int:
                 context,
             )
 
-    if getattr(args, "command", None) == "formchk":
-        try:
-            output_path = convert_chk_to_fchk(args.file, args.output)
-        except Exception as e:
-            utils.print_error(str(e))
-            return 1
-        utils.print_success(f"Formatted checkpoint ready: {output_path}")
-        return 0
-
     if getattr(args, "command", None) is None:
         if sys.stdin.isatty():
             args.command = "interactive"  # type: ignore
         else:
-            calculation = load_calculation(Path(args.file))
-            return execute(lambda: run_analysis(calculation, "summary"), _context(args))
-
-    filename = args.file
-    try:
-        fchk_file, scalars, atomic_numbers, coordinates = load_data(filename)
-    except Exception as e:
-        utils.print_error(str(e))
-        return 1
-
-    lines = read_fchk(fchk_file)
-
-    try:
-        if args.command == "info":  # type: ignore
-            return cmd.cmd_info(scalars, atomic_numbers, coordinates)
-
-        if args.command == "dist":  # type: ignore
-            return cmd.cmd_dist(args.i, args.j, coordinates)
-
-        if args.command == "angle":  # type: ignore
-            return cmd.cmd_angle(args.i, args.j, args.k, coordinates)
-
-        if args.command == "dihedral":  # type: ignore
-            return cmd.cmd_dihedral(args.i, args.j, args.k, args.l, coordinates)
-
-        if args.command == "bonds":  # type: ignore
-            return cmd.cmd_bonds(atomic_numbers, coordinates)
-
-        if args.command == "graph":  # type: ignore
-            return cmd.cmd_graph(atomic_numbers, coordinates)
-
-        if args.command == "mo":  # type: ignore
-            return cmd.cmd_mo(filename, args.index, args.export, lines, coordinates)
-
-        if args.command == "xyz":  # type: ignore
-            return cmd.cmd_xyz(args.output, atomic_numbers, coordinates)
-
-        if args.command == "view":  # type: ignore
-            output_path = args.save or f"{Path(filename).stem}_viewer.html"
-            return cmd.cmd_view(
-                output_path,
-                atomic_numbers,
-                coordinates,
-                open_browser=bool(args.open and not args.no_open),
-                show_labels=not args.no_labels,
-                style=args.style,
+            return execute(
+                lambda: run_analysis(
+                    load_input(Path(args.file), format_hint=args.input_format), "summary"
+                ),
+                _context(args),
             )
 
-        if args.command == "interactive":  # type: ignore
+    if args.command == "interactive":
+        try:
+            fchk_file, _scalars, _atomic_numbers, _coordinates = load_data(args.file)
+            lines = read_fchk(fchk_file)
             run_interactive(lines, fchk_file)
             return 0
-    except Exception as e:
-        utils.print_error(str(e))
-        return 1
+        except Exception as exc:
+            context = _context(args)
+            return execute(lambda error=exc: (_ for _ in ()).throw(error), context)
 
     return 1
 

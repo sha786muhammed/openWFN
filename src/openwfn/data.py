@@ -35,6 +35,7 @@ class StructureData:
     bonds: tuple[Bond, ...] = ()
     charge: int | None = None
     multiplicity: int | None = None
+    effective_nuclear_charges: tuple[float | None, ...] = ()
 
     def __post_init__(self) -> None:
         if len(self.coordinates) != len(self.atomic_numbers):
@@ -44,6 +45,12 @@ class StructureData:
         _require_finite_vectors("coordinates", self.coordinates)
         if self.labels and len(self.labels) != len(self.coordinates):
             raise ValueError("labels and coordinates must contain the same number of entries")
+        if self.effective_nuclear_charges and len(self.effective_nuclear_charges) != len(self.coordinates):
+            raise ValueError("effective nuclear charges and coordinates must contain the same number of entries")
+        if any(charge is not None and not isfinite(charge) for charge in self.effective_nuclear_charges):
+            raise ValueError("effective nuclear charges must be finite when known")
+        if any(charge is not None and charge < 0 for charge in self.effective_nuclear_charges):
+            raise ValueError("effective nuclear charges must be non-negative")
         if any(number is not None and number < 1 for number in self.atomic_numbers):
             raise ValueError("atomic numbers must be positive when known")
         if self.multiplicity is not None and self.multiplicity < 1:
@@ -180,6 +187,7 @@ def wrap_calculation(data: CalculationData) -> OpenWFNData:
         bonds=molecule.bonds,
         charge=molecule.charge,
         multiplicity=molecule.multiplicity,
+        effective_nuclear_charges=tuple(atom.nuclear_charge for atom in molecule.atoms),
     )
     metadata = SourceMetadata(
         source_program=molecule.metadata.source_program,

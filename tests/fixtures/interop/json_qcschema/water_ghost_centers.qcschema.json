@@ -1,0 +1,15 @@
+{
+  "schema_name": "qcschema_molecule",
+  "schema_version": 2,
+  "symbols": ["O", "H", "H", "O", "H", "H", "O", "H", "H"],
+  "geometry": [
+    0.0, 0.0, 0.0, 0.0, 1.4, 1.1, 0.0, -1.4, 1.1,
+    8.0, 0.0, 0.0, 8.0, 1.4, 1.1, 8.0, -1.4, 1.1,
+    -8.0, 0.0, 0.0, -8.0, 1.4, 1.1, -8.0, -1.4, 1.1
+  ],
+  "real": [true, true, true, false, false, false, false, false, false],
+  "molecular_charge": 0,
+  "molecular_multiplicity": 1,
+  "name": "openWFN authored ghost-center regression",
+  "provenance": {"creator": "openWFN", "routine": "test fixture"}
+}

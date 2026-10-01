@@ -73,6 +73,17 @@ def expected_electron_count(data: CalculationData, kind: str) -> ElectronExpecta
     if kind == "spin" and isinstance(alpha, (int, float)) and isinstance(beta, (int, float)):
         return ElectronExpectation(float(alpha - beta), "alpha-beta electron counts")
 
+    if data.alpha_orbitals is not None and data.beta_orbitals is not None:
+        alpha_occupation = float(sum(data.alpha_orbitals.occupations))
+        beta_occupation = float(sum(data.beta_orbitals.occupations))
+        if kind == "alpha":
+            return ElectronExpectation(alpha_occupation, "alpha orbital occupations")
+        if kind == "beta":
+            return ElectronExpectation(beta_occupation, "beta orbital occupations")
+        return ElectronExpectation(
+            alpha_occupation - beta_occupation, "alpha-beta orbital occupations"
+        )
+
     raise DataUnavailableError(f"Expected electron count is unavailable for {kind} density.")
 
 

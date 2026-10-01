@@ -39,3 +39,20 @@ def test_debug_mode_shows_traceback_for_unexpected_failure() -> None:
     assert code == 1
     assert "Traceback" in error_stream.getvalue()
     assert "RuntimeError: unexpected" in error_stream.getvalue()
+
+
+def test_json_failure_envelope_for_domain_error() -> None:
+    import json
+
+    output_stream = io.StringIO()
+    error_stream = io.StringIO()
+    code = execute(
+        lambda: (_ for _ in ()).throw(ParseError("bad input")),
+        CommandContext(format="json", output_stream=output_stream, error_stream=error_stream),
+    )
+
+    assert code == 3
+    payload = json.loads(output_stream.getvalue())
+    assert payload["status"] == "failed"
+    assert payload["error"]["category"] == "ParseError"
+    assert payload["error"]["message"] == "bad input"

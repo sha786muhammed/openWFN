@@ -43,6 +43,17 @@ python scripts/run_external_benchmarks.py \
 See the [registry procedure](https://github.com/sha786muhammed/openWFN/blob/main/validation/external/procedures/qc-iodata.md) for
 source commits, selection conventions, and tolerances.
 
+The 0.9 interoperability branch also has three pinned, externally supplied
+unrestricted wavefunctions: H₂ WFX, O₂ WFN, and LiH-cation WFX. For each, the
+external runner checks alpha, beta, and spin density at five points against an
+independent GBasis evaluator, and checks electron counts on one explicitly
+specified grid per channel. The 18 checks passed on Ubuntu 22.04 with
+`qc-iodata==1.0.1` and `qc-gbasis==0.1.0`. The pointwise comparisons share the
+IOData parser and source orbitals; the fixed-grid counts are regression checks,
+not convergence evidence. The procedure at
+`validation/external/procedures/open-shell-density.md` records the inputs,
+settings, tolerances, and limitations.
+
 ## Independent analysis comparisons
 
 Multiwfn `3.8(dev)` (2024-10-24) independently agrees with openWFN for restricted water,

@@ -10,6 +10,7 @@ from ..errors import DataUnavailableError
 from ..model import MODEL_SCHEMA_VERSION, CalculationData
 from ..results import ResultRecord
 from ..services import molecular_summary, orbital_frontier, population_analysis
+from .structure_summary import structure_summary
 
 AnalysisRunner = Callable[[CalculationData], ResultRecord]
 AnalysisInput = CalculationData | OpenWFNData
@@ -31,6 +32,7 @@ _ORBITALS = CapabilityRequirement("molecular orbitals", ("alpha_orbitals", "beta
 _BASIS = CapabilityRequirement("basis", ("basis",))
 _TOTAL_DENSITY = CapabilityRequirement("total density", ("total_density",))
 _AO_OVERLAP = CapabilityRequirement("AO overlap", ("ao_overlap",))
+_STRUCTURE = CapabilityRequirement("atomic structure", ("structure",))
 
 
 _ANALYSES = {
@@ -71,10 +73,10 @@ _ANALYSES = {
     ),
     "summary": AnalysisDefinition(
         "summary",
-        "1",
+        "2",
         "summary",
         molecular_summary,
-        (_ISOLATED,),
+        (_STRUCTURE,),
     ),
 }
 
@@ -160,12 +162,23 @@ def run_analysis(data: AnalysisInput, name: str) -> ResultRecord:
     definition = _resolve(name)
     normalized = _normalize(data)
     _require_analysis_capabilities(normalized, definition)
-    if normalized.calculation is None:
+    if normalized.calculation is None and definition.name != "summary":
         raise DataUnavailableError(
             f"Analysis '{definition.name}' requires a molecular calculation."
         )
     started = perf_counter()
-    result = definition.runner(normalized.calculation)
+    if definition.name == "summary" and (
+        normalized.calculation is None
+        or (
+            normalized.calculation.basis is None
+            and normalized.calculation.alpha_orbitals is None
+            and normalized.calculation.total_density is None
+        )
+    ):
+        result = structure_summary(normalized)
+    else:
+        assert normalized.calculation is not None
+        result = definition.runner(normalized.calculation)
     elapsed = perf_counter() - started
     return replace(
         result,
