@@ -1,7 +1,6 @@
 # Citation
 
-The source targets unreleased 0.9.0. `CITATION.cff` and the example below still
-identify published 0.8.2; update them when the 0.9.0 release details are finalized.
+The citation below identifies version 0.9.0, dated October 1, 2026.
 For source-checkout work, also record the exact commit and input checksums.
 
 ## Cite the software release
@@ -12,7 +11,7 @@ is the machine-readable source for the software citation.
 
 Plain text:
 
-> Muhammed Shah Shaji (2026). openWFN: Wavefunction post-processing analysis toolkit (Version 0.8.2) [Computer software]. https://github.com/sha786muhammed/openWFN/releases/tag/v0.8.2
+> Muhammed Shah Shaji (2026). openWFN: Wavefunction post-processing analysis toolkit (Version 0.9.0) [Computer software]. https://github.com/sha786muhammed/openWFN/releases/tag/v0.9.0
 
 BibTeX:
 
@@ -21,8 +20,8 @@ BibTeX:
   author  = {Muhammed Shah Shaji},
   title   = {openWFN: Wavefunction post-processing analysis toolkit},
   year    = {2026},
-  version = {0.8.2},
-  url     = {https://github.com/sha786muhammed/openWFN/releases/tag/v0.8.2},
+  version = {0.9.0},
+  url     = {https://github.com/sha786muhammed/openWFN/releases/tag/v0.9.0},
   license = {MIT}
 }
 ```

@@ -4,21 +4,20 @@ openWFN requires Python 3.10–3.13.
 
 !!! note "Current release"
 
-    This handbook follows the source checkout, including unreleased 0.9.0
-    features. The last published release documented here is 0.8.2. See the
-    [0.9.0 preparation notes](releases/0.9.0.md) before using source-only commands.
+    This handbook documents openWFN 0.9.0. See the
+    [0.9.0 release notes](releases/0.9.0.md) for support boundaries.
 
-## Unreleased source checkout
+## Optional features
 
-From the repository checkout, use a separate environment and install:
+In your environment, install only the optional features you need:
 
 ```bash
-python -m pip install -e ".[interop,outputs,mcp]"
+python -m pip install "openwfn[interop,outputs,mcp]==0.9.0"
 openwfn --version
 ```
 
-The source version is 0.9.0; this is not evidence of a PyPI release. Choose only
-the extras you need. MCP and QC output extraction remain Experimental.
+The extras enable IOData ingestion, source-reported output extraction, and
+local MCP respectively. MCP and QC output extraction remain Experimental.
 
 ## Stable release
 
@@ -37,13 +36,13 @@ On Windows, activate with `.venv\Scripts\activate`.
 Pin the exact release when reproducing research:
 
 ```bash
-python -m pip install openwfn==0.8.2
+python -m pip install openwfn==0.9.0
 ```
 
 For reproducing work created with the immediately previous stable release, use:
 
 ```bash
-python -m pip install openwfn==0.8.1
+python -m pip install openwfn==0.8.2
 ```
 
 For older work created with openWFN 0.8.0, use:

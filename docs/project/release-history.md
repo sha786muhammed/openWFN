@@ -1,12 +1,11 @@
 # Release history
 
-## 0.9.0 — unreleased preparation
+## 0.9.0 — interoperability and workflow hardening
 
-The source targets 0.9.0. This is not yet a published package or tagged release.
-It adds capability-aware interoperability and mixed-format workflow hardening,
+Version 0.9.0 adds capability-aware interoperability and mixed-format workflow hardening,
 plus Experimental output extraction and local MCP tools.
 
-[Read the 0.9.0 preparation notes](../releases/0.9.0.md)
+[Read the 0.9.0 release notes](../releases/0.9.0.md)
 
 ## 0.8.2 — post-release scientific edge hardening
 

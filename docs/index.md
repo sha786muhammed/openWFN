@@ -7,11 +7,10 @@ hide:
 
 !!! note "Current release"
 
-    This site follows the source checkout, including unreleased 0.9.0 features.
-    The last published release documented here is 0.8.2. Install it with
+    This site documents openWFN 0.9.0. Install it with
     `python -m pip install --upgrade openwfn`, or pin the release with
-    `python -m pip install openwfn==0.8.2` for reproducible work.
-    See the [0.9.0 preparation notes](releases/0.9.0.md) for source-only features.
+    `python -m pip install openwfn==0.9.0` for reproducible work.
+    See the [0.9.0 release notes](releases/0.9.0.md) for changes and support boundaries.
 
 <div class="ow-home" markdown="1">
 

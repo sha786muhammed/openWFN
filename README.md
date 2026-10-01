@@ -48,7 +48,7 @@ openwfn --version
 Install the exact release when reproducing research:
 
 ```bash
-python -m pip install openwfn==0.8.2
+python -m pip install openwfn==0.9.0
 ```
 
 ## First analysis
@@ -102,7 +102,7 @@ The default density spacing of **0.15 bohr** is an accuracy/performance tradeoff
 | Automation | Versioned results, batch manifests, discovery, resume, JSON and CSV | Stable |
 | Research reports | HTML/Markdown reports, tables, figures, and structures | Stable |
 | Interactive workbench | Optional visualization and teaching surface | Experimental |
-| Additional input formats | Optional IOData ingestion and file-specific capabilities | Stable fixture contract; source-only until 0.9.0 publication |
+| Additional input formats | Optional IOData ingestion and file-specific capabilities | Stable fixture contract; requires the interop extra |
 | QC output properties | Source-reported extraction with optional cclib | Experimental; not a complete wavefunction |
 | Local MCP | Read-only stdio tools for selected analyses | Experimental; no remote service |
 
@@ -110,10 +110,9 @@ The default density spacing of **0.15 bohr** is an accuracy/performance tradeoff
 
 ## Input support
 
-The last published release documented here is 0.8.2. The source now targets
-unreleased 0.9.0 with optional interoperability; this is not a PyPI release.
-See the [0.9.0 preparation notes](docs/releases/0.9.0.md). For the source
-checkout, install `python -m pip install -e ".[interop]"`. The optional reader
+Version 0.9.0 adds optional interoperability support.
+See the [0.9.0 release notes](docs/releases/0.9.0.md).
+Install `python -m pip install "openwfn[interop]==0.9.0"` for additional formats. The optional reader
 is pinned to IOData 1.0.1 and has a [25-format ingestion matrix](docs/reference/formats-and-exports.md)
 with [capability discovery](docs/reference/capabilities.md). Format ingestion
 does not imply that every file has orbitals, density, or an applicable
@@ -129,7 +128,7 @@ XYZ, MOL/SDF, and PDB inputs provide structure-only records. The optional
 backend also reads structure, periodic, grid, and integral-only formats; use
 `openwfn FILE capabilities` to check the actual data before analysis.
 
-In the unreleased 0.9.0 source checkout, use `--input-format FORMAT_ID` when a
+In openWFN 0.9.0, use `--input-format FORMAT_ID` when a
 filename is ambiguous (for example, a GAMESS `.dat`). A structure without a
 complete wavefunction gets a partial `summary`; it does not get inferred
 orbitals, density, or electron counts. Mixed batches can use `--format-map`
@@ -147,11 +146,11 @@ openwfn calculation.fchk density cube density.cube
 
 ### Output properties preview
 
-The development checkout can extract source-reported properties from QC text
+Version 0.9.0 can extract source-reported properties from QC text
 output through the optional cclib reader:
 
 ```bash
-python -m pip install -e ".[outputs]"
+python -m pip install "openwfn[outputs]==0.9.0"
 python -m openwfn.cli --format json calculation.out properties
 ```
 

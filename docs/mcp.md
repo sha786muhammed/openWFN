@@ -1,15 +1,15 @@
 # Local MCP preview
 
-This unreleased adapter lets an MCP client request selected openWFN analyses.
+This Experimental adapter in openWFN 0.9.0 lets an MCP client request selected openWFN analyses.
 It runs locally over stdio and reads files inside one configured directory.
 It does not provide a public HTTP service, upload endpoint, or authentication.
 
-## Install from the development checkout
+## Install
 
-Use a separate environment, then install the checkout:
+Use a separate environment, then install the optional features:
 
 ```bash
-python -m pip install -e ".[mcp,interop,outputs]"
+python -m pip install "openwfn[mcp,interop,outputs]==0.9.0"
 ```
 
 The adapter is tested with MCP SDK 2.2.0. The base openWFN installation does

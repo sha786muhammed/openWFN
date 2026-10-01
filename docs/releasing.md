@@ -1,10 +1,9 @@
 # Releasing openWFN
 
-This guide targets the pending 0.9.0 release. Published 0.8.2 remains the citation
-and package-index reference during preparation. Do not execute tagging or
+This guide targets the 0.9.0 release. Do not execute tagging or
 publication steps without separate owner approval.
 
-While the current changelog entry is `Unreleased`,
+For a future release whose changelog entry is `Unreleased`,
 `sync_release_metadata.py --check` verifies the citation against the latest
 dated release. Source-version and citation-version differences are intentional
 at this stage. Do not invent a release date to make them match.

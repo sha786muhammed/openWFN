@@ -4,7 +4,8 @@
 
 | Version | Security fixes |
 |---|---|
-| `0.8.2` | Supported |
+| `0.9.0` | Supported |
+| `0.8.2` | Not supported |
 | `0.8.1` | Not supported |
 | `0.8.0` | Not supported |
 | Earlier releases | Not supported |

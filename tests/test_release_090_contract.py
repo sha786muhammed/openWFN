@@ -13,19 +13,20 @@ def test_changelog_marks_082_released() -> None:
     assert "## [0.8.2] - Unreleased" not in changelog
 
 
-def test_citation_targets_082_release() -> None:
+def test_citation_targets_090_release() -> None:
     citation = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
-    assert 'version: "0.8.2"' in citation
-    assert 'url: "https://github.com/sha786muhammed/openWFN/releases/tag/v0.8.2"' in citation
+    assert 'version: "0.9.0"' in citation
+    assert 'url: "https://github.com/sha786muhammed/openWFN/releases/tag/v0.9.0"' in citation
 
 
-def test_readme_pins_082_and_keeps_dynamic_pypi_badge() -> None:
+def test_readme_pins_090_and_keeps_dynamic_pypi_badge() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    assert "python -m pip install openwfn==0.8.2" in readme
+    assert "python -m pip install openwfn==0.9.0" in readme
     assert "https://img.shields.io/pypi/v/openwfn?label=PyPI" in readme
 
 
-def test_security_supports_082() -> None:
+def test_security_supports_090() -> None:
     security = (ROOT / "SECURITY.md").read_text(encoding="utf-8")
-    assert "| `0.8.2` | Supported |" in security
+    assert "| `0.9.0` | Supported |" in security
+    assert "| `0.8.2` | Not supported |" in security
     assert "| `0.8.1` | Not supported |" in security

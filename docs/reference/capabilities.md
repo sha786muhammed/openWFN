@@ -1,14 +1,12 @@
 # Capability discovery
 
-These commands describe the unreleased 0.9.0 source checkout. In a source
-checkout, use `python -m pip install -e ".[interop]"`; after a release that
-includes this feature, the package-index install will be:
+These commands are available in openWFN 0.9.0. For IOData-backed formats, install:
 
 ```bash
-python -m pip install "openwfn[interop]"
+python -m pip install "openwfn[interop]==0.9.0"
 ```
 
-In a checkout of this branch, inspect the file before analysis:
+Inspect the file before analysis:
 
 ```bash
 openwfn molecule.molden capabilities
