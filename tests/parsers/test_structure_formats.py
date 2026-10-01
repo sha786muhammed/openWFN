@@ -235,7 +235,10 @@ def test_lossy_structure_exports_warn_and_cube_preserves_effective_charge(tmp_pa
         atoms=(Atom(1, (0.0, 0.0, 0.0), nuclear_charge=1.0),), charge=0,
         multiplicity=2, metadata=CalculationMetadata(source_program="authored-test"),
     )
-    assert write_structure(ordinary, tmp_path / "ordinary.xyz", "xyz") == ()
+    assert any(
+        "multiplicity" in warning
+        for warning in write_structure(ordinary, tmp_path / "ordinary.xyz", "xyz")
+    )
 
     grid = VolumetricGrid(
         origin=(0.0, 0.0, 0.0),

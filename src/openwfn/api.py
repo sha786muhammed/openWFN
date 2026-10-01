@@ -7,7 +7,7 @@ from typing import Literal
 from .analysis.registry import run_analysis, run_analysis_safe
 from .analysis.structure_summary import center_counts
 from .capabilities import Capability, infer_capabilities
-from .data import INTEROP_SCHEMA_VERSION, OpenWFNData
+from .data import INTEROP_SCHEMA_VERSION, OpenWFNData, StructureData
 from .errors import DataUnavailableError
 from .ingest import load_input
 from .model import MODEL_SCHEMA_VERSION, Molecule
@@ -106,15 +106,22 @@ class OpenWFNCalculation:
 
         return run_analysis(self.data, name)
 
+    def _geometry_structure(self) -> Molecule | StructureData:
+        if self.data.periodic is not None:
+            raise DataUnavailableError("Periodic minimum-image geometry is not supported.")
+        if self.data.structure is not None:
+            return self.data.structure
+        return self.molecule
+
     def geometry_distance(self, atom_i: int, atom_j: int) -> ResultRecord:
-        return self._with_provenance(geometry_distance(self.molecule, atom_i, atom_j))
+        return self._with_provenance(geometry_distance(self._geometry_structure(), atom_i, atom_j))
 
     def geometry_angle(self, atom_i: int, atom_j: int, atom_k: int) -> ResultRecord:
-        return self._with_provenance(geometry_angle(self.molecule, atom_i, atom_j, atom_k))
+        return self._with_provenance(geometry_angle(self._geometry_structure(), atom_i, atom_j, atom_k))
 
     def geometry_dihedral(self, atom_i: int, atom_j: int, atom_k: int, atom_l: int) -> ResultRecord:
         return self._with_provenance(
-            geometry_dihedral(self.molecule, atom_i, atom_j, atom_k, atom_l)
+            geometry_dihedral(self._geometry_structure(), atom_i, atom_j, atom_k, atom_l)
         )
 
     def orbitals(self, spin: Literal["alpha", "beta", "all"] = "alpha") -> ResultRecord:

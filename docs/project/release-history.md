@@ -1,5 +1,12 @@
 # Release history
 
+## 0.9.1 — resource and export safety
+
+This patch bounds molecular grid allocation, fixes Molden detection and
+structure-only geometry, and preserves scientific warnings in ESP and exports.
+
+[Read the 0.9.1 release notes](../releases/0.9.1.md)
+
 ## 0.9.0 — interoperability and workflow hardening
 
 Version 0.9.0 adds capability-aware interoperability and mixed-format workflow hardening,

@@ -30,6 +30,7 @@ def _sections(data: CalculationData, analyses: Iterable[str]) -> list[dict[str, 
                 {
                     "name": name,
                     "status": "Available",
+                    "result_status": result.status,
                     "validation_status": result.validation_status,
                     "analysis_version": result.analysis_version,
                     "data": result.data,
@@ -64,7 +65,11 @@ def _html(manifest: dict[str, Any]) -> str:
                 f"<td>{escape(section['units'].get(key, ''))}</td></tr>"
                 for key, value in section["data"].items()
             )
-            body = f"<table>{rows}</table>"
+            warnings = "".join(f"<li>{escape(w)}</li>" for w in section.get("warnings", []))
+            body = (
+                f"<p>Result status: {escape(section.get('result_status', 'success'))}</p>"
+                f"<ul>{warnings}</ul><table>{rows}</table>"
+            )
         sections.append(
             f'<section><h2>{heading}</h2><p>Validation status: '
             f'<strong>{escape(section["validation_status"])}</strong></p>{body}</section>'
@@ -96,6 +101,9 @@ def _markdown(manifest: dict[str, Any]) -> str:
             lines.extend((f"**Unavailable:** {section['error']}", ""))
             continue
         lines.extend((f"Validation status: **{section['validation_status']}**", ""))
+        lines.extend((f"Result status: **{section.get('result_status', 'success')}**", ""))
+        for warning in section.get("warnings", []):
+            lines.extend((f"Warning: {warning}", ""))
         for key, value in section["data"].items():
             unit = section["units"].get(key, "")
             lines.append(f"- {_title(key)}: {value}{f' {unit}' if unit else ''}")
@@ -163,8 +171,12 @@ def build_report_record(
         {"analyses": list(analyses), "format": report_format},
         overwrite=overwrite,
     )
+    results = [run_analysis_safe(data, name) for name in analyses]
+    warnings = tuple(dict.fromkeys(w for result in results for w in result.warnings))
     return ResultRecord(
         kind="research_report",
         data={"output": str(path), "format": report_format, "analyses": list(analyses)},
         validation_status="Stable",
+        status="partial" if any(result.status != "success" for result in results) else "success",
+        warnings=warnings,
     )

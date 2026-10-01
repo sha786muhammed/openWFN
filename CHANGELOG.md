@@ -2,6 +2,17 @@
 
 All notable changes to openWFN are documented in this file.
 
+## [0.9.1] - 2026-10-01
+
+### Fixed
+
+- Grid analyses reject nonfinite settings and grids above two million points before allocation. Density AO chunks are also limited by basis size; spacing is never silently changed.
+- Molden ingestion recognizes `.molden.input` and bounded `[Molden Format]` header detection for otherwise unrecognized filenames.
+- Atomic-charge ESP preserves population conservation warnings and partial status.
+- Research reports display warnings and partial result status; workbench fields retain those facts, ghost-center identity, and usable HOMOs when a LUMO is absent.
+- Structure writers explicitly warn about molecular-charge and spin-multiplicity loss.
+- Python geometry measurements accept isolated structure coordinates without requiring a complete wavefunction.
+
 ## [0.9.0] - 2026-10-01
 
 ### Added

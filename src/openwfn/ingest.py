@@ -79,7 +79,8 @@ def _detect_text_output_format(path: Path) -> str | None:
         return "cp2klog"
     if looks_like_gaussian_output(path):
         return "gaussianlog"
-    text = path.read_text(encoding="utf-8", errors="replace")[:131072]
+    with path.open(encoding="utf-8", errors="replace") as stream:
+        text = stream.read(131072)
     upper = text.upper()
     if "O   R   C   A" in upper or "FINAL SINGLE POINT ENERGY" in upper:
         return "orcalog"
@@ -186,4 +187,8 @@ def load_input(path: Path, *, format_hint: str | None = None) -> OpenWFNData:
             return _load_native(source, source_format=definition.format_id)
         return _load_iodata(source, format_id=definition.format_id)
 
+    with source.open(encoding="utf-8", errors="replace") as stream:
+        header = stream.read(4096).lstrip("\ufeff \t\r\n").casefold()
+    if header.startswith("[molden format]"):
+        return _load_iodata(source, format_id="molden")
     raise ParseError(f"Unsupported input format '{source.suffix}' for {source.name}.")

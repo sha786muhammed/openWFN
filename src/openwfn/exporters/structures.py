@@ -29,6 +29,16 @@ def write_structure(
         for atom in molecule.atoms
     )
     warnings: list[str] = []
+    if molecule.charge != 0:
+        warnings.append(
+            f"{normalized.upper()} export does not preserve molecular charge "
+            f"({molecule.charge:+d}); do not infer charge from a reloaded structure."
+        )
+    if molecule.multiplicity != 1:
+        warnings.append(
+            f"{normalized.upper()} export does not preserve spin multiplicity "
+            f"({molecule.multiplicity}); retain the original calculation metadata."
+        )
     if ghost_count:
         warnings.append(
             f"{normalized.upper()} cannot preserve effective nuclear charges: "

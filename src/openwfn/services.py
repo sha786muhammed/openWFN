@@ -16,6 +16,7 @@ from .analysis.orbitals import (
 )
 from .analysis.population import lowdin_population, mulliken_population
 from .constants import BOHR_TO_ANGSTROM
+from .data import StructureData
 from .errors import DataUnavailableError
 from .exporters.cube import write_cube
 from .geometry import angle, center_of_mass, detect_bonds, dihedral, distance, molecular_formula
@@ -30,7 +31,9 @@ LOWDIN_CONDITION_NUMBER_TOLERANCE = 1e10
 LOWDIN_RANK_TOLERANCE = 1e-12
 
 
-def _coordinates(molecule: Molecule) -> list[tuple[float, float, float]]:
+def _coordinates(molecule: Molecule | StructureData) -> list[tuple[float, float, float]]:
+    if isinstance(molecule, StructureData):
+        return list(molecule.coordinates)
     return [atom.coordinates for atom in molecule.atoms]
 
 
@@ -219,7 +222,7 @@ def molecular_summary(data: CalculationData) -> ResultRecord:
     )
 
 
-def geometry_distance(molecule: Molecule, atom_i: int, atom_j: int) -> ResultRecord:
+def geometry_distance(molecule: Molecule | StructureData, atom_i: int, atom_j: int) -> ResultRecord:
     value = distance(atom_i, atom_j, _coordinates(molecule))
     return ResultRecord(
         kind="distance",
@@ -229,7 +232,7 @@ def geometry_distance(molecule: Molecule, atom_i: int, atom_j: int) -> ResultRec
     )
 
 
-def geometry_angle(molecule: Molecule, atom_i: int, atom_j: int, atom_k: int) -> ResultRecord:
+def geometry_angle(molecule: Molecule | StructureData, atom_i: int, atom_j: int, atom_k: int) -> ResultRecord:
     value = angle(atom_i, atom_j, atom_k, _coordinates(molecule))
     return ResultRecord(
         kind="angle",
@@ -240,7 +243,7 @@ def geometry_angle(molecule: Molecule, atom_i: int, atom_j: int, atom_k: int) ->
 
 
 def geometry_dihedral(
-    molecule: Molecule, atom_i: int, atom_j: int, atom_k: int, atom_l: int
+    molecule: Molecule | StructureData, atom_i: int, atom_j: int, atom_k: int, atom_l: int
 ) -> ResultRecord:
     value = dihedral(atom_i, atom_j, atom_k, atom_l, _coordinates(molecule))
     return ResultRecord(
@@ -446,6 +449,8 @@ def density_grid(
         data.molecule, spacing_bohr=spacing_bohr, padding_bohr=padding_bohr
     )
     values = np.empty(len(points), dtype=float)
+    # Bound AO evaluation temporaries as well as the number of grid points.
+    chunk_size = min(chunk_size, max(1, 8_000_000 // max(1, data.basis.n_functions)))
     offset = 0
     for chunk in iter_point_chunks(points, chunk_size):
         chunk_values = evaluate_density(data.molecule, data.basis, matrix, chunk)
@@ -554,6 +559,7 @@ def electrostatic_potential_point(
     point = np.asarray((coordinates_angstrom,), dtype=float) / BOHR_TO_ANGSTROM
     warnings: list[str] = []
     density_source: str | None = None
+    result_status = "success"
     if component == "nuclear":
         value = float(nuclear_esp(data.molecule, point)[0])
         status = "Stable"
@@ -565,17 +571,13 @@ def electrostatic_potential_point(
         matrix = data.total_density
         density_source = matrix.source
         warnings.extend(_density_source_warnings(data, matrix))
-        overlap = overlap_matrix(data.basis, data.molecule)
-        mapping = ao_atom_indices(data.basis)
-        population = (
-            mulliken_population(data.molecule, matrix, overlap, mapping)
-            if component == "mulliken"
-            else lowdin_population(data.molecule, matrix, overlap, mapping)
-        )
+        population = population_analysis(data, component)
+        warnings.extend(population.warnings)
+        result_status = population.status
         centers = np.asarray([atom.coordinates for atom in data.molecule.atoms], dtype=float)
         centers /= BOHR_TO_ANGSTROM
-        value = float(point_charge_esp(centers, np.asarray(population.atomic_charges), point)[0])
-        status = "Stable"
+        value = float(point_charge_esp(centers, np.asarray(population.data["atomic_charges"]), point)[0])
+        status = population.validation_status
     else:
         matrix = density_matrix_for_kind(data, "total")
         density_source = matrix.source
@@ -600,5 +602,6 @@ def electrostatic_potential_point(
         data=payload,
         units={"x": "angstrom", "y": "angstrom", "z": "angstrom", "value": "hartree/e"},
         validation_status=status,  # type: ignore[arg-type]
+        status=result_status,  # type: ignore[arg-type]
         warnings=tuple(dict.fromkeys(warnings)),
     )
