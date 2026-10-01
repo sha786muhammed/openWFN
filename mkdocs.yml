@@ -73,6 +73,8 @@ nav:
       - Overview: start/index.md
       - Installation: installation.md
       - Interoperability preview: interoperability.md
+      - Output properties preview: output-properties.md
+      - Local MCP preview: mcp.md
       - Your first analysis: start/first-analysis.md
       - Quick start: quick-start.md
       - Learning paths: start/learning-paths.md

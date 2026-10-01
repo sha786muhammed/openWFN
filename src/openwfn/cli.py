@@ -478,6 +478,7 @@ def main(argv: list[str] | None = None) -> int:
 
     subparsers.add_parser("capabilities", help="Report normalized data and analysis capabilities")
     subparsers.add_parser("doctor", help="Inspect parsed data and available analysis capabilities")
+    subparsers.add_parser("properties", help="Extract source-reported properties from QC output (outputs extra)")
 
     p_mo = subparsers.add_parser(
         "mo",
@@ -516,6 +517,18 @@ def main(argv: list[str] | None = None) -> int:
 
     def require_calculation() -> CalculationData:
         return _require_calculation(Path(args.file), format_hint=args.input_format)
+
+    if args.command == "properties":
+        from .output_properties import read_output
+
+        if args.input_format is not None:
+            return execute(
+                lambda: (_ for _ in ()).throw(ValueError(
+                    "properties uses cclib program detection; omit --input-format."
+                )),
+                _context(args),
+            )
+        return execute(lambda: read_output(Path(args.file)), _context(args))
 
     if args.command == "summary":
         def summary_operation() -> ResultRecord:

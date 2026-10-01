@@ -44,6 +44,7 @@ from .model import (
     CalculationData,
     Provenance,
 )
+from .output_properties import read_output
 from .results import RESULT_SCHEMA_VERSION, ResultRecord
 
 __all__ = [
@@ -90,4 +91,5 @@ __all__ = [
     "run_analysis",
     "run_batch",
     "load",
+    "read_output",
 ]

@@ -74,6 +74,26 @@ These are the public top-level choices shown by `openwfn --help`.
 | `validate` | Run the density-conservation check |
 | `doctor` | Inspect input type and available capabilities |
 | `capabilities` | Report normalized component and analysis availability |
+| `properties` | Extract source-reported QC output properties using the optional cclib reader |
+
+## Source-reported output properties
+
+Install the `outputs` extra from this development checkout, then run:
+
+```bash
+python -m pip install -e ".[outputs]"
+python -m openwfn.cli --format json calculation.out properties
+```
+
+The command detects the program from file contents; omit `--input-format`.
+It reports available geometry, charge/multiplicity, SCF energy, frontier
+orbital energies, dipole, printed atomic charges and normal termination.
+Printed charges are source-reported values, separate from recalculated
+`population` results. Missing fields remain null or empty; warnings mark the
+result partial. Normal termination does not prove optimization convergence.
+This Experimental preview is separate from `load()` and is not yet a
+registered batch analysis. See [output properties](../output-properties.md)
+for units, provenance and the validation boundary.
 
 ## Inspection and structure
 

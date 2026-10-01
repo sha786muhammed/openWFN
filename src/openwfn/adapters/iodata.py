@@ -571,6 +571,8 @@ def _omission_warnings(loaded: Any) -> list[str]:
     for name in ("atgradient", "athessian", "atcharges", "atffparams", "extcharges", "g_rot", "moments"):
         value = _safe_attr(loaded, name)
         if value is not None:
+            if isinstance(value, dict) and not value:
+                continue
             try:
                 present = np.asarray(value).size > 0
             except (TypeError, ValueError):

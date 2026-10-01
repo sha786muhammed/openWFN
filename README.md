@@ -141,6 +141,20 @@ openwfn calculation.fchk density cube density.cube
 
 ## Documentation
 
+### Output properties preview
+
+The development checkout can extract source-reported properties from QC text
+output through the optional cclib reader:
+
+```bash
+python -m pip install -e ".[outputs]"
+python -m openwfn.cli --format json calculation.out properties
+```
+
+Python exposes the same result through `openwfn.read_output(path)`. See the
+[output properties preview](docs/output-properties.md) for units, provenance,
+missing-data behavior and the current Experimental validation boundary.
+
 - [First analysis](https://sha786muhammed.github.io/openWFN/start/first-analysis/)
 - [CLI workflows](https://sha786muhammed.github.io/openWFN/guides/cli-workflows/)
 - [Complete CLI reference](https://sha786muhammed.github.io/openWFN/reference/cli/)
