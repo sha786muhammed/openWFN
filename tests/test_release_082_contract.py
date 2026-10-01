@@ -1,17 +1,10 @@
 from pathlib import Path
 
-try:
-    import tomllib
-except ModuleNotFoundError:  # Python 3.10
-    import tomli as tomllib
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_project_version_is_082() -> None:
-    with (ROOT / "pyproject.toml").open("rb") as stream:
-        version = tomllib.load(stream)["project"]["version"]
-    assert version == "0.8.2"
+def test_published_082_release_notes_are_retained() -> None:
+    assert (ROOT / "docs/releases/0.8.2.md").is_file()
 
 
 def test_changelog_marks_082_released() -> None:

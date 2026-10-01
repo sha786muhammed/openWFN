@@ -117,6 +117,7 @@ nav:
       - Product boundary and benchmarking: project/core-benchmarking-design.md
       - Releasing: releasing.md
       - Releases:
+          - Version 0.9.0 (unreleased): releases/0.9.0.md
           - Version 0.8.2: releases/0.8.2.md
           - Version 0.8.1: releases/0.8.1.md
           - Version 0.8.0: releases/0.8.0.md

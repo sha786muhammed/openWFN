@@ -31,3 +31,21 @@ does not identify one and the available repository record does not prove one.
 
 IOData is an optional, separately installed dependency. openWFN-owned code and
 public result contracts remain independent of IOData's internal Python objects.
+
+## cclib (optional QC output reader)
+
+- Distribution and pinned version: `cclib==1.8.1`
+- Upstream project: <https://github.com/cclib/cclib>
+- Purpose: source-reported property extraction from QC text outputs
+- License reported by the installed distribution: BSD-3-Clause
+- Installation: `pip install "openwfn[outputs]"` after a release containing this extra
+- Bundling status: not vendored or redistributed inside openWFN
+
+## MCP Python SDK (optional local protocol adapter)
+
+- Distribution and pinned version: `mcp==2.2.0`
+- Upstream project: <https://github.com/modelcontextprotocol/python-sdk>
+- Purpose: local stdio MCP client/server communication
+- License reported by the installed distribution: MIT
+- Installation: `pip install "openwfn[mcp]"` after a release containing this extra
+- Bundling status: not vendored or redistributed inside openWFN

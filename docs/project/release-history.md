@@ -1,5 +1,13 @@
 # Release history
 
+## 0.9.0 — unreleased preparation
+
+The source targets 0.9.0. This is not yet a published package or tagged release.
+It adds capability-aware interoperability and mixed-format workflow hardening,
+plus Experimental output extraction and local MCP tools.
+
+[Read the 0.9.0 preparation notes](../releases/0.9.0.md)
+
 ## 0.8.2 — post-release scientific edge hardening
 
 Version 0.8.2 is a corrective patch release for three edge cases found by the full post-0.8.1 workflow audit. It restores post-HF SCF-density provenance warnings for real Gaussian method labels, derives the scientifically defined alpha/beta/zero-spin density channels for restricted closed-shell files that omit an explicit spin-density matrix, and returns transparent partial frontier results for valid one-electron or empty-spin-channel cases instead of failing the whole analysis.

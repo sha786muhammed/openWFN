@@ -42,6 +42,22 @@ def read_release_date(changelog_file: Path, release_version: str) -> str:
     return match.group(1)
 
 
+def citation_release_version(changelog_file: Path, source_version: str) -> str:
+    """Keep an unreleased checkout's citation on the latest dated release."""
+    changelog = changelog_file.read_text(encoding="utf-8")
+    pending = re.search(
+        rf"(?m)^## \[{re.escape(source_version)}\] - Unreleased$", changelog
+    )
+    if pending is None:
+        return source_version
+    latest = re.search(
+        r"(?m)^## \[([^\]]+)\] - [0-9]{4}-[0-9]{2}-[0-9]{2}$", changelog
+    )
+    if latest is None:
+        raise ValueError("Unreleased source has no dated release to cite")
+    return latest.group(1)
+
+
 def rendered_citation(
     citation_text: str,
     release_version: str,
@@ -77,6 +93,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         current = citation_file.read_text(encoding="utf-8")
         release_version = read_project_version(project_file)
+        if args.date is None:
+            release_version = citation_release_version(changelog_file, release_version)
         release_date = args.date or read_release_date(changelog_file, release_version)
         release_url = f"{read_repository_url(project_file)}/releases/tag/v{release_version}"
         expected = rendered_citation(

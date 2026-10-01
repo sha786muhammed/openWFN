@@ -1,7 +1,7 @@
 # Python API reference
 
-The interoperability sections below describe an unreleased development branch;
-the published stable package remains 0.8.2.
+The interoperability sections below describe the unreleased 0.9.0 source;
+the last published release documented here is 0.8.2.
 
 The stable import surface is declared by `openwfn.__all__`. Import from `openwfn` rather than internal modules when possible.
 

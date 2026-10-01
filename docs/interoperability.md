@@ -1,7 +1,7 @@
 # Interoperability preview
 
-This page describes the unreleased 0.9 development branch. The published
-stable package remains 0.8.2. In a checkout of this branch, install the
+This page describes the unreleased 0.9.0 source checkout. The last published
+release documented here is 0.8.2. From the source checkout, install the
 optional format reader with:
 
 ```bash

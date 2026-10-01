@@ -26,7 +26,7 @@ def built_archives(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path
 
 
 def test_installed_distribution_version() -> None:
-    assert version("openwfn") == "0.8.2"
+    assert version("openwfn") == "0.9.0"
 
 
 def test_console_script_targets_cli_main() -> None:

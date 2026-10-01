@@ -4,7 +4,21 @@ openWFN requires Python 3.10–3.13.
 
 !!! note "Current release"
 
-    This handbook documents openWFN 0.8.2.
+    This handbook follows the source checkout, including unreleased 0.9.0
+    features. The last published release documented here is 0.8.2. See the
+    [0.9.0 preparation notes](releases/0.9.0.md) before using source-only commands.
+
+## Unreleased source checkout
+
+From the repository checkout, use a separate environment and install:
+
+```bash
+python -m pip install -e ".[interop,outputs,mcp]"
+openwfn --version
+```
+
+The source version is 0.9.0; this is not evidence of a PyPI release. Choose only
+the extras you need. MCP and QC output extraction remain Experimental.
 
 ## Stable release
 
