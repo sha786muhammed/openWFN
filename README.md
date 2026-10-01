@@ -48,7 +48,7 @@ openwfn --version
 Install the exact release when reproducing research:
 
 ```bash
-python -m pip install openwfn==0.9.0
+python -m pip install openwfn==0.9.1
 ```
 
 ## First analysis
@@ -110,9 +110,9 @@ The default density spacing of **0.15 bohr** is an accuracy/performance tradeoff
 
 ## Input support
 
-Version 0.9.0 adds optional interoperability support.
-See the [0.9.0 release notes](docs/releases/0.9.0.md).
-Install `python -m pip install "openwfn[interop]==0.9.0"` for additional formats. The optional reader
+Version 0.9.1 includes optional interoperability support and resource/export safety fixes.
+See the [0.9.1 release notes](docs/releases/0.9.1.md).
+Install `python -m pip install "openwfn[interop]==0.9.1"` for additional formats. The optional reader
 is pinned to IOData 1.0.1 and has a [25-format ingestion matrix](docs/reference/formats-and-exports.md)
 with [capability discovery](docs/reference/capabilities.md). Format ingestion
 does not imply that every file has orbitals, density, or an applicable
@@ -128,7 +128,7 @@ XYZ, MOL/SDF, and PDB inputs provide structure-only records. The optional
 backend also reads structure, periodic, grid, and integral-only formats; use
 `openwfn FILE capabilities` to check the actual data before analysis.
 
-In openWFN 0.9.0, use `--input-format FORMAT_ID` when a
+In openWFN 0.9.1, use `--input-format FORMAT_ID` when a
 filename is ambiguous (for example, a GAMESS `.dat`). A structure without a
 complete wavefunction gets a partial `summary`; it does not get inferred
 orbitals, density, or electron counts. Mixed batches can use `--format-map`
@@ -146,11 +146,11 @@ openwfn calculation.fchk density cube density.cube
 
 ### Output properties preview
 
-Version 0.9.0 can extract source-reported properties from QC text
+Version 0.9.1 can extract source-reported properties from QC text
 output through the optional cclib reader:
 
 ```bash
-python -m pip install "openwfn[outputs]==0.9.0"
+python -m pip install "openwfn[outputs]==0.9.1"
 python -m openwfn.cli --format json calculation.out properties
 ```
 

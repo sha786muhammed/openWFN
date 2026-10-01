@@ -19,7 +19,8 @@ Parser = Callable[[Path], Any]
 def looks_like_gaussian_output(path: Path) -> bool:
     """Return whether text contains conservative Gaussian output signatures."""
 
-    text = path.read_text(encoding="utf-8", errors="replace")[:131072]
+    with path.open(encoding="utf-8", errors="replace") as stream:
+        text = stream.read(131072)
     return any(
         marker in text
         for marker in (

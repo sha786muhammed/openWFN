@@ -32,7 +32,7 @@ IODATA_READABLE_FORMATS: tuple[FormatDefinition, ...] = (
     FormatDefinition("json_qcschema", ("*.qcschema.json",), "iodata"),
     FormatDefinition("locpot", ("LOCPOT", "LOCPOT-*", "*.locpot"), "iodata"),
     FormatDefinition("mol2", ("*.mol2",), "iodata"),
-    FormatDefinition("molden", ("*.molden",), "iodata"),
+    FormatDefinition("molden", ("*.molden", "*.molden.input"), "iodata"),
     FormatDefinition("molekel", ("*.mkl",), "iodata"),
     FormatDefinition("mwfn", ("*.mwfn",), "iodata"),
     FormatDefinition("orcalog", (), "iodata", requires_explicit_hint=True),

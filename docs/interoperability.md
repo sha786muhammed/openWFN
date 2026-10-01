@@ -1,10 +1,10 @@
 # Interoperability
 
-Version 0.9.0 provides optional capability-aware ingestion. Install the
+Version 0.9.1 provides optional capability-aware ingestion. Install the
 optional format reader with:
 
 ```bash
-python -m pip install "openwfn[interop]==0.9.0"
+python -m pip install "openwfn[interop]==0.9.1"
 ```
 
 The base install still works without IOData. Gaussian FCHK continues through

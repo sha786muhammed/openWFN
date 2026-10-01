@@ -1,6 +1,6 @@
 # Python API reference
 
-This reference describes openWFN 0.9.0. Optional output extraction remains
+This reference describes openWFN 0.9.1. Optional output extraction remains
 Experimental; ingestion support does not imply every analysis is available.
 
 The stable import surface is declared by `openwfn.__all__`. Import from `openwfn` rather than internal modules when possible.

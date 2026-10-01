@@ -25,8 +25,14 @@ not. Electronic analyses fail cleanly when required records are absent.
 
 ## Stable interoperability formats
 
-This section describes openWFN 0.9.0. Install
-`python -m pip install "openwfn[interop]==0.9.0"` for the IOData-backed entries. This is the
+In 0.9.1, Molden detection also accepts `.molden.input` and recognizes
+the `[Molden Format]` header for unrecognized filenames. Structure exports warn
+when molecular charge or spin multiplicity cannot be retained, in addition to
+ghost/ECP warnings. Keep the original calculation and its metadata; reloading a
+structure export is not an electronic-state round-trip.
+
+This section describes openWFN 0.9.1. Install
+`python -m pip install "openwfn[interop]==0.9.1"` for the IOData-backed entries. This is the
 pinned IOData 1.0.1 readable-format inventory. “Stable” means ingestion passed
 the project fixture contract; it does not mean every analysis is available,
 or that all real-world variants have been independently validated. Native

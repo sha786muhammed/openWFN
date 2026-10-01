@@ -7,14 +7,14 @@ from typing import Any
 import numpy as np
 
 from .. import __version__
-from ..analysis.basis import ao_atom_indices, overlap_matrix
+from ..analysis.density import integrate_density
 from ..analysis.electrostatics import point_charge_esp
-from ..analysis.grids import molecular_grid_points, scalar_grid
-from ..analysis.orbitals import evaluate_orbital, frontier_orbitals
-from ..analysis.population import mulliken_population
+from ..analysis.grids import iter_point_chunks, molecular_grid_points, scalar_grid
+from ..analysis.orbitals import evaluate_orbital
 from ..constants import BOHR_TO_ANGSTROM, Z_TO_SYMBOL
 from ..exporters.cube import format_cube
 from ..model import CalculationData
+from ..scientific import expected_electron_count, is_ghost_atom
 from ..services import density_grid, orbital_frontier, population_analysis
 
 
@@ -39,6 +39,8 @@ class WorkbenchPayload:
                     "symbol": Z_TO_SYMBOL.get(atom.atomic_number, "X"),
                     "coordinates": list(atom.coordinates),
                     "coordinate_unit": atom.coordinate_unit,
+                    "nuclear_charge": atom.nuclear_charge,
+                    "is_ghost": is_ghost_atom(atom),
                 }
                 for index, atom in enumerate(data.molecule.atoms, start=1)
             ],
@@ -64,6 +66,8 @@ class WorkbenchPayload:
                     **result.data,
                     "units": result.units,
                     "validation_status": result.validation_status,
+                    "status": result.status,
+                    "warnings": list(result.warnings),
                 }
             except Exception as exc:
                 properties[name] = {"status": "Unavailable", "error": str(exc)}
@@ -74,20 +78,26 @@ class WorkbenchPayload:
             padding = 3.0
             if data.total_density is not None:
                 density = density_grid(data, "total", spacing, padding)
+                integral = integrate_density(density, expected_electron_count(data, "total").value)
+                density_warnings = [] if integral.passed else ["Density electron conservation failed on the embedded grid."]
                 fields.append({
                     "id": "density-total", "name": "Total electron density", "workspace": "density",
                     "cube": format_cube(density, data.molecule), "isovalue": 0.02,
-                    "units": "electron/bohr^3", "validation_status": "Stable",
+                    "units": "electron/bohr^3",
+                    "validation_status": "Validated" if integral.passed else "Experimental",
+                    "status": "success" if integral.passed else "partial",
+                    "warnings": density_warnings,
                     "grid": {"spacing_bohr": spacing, "padding_bohr": padding},
                 })
-            if data.alpha_orbitals is not None:
-                frontier = frontier_orbitals(data.alpha_orbitals)
+            homo_number = properties["frontier"].get("homo_number")
+            if data.alpha_orbitals is not None and homo_number is not None:
                 points, origin, shape = molecular_grid_points(
                     data.molecule, spacing_bohr=spacing, padding_bohr=padding
                 )
-                values = evaluate_orbital(
-                    data.molecule, data.basis, data.alpha_orbitals, frontier.homo_index, points
-                )
+                values = np.concatenate([
+                    evaluate_orbital(data.molecule, data.basis, data.alpha_orbitals, homo_number - 1, chunk)
+                    for chunk in iter_point_chunks(points, min(65536, max(1, 8_000_000 // data.basis.n_functions)))
+                ])
                 orbital_grid = scalar_grid(
                     data.molecule, values, origin, shape, spacing, "wavefunction"
                 )
@@ -95,26 +105,29 @@ class WorkbenchPayload:
                     "id": "orbital-homo", "name": "HOMO", "workspace": "orbitals",
                     "cube": format_cube(orbital_grid, data.molecule), "isovalue": 0.03,
                     "units": "wavefunction", "validation_status": "Stable", "signed": True,
+                    "status": properties["frontier"]["status"],
+                    "warnings": properties["frontier"]["warnings"],
                     "grid": {"spacing_bohr": spacing, "padding_bohr": padding},
                 })
-            if data.total_density is not None:
-                overlap = overlap_matrix(data.basis, data.molecule)
-                population = mulliken_population(
-                    data.molecule, data.total_density, overlap, ao_atom_indices(data.basis)
-                )
+            if data.total_density is not None and "atomic_charges" in properties["mulliken"]:
+                population = properties["mulliken"]
                 points, origin, shape = molecular_grid_points(
                     data.molecule, spacing_bohr=spacing, padding_bohr=padding
                 )
                 centers = np.asarray([atom.coordinates for atom in data.molecule.atoms]) / BOHR_TO_ANGSTROM
-                values = point_charge_esp(
-                    centers, np.asarray(population.atomic_charges), points,
-                    singularity_value=0.0, singularity_tolerance=1e-8,
-                )
+                values = np.concatenate([
+                    point_charge_esp(
+                        centers, np.asarray(population["atomic_charges"]), chunk,
+                        singularity_value=0.0, singularity_tolerance=1e-8,
+                    )
+                    for chunk in iter_point_chunks(points, min(65536, max(1, 1_000_000 // len(centers))))
+                ])
                 esp_grid = scalar_grid(data.molecule, values, origin, shape, spacing, "hartree/e")
                 fields.append({
                     "id": "esp-mulliken", "name": "Mulliken ESP", "workspace": "esp",
                     "cube": format_cube(esp_grid, data.molecule), "isovalue": 0.02,
-                    "units": "hartree/e", "validation_status": "Stable", "signed": True,
+                    "units": "hartree/e", "validation_status": population["validation_status"], "signed": True,
+                    "status": population["status"], "warnings": population["warnings"],
                     "grid": {"spacing_bohr": spacing, "padding_bohr": padding},
                 })
         return cls(
