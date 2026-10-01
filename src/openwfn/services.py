@@ -557,11 +557,20 @@ def electrostatic_potential_point(
             "ESP component must be 'nuclear', 'electronic', 'total', 'mulliken', or 'lowdin'"
         )
     point = np.asarray((coordinates_angstrom,), dtype=float) / BOHR_TO_ANGSTROM
+    if point.shape != (1, 3) or not np.all(np.isfinite(point)):
+        raise ValueError("ESP coordinates must contain three finite values in angstrom.")
+    nuclear_value = None
+    if component in {"nuclear", "total"}:
+        nuclear_value = float(nuclear_esp(data.molecule, point)[0])
+        if not np.isfinite(nuclear_value):
+            raise ValueError(
+                "ESP is singular at a nuclear position. Choose a point farther from the nuclei."
+            )
     warnings: list[str] = []
     density_source: str | None = None
     result_status = "success"
     if component == "nuclear":
-        value = float(nuclear_esp(data.molecule, point)[0])
+        value = nuclear_value
         status = "Stable"
     elif component in {"mulliken", "lowdin"}:
         if data.basis is None or data.total_density is None:
@@ -577,6 +586,11 @@ def electrostatic_potential_point(
         centers = np.asarray([atom.coordinates for atom in data.molecule.atoms], dtype=float)
         centers /= BOHR_TO_ANGSTROM
         value = float(point_charge_esp(centers, np.asarray(population.data["atomic_charges"]), point)[0])
+        if not np.isfinite(value):
+            raise ValueError(
+                "Atomic-charge ESP is singular at a nuclear/atomic-charge center. "
+                "Choose a point farther from the charge centers."
+            )
         status = population.validation_status
     else:
         matrix = density_matrix_for_kind(data, "total")
@@ -586,8 +600,13 @@ def electrostatic_potential_point(
         electronic = float(electronic_esp_from_grid(grid, point)[0])
         value = electronic
         if component == "total":
-            value += float(nuclear_esp(data.molecule, point)[0])
+            value += nuclear_value
         status = "Experimental"
+    if not np.isfinite(value):
+        raise ValueError(
+            "Electronic ESP quadrature is singular at a density-grid point. "
+            "Choose a different evaluation point or grid spacing."
+        )
     payload: dict[str, object] = {
         "component": component,
         "x": coordinates_angstrom[0],

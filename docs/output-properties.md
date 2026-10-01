@@ -1,10 +1,10 @@
 # Source-reported output properties
 
-This Experimental interface in 0.9.1 reads properties printed in QC text
+This Experimental interface in 0.9.2 reads properties printed in QC text
 output through the optional cclib reader. Install:
 
 ```bash
-python -m pip install "openwfn[outputs]==0.9.1"
+python -m pip install "openwfn[outputs]==0.9.2"
 python -m openwfn.cli --format json calculation.out properties
 ```
 
@@ -25,6 +25,16 @@ SCF energy is not relabelled as a correlated or thermal energy. Orbital indices
 are 1-based. Normal termination does not establish optimization convergence.
 Charge sums differing by more than 1e-4 e produce a warning; this is a
 diagnostic threshold and not universal numerical validation.
+
+Human-readable output abbreviates arrays longer than eight entries, including
+coordinates and reported atomic charges. Scalar diagnostics and warnings remain
+visible. Use `openwfn --verbose calculation.out properties` to print the full
+arrays, or `--format json` for complete machine-readable results. Python and
+CSV results are not abbreviated.
+
+`Analysis Validation Status` describes the openWFN analysis, not the source
+calculation's convergence. `Result Status` describes this extraction result;
+`Source Job Termination` separately reports normal, not normal, or unknown.
 
 This pathway uses cclib content detection; omit `--input-format`. It is separate
 from `load()` and does not add wavefunction capabilities to that object's model.

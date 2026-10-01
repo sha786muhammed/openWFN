@@ -34,7 +34,7 @@ def point_charge_esp(
         raise ValueError("singularity_tolerance must be non-negative")
 
     distances = np.linalg.norm(points[:, None, :] - centers[None, :, :], axis=2)
-    singular = np.any(distances <= singularity_tolerance, axis=1)
+    singular = np.any((distances <= singularity_tolerance) & (charge_values[None, :] != 0), axis=1)
     safe_distances = np.where(distances <= singularity_tolerance, 1.0, distances)
     values = np.sum(charge_values[None, :] / safe_distances, axis=1)
     values[singular] = singularity_value

@@ -4,15 +4,15 @@ openWFN requires Python 3.10–3.13.
 
 !!! note "Current release"
 
-    This handbook documents openWFN 0.9.1. See the
-    [0.9.1 release notes](releases/0.9.1.md) for support boundaries.
+    This handbook documents openWFN 0.9.2. See the
+    [0.9.2 release notes](releases/0.9.2.md) for support boundaries.
 
 ## Optional features
 
 In your environment, install only the optional features you need:
 
 ```bash
-python -m pip install "openwfn[interop,outputs,mcp]==0.9.1"
+python -m pip install "openwfn[interop,outputs,mcp]==0.9.2"
 openwfn --version
 ```
 
@@ -36,7 +36,7 @@ On Windows, activate with `.venv\Scripts\activate`.
 Pin the exact release when reproducing research:
 
 ```bash
-python -m pip install openwfn==0.9.1
+python -m pip install openwfn==0.9.2
 ```
 
 For reproducing work created with the immediately previous stable release, use:

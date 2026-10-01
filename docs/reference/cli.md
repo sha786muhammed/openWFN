@@ -137,6 +137,19 @@ The default density spacing is **0.15 bohr** with 6.0 bohr padding. This is an a
 
 ESP components are `nuclear`, `mulliken`, `lowdin`, `electronic`, and `total`. Coordinates are Cartesian; consult [methods and units](../science/population-esp.md).
 
+Point ESP rejects a singular evaluation with an explanation: nuclear/total
+values are undefined at nonzero nuclear-charge centers, atomic-charge models
+are singular at nonzero charge centers, and grid electronic quadrature can be
+singular at a charged density voxel. Choose a different point or, for a grid
+singularity, different grid settings. Zero-charge ghost centers do not create a
+nuclear singularity.
+
+Human-readable output separates `Analysis Validation Status` from `Result
+Status`. Neither establishes convergence of the source QC calculation. FCHK
+results explicitly report source convergence as unknown; output properties
+report source-job termination separately. Normal termination alone does not
+establish optimization convergence. JSON field names remain unchanged.
+
 ## Reports, exports, and visualization
 
 | Command | Syntax | Output |
