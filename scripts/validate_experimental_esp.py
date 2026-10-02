@@ -13,7 +13,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def compare_case(name: str) -> dict:
-    from pyscf import gto, lib, scf
+    from pyscf import lib
+    from pyscf.tools import molden
 
     from openwfn.analysis.density import integrate_density
     from openwfn.analysis.electrostatics import electronic_esp_from_grid, nuclear_esp
@@ -23,17 +24,16 @@ def compare_case(name: str) -> dict:
     lib.num_threads(1)
     report = json.loads((ROOT/'validation/everyday-qc/pyscf-report.json').read_text())
     entry = next(case for case in report['cases'] if case['case'] == name)
-    mol = gto.M(atom=entry['geometry_angstrom'], basis=entry['basis'], spin=entry['spin'],
-                charge=entry['charge'], cart=entry['cartesian'], verbose=0)
-    # These deliberately small references fit in memory, including container PID namespaces.
-    mol.incore_anyway = True
-    mf = scf.UHF(mol) if entry['spin'] else scf.RHF(mol)
-    mf.conv_tol = 1e-11
-    mf.kernel()
-    assert mf.converged
-    dm = mf.make_rdm1()
+    source = ROOT/f'examples/everyday-qc/{name}.molden'
+    # Use the very same committed wavefunction via an independent parser.
+    # Fresh SCF can rotate a singly occupied degenerate OH orbital and therefore
+    # produce a genuinely different density despite the same energy/geometry.
+    mol, _, coefficients, occupations, _, _ = molden.load(str(source))
+    mol.charge, mol.spin = entry['charge'], entry['spin']
     if entry['spin']:
-        dm = dm.sum(axis=0)
+        dm = sum((c*o) @ c.T for c, o in zip(coefficients, occupations, strict=True))
+    else:
+        dm = (coefficients*occupations) @ coefficients.T
     centroid = mol.atom_coords().mean(axis=0)
     points = centroid + np.array([[2.13, 2.71, 3.29], [8.13, 7.71, 9.29]])
     reference_electronic = []
@@ -72,7 +72,7 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     report = {'validation_status': 'Experimental',
-              'reference': 'PySCF analytic int1e_rinv contraction; independently summed nuclear potential',
+              'reference': 'Independent PySCF Molden parser of committed wavefunction; analytic int1e_rinv contraction; independently summed nuclear potential',
               'dependencies': {name: version(name) for name in ('pyscf', 'qc-iodata', 'numpy')},
               'cases': [compare_case(name) for name in ('water', 'oh_diffuse_uhf', 'ammonium_cation')]}
     report['status'] = 'passed' if all(case['status'] == 'passed' for case in report['cases']) else 'partial'

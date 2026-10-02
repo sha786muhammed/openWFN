@@ -191,3 +191,10 @@ input Coulomb regressions, the complete real-corpus file passed **32 tests**
 validation runner passed. A bounded independent review found no Critical or
 Important numerical issues. The optional browser download failure is recorded
 above and is not counted as a passing workflow.
+
+CI identified a reference mismatch for OH: a fresh SCF solution can rotate the
+singly occupied degenerate orbital and change the density. The legacy grid-ESP
+reference now reads the exact committed Molden wavefunction using PySCF's
+independent parser and contracts its analytic Coulomb integrals. The three grid
+reference cases pass their expected success/partial assertions without relaxing
+tolerances; ammonium remains partial. This also avoids redundant fresh SCF work.

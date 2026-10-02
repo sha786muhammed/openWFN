@@ -1,6 +1,6 @@
 {
   "validation_status": "Experimental",
-  "reference": "PySCF analytic int1e_rinv contraction; independently summed nuclear potential",
+  "reference": "Independent PySCF Molden parser of committed wavefunction; analytic int1e_rinv contraction; independently summed nuclear potential",
   "dependencies": {
     "pyscf": "2.12.1",
     "qc-iodata": "1.0.1",
@@ -14,7 +14,7 @@
         [
           2.13,
           2.71,
-          4.029512823413127
+          4.0295128234131266
         ],
         [
           8.13,
@@ -23,11 +23,11 @@
         ]
       ],
       "reference_electronic_esp": [
-        -1.9313451560568458,
-        -0.6695429054983373
+        -1.9313451560568493,
+        -0.6695429054983381
       ],
       "reference_nuclear_esp": [
-        1.9514299414794443,
+        1.9514299414794447,
         0.6715488991543719
       ],
       "history": [
@@ -36,14 +36,14 @@
           "padding_bohr": 4.0,
           "grid_points": 38610,
           "electronic_esp_hartree_per_e": [
-            -2.653072844055984,
+            -2.6530728440559845,
             -0.9240425201442777
           ],
           "total_esp_hartree_per_e": [
-            -0.7016429025765396,
+            -0.7016429025765398,
             -0.2524936209899058
           ],
-          "max_absolute_esp_error": 0.7217276879991383,
+          "max_absolute_esp_error": 0.7217276879991352,
           "electron_count": 13.82711008843352,
           "electron_count_error": 3.8271100884335194,
           "conservation_passed": false
@@ -57,10 +57,10 @@
             -0.720228946820715
           ],
           "total_esp_hartree_per_e": [
-            -0.12365825301199052,
+            -0.1236582530119903,
             -0.04868004766634315
           ],
-          "max_absolute_esp_error": 0.14374303843458924,
+          "max_absolute_esp_error": 0.1437430384345857,
           "electron_count": 10.762225214935587,
           "electron_count_error": 0.7622252149355866,
           "conservation_passed": false
@@ -74,10 +74,10 @@
             -0.6701658029591073
           ],
           "total_esp_hartree_per_e": [
-            0.0183129144721057,
+            0.018312914472105923,
             0.0013830961952645549
           ],
-          "max_absolute_esp_error": 0.0017718709504930263,
+          "max_absolute_esp_error": 0.0017718709504894736,
           "electron_count": 10.00939429788366,
           "electron_count_error": 0.00939429788365942,
           "conservation_passed": true
@@ -103,8 +103,8 @@
         ]
       ],
       "reference_electronic_esp": [
-        -1.6877012123982524,
-        -0.5970300894659385
+        -1.6877012123982522,
+        -0.5970300894659384
       ],
       "reference_nuclear_esp": [
         1.7099783220616018,
@@ -123,7 +123,7 @@
             -1.1701032602972283,
             -0.4255299637607537
           ],
-          "max_absolute_esp_error": 1.1923803699605777,
+          "max_absolute_esp_error": 1.192380369960578,
           "electron_count": 15.484122041236208,
           "electron_count_error": 6.484122041236208,
           "conservation_passed": false
@@ -140,7 +140,7 @@
             -0.259943424388398,
             -0.09893806899142532
           ],
-          "max_absolute_esp_error": 0.2822205340517474,
+          "max_absolute_esp_error": 0.28222053405174763,
           "electron_count": 10.53420865669627,
           "electron_count_error": 1.5342086566962703,
           "conservation_passed": false
@@ -157,7 +157,7 @@
             0.0034880298080604,
             -0.004410774718700217
           ],
-          "max_absolute_esp_error": 0.018789079855288993,
+          "max_absolute_esp_error": 0.018789079855289215,
           "electron_count": 9.101512709190823,
           "electron_count_error": 0.101512709190823,
           "conservation_passed": false
@@ -174,7 +174,7 @@
             0.018264375730580262,
             0.0008885632154346235
           ],
-          "max_absolute_esp_error": 0.00401273393276913,
+          "max_absolute_esp_error": 0.004012733932769352,
           "electron_count": 9.021204180543982,
           "electron_count_error": 0.02120418054398243,
           "conservation_passed": true
@@ -200,11 +200,11 @@
         ]
       ],
       "reference_electronic_esp": [
-        -2.1162415494393914,
-        -0.6872480320470956
+        -2.1162415494393905,
+        -0.6872480320470958
       ],
       "reference_nuclear_esp": [
-        2.343297169326944,
+        2.3432971693269447,
         0.7561311814555607
       ],
       "history": [
@@ -220,7 +220,7 @@
             -0.6114685636827382,
             -0.20561793693767627
           ],
-          "max_absolute_esp_error": 0.8385241835702915,
+          "max_absolute_esp_error": 0.8385241835702923,
           "electron_count": 13.995335566615484,
           "electron_count_error": 3.995335566615484,
           "conservation_passed": false
@@ -237,7 +237,7 @@
             0.03494136467570419,
             0.005989405519482682
           ],
-          "max_absolute_esp_error": 0.1921142552118491,
+          "max_absolute_esp_error": 0.19211425521185,
           "electron_count": 10.915412024276542,
           "electron_count_error": 0.9154120242765416,
           "conservation_passed": false
@@ -254,7 +254,7 @@
             0.21447531521558938,
             0.06476642552659717
           ],
-          "max_absolute_esp_error": 0.012580304671963916,
+          "max_absolute_esp_error": 0.012580304671964804,
           "electron_count": 10.059918382390027,
           "electron_count_error": 0.05991838239002689,
           "conservation_passed": false
