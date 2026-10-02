@@ -568,6 +568,7 @@ def electrostatic_potential_point(
                 "ESP is singular at a nuclear position. Choose a point farther from the nuclei."
             )
     warnings: list[str] = []
+    grid_diagnostics: dict[str, object] = {}
     density_source: str | None = None
     result_status = "success"
     if component == "nuclear":
@@ -598,6 +599,21 @@ def electrostatic_potential_point(
         density_source = matrix.source
         warnings.extend(_density_source_warnings(data, matrix))
         grid = density_grid(data, "total", spacing_bohr, padding_bohr)
+        expectation = expected_electron_count(data, "total")
+        conservation = integrate_density(grid, expectation.value)
+        grid_diagnostics = {
+            "grid_electron_count": conservation.electron_count,
+            "expected_electrons": expectation.value,
+            "grid_electron_conservation_error": conservation.absolute_error,
+            "grid_spacing_bohr": spacing_bohr,
+            "grid_padding_bohr": padding_bohr,
+        }
+        if not conservation.passed:
+            result_status = "partial"
+            warnings.append(
+                "ESP density-grid electron conservation failed; refine spacing/padding. "
+                "Charge conservation alone does not establish Coulomb-quadrature convergence."
+            )
         electronic = float(electronic_esp_from_grid(grid, point)[0])
         value = electronic
         if component == "total":
@@ -614,6 +630,7 @@ def electrostatic_potential_point(
         "y": coordinates_angstrom[1],
         "z": coordinates_angstrom[2],
         "value": round(value, 10),
+        **grid_diagnostics,
     }
     if density_source is not None:
         payload["density_source"] = density_source
