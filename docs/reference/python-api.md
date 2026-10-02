@@ -176,6 +176,7 @@ The default density-grid spacing is **0.15 bohr** with 6.0 bohr padding. These d
 | `frontier-all` | Alpha and beta frontiers plus the true overall HOMO for unrestricted calculations |
 | `lowdin` | Löwdin populations and charges |
 | `mulliken` | Mulliken populations and charges |
+| `orbital-composition` | Experimental default HOMO/alpha/Lowdin AO projections |
 | `summary` | Version 2: complete molecular summary or partial structure-only/periodic summary |
 
 Use `available_analyses()` to discover registered names. Run an analysis
@@ -252,3 +253,5 @@ Outputs can disclose the underlying molecular data. Apply the same access contro
 ## Compatibility
 
 The public import surface is versioned, but scientific behavior can be clarified between releases. Pin an exact openWFN version for reproducible work and review the [release history](../project/release-history.md).
+
+Development branch: `orbital_cube(output, mo="homo", spin="alpha", spacing_bohr=.15, padding_bohr=6.)` exports signed amplitudes. `orbital_composition(mo="homo", spin="alpha", method="lowdin")` returns AO fractions. See [MO cubes](../science/mo-cubes.md) and [composition](../science/orbital-composition.md).

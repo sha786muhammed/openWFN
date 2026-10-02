@@ -91,3 +91,47 @@ def orbital_cube_export(data: CalculationData, mo: int | str, spin: str, spacing
         'squared_amplitude_integral': integral, 'grid_norm_error': abs(integral-norm),
         }, units={'amplitude': 'bohr^-3/2', 'spacing': 'bohr', 'padding': 'bohr', 'energy_hartree': 'hartree'},
         validation_status='Experimental', status='partial' if warnings else 'success', warnings=tuple(warnings))
+
+
+def orbital_composition(data: CalculationData, mo: int | str = 'homo', spin: str = 'alpha',
+                        method: str = 'lowdin') -> ResultRecord:
+    from .analysis.basis import ao_atom_indices
+    from .analysis.composition import orbital_weights
+
+    if data.basis is None:
+        raise DataUnavailableError('Orbital composition requires Gaussian basis data.')
+    orbitals, index = select_orbital(data, mo, spin)
+    c = np.asarray(orbitals.coefficients)[:, index:index+1]
+    weights, norms, diagnostics = orbital_weights(c, overlap_matrix(data.basis, data.molecule), method)
+    weights = weights[:, 0]
+    atoms = np.bincount(ao_atom_indices(data.basis), weights=weights, minlength=len(data.molecule.atoms))
+    shells, angular = [], {}
+    offset = 0
+    for shell_index, shell in enumerate(data.basis.shells):
+        block = weights[offset:offset+shell.n_functions]
+        shells.append({'shell_number': shell_index+1, 'atom_number': shell.atom_index+1,
+                       'angular_momentum': shell.angular_momentum, 'fraction': float(block.sum())})
+        if shell.angular_momentum == -1:
+            parts = [(0, float(block[0])), (1, float(block[1:].sum()))]
+        else:
+            parts = [(shell.angular_momentum, float(block.sum()))]
+        for momentum, value in parts:
+            angular[momentum] = angular.get(momentum, 0.) + value
+        offset += shell.n_functions
+    warnings = []
+    if abs(norms[0]-1.) > 1e-6:
+        warnings.append('Raw MO AO-metric norm fails 1e-6 normalization tolerance; fractions are normalized by the reported raw norm.')
+    condition = diagnostics['overlap_condition_number']
+    if diagnostics['overlap_rank_deficient'] or diagnostics['overlap_min_eigenvalue'] < 1e-8 or (condition is not None and condition > 1e10):
+        warnings.append('Overlap is rank deficient or ill-conditioned; composition may be unreliable.')
+    return ResultRecord(kind='orbital_composition', data={
+        'mo_number': index+1, 'spin': orbitals.spin, 'method': method,
+        'ao_metric_norm': float(norms[0]), 'normalization_residual': float(weights.sum()-1.),
+        'atom_contributions': [{'atom_number': i+1, 'atomic_number': atom.atomic_number,
+                                'fraction': float(atoms[i]), 'percent': float(100*atoms[i])}
+                               for i, atom in enumerate(data.molecule.atoms)],
+        'shell_contributions': shells,
+        'angular_contributions': [{'angular_momentum': momentum, 'fraction': value} for momentum, value in sorted(angular.items())],
+        'ao_contributions': weights.tolist(), **diagnostics,
+    }, units={'atom_contributions': 'fraction and percent', 'ao_contributions': 'fraction'},
+        validation_status='Experimental', status='partial' if warnings else 'success', warnings=tuple(warnings))

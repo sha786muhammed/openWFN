@@ -391,6 +391,11 @@ def main(argv: list[str] | None = None) -> int:
     p_frontier = orbital_commands.add_parser("frontier", help="Report HOMO, LUMO, and energy gap")
     p_frontier.add_argument("--spin", choices=["alpha", "beta", "all"], default="alpha")
 
+    p_composition = orbital_commands.add_parser("composition", help="Named Mulliken/Lowdin MO projections")
+    p_composition.add_argument("--mo", default="homo")
+    p_composition.add_argument("--spin", choices=["alpha", "beta"], default="alpha")
+    p_composition.add_argument("--method", choices=["lowdin", "mulliken"], default="lowdin")
+
     p_orbital_cube = orbital_commands.add_parser("cube", help="Export signed MO amplitude as Gaussian cube")
     p_orbital_cube.add_argument("--mo", default="homo", help="One-based MO number, homo or lumo")
     p_orbital_cube.add_argument("--spin", choices=["alpha", "beta"], default="alpha")
@@ -569,6 +574,9 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     if args.command == "orbitals":
+        if args.orbital_command == "composition":
+            return execute(lambda: run_analysis(require_calculation(), "orbital-composition",
+                mo=args.mo, spin=args.spin, method=args.method), _context(args))
         if args.orbital_command == "cube":
             from .api import load
 

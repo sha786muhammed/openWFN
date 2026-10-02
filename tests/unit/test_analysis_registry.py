@@ -20,6 +20,7 @@ def test_registry_runs_summary_with_versioned_input_provenance() -> None:
         "frontier-all",
         "lowdin",
         "mulliken",
+        "orbital-composition",
         "summary",
     )
     assert result.analysis_name == "summary"

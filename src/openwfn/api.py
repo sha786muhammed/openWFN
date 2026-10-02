@@ -101,10 +101,10 @@ class OpenWFNCalculation:
             )
         )
 
-    def analyze(self, name: str) -> ResultRecord:
+    def analyze(self, name: str, **parameters) -> ResultRecord:
         """Run a named analysis through the shared versioned registry."""
 
-        return run_analysis(self.data, name)
+        return run_analysis(self.data, name, **parameters)
 
     def _geometry_structure(self) -> Molecule | StructureData:
         if self.data.periodic is not None:
@@ -155,6 +155,11 @@ class OpenWFNCalculation:
             )
         except DataUnavailableError as exc:
             return self._unavailable("density_integration", f"density-{kind}", str(exc))
+
+    def orbital_composition(self, *, mo: int | str = "homo", spin: str = "alpha",
+                            method: str = "lowdin") -> ResultRecord:
+        """Return explicitly named AO/atom/shell MO projection fractions."""
+        return run_analysis_safe(self.data, "orbital-composition", mo=mo, spin=spin, method=method)
 
     def orbital_cube(self, output: str | Path, *, mo: int | str = "homo",
                      spin: str = "alpha", spacing_bohr: float = 0.15,
