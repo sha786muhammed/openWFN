@@ -1,245 +1,96 @@
-# Staged QC validation and handoff
+# Everyday QC validation and evidence
 
-## Scope actually implemented
+This page describes the **current** everyday-QC validation state for openWFN 0.10.1. Historical development captures remain in the repository for provenance, but they do not override the current capability registry in `validation/manifest.json`.
 
-Baseline is 0.9.2 / 0991406. This branch implements roadmap units 1–5 plus
-source-spin and MCP resource safeguards. It does **not** complete Phase 1 or
-Phases 2–4. Successful everyday QC results now report Validated for the documented reference scope. No release version was
-changed, no release was published and no phase gate was declared satisfied.
+## Current status
 
-| Capability | Released 0.9.2 | This branch |
+| Capability | Current status | Evidence and boundary |
 |---|---|---|
-| Signed arbitrary MO cube, HOMO/LUMO, alpha/beta | Developer VTK preview only | Shared signed cube service and CLI/Python API |
-| Named MO AO/atom/shell/angular projections | Absent | Mulliken or Löwdin, raw norm and overlap diagnostics |
-| Mayer atom-pair bond orders | Absent | Total plus spin-density terms, charge/spin conservation |
-| Orbital-energy DOS | Absent | Gaussian sigma/range/grid controls, alpha/beta, exports |
-| PDOS | Absent | Atom/element/angular grouping, named weights and sum rule |
-| Source restricted spin density in IOData | Discarded during combined occupation normalization | Retained from source alpha/beta occupations, including ROHF |
-| Dense-analysis MCP AO bound | File-size containment only | Default 256-AO bound before overlap construction |
-| Native Hirshfeld | Absent | Blocked; no unverified method exposed |
-| Typed vibrations/IR/Raman/excited states/UV-Vis/NTO | Absent | Planned, not implemented |
-| Analytic derivatives/QTAIM/ELF/LOL/NCI/basins | Absent | Planned, not implemented |
+| Orbital composition | Validated | Mulliken/Löwdin post-processing is compared against independent same-wavefunction references for the documented everyday-QC corpus. Conditioning or normalization failures remain partial or Experimental. |
+| Mayer bond order | Validated | Compared with independent contractions for the documented RHF/UHF scope, with charge and spin conservation checks. |
+| DOS | Validated | Gaussian broadening of orbital energies for the documented reference scope. It is not an excited-state spectrum. |
+| PDOS | Validated | Atom/element/angular projections with explicit projection-sum diagnostics; representation-dependent conventions remain documented. |
+| Native point ESP | Validated | Gaussian-integral electronic ESP is checked against independent PySCF Coulomb references at committed points and analytic high-angular-momentum tests. |
+| MO cube fields | Conditional | Field values are compared against independent references; a generated cube remains partial when its requested coarse grid fails the normalization/conservation diagnostic. |
+| Offline workbench interface | Stable interface | Tested in offline desktop Chromium for the documented corpus. Individual displayed scientific fields retain their own success/partial/Experimental status. |
+| Local read-only MCP interface | Stable interface | Common registered analyses are parity-tested against CLI/Python/batch/report results within the documented containment limits. |
+| Source-output property readers | Experimental | Source-reported extraction remains dependent on program/file-version coverage and does not imply a complete wavefunction. |
 
-Registry methods are `orbital-composition`, `mayer`, `dos`, `pdos`.
-CLI/Python allow documented parameters. Batch/report/MCP reuse the same
-registered defaults; their custom parameter transport is future work.
-Cube output remains outside read-only MCP. Model schema stays 2.0 and result
-schema stays 1.0. Existing numerical kernels and safeguards were retained.
+The machine-readable status index is `validation/manifest.json`. It identifies current capability status, the resource benchmark contract, and historical captures that must not be interpreted as current validation labels.
 
-## Evidence, classified honestly
+## Independent reference evidence
 
-| Unit | Numerical evidence | Boundaries |
-|---|---|---|
-| MO cube | Normalized Gaussian signed field/norm, chunk equivalence; independent GBasis 0.1.0 Cartesian and pure d values at 3 points, 1e-12 tolerance; five-format water fields 1e-7 | Synthetic d-shell spin channel, not broad molecular/high-l external validation |
-| Composition | Analytic two-AO metric, half/half bonding case, signed Mulliken vs positive Löwdin, partition closure, invalid norms/overlap; same contracted-basis Molden/MWFN equivalence 2e-7 | Fresh PySCF molecular comparisons below; Löwdin is representation dependent |
-| Mayer | Analytic restricted bond 1.0, one-alpha bond 0.5; independent cclib 1.8.1 MBO contractions 1e-12; water matrix equivalence four formats 2e-7; charge/spin closure and corrupted spin regression | cclib comparisons share orbital and overlap input; no new Multiwfn/ORCA run |
-| DOS | Closed-form Gaussian peak/line shape/unit area, channel counting, analytic truncated area, resource/error cases, CSV/SVG export | Independent expansion from fresh PySCF energies below; spectrum is orbital-energy broadening |
-| PDOS | Six grouping/method combinations, pointwise projection closure, raw norm corruption, missing data, bounded outputs | Fresh molecular projection comparisons below; signed Mulliken weights and AO-basis sensitivity |
-| All registered defaults | Numerical data match CLI, Python, batch, embedded HTML report manifest and in-process read-only MCP | MCP parameters use defaults; expensive export remains outside MCP |
+`validation/everyday-qc/pyscf-report.json` is the main same-wavefunction external-comparison capture. PySCF 2.12.1 generates or reads the documented RHF/UHF wavefunctions; openWFN ingests them through the pinned interoperability layer. Comparisons cover orbital fields, compositions, Mayer matrices, DOS/PDOS and native Coulomb point ESP.
 
-Stage full-suite results: MO 620 passed/1 skipped; composition 626/1;
-Mayer 634/1; DOS 647/1; PDOS 656/1; spin/MCP hardening 666/1.
-Final review-fix run: **667 passed, 1 skipped** in 36.01 s after the documentation handoff. Ruff passed.
-Tests were added before implementation and their initial failures observed.
-Independent bounded review found one Important issue: unchecked Mayer spin
-closure. Its reproducing test failed before the fix and passes afterwards.
-No other Critical/Important findings were reported. This is a bounded code
-review, not an independent scientific certification.
+The references test **post-processing correctness for the same wavefunction**. They do not validate Hartree-Fock as a physical model, all elements, all basis sets, ECP reconstruction, correlated densities or every quantum-chemistry program/version.
 
-## Follow-up molecular reference validation
-
-PR CI exposed four missing optional-dependency guards in the MO field tests.
-A clean core-only installation reproduced all four failures; those cases now
-skip only when IOData is absent. The dedicated interoperability job explicitly
-runs both the cube and everyday cross-format tests with IOData installed.
-The optional-interface job now includes registered-analysis parity and the
-independent cclib Mayer comparisons. No numerical assertions were relaxed.
-
-`scripts/validate_everyday_pyscf.py` freshly computes six bounded reference cases
-using PySCF 2.12.1: RHF water/STO-3G, methane/STO-3G, ammonia/6-31G*,
-benzene/STO-3G, UHF OH/6-31+G*, and Cartesian RHF water/6-31G*.
-Each converged SCF wavefunction is exported by PySCF to Molden and independently
-ingested by openWFN through IOData. The report records geometry, basis, spin,
-SCF energy, source hash, dependency versions, observed errors and cube warnings.
-
-Comparisons cover alpha HOMO/LUMO and UHF beta HOMO/LUMO fields against PySCF's
-AO evaluator, actual cube serialization/layout, atom compositions using
-PySCF Mulliken populations (SciPy symmetric square root for Löwdin), Mayer
-matrices independently constructed by cclib from PySCF coefficients/overlap,
-and DOS/atom PDOS from an independent Gaussian expansion. Pure-basis PDOS is
-compared for both conventions; Cartesian PDOS is compared for Mulliken.
-The molecular validation job runs these six comparisons in CI.
-
-Cartesian AO normalization differs between PySCF and openWFN. Mulliken
-populations, Mayer indices and physical fields can be compared after source
-normalization; Löwdin partitions and overlap eigenvalues depend on the AO
-representation and are explicitly **not compared** for that Cartesian case.
-The report preserves the unasserted Löwdin difference with `compared: false`.
-The coarse cube grid can yield `partial` norm diagnostics; reference field
-agreement does not erase those warnings.
-
-Tolerances are 2e-7 for fields, compositions and Mayer, 5e-6 for serialized cube
-values (limited by text precision), and 2e-6 orbitals/eV for DOS/PDOS after
-Molden energy rounding. `validation/everyday-qc/pyscf-report.json` is a captured
-external-comparison report, distinct from the original observed snapshots.
-These are same-wavefunction post-processing checks, not validation of HF
-accuracy, all elements, high angular momentum, ECPs or correlated densities.
-The subsequent stabilization stage promotes successful results of these five
-methods to **Validated**, using this reference evidence; conditional partial
-results remain Experimental.
-
-Follow-up verification: **673 passed, 1 skipped** in the full optional-dependency
-environment; clean core-only CI configuration: **611 passed, 62 skipped,
-1 docs test deselected**. Ruff, repository/documentation checks and strict
-MkDocs pass; internal validation and all 25 interoperability formats pass.
-The core-only optional skips are expected and are not scientific evidence.
-
-Reproduce the external comparisons with:
+The committed real-molecule corpus lives in `examples/everyday-qc/`. Starting with 0.10.1, the same corpus is also packaged under `openwfn.example_data` and installed by:
 
 ```bash
-python -m pip install -e '.[test,interop,outputs]' pyscf==2.12.1
-python scripts/validate_everyday_pyscf.py --output-dir /tmp/openwfn-pyscf-validation
-python -m pytest tests/validation/test_everyday_pyscf.py -q
+openwfn examples install installed-examples
 ```
 
-Primary API references: [PySCF Molden export](https://pyscf.org/_modules/pyscf/tools/molden.html)
-and [PySCF AO evaluation](https://pyscf.org/pyscf_api_docs/pyscf.gto.html).
+The 11 Molden inputs are then available under `installed-examples/everyday-qc/`, allowing the built wheel and the package downloaded back from public PyPI to run the same bounded workflow matrix used by release CI.
 
-`validation/everyday-qc/report.json` contains bounded water/methane/ammonia
-snapshots with input hashes and dependency versions. They are observed values,
-not independent reference targets. Full-grid DOS/PDOS arrays are omitted.
-The element PDOS PNG was inspected for axes, colors, curve shape and readability;
-a selected valence-energy range correctly retains a truncation warning.
+## Resource workflow evidence
+
+The release resource benchmark runs nine prescribed CLI workflows for each of eleven real molecular inputs:
+
+1. summary/geometry
+2. Mayer bond order
+3. DOS
+4. PDOS
+5. density cube
+6. MO cube
+7. offline workbench export
+8. native point ESP
+9. HTML report
+
+That is 99 commands in total. The benchmark checks command completion, timeout, observed process-tree RSS and generated-output size. **Resource/command success does not establish scientific validation.** Scientific status is evaluated separately by capability-specific reference tests and by each result's diagnostics.
+
+The benchmark now accepts an explicit corpus directory so release verification can run against installed package data instead of silently falling back to repository fixtures:
+
+```bash
+python scripts/benchmark_resources.py \
+  --examples-dir installed-examples/everyday-qc \
+  --output resource-report.json
+```
+
+It rejects an incomplete corpus rather than treating an empty or partial input set as a successful benchmark.
+
+## Historical captures
+
+Two files are intentionally retained as historical evidence:
+
+- `validation/everyday-qc/report.json` is an earlier water/methane/ammonia regression snapshot. Its recorded validation labels describe that historical capture and are not the current capability status.
+- `validation/everyday-qc/esp-report.json` records the earlier grid-ESP convergence study, including the retained ammonium partial result. It is not the current status source for native Gaussian-integral point ESP.
+
+These files remain useful for provenance and regression history. `validation/manifest.json` explicitly marks them as non-authoritative for current status.
 
 ## Reproduction
 
+Full source-checkout reference validation can be reproduced with:
+
 ```bash
-python -m pip install -e '.[test,interop,outputs,mcp,docs]' qc-gbasis==0.1.0
+python -m pip install -e '.[test,interop,outputs,mcp,docs,resources]' pyscf==2.12.1 qc-gbasis==0.1.0
 python -m pytest -q
-python -m ruff check .
+python -m ruff check src tests scripts
 python scripts/run_validation.py
 python scripts/run_interop_validation.py
 python scripts/check_repository.py --root .
 python scripts/check_docs.py --root .
 python -m mkdocs build --strict
+python scripts/benchmark_resources.py --output resource-report.json
 ```
 
-Optional dependency tests skip when their independently supplied packages are
-absent. The single remaining skipped test checks the core-only missing-IOData contract;
-it is inapplicable because IOData is installed in this verification environment.
-Do not describe skipped tests as validation evidence.
+Release CI additionally builds the wheel, installs it into a clean environment, installs the packaged everyday-QC corpus, and runs the resource benchmark against those installed inputs. After publication, CI downloads the exact version from public PyPI with the required `interop` and `resources` extras and repeats the same installed-corpus benchmark.
 
-## Hirshfeld gate: unresolved scientific inputs
+## Remaining scientific boundaries
 
-A neutral free-atom reference database is not present in the repository. Its
-source/method, spherical averaging, spin configuration, radial grid accuracy,
-licensing and immutable hashes must be established before native stockholder
-charges can be defensible. The ordinary definition is
-`w_A(r)=rho_A^0(r)/sum_B rho_B^0(r)` and
-`q_A=Z_A-integral w_A(r) rho(r) dr`. The definition alone does not determine
-free-atom density data, an ECP core reconstruction convention, or a reliable
-quadrature tolerance. Picking arbitrary hydrogenic profiles would change the
-scientific method while producing plausible numbers, so no such shortcut was
-implemented. ORCA's fitted free-atom densities and HORTON proatom databases are
-method references, not an acquired/verified redistributable dataset here.
+The following are not promoted by this release hardening work: native Hirshfeld stockholder charges, typed vibrational/IR/Raman workflows, excited-state/UV-Vis analysis, genuine transition-data NTOs, analytic density derivatives, QTAIM/ELF/LOL/NCI topology or basin integration. Each requires its own method definition, reference data and validation gate.
 
-Next admissible unit: choose and validate a versioned reference provider,
-restrict its advertised elements/core treatment, add convergence-controlled
-atom-centered quadrature and trusted same-wavefunction reference charges.
-No Hirshfeld command or unsupported placeholder is advertised as implemented.
-Phase 2 is gated on Phase 1 stability as requested. NTO amplitude conventions,
-Raman intensity conversion, QTAIM completeness and basin topology each need
-their own design and independent validation before implementation claims.
+Cartesian AO normalization can differ across programs. Physical fields and representation-invariant quantities are compared where appropriate; representation-dependent Löwdin quantities are not claimed equivalent when the AO normalization convention differs. ECPs, arbitrary diffuse tails, broad high-angular-momentum molecular coverage and correlated post-SCF densities retain their documented limitations.
 
-## Release strategy
+## Historical development record
 
-Keep 0.9.2 as the stable release. Review the staged commits as a draft PR.
-A future 0.10.0a1 can expose the five validated methods after review;
-a stable 0.10.0 needs reviewed reference captures, broader restricted/unrestricted
-molecules and completed Phase 1 gates. Use separate prerelease/PR units for
-spectroscopy, transition interpretation and real-space methods. Basin integration
-is a separate advanced project. No date is promised for the later scientific gates.
-
-## Extended Experimental audit
-
-The reference corpus now has 11 real cases committed under `examples/everyday-qc/`.
-See [the complete Experimental coverage ledger](experimental-coverage.md) for
-charged, triplet, intermolecular and real output-reader evidence, analytic ESP
-convergence histories (including a retained ammonium failure), and safety fixes.
-The earlier six-case capture above describes the initial stabilization milestone.
-
-## Workflow stabilization follow-up
-
-The design in [workflow stabilization](workflow-stabilization-design.md) adds
-Gaussian-integral point ESP, independent PySCF Coulomb references for all eleven
-examples, analytic s–h tests, shared API/CLI defaults and provenance parity.
-The legacy grid comparison including failed ammonium convergence is preserved.
-The checked-in input hashes are unchanged. Guided terminal mode now loads
-normalized molecular inputs, including Molden; water, triplet oxygen and ammonium
-exercise its orbital workflow. Human output bounds long arrays and formats atom
-composition and Mayer pairs as tables; JSON and verbose output retain full data.
-
-An interactive Chromium verification was attempted but browser downloads were
-truncated in this environment. HTML payload/JavaScript/export regressions pass,
-but this is not an interactive-browser certification: workbench remains
-Experimental. Absent advanced scientific methods remain unsupported.
-
-Observed local verification after stabilization: **725 passed, 1 skipped** in
-the full optional-dependency suite (92.99 s). After adding the eleven committed
-input Coulomb regressions, the complete real-corpus file passed **32 tests**
-(18.59 s). Ruff, documentation checks, strict MkDocs and the internal numerical
-validation runner passed. A bounded independent review found no Critical or
-Important numerical issues. The optional browser download failure is recorded
-above and is not counted as a passing workflow.
-
-CI identified a reference mismatch for OH: a fresh SCF solution can rotate the
-singly occupied degenerate orbital and change the density. The legacy grid-ESP
-reference now reads the exact committed Molden wavefunction using PySCF's
-independent parser and contracts its analytic Coulomb integrals. The three grid
-reference cases pass their expected success/partial assertions without relaxing
-tolerances; ammonium remains partial. This also avoids redundant fresh SCF work.
-
-The remote Chromium job successfully installed the browser and exposed a real
-layout defect: the unpositioned viewer's canvas covered sidebar buttons.
-The viewer now establishes its own positioned/clipped container. Browser checks
-assert canvas containment and use actual workspace clicks and keyboard sliders;
-the corpus now covers all eleven molecules. Contracted off-center s–h potentials
-also match independent PySCF analytic integrals in twelve additional tests,
-with explicit Gaussian/PySCF Cartesian ordering and normalization mapping.
-
-Chromium next exposed a signed torsion disagreement on the real ethanol example
-(HTML −60.945396°, Python +60.945396°). The HTML cross-product orientation now
-matches the established core convention. A deterministic 100-geometry signed
-JavaScript/core regression tests both senses in addition to the browser readout.
-Guided terminal submenus now route composition, cubes, alpha/beta/all frontier,
-Mayer, DOS/PDOS, density components and point ESP through the existing API;
-expected input/data errors remain inside the structured result boundary.
-
-## Completed supported-workflow stage
-
-Final local regression: **757 passed, 1 expected optional-dependency skip**,
-103.39 s, before the following metadata/evidence-only promotion. GitHub Actions
-passed the numerical/reference, Python 3.10–3.13, Windows/macOS, wheel, interface,
-documentation and security jobs. Offline Chromium 151.0.7922.34 passed all eleven
-real molecular workbenches, every workspace/surface selector, keyboard isovalue
-controls and 21 displayed distance/angle/torsion comparisons, with no page errors
-or network requests. Capture: `validation/everyday-qc/browser-report.json`,
-including input hashes and exact tested commit/workflow/job provenance.
-
-The workbench outer ResultRecord now describes a **Stable interface** for this
-documented desktop Chromium scope. Individual coarse density previews retain
-their actual partial/Experimental conservation diagnostics. This is neither a
-GPU/mobile-browser certification nor quantitative integration validation of
-coarse visualization grids. The local-download failure and remote failures
-above are historical findings that were resolved by the recorded CI run.
-A bounded follow-up review found an invalid cube index could end guided mode;
-the expected IndexError now renders a failed record and restores navigation.
-No data are invented for absent/invalid inputs. Source-output readers and
-advanced unimplemented methods retain their documented boundaries.
-
-The common-registry parity matrix now covers native water FCHK plus all eleven
-committed real Molden molecules: four analyses times twelve inputs, comparing
-full numerical data through CLI, Python, batch, HTML reports and MCP. Existing
-stdio, containment, malformed-data and resource tests remain active. The local
-MCP interface is Stable for this documented scope; individual scientific result
-statuses and source-reader limitations remain independent.
+The 0.10.0 development cycle progressed through staged numerical checks, independent PySCF comparisons, workflow stabilization, browser fixes and resource hardening before the stable release. Those milestone descriptions are historical context only. Current release status is defined by the versioned release notes, `validation/manifest.json`, current tests and the exact release CI evidence.
