@@ -6,14 +6,15 @@ from . import (
     utils,  # type: ignore
 )
 from . import commands as cmd  # type: ignore
+from .api import load
 from .app import CommandContext
-from .fchk import parse_fchk_arrays, parse_fchk_scalars, print_atom_table  # type: ignore
+from .errors import DataUnavailableError
+from .fchk import print_atom_table  # type: ignore
 from .geometry import molecular_formula  # type: ignore
 from .palette import prompt_workflow
-from .parsers.registry import load as load_calculation
 from .presentation import render
 from .reporting import build_report_record
-from .services import density_integration, orbital_frontier
+from .results import ResultRecord
 from .workbench.export import export_workbench_record
 
 OPENWFN_ASCII = [
@@ -27,7 +28,7 @@ OPENWFN_ASCII = [
 
 PRODUCT_NAME = "openWFN"
 PRODUCT_EXPANSION = "Open WaveFunction Network"
-PRODUCT_TAGLINE = "Scientific geometry, topology, and structure analysis for Gaussian formatted checkpoint data."
+PRODUCT_TAGLINE = "Scientific geometry, orbitals, and density analysis for normalized molecular wavefunctions."
 AUTHOR_CREDIT = "Muhammed Shah Shaji"
 
 
@@ -180,10 +181,20 @@ def prompt_page_navigation(prompt_label: str) -> str:
         utils.print_error("Enter `back` to return or `exit` to quit.")
 
 
+def run_guided_action(action: Callable[[], None], title: str) -> None:
+    """Keep expected input/data failures inside the standard result boundary."""
+    try:
+        action()
+    except (DataUnavailableError, ValueError, IndexError, FileExistsError) as exc:
+        record = ResultRecord.failure(kind="guided_workflow", analysis_name=title,
+                                      analysis_version="1", exception=exc, elapsed_seconds=0.)
+        print(render(record, CommandContext(format="plain")), end="")
+
+
 def run_static_page(title: str, description: str, render: Callable[[], None]) -> str:
     """Render a feature page that does not require extra user input."""
     print_feature_page(title, description)
-    render()
+    run_guided_action(render, title)
     print()
     return prompt_page_navigation(title)
 
@@ -192,7 +203,7 @@ def run_input_page(title: str, description: str, action: Callable[[], None]) -> 
     """Render a feature page that prompts for additional input."""
     while True:
         print_feature_page(title, description)
-        action()
+        run_guided_action(action, title)
         print()
         nav = prompt_page_navigation(title)
         if nav in {"back", "exit"}:
@@ -200,16 +211,22 @@ def run_input_page(title: str, description: str, action: Callable[[], None]) -> 
 
 
 def run_interactive(lines, filename):
-    scalars = parse_fchk_scalars(lines)
-    atomic_numbers, coordinates = parse_fchk_arrays(lines)
+    client = load(Path(filename))
+    calculation = client.data.calculation
+    if calculation is None:
+        raise DataUnavailableError("Guided wavefunction workflows require an isolated molecular calculation.")
+    molecule = calculation.molecule
+    atomic_numbers = [atom.atomic_number for atom in molecule.atoms]
+    coordinates = [atom.coordinates for atom in molecule.atoms]
+    scalars = {"Charge": molecule.charge, "Multiplicity": molecule.multiplicity,
+               "Number of atoms": len(molecule.atoms)}
     menu_filename = str(Path(filename).name)
-    calculation = load_calculation(Path(filename))
 
     def show_result(result) -> None:
         print(render(result, CommandContext(input_path=Path(filename), format="plain")), end="")
 
     def show_summary() -> None:
-        cmd.cmd_summary(scalars, atomic_numbers, coordinates)
+        show_result(client.analyze("summary"))
 
     def show_info() -> None:
         cmd.cmd_info(scalars, atomic_numbers, coordinates)
@@ -221,17 +238,17 @@ def run_interactive(lines, filename):
     def run_distance() -> None:
         indices = prompt_indices(("i", "j"))
         if indices is not None:
-            cmd.cmd_dist(indices[0], indices[1], coordinates)
+            show_result(client.geometry_distance(*indices))
 
     def run_angle() -> None:
         indices = prompt_indices(("i", "j", "k"))
         if indices is not None:
-            cmd.cmd_angle(indices[0], indices[1], indices[2], coordinates)
+            show_result(client.geometry_angle(*indices))
 
     def run_dihedral() -> None:
         indices = prompt_indices(("i", "j", "k", "l"))
         if indices is not None:
-            cmd.cmd_dihedral(indices[0], indices[1], indices[2], indices[3], coordinates)
+            show_result(client.geometry_dihedral(*indices))
 
     def export_xyz() -> None:
         out = prompt_output_filename(filename)
@@ -257,11 +274,41 @@ def run_interactive(lines, filename):
         else:
             utils.print_warning("Viewer export cancelled.")
 
+    def ask(prompt: str, default: str) -> str:
+        try:
+            return input(prompt).strip() or default
+        except EOFError:
+            return default
+
     def show_orbitals() -> None:
-        show_result(orbital_frontier(calculation))
+        operation = ask("Orbital analysis [frontier/composition/cube/dos/pdos; default frontier]: ", "frontier").casefold()
+        spin = ask("Spin channel [alpha/beta/all; default alpha]: ", "alpha").casefold()
+        if operation == "frontier":
+            show_result(client.orbitals(spin))
+        elif operation in {"composition", "cube"}:
+            mo = ask("MO [homo/lumo/one-based number; default homo]: ", "homo")
+            if operation == "composition":
+                method = ask("Population convention [lowdin/mulliken; default lowdin]: ", "lowdin")
+                show_result(client.orbital_composition(mo=mo, spin=spin, method=method))
+            else:
+                output = ask("Output cube path [orbital.cube]: ", "orbital.cube")
+                show_result(client.orbital_cube(output, mo=mo, spin=spin))
+        elif operation in {"dos", "pdos"}:
+            show_result(client.dos(spin=spin) if operation == "dos" else client.pdos(spin=spin))
+        else:
+            utils.print_error("Unknown orbital analysis.")
 
     def show_density() -> None:
-        show_result(density_integration(calculation, "total", 0.15, 6.0))
+        operation = ask("Density workflow [integrate/esp; default integrate]: ", "integrate").casefold()
+        if operation == "integrate":
+            kind = ask("Density component [total/alpha/beta/spin; default total]: ", "total").casefold()
+            show_result(client.density(kind))
+        elif operation == "esp":
+            point = tuple(float(value) for value in ask("ESP coordinates x y z in angstrom [5 0 0]: ", "5 0 0").split())
+            component = ask("ESP component [total/electronic/nuclear/mulliken/lowdin; default total]: ", "total")
+            show_result(client.esp(point, component=component))
+        else:
+            utils.print_error("Unknown density workflow.")
 
     def create_report() -> None:
         output = Path(f"{Path(filename).stem}-report.html")
@@ -277,7 +324,15 @@ def run_interactive(lines, filename):
         )
 
     def show_bonds() -> None:
-        cmd.cmd_bonds(atomic_numbers, coordinates)
+        method = ask("Bond analysis [geometry/mayer/fragments; default geometry]: ", "geometry").casefold()
+        if method == "mayer":
+            show_result(client.mayer())
+        elif method == "fragments":
+            show_graph()
+        elif method == "geometry":
+            cmd.cmd_bonds(atomic_numbers, coordinates)
+        else:
+            utils.print_error("Unknown bond analysis.")
 
     def show_graph() -> None:
         cmd.cmd_graph(atomic_numbers, coordinates)

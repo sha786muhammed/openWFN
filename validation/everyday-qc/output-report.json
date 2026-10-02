@@ -1,0 +1,244 @@
+{
+  "status": "passed",
+  "cases": [
+    {
+      "source_url": "https://raw.githubusercontent.com/cclib/cclib-data/127b2229d584d54fb84a74e383edb18a271fc283/Gaussian/Gaussian09/water_gaussian.inp.log",
+      "upstream_commit": "127b2229d584d54fb84a74e383edb18a271fc283",
+      "input_sha256": "b53efef3938561ea060a2b218beb46650fff5fc085c758359a941717952fd850",
+      "program": "gaussian",
+      "energy_evidence": {
+        "expected_scf_energy_hartree": null,
+        "reason": "CASSCF-only job"
+      },
+      "result": {
+        "analysis_name": "output_properties",
+        "analysis_version": "1",
+        "data": {
+          "source_program": "Gaussian",
+          "source_program_version": "2009+A.02",
+          "methods": [],
+          "basis_set": "CC-pVDZ",
+          "normal_termination": true,
+          "atom_count": 3,
+          "charge": 0,
+          "multiplicity": 1,
+          "scf_energy_hartree": null,
+          "atomic_numbers": [
+            1,
+            8,
+            1
+          ],
+          "coordinates_angstrom": [
+            [
+              0.0,
+              0.890139,
+              -0.503271
+            ],
+            [
+              0.0,
+              0.0,
+              0.125818
+            ],
+            [
+              0.0,
+              -0.890139,
+              -0.503271
+            ]
+          ],
+          "dipole_debye": [
+            0.0,
+            0.0,
+            -2.0801
+          ],
+          "dipole_origin_angstrom": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "frontier_orbitals": [],
+          "reported_atomic_charges": {
+            "mulliken": {
+              "charges": [
+                0.220167,
+                -0.440334,
+                0.220167
+              ],
+              "total_charge": 0.0,
+              "charge_sum_residual": 0.0
+            },
+            "mulliken_sum": {
+              "charges": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "total_charge": 0.0,
+              "charge_sum_residual": 0.0
+            }
+          }
+        },
+        "elapsed_seconds": 0.00853527000072063,
+        "error": null,
+        "kind": "output_properties",
+        "provenance": {
+          "property_origin": "source-reported",
+          "source_path": "/tmp/openwfn-log-references/gaussian.txt",
+          "input_sha256": "b53efef3938561ea060a2b218beb46650fff5fc085c758359a941717952fd850",
+          "parser": "cclib",
+          "parser_version": "1.8.1",
+          "openwfn_version": "0.9.2",
+          "source_program": "Gaussian",
+          "source_program_version": "2009+A.02",
+          "transformations": [
+            "SCF energy converted eV -> hartree using cclib's conversion constant"
+          ]
+        },
+        "schema_version": "1.0",
+        "status": "partial",
+        "units": {
+          "scf_energy_hartree": "hartree",
+          "coordinates_angstrom": "angstrom",
+          "dipole_origin_angstrom": "angstrom",
+          "dipole_debye": "Debye",
+          "frontier_orbitals": "energies: eV; indices: 1-based",
+          "reported_atomic_charges": "e"
+        },
+        "validation_status": "Experimental",
+        "warnings": [
+          "No SCF energy was reported by the reader."
+        ]
+      },
+      "validation_status": "Experimental",
+      "scope": "Printed SCF energy, ORCA Mulliken charges/dipole magnitude, atom count, charge/multiplicity and genuine absent-SCF behavior. Other parsed fields are observations, not independently validated."
+    },
+    {
+      "source_url": "https://raw.githubusercontent.com/cclib/cclib-data/127b2229d584d54fb84a74e383edb18a271fc283/ORCA/ORCA4.2/water_mp2.out",
+      "upstream_commit": "127b2229d584d54fb84a74e383edb18a271fc283",
+      "input_sha256": "666f71fd4c04d73ac1872934382979e5a230aab18365fa28415ddf65b5293061",
+      "program": "orca",
+      "energy_evidence": {
+        "printed_scf_energy_hartree": -74.9635741,
+        "tolerance": 1e-08,
+        "printed_mulliken_charges": [
+          -0.361723,
+          0.180857,
+          0.180866
+        ],
+        "charge_tolerance": 1e-06,
+        "printed_dipole_magnitude_debye": 1.7189,
+        "dipole_tolerance": 5e-05
+      },
+      "result": {
+        "analysis_name": "output_properties",
+        "analysis_version": "1",
+        "data": {
+          "source_program": "ORCA",
+          "source_program_version": "4.2.0",
+          "methods": [
+            "HF",
+            "MP2"
+          ],
+          "basis_set": "STO-3G",
+          "normal_termination": true,
+          "atom_count": 3,
+          "charge": 0,
+          "multiplicity": 1,
+          "scf_energy_hartree": -74.9635741,
+          "atomic_numbers": [
+            8,
+            1,
+            1
+          ],
+          "coordinates_angstrom": [
+            [
+              1.784914,
+              1.262422,
+              0.511985
+            ],
+            [
+              2.648237,
+              1.072929,
+              0.131631
+            ],
+            [
+              1.183168,
+              1.256816,
+              -0.238835
+            ]
+          ],
+          "dipole_debye": [
+            0.38187195359520004,
+            -0.28485349999610005,
+            -1.6515250304048001
+          ],
+          "dipole_origin_angstrom": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "frontier_orbitals": [
+            {
+              "channel": "restricted_or_alpha",
+              "homo_index_1based": 5,
+              "lumo_index_1based": 6,
+              "homo_ev": -10.6354065784822,
+              "lumo_ev": 16.34231430809345,
+              "gap_ev": 26.97772088657565
+            }
+          ],
+          "reported_atomic_charges": {
+            "mulliken": {
+              "charges": [
+                -0.361723,
+                0.180857,
+                0.180866
+              ],
+              "total_charge": -2.7755575615628914e-17,
+              "charge_sum_residual": -2.7755575615628914e-17
+            },
+            "lowdin": {
+              "charges": [
+                -0.250698,
+                0.125347,
+                0.125351
+              ],
+              "total_charge": 0.0,
+              "charge_sum_residual": 0.0
+            }
+          }
+        },
+        "elapsed_seconds": 0.006071120000342489,
+        "error": null,
+        "kind": "output_properties",
+        "provenance": {
+          "property_origin": "source-reported",
+          "source_path": "/tmp/openwfn-log-references/orca.txt",
+          "input_sha256": "666f71fd4c04d73ac1872934382979e5a230aab18365fa28415ddf65b5293061",
+          "parser": "cclib",
+          "parser_version": "1.8.1",
+          "openwfn_version": "0.9.2",
+          "source_program": "ORCA",
+          "source_program_version": "4.2.0",
+          "transformations": [
+            "SCF energy converted eV -> hartree using cclib's conversion constant"
+          ]
+        },
+        "schema_version": "1.0",
+        "status": "success",
+        "units": {
+          "scf_energy_hartree": "hartree",
+          "coordinates_angstrom": "angstrom",
+          "dipole_origin_angstrom": "angstrom",
+          "dipole_debye": "Debye",
+          "frontier_orbitals": "energies: eV; indices: 1-based",
+          "reported_atomic_charges": "e"
+        },
+        "validation_status": "Experimental",
+        "warnings": []
+      },
+      "validation_status": "Experimental",
+      "scope": "Printed SCF energy, ORCA Mulliken charges/dipole magnitude, atom count, charge/multiplicity and genuine absent-SCF behavior. Other parsed fields are observations, not independently validated."
+    }
+  ],
+  "redistribution": "Numeric evidence only. Upstream log licensing was not established; source logs are fetched explicitly and are not redistributed here."
+}

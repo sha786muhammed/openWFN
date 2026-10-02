@@ -35,7 +35,6 @@ from .results import ResultError, ResultRecord
 from .services import (
     density_cube_export,
     density_integration,
-    electrostatic_potential_point,
     geometry_angle,
     geometry_dihedral,
     geometry_distance,
@@ -386,10 +385,39 @@ def main(argv: list[str] | None = None) -> int:
     population_commands.add_parser("mulliken", help="Compute Mulliken atomic populations and charges")
     population_commands.add_parser("lowdin", help="Compute symmetric Löwdin populations and charges")
 
+    p_bondorder = subparsers.add_parser("bondorder", help="AO bond-order analysis")
+    bondorder_commands = p_bondorder.add_subparsers(dest="bondorder_method", required=True)
+    p_mayer = bondorder_commands.add_parser("mayer", help="Mayer bond orders with spin-density term")
+    p_mayer.add_argument("--threshold", type=float, default=.05)
+
     p_orbitals = subparsers.add_parser("orbitals", help="Molecular orbital analysis")
     orbital_commands = p_orbitals.add_subparsers(dest="orbital_command", required=True)
     p_frontier = orbital_commands.add_parser("frontier", help="Report HOMO, LUMO, and energy gap")
     p_frontier.add_argument("--spin", choices=["alpha", "beta", "all"], default="alpha")
+
+    for spectral_name in ("dos", "pdos"):
+        p_spectrum = orbital_commands.add_parser(spectral_name, help="Gaussian orbital-energy " + spectral_name.upper())
+        p_spectrum.add_argument("--sigma", type=float, default=.3, help="Gaussian standard deviation in eV")
+        p_spectrum.add_argument("--spin", choices=["alpha", "beta", "all"], default="all")
+        p_spectrum.add_argument("--energy-min", type=float)
+        p_spectrum.add_argument("--energy-max", type=float)
+        p_spectrum.add_argument("--points", type=int)
+        p_spectrum.add_argument("--export", dest="spectrum_output", type=Path, help="CSV, JSON, PNG or SVG")
+        if spectral_name == "pdos":
+            p_spectrum.add_argument("--group-by", choices=["atom", "element", "angular"], default="atom")
+            p_spectrum.add_argument("--method", choices=["lowdin", "mulliken"], default="lowdin")
+
+    p_composition = orbital_commands.add_parser("composition", help="Named Mulliken/Lowdin MO projections")
+    p_composition.add_argument("--mo", default="homo")
+    p_composition.add_argument("--spin", choices=["alpha", "beta"], default="alpha")
+    p_composition.add_argument("--method", choices=["lowdin", "mulliken"], default="lowdin")
+
+    p_orbital_cube = orbital_commands.add_parser("cube", help="Export signed MO amplitude as Gaussian cube")
+    p_orbital_cube.add_argument("--mo", default="homo", help="One-based MO number, homo or lumo")
+    p_orbital_cube.add_argument("--spin", choices=["alpha", "beta"], default="alpha")
+    p_orbital_cube.add_argument("--output", dest="orbital_cube_output", required=True, type=Path)
+    p_orbital_cube.add_argument("--spacing", type=float, default=.15, help="Grid spacing in bohr")
+    p_orbital_cube.add_argument("--padding", type=float, default=6., help="Padding in bohr")
 
     p_density = subparsers.add_parser("density", help="Electron and spin-density analysis")
     density_commands = p_density.add_subparsers(dest="density_command", required=True)
@@ -412,6 +440,7 @@ def main(argv: list[str] | None = None) -> int:
         choices=["nuclear", "mulliken", "lowdin", "electronic", "total"],
         default="total",
     )
+    p_esp_point.add_argument("--method", choices=("integrals", "grid"), default="integrals")
     p_esp_point.add_argument("--spacing", type=float, default=0.15)
     p_esp_point.add_argument("--padding", type=float, default=6.0)
 
@@ -561,7 +590,32 @@ def main(argv: list[str] | None = None) -> int:
             _context(args),
         )
 
+    if args.command == "bondorder":
+        return execute(lambda: run_analysis(require_calculation(), "mayer", threshold=args.threshold), _context(args))
+
     if args.command == "orbitals":
+        if args.orbital_command in {"dos", "pdos"}:
+            def spectrum_operation() -> ResultRecord:
+                from .exporters.spectra import write_spectrum
+
+                parameters = {"group_by": args.group_by, "method": args.method} if args.orbital_command == "pdos" else {}
+                record = run_analysis(require_calculation(), args.orbital_command, **parameters, sigma_ev=args.sigma,
+                    spin=args.spin, energy_min_ev=args.energy_min,
+                    energy_max_ev=args.energy_max, points=args.points)
+                if args.spectrum_output is not None:
+                    write_spectrum(record, args.spectrum_output, overwrite=args.overwrite)
+                return record
+            return execute(spectrum_operation, _context(args))
+        if args.orbital_command == "composition":
+            return execute(lambda: run_analysis(require_calculation(), "orbital-composition",
+                mo=args.mo, spin=args.spin, method=args.method), _context(args))
+        if args.orbital_command == "cube":
+            from .api import load
+
+            return execute(lambda: load(args.file, format_hint=args.input_format).orbital_cube(
+                args.orbital_cube_output, mo=args.mo, spin=args.spin,
+                spacing_bohr=args.spacing, padding_bohr=args.padding,
+                overwrite=args.overwrite), _context(args))
         analysis = {
             "alpha": "frontier",
             "beta": "beta-frontier",
@@ -593,14 +647,12 @@ def main(argv: list[str] | None = None) -> int:
         return execute(density_operation, context)
 
     if args.command == "esp":
+        from .api import load
+
         return execute(
-            lambda: electrostatic_potential_point(
-                require_calculation(),
-                (args.x, args.y, args.z),
-                args.component,
-                args.spacing,
-                args.padding,
-            ),
+            lambda: load(Path(args.file), format_hint=args.input_format).esp(
+                (args.x, args.y, args.z), component=args.component,
+                spacing_bohr=args.spacing, padding_bohr=args.padding, method=args.method),
             _context(args),
         )
 
@@ -841,9 +893,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "interactive":
         try:
-            fchk_file, _scalars, _atomic_numbers, _coordinates = load_data(args.file)
-            lines = read_fchk(fchk_file)
-            run_interactive(lines, fchk_file)
+            run_interactive(None, str(args.file))
             return 0
         except Exception as exc:
             context = _context(args)

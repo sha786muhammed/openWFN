@@ -2,7 +2,7 @@
 
 openWFN helps you move from a Gaussian checkpoint calculation to inspectable,
 reproducible analysis. You can work through a command line, a guided terminal,
-Python, or structured reports. An optional Experimental offline workbench supports
+Python, or structured reports. An optional offline workbench supports
 visual inspection and teaching. Every surface uses the same calculation model and
 the same scientific conventions.
 

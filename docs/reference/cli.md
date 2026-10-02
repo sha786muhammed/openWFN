@@ -60,12 +60,13 @@ These are the public top-level choices shown by `openwfn --help`.
 | `interactive` | Start the guided terminal interface |
 | `graph` | Show molecular fragments |
 | `geometry` | Run distance, angle, and dihedral operations |
+| `bondorder` | Experimental Mayer AO bond orders |
 | `population` | Run Mulliken or Löwdin population analysis |
 | `orbitals` | Inspect frontier orbitals |
 | `density` | Integrate or export electron and spin density |
 | `esp` | Evaluate supported electrostatic-potential components |
 | `report` | Build a research report |
-| `workbench` | Build the optional Experimental workbench |
+| `workbench` | Build the optional offline workbench |
 | `cube` | Export an electron-density cube |
 | `convert` | Convert molecular structure formats |
 | `export` | Export a registered result table |
@@ -116,11 +117,12 @@ CLI atom indices are one-based. The legacy `dist`, `angle`, and `dihedral` forms
 | Command | Syntax and options | Status note |
 |---|---|---|
 | `orbitals` | `orbitals frontier [--spin alpha\|beta\|all]` | Requires MO energies; `all` reports both unrestricted channels and the true overall HOMO |
+| `bondorder` | Experimental Mayer AO bond orders |
 | `population` | `population mulliken` or `population lowdin` | Requires AO density and overlap data; conservation failures return `partial` with warnings |
 | `density` | `density integrate [--kind total\|alpha\|beta\|spin] [--spacing BOHR] [--padding BOHR]` | Grid integration; validation status comes from the generated grid's conservation check |
 | `density` | `density cube OUTPUT [grid options]` | Cube is written when requested; failed conservation returns `partial`/Experimental rather than a false Validated result |
 | `cube` | `cube OUTPUT [grid options]` | Convenience density-cube command with the same validation behavior |
-| `esp` | `esp point X Y Z [--component COMPONENT]` | Nuclear and charge-model components Stable; grid electronic/total Experimental |
+| `esp` | `esp point X Y Z [--component COMPONENT] [--method integrals|grid]` | Nuclear/charge-model Stable; default Gaussian-integral electronic/total Validated; explicit grid Experimental |
 | `validate` | `openwfn FILE validate` | Runs default total-density conservation check |
 
 The accepted frontier selector is `--spin alpha|beta|all`. For an unrestricted calculation, use:
@@ -155,7 +157,7 @@ establish optimization convergence. JSON field names remain unchanged.
 | Command | Syntax | Output |
 |---|---|---|
 | `report` | `report build OUTPUT [--report-format html\|markdown] [--analyses LIST]` | Self-contained research report |
-| `workbench` | `workbench [OUTPUT] [--open]` | Optional Experimental offline visualization |
+| `workbench` | `workbench [OUTPUT] [--open]` | Stable offline interface for the tested Chromium scope |
 | `view` | `view [--save HTML] [--open] [--no-labels] [--style ballstick\|stick]` | Standalone molecular viewer |
 | `xyz` | `xyz OUTPUT` | Legacy XYZ export |
 | `convert` | `convert --to xyz\|pdb\|mol\|sdf --output PATH` | Structure conversion |
@@ -207,3 +209,16 @@ terminal session enters guided mode; redirected input or `--non-interactive`
 defaults to `summary`.
 
 The hidden `mo` developer preview is intentionally not part of the public command contract.
+
+Development branch: `orbitals cube`, `orbitals composition` and `bondorder mayer` are described in [MO cubes](../science/mo-cubes.md), [composition](../science/orbital-composition.md) and [Mayer](../science/mayer.md). Global options such as `--format json` go before the input path.
+
+Development spectrum commands are `orbitals dos` and `orbitals pdos`; `--sigma`
+is in eV, `--energy-min`/`--energy-max` set both endpoints, `--points` controls
+resolution, and `--export` writes CSV/JSON/PNG/SVG. PDOS adds `--group-by`
+(atom/element/angular) and `--method` (lowdin/mulliken). These commands are
+Experimental; see [DOS/PDOS](../science/dos-pdos.md).
+
+Guided mode loads normalized molecular inputs and exposes frontier/composition/
+cube/DOS/PDOS orbital submenus with spin selection, Mayer bond analysis, density
+components and point ESP. Its results use the same services and formatter as
+the public API; expected input errors return failed records and keep navigation.

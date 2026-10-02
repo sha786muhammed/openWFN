@@ -1,6 +1,8 @@
-# Local MCP preview
+# Local MCP interface
 
-This Experimental adapter in openWFN 0.9.2 lets an MCP client request selected openWFN analyses.
+The published openWFN 0.9.2 adapter is Experimental. The development branch
+provides a Stable local interface for the selected registered analyses, backed
+by real molecular CLI/Python/batch/report/MCP parity checks.
 It runs locally over stdio and reads files inside one configured directory.
 It does not provide a public HTTP service, upload endpoint, or authentication.
 
@@ -87,3 +89,26 @@ the server runs. This local preview is not a sandbox for hostile files and
 has no CPU, memory, or execution-time isolation. Results include source paths;
 consider that before sharing them with an external client. Remote deployment
 needs separate access-control, upload, and resource-limit work.
+
+## Development-branch dense analysis limit
+
+The staged QC branch adds default read-only `orbital-composition`, `mayer`,
+`dos` and `pdos` registry analyses. Cube/CSV/plot writes remain outside MCP.
+Overlap-based analyses (including existing Mulliken/Löwdin) are limited to 256
+AO functions by default before overlap construction. Configure an intentional
+higher limit with `--max-basis-functions N` or
+`create_server(root, max_basis_functions=N)`; this is a resource bound, not a
+runtime guarantee. DOS grids are independently limited to 100000 points and
+PDOS to two million output projection values. Expensive grids/cubes/real-space
+methods are not exposed. Existing file-size and data-root restrictions remain.
+
+## Development-branch interface evidence
+
+The common-registry parity matrix checks composition, Mayer, DOS and PDOS on
+the native water FCHK plus all eleven actual everyday-QC Molden inputs. Each
+case compares full numerical data across CLI, Python, batch manifests, embedded
+HTML report JSON and an in-process MCP client/server session. Existing tests
+also exercise a real stdio session, malformed input, missing capabilities,
+file-size/resource bounds and filesystem containment. The pinned optional SDK
+remains 2.2.0. Stable describes this local interface, not universal source-program
+or molecule validation; each returned analysis retains its own scientific status.

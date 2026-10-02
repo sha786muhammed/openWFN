@@ -34,6 +34,28 @@ openWFN connects scientific analysis, automation, validation evidence, and resea
 - **Validate** using explicit capability status, parser provenance, transformations, numerical controls, and fixture-backed evidence.
 - **Publish** durable reports, figures, cube files, structures, and batch manifests.
 
+## Staged QC development branch
+
+The development branch includes [11 real molecular examples](examples/everyday-qc/README.md)
+and a [complete Experimental coverage audit](docs/project/experimental-coverage.md).
+The audit retains ESP convergence failures and unsupported legacy entry points.
+
+The stable release remains **0.9.2**. The `feat/everyday-qc-staged` branch adds
+these **Validated** methods within the documented reference scope; they are not yet part of a published release.
+
+| Development capability | Scientific controls |
+|---|---|
+| Signed MO cubes, arbitrary MO/HOMO/LUMO, alpha/beta | AO/grid norm diagnostics, bounded chunks, input-hash cube comments |
+| Mulliken/Löwdin MO composition | Named convention, atom/shell/angular partitions, raw norm and overlap conditioning |
+| Spin-corrected Mayer bond orders | Total/spin conservation, density provenance, full matrix and filtered pairs |
+| Orbital-energy DOS/PDOS | Gaussian sigma/range controls, spin channels, projection sum rules, CSV/JSON/PNG/SVG |
+
+See the [design and roadmap](docs/project/everyday-qc-design.md),
+[validation and limitations](docs/project/everyday-qc-validation.md), and
+[method documentation](docs/science/dos-pdos.md). Native Hirshfeld and later
+spectroscopy/real-space phases are not implemented; the validation document
+records their scientific gates. Existing CLI/API/result schemas are retained.
+
 ## Install
 
 openWFN supports Python 3.10–3.13.
@@ -98,13 +120,14 @@ The default density spacing of **0.15 bohr** is an accuracy/performance tradeoff
 | Population | Mulliken and symmetric Löwdin populations and charges | Stable interface; conservation checked and fixture-scoped |
 | Density | Total, alpha, beta, and spin integration and cube export | Validated only for the named active validation fixtures and tolerances |
 | Electrostatic potential | Nuclear and charge-model point ESP | Stable interface; special-case regressions included |
+| Gaussian-integral electronic/total ESP | AO-density Coulomb integrals with independent references | Validated for the eleven-case set |
 | Grid electronic/total ESP | Numerical Coulomb evaluation | Experimental |
 | Automation | Versioned results, batch manifests, discovery, resume, JSON and CSV | Stable |
 | Research reports | HTML/Markdown reports, tables, figures, and structures | Stable |
-| Interactive workbench | Optional visualization and teaching surface | Experimental |
+| Interactive workbench | Offline workspaces, surfaces and signed geometry readouts | Stable interface; eleven-molecule Chromium evidence; field diagnostics retained |
 | Additional input formats | Optional IOData ingestion and file-specific capabilities | Stable fixture contract; requires the interop extra |
 | QC output properties | Source-reported extraction with optional cclib | Experimental; not a complete wavefunction |
-| Local MCP | Read-only stdio tools for selected analyses | Experimental; no remote service |
+| Local MCP | Read-only stdio tools for selected registered analyses | Stable local interface; real CLI/API/batch/report parity; no remote service |
 
 “Validated” is deliberately scoped. Review the [validation evidence](https://sha786muhammed.github.io/openWFN/science/validation-status/) and [limitations](https://sha786muhammed.github.io/openWFN/limitations/) before research use.
 
@@ -193,3 +216,6 @@ Project policies: [Code of Conduct](CODE_OF_CONDUCT.md) ·
 Cite the exact version used and the project repository; see the [citation guide](https://sha786muhammed.github.io/openWFN/citation/). openWFN is released under the [MIT License](LICENSE).
 
 **Author:** Muhammed Shah Shaji
+
+Development resource checks and their measured scope are documented in
+[Runtime and resource validation](docs/project/resource-validation.md).

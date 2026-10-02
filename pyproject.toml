@@ -56,6 +56,9 @@ Releases = "https://github.com/sha786muhammed/openWFN/releases"
 openwfn = "openwfn.cli:main"
 
 [project.optional-dependencies]
+resources = [
+    "psutil>=5.9,<8",
+]
 docs = [
     "mkdocs>=1.6,<2",
     "mkdocs-material>=9.5,<10",

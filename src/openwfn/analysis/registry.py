@@ -1,6 +1,7 @@
 """Versioned registry for analyses shared by every public interface."""
 
 from dataclasses import dataclass, replace
+from inspect import signature
 from time import perf_counter
 from typing import Callable
 
@@ -8,11 +9,13 @@ from ..capabilities import CapabilityRequirement, evaluate_requirements
 from ..data import INTEROP_SCHEMA_VERSION, OpenWFNData, wrap_calculation
 from ..errors import DataUnavailableError
 from ..model import MODEL_SCHEMA_VERSION, CalculationData
+from ..orbital_services import orbital_composition
 from ..results import ResultRecord
-from ..services import molecular_summary, orbital_frontier, population_analysis
+from ..services import mayer_bond_orders, molecular_summary, orbital_frontier, population_analysis
+from ..spectral_services import orbital_dos, orbital_pdos
 from .structure_summary import structure_summary
 
-AnalysisRunner = Callable[[CalculationData], ResultRecord]
+AnalysisRunner = Callable[..., ResultRecord]
 AnalysisInput = CalculationData | OpenWFNData
 
 
@@ -36,6 +39,10 @@ _STRUCTURE = CapabilityRequirement("atomic structure", ("structure",))
 
 
 _ANALYSES = {
+    "pdos": AnalysisDefinition("pdos", "1", "orbital_pdos", orbital_pdos, (_ISOLATED, _BASIS, _ORBITALS, _AO_OVERLAP)),
+    "dos": AnalysisDefinition("dos", "1", "orbital_dos", orbital_dos, (_ISOLATED, _ORBITALS)),
+    "mayer": AnalysisDefinition("mayer", "1", "mayer_bond_order", mayer_bond_orders, (_ISOLATED, _BASIS, _TOTAL_DENSITY, _AO_OVERLAP)),
+    "orbital-composition": AnalysisDefinition("orbital-composition", "1", "orbital_composition", orbital_composition, (_ISOLATED, _BASIS, _ORBITALS, _AO_OVERLAP)),
     "beta-frontier": AnalysisDefinition(
         "beta-frontier",
         "1",
@@ -156,11 +163,12 @@ def _require_analysis_capabilities(
     )
 
 
-def run_analysis(data: AnalysisInput, name: str) -> ResultRecord:
+def run_analysis(data: AnalysisInput, name: str, **parameters) -> ResultRecord:
     """Run one registered analysis and attach reproducibility metadata."""
 
     definition = _resolve(name)
     normalized = _normalize(data)
+    signature(definition.runner).bind(normalized.calculation, **parameters)
     _require_analysis_capabilities(normalized, definition)
     if normalized.calculation is None and definition.name != "summary":
         raise DataUnavailableError(
@@ -178,7 +186,7 @@ def run_analysis(data: AnalysisInput, name: str) -> ResultRecord:
         result = structure_summary(normalized)
     else:
         assert normalized.calculation is not None
-        result = definition.runner(normalized.calculation)
+        result = definition.runner(normalized.calculation, **parameters)
     elapsed = perf_counter() - started
     return replace(
         result,
@@ -190,7 +198,7 @@ def run_analysis(data: AnalysisInput, name: str) -> ResultRecord:
     )
 
 
-def run_analysis_safe(data: AnalysisInput, name: str) -> ResultRecord:
+def run_analysis_safe(data: AnalysisInput, name: str, **parameters) -> ResultRecord:
     """Run one analysis and return expected scientific failures as data."""
 
     started = perf_counter()
@@ -207,7 +215,7 @@ def run_analysis_safe(data: AnalysisInput, name: str) -> ResultRecord:
             provenance=_input_provenance(data),
         )
     try:
-        return run_analysis(data, definition.name)
+        return run_analysis(data, definition.name, **parameters)
     except Exception as exc:
         return ResultRecord.failure(
             kind=definition.result_kind,

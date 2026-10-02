@@ -1,0 +1,356 @@
+{
+  "schema_version": "1.0",
+  "baseline_commit": "0991406",
+  "date": "2026-10-02",
+  "evidence_type": "regression snapshots; not independent reference targets",
+  "versions": {
+    "numpy": "2.3.5",
+    "qc-iodata": "1.0.1",
+    "qc-gbasis": "0.1.0",
+    "cclib": "1.8.1",
+    "pytest": "9.1.1"
+  },
+  "records": [
+    {
+      "input": "examples/water/water.fchk",
+      "sha256": "f3c6cb5e1f9f205e49b439339bb0833160f56be68f40e1c1097db3f30f52dcf2",
+      "mayer": {
+        "status": "success",
+        "validation_status": "Experimental",
+        "data": {
+          "convention": "Mayer: PS products + spin QS products",
+          "bond_order_matrix": [
+            [
+              0.0,
+              0.8274867580869324,
+              0.8274867580869325
+            ],
+            [
+              0.8274867580869325,
+              0.0,
+              0.008115506244092172
+            ],
+            [
+              0.8274867580869325,
+              0.008115506244092172,
+              0.0
+            ]
+          ],
+          "pairs": [
+            {
+              "atom1": 1,
+              "atom2": 2,
+              "bond_order": 0.8274867580869324
+            },
+            {
+              "atom1": 1,
+              "atom2": 3,
+              "bond_order": 0.8274867580869325
+            }
+          ],
+          "threshold": 0.05,
+          "bonded_valence": [
+            1.654973516173865,
+            0.8356022643310247,
+            0.8356022643310247
+          ],
+          "charge_conservation_error": 3.8e-09,
+          "density_source": "scf",
+          "spin_density_source": "scf",
+          "reference_kind": "restricted_closed_shell",
+          "spin_electron_count": 0.0,
+          "expected_spin_electrons": 0.0,
+          "spin_conservation_error": 0.0
+        },
+        "warnings": []
+      },
+      "dos": {
+        "status": "success",
+        "orbital_count": 13,
+        "integrated_dos": 12.999999377857577,
+        "analytic_truncated_area": 12.999999426696856,
+        "points": 10723
+      },
+      "pdos": {
+        "status": "success",
+        "sum_max_error": 4.218847493575595e-15,
+        "max_raw_norm_error": 4.823363153327875e-09
+      },
+      "composition": {
+        "status": "success",
+        "mo": 5,
+        "method": "lowdin",
+        "raw_norm": 1.0000000005224887,
+        "atom_fractions": [
+          {
+            "atom_number": 1,
+            "atomic_number": 8,
+            "fraction": 0.999999999999998,
+            "percent": 99.9999999999998
+          },
+          {
+            "atom_number": 2,
+            "atomic_number": 1,
+            "fraction": 2.4884193025787356e-32,
+            "percent": 2.4884193025787354e-30
+          },
+          {
+            "atom_number": 3,
+            "atomic_number": 1,
+            "fraction": 4.973936116063178e-33,
+            "percent": 4.9739361160631785e-31
+          }
+        ]
+      }
+    },
+    {
+      "input": "examples/methane/methane.fchk",
+      "sha256": "1c37731946a48c3b64abd2a6c6594322f15fa1a4d5081144ef3a53bc7337b343",
+      "mayer": {
+        "status": "success",
+        "validation_status": "Experimental",
+        "data": {
+          "convention": "Mayer: PS products + spin QS products",
+          "bond_order_matrix": [
+            [
+              0.0,
+              0.9336972212046302,
+              0.9336972212046302,
+              0.9336972212046302,
+              0.9336972212046302
+            ],
+            [
+              0.9336972212046301,
+              0.0,
+              -0.004748172393615699,
+              -0.004748172393615703,
+              -0.0047481723936157036
+            ],
+            [
+              0.9336972212046301,
+              -0.0047481723936157,
+              0.0,
+              -0.0047481723936157,
+              -0.004748172393615702
+            ],
+            [
+              0.9336972212046302,
+              -0.004748172393615703,
+              -0.004748172393615701,
+              0.0,
+              -0.0047481723936157
+            ],
+            [
+              0.9336972212046301,
+              -0.004748172393615703,
+              -0.004748172393615702,
+              -0.0047481723936157,
+              0.0
+            ]
+          ],
+          "pairs": [
+            {
+              "atom1": 1,
+              "atom2": 2,
+              "bond_order": 0.9336972212046302
+            },
+            {
+              "atom1": 1,
+              "atom2": 3,
+              "bond_order": 0.9336972212046302
+            },
+            {
+              "atom1": 1,
+              "atom2": 4,
+              "bond_order": 0.9336972212046302
+            },
+            {
+              "atom1": 1,
+              "atom2": 5,
+              "bond_order": 0.9336972212046302
+            }
+          ],
+          "threshold": 0.05,
+          "bonded_valence": [
+            3.7347888848185207,
+            0.919452704023783,
+            0.919452704023783,
+            0.9194527040237831,
+            0.919452704023783
+          ],
+          "charge_conservation_error": 4.1e-09,
+          "density_source": "scf",
+          "spin_density_source": "scf",
+          "reference_kind": "restricted_closed_shell",
+          "spin_electron_count": 0.0,
+          "expected_spin_electrons": 0.0,
+          "spin_conservation_error": 0.0
+        },
+        "warnings": []
+      },
+      "dos": {
+        "status": "success",
+        "orbital_count": 17,
+        "integrated_dos": 16.99999937786582,
+        "analytic_truncated_area": 16.999999426696856,
+        "points": 5993
+      },
+      "pdos": {
+        "status": "success",
+        "sum_max_error": 5.329070518200751e-15,
+        "max_raw_norm_error": 6.434232258101247e-09
+      },
+      "composition": {
+        "status": "success",
+        "mo": 3,
+        "method": "lowdin",
+        "raw_norm": 0.999999999366052,
+        "atom_fractions": [
+          {
+            "atom_number": 1,
+            "atomic_number": 6,
+            "fraction": 0.5650292124971927,
+            "percent": 56.50292124971927
+          },
+          {
+            "atom_number": 2,
+            "atomic_number": 1,
+            "fraction": 0.10874269687570232,
+            "percent": 10.874269687570232
+          },
+          {
+            "atom_number": 3,
+            "atomic_number": 1,
+            "fraction": 0.10874269687570236,
+            "percent": 10.874269687570235
+          },
+          {
+            "atom_number": 4,
+            "atomic_number": 1,
+            "fraction": 0.10874269687570229,
+            "percent": 10.874269687570228
+          },
+          {
+            "atom_number": 5,
+            "atomic_number": 1,
+            "fraction": 0.10874269687570232,
+            "percent": 10.874269687570232
+          }
+        ]
+      }
+    },
+    {
+      "input": "examples/ammonia/ammonia.fchk",
+      "sha256": "cc6ef792b77b38b35a176bcb9856f10c178ad072fb5f56e8fa78d0f91c817d90",
+      "mayer": {
+        "status": "success",
+        "validation_status": "Experimental",
+        "data": {
+          "convention": "Mayer: PS products + spin QS products",
+          "bond_order_matrix": [
+            [
+              0.0,
+              0.8765552896301305,
+              0.8765934435344638,
+              0.8765934435344638
+            ],
+            [
+              0.8765552896301306,
+              0.0,
+              0.0020367211548928416,
+              0.0020367211548928395
+            ],
+            [
+              0.8765934435344638,
+              0.0020367211548928416,
+              0.0,
+              0.002035585963215421
+            ],
+            [
+              0.8765934435344638,
+              0.0020367211548928395,
+              0.002035585963215421,
+              0.0
+            ]
+          ],
+          "pairs": [
+            {
+              "atom1": 1,
+              "atom2": 2,
+              "bond_order": 0.8765552896301305
+            },
+            {
+              "atom1": 1,
+              "atom2": 3,
+              "bond_order": 0.8765934435344638
+            },
+            {
+              "atom1": 1,
+              "atom2": 4,
+              "bond_order": 0.8765934435344638
+            }
+          ],
+          "threshold": 0.05,
+          "bonded_valence": [
+            2.6297421766990583,
+            0.8806287319399163,
+            0.880665750652572,
+            0.880665750652572
+          ],
+          "charge_conservation_error": 5.1e-09,
+          "density_source": "scf",
+          "spin_density_source": "scf",
+          "reference_kind": "restricted_closed_shell",
+          "spin_electron_count": 0.0,
+          "expected_spin_electrons": 0.0,
+          "spin_conservation_error": 0.0
+        },
+        "warnings": []
+      },
+      "dos": {
+        "status": "success",
+        "orbital_count": 15,
+        "integrated_dos": 14.999999377863624,
+        "analytic_truncated_area": 14.999999426696856,
+        "points": 8218
+      },
+      "pdos": {
+        "status": "success",
+        "sum_max_error": 6.217248937900877e-15,
+        "max_raw_norm_error": 5.346094567038051e-09
+      },
+      "composition": {
+        "status": "success",
+        "mo": 5,
+        "method": "lowdin",
+        "raw_norm": 0.9999999994322184,
+        "atom_fractions": [
+          {
+            "atom_number": 1,
+            "atomic_number": 7,
+            "fraction": 0.9861654189804285,
+            "percent": 98.61654189804285
+          },
+          {
+            "atom_number": 2,
+            "atomic_number": 1,
+            "fraction": 0.004609762315698753,
+            "percent": 0.46097623156987527
+          },
+          {
+            "atom_number": 3,
+            "atomic_number": 1,
+            "fraction": 0.004612409351936239,
+            "percent": 0.4612409351936239
+          },
+          {
+            "atom_number": 4,
+            "atomic_number": 1,
+            "fraction": 0.0046124093519362384,
+            "percent": 0.46124093519362386
+          }
+        ]
+      }
+    }
+  ]
+}

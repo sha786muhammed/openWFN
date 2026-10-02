@@ -2,7 +2,7 @@
 
 The workbench packages a calculation, selected derived data, interface code, and the molecular renderer into one HTML file. It is designed for inspection, teaching, and sharing when a hosted service is unnecessary or inappropriate.
 
-**Status: Experimental.** The workbench is an optional visualization and teaching surface, not a numerical reference. Preserve the corresponding JSON, CSV, or report output as the scientific record.
+**Status: Stable interface for the documented desktop Chromium scope.** The workbench is an optional visualization and teaching surface, not a numerical reference. Preserve the corresponding JSON, CSV, or report output as the scientific record.
 
 ```bash
 openwfn ./openwfn-examples/water.fchk workbench water-workbench.html --open
@@ -60,3 +60,18 @@ Use a **workbench** for interactive spatial exploration. Use a **report** for a 
 - If a surface is slow, use coarser exploratory data first, then converge settings separately.
 
 See [Formats and exports](reference/formats-and-exports.md), [Security](project/security.md), and [Validation status](science/validation-status.md).
+
+## Browser validation scope
+
+The development branch validates all eleven committed everyday-QC molecules in
+offline Chromium 151.0.7922.34, with workspace/surface control interaction and
+21 distance/angle/signed-torsion readouts matching the Python API. The canvas
+is contained in the viewer so it cannot intercept sidebar clicks.
+Evidence with input/CI provenance is captured in
+`validation/everyday-qc/browser-report.json`; CI reruns the browser validator.
+This scope does not certify every GPU, browser or mobile device. Each preview
+field retains its scientific validation and conservation status independently
+of the interface. Coarse density fields are partial and explicitly warn about
+failed integration; use convergence-controlled density export for quantitative
+integration. The ESP preview is the named Mulliken charge model; Gaussian-integral
+point ESP is available through the CLI/API and guided terminal.

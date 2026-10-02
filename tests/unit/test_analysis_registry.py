@@ -16,10 +16,14 @@ def test_registry_runs_summary_with_versioned_input_provenance() -> None:
 
     assert available_analyses() == (
         "beta-frontier",
+        "dos",
         "frontier",
         "frontier-all",
         "lowdin",
+        "mayer",
         "mulliken",
+        "orbital-composition",
+        "pdos",
         "summary",
     )
     assert result.analysis_name == "summary"

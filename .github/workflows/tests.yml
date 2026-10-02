@@ -58,7 +58,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: python -m pip install -e ".[test,interop]"
-      - run: python -m pytest tests/parsers/test_iodata_adapter.py tests/integration/test_interop_python_api.py tests/cli/test_capabilities_command.py tests/validation/test_interop_format_contract.py tests/validation/test_cross_format_equivalence.py -q
+      - run: python -m pytest tests/parsers/test_iodata_adapter.py tests/integration/test_interop_python_api.py tests/cli/test_capabilities_command.py tests/validation/test_interop_format_contract.py tests/validation/test_cross_format_equivalence.py tests/unit/test_orbital_cubes.py tests/integration/test_everyday_cross_format.py -q
       - run: python scripts/run_interop_validation.py
   optional-interfaces:
     runs-on: ubuntu-latest
@@ -69,7 +69,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: python -m pip install -e ".[test,interop,outputs,mcp]"
-      - run: python -m pytest --strict-markers tests/test_mcp_server.py tests/test_output_properties.py -q
+      - run: python -m pytest --strict-markers tests/test_mcp_server.py tests/test_output_properties.py tests/integration/test_everyday_qc_parity.py tests/unit/test_mayer.py -q
   scientific-validation:
     runs-on: ubuntu-latest
     steps:
@@ -81,6 +81,39 @@ jobs:
       - run: python -m pip install .
       - run: python scripts/run_validation.py
       - run: python scripts/run_external_benchmarks.py --repository-only --output-dir /tmp/openwfn-external-validation
+  everyday-reference-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e ".[test,interop,outputs]" pyscf==2.12.1
+      - run: python -m pytest tests/validation/test_everyday_pyscf.py tests/validation/test_experimental_esp.py tests/validation/test_real_example_corpus.py tests/validation/test_coulomb_high_l.py -q
+  resource-safety:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e ".[test,resources,interop]"
+      - run: python -m pytest tests/unit/test_resource_budget.py tests/unit/test_streaming_cube.py tests/unit/test_ao_chunk_budget.py -q
+      - if: runner.os == 'Linux'
+        run: python scripts/benchmark_resources.py --output resource-report.json
+      - if: always() && runner.os == 'Linux'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: resource-report
+          path: resource-report.json
+          if-no-files-found: warn
   wheel-smoke:
     runs-on: ubuntu-latest
     steps:
@@ -114,7 +147,7 @@ jobs:
           workbench_output = Path("workbench.txt").read_text()
           assert "http://" not in report and "https://" not in report
           assert "Molecular rendering: 3Dmol.js (BSD-3-Clause)" in workbench
-          assert "Status: Experimental" in workbench_output
+          assert "Status: Stable" in workbench_output
           assert '<script src="http' not in workbench
           assert "<script src='http" not in workbench
           PY

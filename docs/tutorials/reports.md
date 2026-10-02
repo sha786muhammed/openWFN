@@ -38,6 +38,6 @@ openwfn examples/water/water.fchk workbench water-workbench.html
 openwfn examples/water/water.fchk plot frontier water-frontier.png --dpi 300
 ```
 
-The workbench is Experimental and intended for optional visual inspection. Review formula, state, ordering, status, and supported analyses. Inspect artifacts for confidential data and machine-specific metadata. Keep CSV/JSON records: neither a workbench nor screenshot should be the only numerical evidence.
+The workbench interface is Stable for the tested Chromium scope and intended for optional visual inspection. Review formula, state, ordering, status, and supported analyses. Inspect artifacts for confidential data and machine-specific metadata. Keep CSV/JSON records: neither a workbench nor screenshot should be the only numerical evidence.
 
 For multiple inputs, follow [Batch analysis and reports](../guides/batch-and-reports.md).

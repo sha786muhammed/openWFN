@@ -99,7 +99,7 @@ openwfn molecule.fchk report build report.html \
 
 Set `--report-format markdown` for a Markdown artifact. Requested analyses require their underlying FCHK records; run `doctor` first if the file's contents are unknown.
 
-## Optional Experimental workbench
+## Optional offline workbench
 
 ```bash
 openwfn molecule.fchk workbench molecule-workbench.html --open

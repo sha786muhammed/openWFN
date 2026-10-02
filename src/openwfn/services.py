@@ -4,7 +4,7 @@ from typing import Literal
 
 import numpy as np
 
-from .analysis.basis import ao_atom_indices, overlap_matrix
+from .analysis.basis import ao_atom_indices, bounded_ao_chunk_size, overlap_matrix
 from .analysis.density import density_matrix_for_kind, evaluate_density, integrate_density
 from .analysis.electrostatics import electronic_esp_from_grid, nuclear_esp, point_charge_esp
 from .analysis.grids import iter_point_chunks, molecular_grid_points, scalar_grid
@@ -22,6 +22,7 @@ from .exporters.cube import write_cube
 from .geometry import angle, center_of_mass, detect_bonds, dihedral, distance, molecular_formula
 from .graph import build_graph
 from .model import CalculationData, DensityMatrix, MolecularOrbitals, Molecule
+from .orbital_services import orbital_cube_export, orbital_grid, select_orbital  # noqa: F401
 from .results import ResultRecord
 from .scientific import expected_electron_count, is_ghost_atom, orbital_reference_kind
 
@@ -450,7 +451,7 @@ def density_grid(
     )
     values = np.empty(len(points), dtype=float)
     # Bound AO evaluation temporaries as well as the number of grid points.
-    chunk_size = min(chunk_size, max(1, 8_000_000 // max(1, data.basis.n_functions)))
+    chunk_size = bounded_ao_chunk_size(data.basis, chunk_size)
     offset = 0
     for chunk in iter_point_chunks(points, chunk_size):
         chunk_values = evaluate_density(data.molecule, data.basis, matrix, chunk)
@@ -551,7 +552,10 @@ def electrostatic_potential_point(
     component: Literal["nuclear", "electronic", "total", "mulliken", "lowdin"],
     spacing_bohr: float,
     padding_bohr: float,
+    *, method: Literal["grid", "integrals"] = "grid",
 ) -> ResultRecord:
+    if method not in {"grid", "integrals"}:
+        raise ValueError("ESP method must be grid or integrals")
     if component not in {"nuclear", "electronic", "total", "mulliken", "lowdin"}:
         raise ValueError(
             "ESP component must be 'nuclear', 'electronic', 'total', 'mulliken', or 'lowdin'"
@@ -567,6 +571,7 @@ def electrostatic_potential_point(
                 "ESP is singular at a nuclear position. Choose a point farther from the nuclei."
             )
     warnings: list[str] = []
+    grid_diagnostics: dict[str, object] = {}
     density_source: str | None = None
     result_status = "success"
     if component == "nuclear":
@@ -596,12 +601,47 @@ def electrostatic_potential_point(
         matrix = density_matrix_for_kind(data, "total")
         density_source = matrix.source
         warnings.extend(_density_source_warnings(data, matrix))
-        grid = density_grid(data, "total", spacing_bohr, padding_bohr)
-        electronic = float(electronic_esp_from_grid(grid, point)[0])
+        if method == "integrals":
+            from .analysis.gaussian_coulomb import electronic_potential
+
+            if data.basis is None:
+                raise DataUnavailableError("Integral ESP requires Gaussian basis data.")
+            electronic_values, diagnostics = electronic_potential(
+                data.molecule, data.basis, matrix, point)
+            expectation = expected_electron_count(data, "total")
+            electron_count = float(np.trace(np.asarray(matrix.values) @ overlap_matrix(data.basis, data.molecule)))
+            error = abs(electron_count-expectation.value)
+            grid_diagnostics = {**diagnostics, "method": "integrals",
+                                "electron_count": electron_count,
+                                "expected_electrons": expectation.value,
+                                "electron_conservation_error": error}
+            warnings.extend(expectation.warnings)
+            if error > POPULATION_CONSERVATION_TOLERANCE or not diagnostics["quadrature_passed"]:
+                result_status = "partial"
+                warnings.append("Integral ESP electron conservation or auxiliary quadrature convergence failed.")
+            electronic = float(electronic_values[0])
+        else:
+            grid = density_grid(data, "total", spacing_bohr, padding_bohr)
+            expectation = expected_electron_count(data, "total")
+            conservation = integrate_density(grid, expectation.value)
+            grid_diagnostics = {
+                "grid_electron_count": conservation.electron_count,
+                "expected_electrons": expectation.value,
+                "grid_electron_conservation_error": conservation.absolute_error,
+                "grid_spacing_bohr": spacing_bohr,
+                "grid_padding_bohr": padding_bohr,
+            }
+            if not conservation.passed:
+                result_status = "partial"
+                warnings.append(
+                    "ESP density-grid electron conservation failed; refine spacing/padding. "
+                    "Charge conservation alone does not establish Coulomb-quadrature convergence."
+                )
+            electronic = float(electronic_esp_from_grid(grid, point)[0])
         value = electronic
         if component == "total":
             value += nuclear_value
-        status = "Experimental"
+        status = "Validated" if method == "integrals" and result_status == "success" else "Experimental"
     if not np.isfinite(value):
         raise ValueError(
             "Electronic ESP quadrature is singular at a density-grid point. "
@@ -613,6 +653,7 @@ def electrostatic_potential_point(
         "y": coordinates_angstrom[1],
         "z": coordinates_angstrom[2],
         "value": round(value, 10),
+        **grid_diagnostics,
     }
     if density_source is not None:
         payload["density_source"] = density_source
@@ -624,3 +665,57 @@ def electrostatic_potential_point(
         status=result_status,  # type: ignore[arg-type]
         warnings=tuple(dict.fromkeys(warnings)),
     )
+
+
+def mayer_bond_orders(data: CalculationData, threshold: float = .05) -> ResultRecord:
+    """Conventional Mayer bond orders; row sums are bonded-valence diagnostics."""
+    from math import isfinite
+
+    from .analysis.bondorder import mayer_matrix
+
+    if not isfinite(threshold) or threshold < 0:
+        raise ValueError('bond-order threshold must be finite and nonnegative')
+    if data.basis is None or data.total_density is None:
+        raise DataUnavailableError('Mayer analysis requires Gaussian basis and total AO density.')
+    # This helper refuses absent open-shell spin density; no fabricated Q=0.
+    spin = density_matrix_for_kind(data, 'spin')
+    overlap = overlap_matrix(data.basis, data.molecule)
+    total = np.asarray(data.total_density.values)
+    matrix = mayer_matrix(total, np.asarray(spin.values), overlap,
+                          ao_atom_indices(data.basis), len(data.molecule.atoms))
+    population = population_analysis(data, 'mulliken')
+    warnings = list(population.warnings)
+    spin_count = float(np.trace(np.asarray(spin.values) @ overlap))
+    expected_spin = None
+    spin_error = None
+    try:
+        expectation = expected_electron_count(data, "spin")
+        expected_spin = expectation.value
+        spin_error = abs(spin_count-expected_spin)
+        warnings.extend(expectation.warnings)
+        if spin_error > POPULATION_CONSERVATION_TOLERANCE:
+            warnings.append(f"Spin conservation failed: error {spin_error:.6g} e exceeds 1e-6 e.")
+    except DataUnavailableError:
+        warnings.append("Spin conservation could not be checked: authoritative spin electron count is unavailable.")
+    if spin.source != data.total_density.source:
+        warnings.append('Total and spin density sources differ; Mayer spin consistency is unconfirmed.')
+    if _is_post_hf_method(data.molecule.metadata.method) and data.total_density.source != 'scf':
+        warnings.append('Conventional Mayer index applied to a correlated density; improved correlated Mayer definitions are not implemented.')
+    return ResultRecord(kind='mayer_bond_order', data={
+        'convention': 'Mayer: PS products + spin QS products',
+        'bond_order_matrix': matrix.tolist(),
+        'pairs': [{'atom1': i+1, 'atom2': j+1, 'bond_order': float(matrix[i, j])}
+                  for i in range(len(matrix)) for j in range(i+1, len(matrix))
+                  if abs(matrix[i, j]) >= threshold],
+        'threshold': threshold, 'bonded_valence': matrix.sum(axis=1).tolist(),
+        'charge_conservation_error': population.data['conservation_error'],
+        'density_source': data.total_density.source, 'spin_density_source': spin.source,
+        'reference_kind': orbital_reference_kind(data),
+        'spin_electron_count': spin_count, 'expected_spin_electrons': expected_spin,
+        'spin_conservation_error': spin_error,
+    }, units={'bond_order_matrix': 'dimensionless', 'pairs': 'dimensionless',
+              'bonded_valence': 'dimensionless', 'charge_conservation_error': 'e',
+              'spin_electron_count': 'electron', 'expected_spin_electrons': 'electron',
+              'spin_conservation_error': 'electron'},
+        validation_status='Experimental' if warnings else 'Validated', status='partial' if warnings else 'success',
+        warnings=tuple(dict.fromkeys(warnings)))

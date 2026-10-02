@@ -6,6 +6,7 @@ import json
 from typing import Any
 
 from .app import CommandContext
+from .constants import Z_TO_SYMBOL
 from .results import ResultRecord
 
 
@@ -55,12 +56,25 @@ def render(result: ResultRecord, context: CommandContext) -> str:
         return "\n".join(lines) + "\n"
 
     lines = [_display_name(result.kind)]
+    table_keys = set()
+    if result.kind == "orbital_composition" and not context.verbose:
+        lines.append("Atom  Element  Contribution (%)")
+        for row in result.data.get("atom_contributions", []):
+            lines.append(f"{row['atom_number']:>4}  {Z_TO_SYMBOL.get(row['atomic_number'], '?'):<7}  {row['percent']:>16.4f}")
+        table_keys.add("atom_contributions")
+    if result.kind == "mayer_bond_order" and not context.verbose:
+        lines.append("Atom 1  Atom 2  Mayer bond order")
+        for row in result.data.get("pairs", []):
+            lines.append(f"{row['atom1']:>6}  {row['atom2']:>6}  {row['bond_order']:>16.6f}")
+        table_keys.add("pairs")
     for key, value in result.data.items():
+        if key in table_keys:
+            continue
         if key == "normal_termination":
             label = "Normal" if value is True else "Not normal" if value is False else "Unknown"
             lines.append(f"Source Job Termination: {label}")
             continue
-        if result.kind == "output_properties" and not context.verbose:
+        if not context.verbose:
             value = _summarize_arrays(value)
         lines.append(f"{_display_name(key)}: {_plain_value(key, value, result.units)}")
     lines.append(f"Analysis Validation Status: {result.validation_status}")

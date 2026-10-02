@@ -1,6 +1,43 @@
 # Changelog
 
+Experimental-validation development follow-up: include 11 actual PySCF molecular
+inputs with immutable reference hashes; analytic ESP comparisons and real
+ORCA/Gaussian output-reader evidence. Retain the ammonium ESP convergence failure.
+Grid ESP now warns/returns partial when density electron conservation fails;
+legacy `evaluate_mo` explicitly fails instead of returning an invented zero field.
+No scientific validation label or release version is promoted by these additions.
+
 All notable changes to openWFN are documented in this file.
+
+## [Unreleased] — staged everyday QC branch
+
+- Reduce coordinate-grid temporaries, account for primitive/Cartesian AO work,
+  cache contraction normalization and stream atomic density/MO cube exports.
+- Add optional trusted-workflow timeout/RSS/output supervision, real-molecule
+  resource benchmarking and Linux/macOS/Windows resource-safety CI. Preserve
+  all scientific validation labels and document sampled-monitor limitations.
+
+- Add native Gaussian-integral ESP and a shared Python/CLI point interface,
+  independently checked against eleven PySCF wavefunctions and analytic s–h AOs.
+- Promote successful MO cube/composition/Mayer/DOS/PDOS results to Validated for
+  the named reference scope; retain partial/Experimental diagnostics.
+- Fix guided terminal Molden loading and format atom/bond tables and bounded
+  spectrum summaries while preserving full JSON/verbose output.
+- Stabilize the offline HTML workbench interface with eleven-molecule Chromium
+  evidence; fix canvas click interception and signed torsion parity while retaining
+  field-level partial conservation warnings.
+
+- Add Experimental signed MO cube export with one-based selection, spin routing,
+  shared AO evaluation, bounded grids and normalization/provenance diagnostics.
+- Add named Mulliken/Löwdin MO compositions, spin-corrected Mayer bond orders,
+  orbital-energy DOS and atom/element/angular PDOS through the shared registry.
+- Add spectral CSV/full JSON/PNG/SVG exports and numerical interface parity tests.
+- Preserve source IOData restricted alpha/beta occupations in derived spin density.
+- Bound dense MCP analyses to a configurable default 256 AO functions and reject
+  ignored registry parameters; cube/export writes stay outside read-only MCP.
+- Add Mayer spin-conservation diagnostics after independent bounded code review.
+- Document new methods as Experimental. Hirshfeld/reference and later phase gates
+  remain unresolved; no native spectroscopy, NTO or real-space methods are claimed.
 
 ## [0.9.2] - 2026-10-01
 

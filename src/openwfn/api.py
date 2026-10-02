@@ -14,6 +14,7 @@ from .model import MODEL_SCHEMA_VERSION, Molecule
 from .results import ResultRecord
 from .services import (
     density_integration,
+    electrostatic_potential_point,
     geometry_angle,
     geometry_dihedral,
     geometry_distance,
@@ -101,10 +102,10 @@ class OpenWFNCalculation:
             )
         )
 
-    def analyze(self, name: str) -> ResultRecord:
+    def analyze(self, name: str, **parameters) -> ResultRecord:
         """Run a named analysis through the shared versioned registry."""
 
-        return run_analysis(self.data, name)
+        return run_analysis(self.data, name, **parameters)
 
     def _geometry_structure(self) -> Molecule | StructureData:
         if self.data.periodic is not None:
@@ -155,6 +156,60 @@ class OpenWFNCalculation:
             )
         except DataUnavailableError as exc:
             return self._unavailable("density_integration", f"density-{kind}", str(exc))
+
+    def esp(self, coordinates_angstrom: tuple[float, float, float], *,
+            component: str = "total", method: str = "integrals",
+            spacing_bohr: float = .15, padding_bohr: float = 6.) -> ResultRecord:
+        """Point electrostatic potential in hartree/e; coordinates are angstrom."""
+        if self.data.calculation is None:
+            return self._unavailable("electrostatic_potential", "esp-point", "ESP requires a molecular wavefunction.")
+        try:
+            return self._with_provenance(electrostatic_potential_point(
+                self.data.calculation, coordinates_angstrom, component,
+                spacing_bohr, padding_bohr, method=method))
+        except (DataUnavailableError, ValueError) as exc:
+            return self._with_provenance(ResultRecord.failure(
+                kind="electrostatic_potential", analysis_name="esp-point",
+                analysis_version="1", exception=exc, elapsed_seconds=0.0))
+
+    def pdos(self, *, group_by: str = "atom", method: str = "lowdin", sigma_ev: float = .3,
+             spin: str = "all", energy_min_ev: float | None = None,
+             energy_max_ev: float | None = None, points: int | None = None) -> ResultRecord:
+        """Orbital-energy PDOS with explicitly named normalized AO projections."""
+        return run_analysis_safe(self.data, "pdos", group_by=group_by, method=method,
+            sigma_ev=sigma_ev, spin=spin, energy_min_ev=energy_min_ev,
+            energy_max_ev=energy_max_ev, points=points)
+
+    def dos(self, *, sigma_ev: float = .3, spin: str = "all",
+            energy_min_ev: float | None = None, energy_max_ev: float | None = None,
+            points: int | None = None) -> ResultRecord:
+        """Gaussian orbital-energy DOS (width is sigma in eV)."""
+        return run_analysis_safe(self.data, "dos", sigma_ev=sigma_ev, spin=spin,
+            energy_min_ev=energy_min_ev, energy_max_ev=energy_max_ev, points=points)
+
+    def mayer(self, *, threshold: float = .05) -> ResultRecord:
+        """Return Mayer bond orders including the spin-density term."""
+        return run_analysis_safe(self.data, "mayer", threshold=threshold)
+
+    def orbital_composition(self, *, mo: int | str = "homo", spin: str = "alpha",
+                            method: str = "lowdin") -> ResultRecord:
+        """Return explicitly named AO/atom/shell MO projection fractions."""
+        return run_analysis_safe(self.data, "orbital-composition", mo=mo, spin=spin, method=method)
+
+    def orbital_cube(self, output: str | Path, *, mo: int | str = "homo",
+                     spin: str = "alpha", spacing_bohr: float = 0.15,
+                     padding_bohr: float = 6.0, overwrite: bool = False) -> ResultRecord:
+        """Export signed MO amplitudes; public orbital numbers are one-based."""
+        from .orbital_services import orbital_cube_export
+
+        if self.data.calculation is None:
+            return self._unavailable("orbital_cube", "orbital_cube", "MO cube requires a molecular wavefunction.")
+        try:
+            return self._with_provenance(orbital_cube_export(
+                self.data.calculation, mo, spin, spacing_bohr, padding_bohr,
+                Path(output), overwrite))
+        except DataUnavailableError as exc:
+            return self._unavailable("orbital_cube", "orbital_cube", str(exc))
 
     def population(
         self,

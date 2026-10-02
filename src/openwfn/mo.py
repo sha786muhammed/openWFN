@@ -31,7 +31,7 @@ def evaluate_mo(
     coordinates: List[tuple[float, float, float]]
 ) -> np.ndarray:
     """
-    Evaluate a specific Molecular Orbital at given Cartesian points.
+    Legacy placeholder, unavailable; use the normalized scientific evaluator.
     
     Args:
         r_points: (N, 3) matrix of grid points.
@@ -41,16 +41,10 @@ def evaluate_mo(
         coordinates: Atomic coordinates from FCHK.
         
     Returns:
-        (N,) array of MO amplitude values at each point.
+        No values: this unimplemented legacy entry point raises NotImplementedError.
     """
-    # This is a stub for the full evaluation routine which would:
-    # 1. Iterate over contracted shells
-    # 2. Extract specific MO coefficients for each basis function
-    # 3. Call eval_s_type_gto / eval_p_type_gto etc.
-    # 4. Sum up: Psi_i(r) = sum_mu C_{mu, i} * Phi_mu(r)
-
-    N_points = r_points.shape[0]
-    psi = np.zeros(N_points)
-    
-    # Needs full shell iteration implemented here.
-    return psi
+    raise NotImplementedError(
+        "Legacy evaluate_mo has no validated implementation. "
+        "Use openwfn.analysis.orbitals.evaluate_orbital with normalized CalculationData "
+        "or OpenWFNCalculation.orbital_cube instead."
+    )

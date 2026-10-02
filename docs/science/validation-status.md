@@ -87,3 +87,18 @@ python -m mkdocs build --strict
 ```
 
 Read [limitations](../limitations.md) before publication and cite the exact version used.
+
+## Staged everyday QC branch
+
+Successful MO cubes, composition, Mayer, DOS and PDOS are now Validated for
+the named eleven-case reference set; warnings and failed diagnostics retain
+partial/Experimental status. Gaussian-integral ESP is also Validated for its
+independent PySCF and analytic radial checks. Their independent comparisons, numerical tolerances, interface
+parity and remaining scientific gates are listed in the
+[staged validation record](../project/everyday-qc-validation.md). They are not
+included in the published 0.9.2 validation claims above.
+
+The [complete Experimental coverage audit](../project/experimental-coverage.md)
+includes 11 actual molecular examples, three analytic ESP comparisons with
+retained convergence failures, real output-reader evidence and visualization
+boundaries. It does not promote all methods merely because software tests pass.

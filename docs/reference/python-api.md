@@ -172,10 +172,14 @@ The default density-grid spacing is **0.15 bohr** with 6.0 bohr padding. These d
 | Name | Result |
 |---|---|
 | `beta-frontier` | Beta-spin HOMO, LUMO, and gap |
+| `dos` | Experimental Gaussian orbital-energy DOS |
 | `frontier` | Alpha/default HOMO, LUMO, and gap |
 | `frontier-all` | Alpha and beta frontiers plus the true overall HOMO for unrestricted calculations |
+| `mayer` | Experimental spin-corrected Mayer bond orders |
 | `lowdin` | Löwdin populations and charges |
 | `mulliken` | Mulliken populations and charges |
+| `orbital-composition` | Experimental default HOMO/alpha/Lowdin AO projections |
+| `pdos` | Experimental atom-resolved Lowdin PDOS by default |
 | `summary` | Version 2: complete molecular summary or partial structure-only/periodic summary |
 
 Use `available_analyses()` to discover registered names. Run an analysis
@@ -252,3 +256,21 @@ Outputs can disclose the underlying molecular data. Apply the same access contro
 ## Compatibility
 
 The public import surface is versioned, but scientific behavior can be clarified between releases. Pin an exact openWFN version for reproducible work and review the [release history](../project/release-history.md).
+
+Development branch: `orbital_cube(output, mo="homo", spin="alpha", spacing_bohr=.15, padding_bohr=6.)` exports signed amplitudes. `orbital_composition(mo="homo", spin="alpha", method="lowdin")` returns AO fractions. See [MO cubes](../science/mo-cubes.md) and [composition](../science/orbital-composition.md).
+
+Development registry calls accept keyword parameters: `calculation.analyze(name, **parameters)`.
+Unknown parameters are rejected, including structure-only summaries. The convenience
+methods `mayer(threshold=.05)`, `dos(sigma_ev=.3, spin="all", energy_min_ev=None,
+energy_max_ev=None, points=None)` and `pdos(group_by="atom", method="lowdin", ...)`
+return the same shared result envelopes. See [DOS/PDOS](../science/dos-pdos.md).
+
+Point ESP uses the same Gaussian-integral core as the CLI:
+
+```python
+result = calculation.esp((1.127, 1.434, 1.741), component="total", method="integrals")
+print(result.data["value"])  # hartree/e; input coordinates are angstrom
+```
+
+Unavailable data and singular nuclear potentials return structured failed results.
+The explicit `method="grid"` retains the legacy convergence-controlled method.

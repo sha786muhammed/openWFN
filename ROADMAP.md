@@ -40,3 +40,12 @@ documentation, provenance, and validation evidence are ready.
 
 Priorities may change as defects, validation evidence, and contributor capacity
 change. Open a feature proposal to discuss a roadmap item before implementation.
+
+## Everyday QC staged project
+
+Units 1–5 are implemented on `feat/everyday-qc-staged` as Experimental:
+MO cubes, named MO composition, Mayer, DOS and PDOS. Native Hirshfeld is the
+next gated unit; spectroscopy, NTO, derivatives, QTAIM, ELF/LOL, NCI and basins
+follow only after the earlier scientific gates pass. See the
+[architecture and ordered roadmap](docs/project/everyday-qc-design.md) and
+[actual completion/validation record](docs/project/everyday-qc-validation.md).
