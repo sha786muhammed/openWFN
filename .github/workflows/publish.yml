@@ -3,91 +3,74 @@ name: Publish to PyPI
 on:
   push:
     branches: [main]
-    paths: [pyproject.toml, .github/workflows/security.yml]
-  release:
-    types: [published]
+    paths:
+      - pyproject.toml
+      - docs/releases/**
+      - validation/manifest.json
+      - .github/workflows/publish.yml
 
 permissions:
   contents: read
 
 jobs:
-  publish:
-    if: github.event_name == 'release'
-    name: Build and publish distribution
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-
-      - name: Set up Python
-        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
-        with:
-          python-version: "3.12"
-
-      - name: Install release tools
-        run: python -m pip install --upgrade build twine
-
-      - name: Verify release tag matches package version
-        run: |
-          PACKAGE_VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
-          test "${GITHUB_REF_NAME}" = "v${PACKAGE_VERSION}"
-
-      - name: Build distributions
-        run: python -m build
-
-      - name: Validate distributions
-        run: python -m twine check dist/*
-
-      - name: Publish distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33
-
   release-stable:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'release:0.10.0')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'release:')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
       contents: write
       actions: read
       id-token: write
-    env:
-      RELEASE_VERSION: "0.10.0"
-      RELEASE_TAG: "v0.10.0"
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
         with:
           python-version: "3.12"
-      - name: Verify approved release version
+
+      - name: Derive release metadata from package version
+        env:
+          HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           python - <<'PY'
           import os, tomllib
           from pathlib import Path
+
           version = tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"]
-          assert version == os.environ["RELEASE_VERSION"] == "0.10.0"
-          assert os.environ["RELEASE_TAG"] == "v" + version
+          expected_message = f"release:{version}"
+          first_line = os.environ["HEAD_COMMIT_MESSAGE"].splitlines()[0].strip()
+          if first_line != expected_message:
+              raise SystemExit(
+                  f"stable publication requires commit subject {expected_message!r}; got {first_line!r}"
+              )
+          notes = Path(f"docs/releases/{version}.md")
+          if not notes.is_file():
+              raise SystemExit(f"missing release notes: {notes}")
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as stream:
+              stream.write(f"RELEASE_VERSION={version}\n")
+              stream.write(f"RELEASE_TAG=v{version}\n")
+              stream.write(f"RELEASE_NOTES={notes.as_posix()}\n")
           PY
+
       - name: Require all checks on this exact release commit
         env:
           GH_TOKEN: ${{ github.token }}
         run: python scripts/release_gate.py
+
       - name: Build and check both distributions
         run: |
           python -m pip install --upgrade build twine
           python scripts/sync_release_metadata.py --check
           python -m build
           python -m twine check dist/*
+
       - name: Verify the installed wheel and real workflows
         run: |
           python -m venv release-smoke
           wheel_file=$(find dist -name '*.whl' -print -quit)
           release-smoke/bin/python -m pip install "${wheel_file}[interop,resources]"
           release-smoke/bin/python - <<'PY'
-          import openwfn
-          assert openwfn.__version__ == "0.10.0"
+          import os, openwfn
+          assert openwfn.__version__ == os.environ["RELEASE_VERSION"]
           PY
           release-smoke/bin/openwfn examples install installed-examples
           release-smoke/bin/openwfn --format json installed-examples/water.fchk summary > installed-summary.json
@@ -97,7 +80,17 @@ jobs:
           result = json.loads(Path("installed-summary.json").read_text())
           assert result["status"] == "success" and result["data"]["formula"] == "H2O"
           PY
-          release-smoke/bin/python scripts/benchmark_resources.py --output installed-resource-report.json
+          release-smoke/bin/python scripts/benchmark_resources.py \
+            --examples-dir installed-examples/everyday-qc \
+            --output installed-resource-report.json
+          release-smoke/bin/python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("installed-resource-report.json").read_text())
+          assert len(report["records"]) == 99
+          assert all(record["status"] == "success" for record in report["records"])
+          PY
+
       - name: Create the approved annotated tag without overwriting tags
         run: |
           existing_target=$(git ls-remote origin "refs/tags/${RELEASE_TAG}^{}" | cut -f1)
@@ -105,12 +98,14 @@ jobs:
             test "$existing_target" = "$GITHUB_SHA"
           else
             git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git config user.email "418982961+github-actions[bot]@users.noreply.github.com"
             git tag -a "$RELEASE_TAG" -m "openWFN $RELEASE_VERSION"
             git push origin "$RELEASE_TAG"
           fi
+
       - name: Publish stable distributions to PyPI
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33
+
       - name: Publish GitHub stable release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -119,28 +114,42 @@ jobs:
           import json, os
           from pathlib import Path
           from urllib.request import Request, urlopen
+
           repo = os.environ["GITHUB_REPOSITORY"]
           tag = os.environ["RELEASE_TAG"]
-          headers = {"Authorization": "Bearer " + os.environ["GH_TOKEN"],
-                     "Accept": "application/vnd.github+json",
-                     "X-GitHub-Api-Version": "2022-11-28"}
-          payload = {"tag_name": tag, "target_commitish": os.environ["GITHUB_SHA"],
-                     "name": "openWFN " + os.environ["RELEASE_VERSION"],
-                     "body": Path("docs/releases/0.10.0.md").read_text(),
-                     "draft": False, "prerelease": False, "make_latest": "true"}
-          request = Request(f"https://api.github.com/repos/{repo}/releases",
-                            data=json.dumps(payload).encode(), headers=headers, method="POST")
+          headers = {
+              "Authorization": "Bearer " + os.environ["GH_TOKEN"],
+              "Accept": "application/vnd.github+json",
+              "X-GitHub-Api-Version": "2022-11-28",
+          }
+          payload = {
+              "tag_name": tag,
+              "target_commitish": os.environ["GITHUB_SHA"],
+              "name": "openWFN " + os.environ["RELEASE_VERSION"],
+              "body": Path(os.environ["RELEASE_NOTES"]).read_text(),
+              "draft": False,
+              "prerelease": False,
+              "make_latest": "true",
+          }
+          request = Request(
+              f"https://api.github.com/repos/{repo}/releases",
+              data=json.dumps(payload).encode(),
+              headers=headers,
+              method="POST",
+          )
           with urlopen(request, timeout=30) as response:
               release = json.load(response)
           print(release["html_url"])
           PY
+
       - name: Verify the published PyPI package in a clean environment
         run: |
           python -m venv published-smoke
-          published-smoke/bin/python -m pip install --no-cache-dir --index-url https://pypi.org/simple "openwfn==${RELEASE_VERSION}"
+          published-smoke/bin/python -m pip install --no-cache-dir --index-url https://pypi.org/simple \
+            "openwfn[interop,resources]==${RELEASE_VERSION}"
           published-smoke/bin/python - <<'PY'
-          import openwfn
-          assert openwfn.__version__ == "0.10.0"
+          import os, openwfn
+          assert openwfn.__version__ == os.environ["RELEASE_VERSION"]
           PY
           published-smoke/bin/openwfn examples install published-examples
           published-smoke/bin/openwfn --format json published-examples/water.fchk summary > published-summary.json
@@ -149,4 +158,14 @@ jobs:
           from pathlib import Path
           result = json.loads(Path("published-summary.json").read_text())
           assert result["status"] == "success" and result["data"]["formula"] == "H2O"
+          PY
+          published-smoke/bin/python scripts/benchmark_resources.py \
+            --examples-dir published-examples/everyday-qc \
+            --output published-resource-report.json
+          published-smoke/bin/python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("published-resource-report.json").read_text())
+          assert len(report["records"]) == 99
+          assert all(record["status"] == "success" for record in report["records"])
           PY
