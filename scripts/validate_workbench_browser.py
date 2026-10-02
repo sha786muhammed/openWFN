@@ -26,6 +26,12 @@ def validate_case(browser, name, output):
     page.route('https://**/*', lambda route: route.abort())
     page.goto(path.resolve().as_uri())
     page.wait_for_selector('#viewer canvas')
+    canvas = page.locator('#viewer canvas').first.bounding_box()
+    container = page.locator('#viewer').bounding_box()
+    assert canvas['x'] >= container['x']-.5
+    assert canvas['y'] >= container['y']-.5
+    assert canvas['x']+canvas['width'] <= container['x']+container['width']+.5
+    assert canvas['y']+canvas['height'] <= container['y']+container['height']+.5
     fields = page.evaluate('payload.fields.map(f=>({id:f.id,status:f.status,validation_status:f.validation_status,warnings:f.warnings||[]}))')
     for workspace in ('structure', 'orbitals', 'density', 'esp', 'measurements'):
         page.locator(f'[data-workspace="{workspace}"]').click()
@@ -79,7 +85,7 @@ def main():
         report = {'status': 'passed', 'browser': browser.version,
                   'scope': 'offline Chromium; workspace/surface controls and atom-selection callback; API geometry parity',
                   'cases': [validate_case(browser, name, args.output_dir)
-                            for name in ('water', 'oxygen_triplet', 'ammonium_cation', 'ethanol')]}
+                            for name in sorted(path.stem for path in (ROOT/'examples/everyday-qc').glob('*.molden'))]}
         browser.close()
     (args.output_dir/'report.json').write_text(json.dumps(report, indent=2)+'\n', encoding='utf-8')
     print(f"{len(report['cases'])} real-molecule browser workflows passed")

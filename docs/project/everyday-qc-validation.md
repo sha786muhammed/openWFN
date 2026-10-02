@@ -198,3 +198,11 @@ reference now reads the exact committed Molden wavefunction using PySCF's
 independent parser and contracts its analytic Coulomb integrals. The three grid
 reference cases pass their expected success/partial assertions without relaxing
 tolerances; ammonium remains partial. This also avoids redundant fresh SCF work.
+
+The remote Chromium job successfully installed the browser and exposed a real
+layout defect: the unpositioned viewer's canvas covered sidebar buttons.
+The viewer now establishes its own positioned/clipped container. Browser checks
+assert canvas containment and use actual workspace clicks and keyboard sliders;
+the corpus now covers all eleven molecules. Contracted off-center s–h potentials
+also match independent PySCF analytic integrals in twelve additional tests,
+with explicit Gaussian/PySCF Cartesian ordering and normalization mapping.
