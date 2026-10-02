@@ -30,6 +30,7 @@ GitHub Actions run `37056586886`, Python 3.12 pytest job `111002676741`, produce
 - Built-wheel verification installs `[interop,resources]`, installs the packaged corpus, and reruns the 99-command benchmark.
 - Public-PyPI verification downloads the exact release with the same extras, installs the same corpus, reruns the same 99-command benchmark, and retries briefly for index propagation.
 - Preserved the scientific distinction that 99/99 command/resource completion is **not** scientific validation.
+- Added branch-scoped `cancel-in-progress` concurrency to Tests, Security, and Chromium validation so superseded PR commits do not occupy runners; Documentation already had equivalent cancellation behavior.
 
 ## Review findings fixed during implementation
 
@@ -38,6 +39,8 @@ GitHub Actions run `37056586886`, Python 3.12 pytest job `111002676741`, produce
 - Confirmed `scripts/release_gate.py` waits only for `Tests and quality`, `Documentation`, `Security audit`, and `Offline workbench browser validation`; it does not wait on the publish workflow itself.
 - Confirmed all four required workflows run on every main push, including an empty release-approval commit.
 - Synchronized the source and packaged everyday-QC README so PyPI users are not told that the corpus is source-only.
+- Found and corrected stale public method/CLI labels that still described stabilized 0.10 capabilities as development or Experimental.
+- Observed that rapid incremental commits could backlog non-concurrent CI; added cancellation of superseded same-branch runs so final verification targets the latest commit rather than consuming capacity on obsolete commits.
 
 ## Final verification rule
 
