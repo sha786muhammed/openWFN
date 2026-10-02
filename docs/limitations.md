@@ -41,3 +41,14 @@
   cannot make a damaged or unrecognized scientific record valid.
 
 Always record the openWFN version, source-file checksum, grid spacing, padding, units, warnings, execution status, and validation status in research outputs.
+
+## Development-branch QC expansion
+
+The new MO cube/composition/Mayer/DOS/PDOS methods are Experimental and have
+limited validation sets. Löwdin partitions depend on AO representation;
+Mulliken fractions/PDOS may be signed. Mayer row sums are bonded-valence
+diagnostics, and correlated improved Mayer definitions are absent. DOS is
+finite-molecule orbital-energy broadening with one count per supplied spatial
+orbital/channel, without occupancy weighting or periodic bands. Hirshfeld,
+typed spectroscopy/NTO and real-space topology/basins are not implemented.
+See the [completion and gate record](project/everyday-qc-validation.md).

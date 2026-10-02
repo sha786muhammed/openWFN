@@ -102,6 +102,10 @@ nav:
       - Geometry and topology: science/geometry-topology.md
       - Orbitals and density: science/orbitals-density.md
       - Population and ESP: science/population-esp.md
+      - MO cubes (development): science/mo-cubes.md
+      - MO composition (development): science/orbital-composition.md
+      - Mayer (development): science/mayer.md
+      - DOS and PDOS (development): science/dos-pdos.md
       - Validation status: science/validation-status.md
       - Methods overview: methods.md
       - Limitations: limitations.md
@@ -114,6 +118,8 @@ nav:
       - Contributors: https://github.com/sha786muhammed/openWFN/blob/main/CONTRIBUTORS.md
       - Roadmap: https://github.com/sha786muhammed/openWFN/blob/main/ROADMAP.md
       - Release history: project/release-history.md
+      - QC design and roadmap: project/everyday-qc-design.md
+      - QC validation and gates: project/everyday-qc-validation.md
       - Product boundary and benchmarking: project/core-benchmarking-design.md
       - Releasing: releasing.md
       - Releases:
@@ -128,3 +134,4 @@ nav:
           - Version 0.7.2: releases/0.7.2.md
           - Version 0.7.1: releases/0.7.1.md
           - Version 0.7.0: releases/0.7.0.md
+

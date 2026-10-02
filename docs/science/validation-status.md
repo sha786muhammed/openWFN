@@ -87,3 +87,11 @@ python -m mkdocs build --strict
 ```
 
 Read [limitations](../limitations.md) before publication and cite the exact version used.
+
+## Staged everyday QC branch
+
+MO cubes, composition, Mayer, DOS and PDOS remain Experimental despite their
+passing tests. Their independent comparisons, numerical tolerances, interface
+parity and remaining scientific gates are listed in the
+[staged validation record](../project/everyday-qc-validation.md). They are not
+included in the published 0.9.2 validation claims above.

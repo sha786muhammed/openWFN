@@ -211,3 +211,9 @@ defaults to `summary`.
 The hidden `mo` developer preview is intentionally not part of the public command contract.
 
 Development branch: `orbitals cube`, `orbitals composition` and `bondorder mayer` are described in [MO cubes](../science/mo-cubes.md), [composition](../science/orbital-composition.md) and [Mayer](../science/mayer.md). Global options such as `--format json` go before the input path.
+
+Development spectrum commands are `orbitals dos` and `orbitals pdos`; `--sigma`
+is in eV, `--energy-min`/`--energy-max` set both endpoints, `--points` controls
+resolution, and `--export` writes CSV/JSON/PNG/SVG. PDOS adds `--group-by`
+(atom/element/angular) and `--method` (lowdin/mulliken). These commands are
+Experimental; see [DOS/PDOS](../science/dos-pdos.md).

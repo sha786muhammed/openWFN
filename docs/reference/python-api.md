@@ -258,3 +258,9 @@ Outputs can disclose the underlying molecular data. Apply the same access contro
 The public import surface is versioned, but scientific behavior can be clarified between releases. Pin an exact openWFN version for reproducible work and review the [release history](../project/release-history.md).
 
 Development branch: `orbital_cube(output, mo="homo", spin="alpha", spacing_bohr=.15, padding_bohr=6.)` exports signed amplitudes. `orbital_composition(mo="homo", spin="alpha", method="lowdin")` returns AO fractions. See [MO cubes](../science/mo-cubes.md) and [composition](../science/orbital-composition.md).
+
+Development registry calls accept keyword parameters: `calculation.analyze(name, **parameters)`.
+Unknown parameters are rejected, including structure-only summaries. The convenience
+methods `mayer(threshold=.05)`, `dos(sigma_ev=.3, spin="all", energy_min_ev=None,
+energy_max_ev=None, points=None)` and `pdos(group_by="atom", method="lowdin", ...)`
+return the same shared result envelopes. See [DOS/PDOS](../science/dos-pdos.md).

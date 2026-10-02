@@ -34,6 +34,24 @@ openWFN connects scientific analysis, automation, validation evidence, and resea
 - **Validate** using explicit capability status, parser provenance, transformations, numerical controls, and fixture-backed evidence.
 - **Publish** durable reports, figures, cube files, structures, and batch manifests.
 
+## Staged QC development branch
+
+The stable release remains **0.9.2**. The `feat/everyday-qc-staged` branch adds
+these **Experimental** methods; they are not yet part of a published release.
+
+| Development capability | Scientific controls |
+|---|---|
+| Signed MO cubes, arbitrary MO/HOMO/LUMO, alpha/beta | AO/grid norm diagnostics, bounded chunks, input-hash cube comments |
+| Mulliken/Löwdin MO composition | Named convention, atom/shell/angular partitions, raw norm and overlap conditioning |
+| Spin-corrected Mayer bond orders | Total/spin conservation, density provenance, full matrix and filtered pairs |
+| Orbital-energy DOS/PDOS | Gaussian sigma/range controls, spin channels, projection sum rules, CSV/JSON/PNG/SVG |
+
+See the [design and roadmap](docs/project/everyday-qc-design.md),
+[validation and limitations](docs/project/everyday-qc-validation.md), and
+[method documentation](docs/science/dos-pdos.md). Native Hirshfeld and later
+spectroscopy/real-space phases are not implemented; the validation document
+records their scientific gates. Existing CLI/API/result schemas are retained.
+
 ## Install
 
 openWFN supports Python 3.10–3.13.

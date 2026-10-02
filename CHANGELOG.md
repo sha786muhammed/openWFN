@@ -2,6 +2,20 @@
 
 All notable changes to openWFN are documented in this file.
 
+## [Unreleased] — staged everyday QC branch
+
+- Add Experimental signed MO cube export with one-based selection, spin routing,
+  shared AO evaluation, bounded grids and normalization/provenance diagnostics.
+- Add named Mulliken/Löwdin MO compositions, spin-corrected Mayer bond orders,
+  orbital-energy DOS and atom/element/angular PDOS through the shared registry.
+- Add spectral CSV/full JSON/PNG/SVG exports and numerical interface parity tests.
+- Preserve source IOData restricted alpha/beta occupations in derived spin density.
+- Bound dense MCP analyses to a configurable default 256 AO functions and reject
+  ignored registry parameters; cube/export writes stay outside read-only MCP.
+- Add Mayer spin-conservation diagnostics after independent bounded code review.
+- Document new methods as Experimental. Hirshfeld/reference and later phase gates
+  remain unresolved; no native spectroscopy, NTO or real-space methods are claimed.
+
 ## [0.9.2] - 2026-10-01
 
 ### Fixed
