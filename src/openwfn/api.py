@@ -156,6 +156,13 @@ class OpenWFNCalculation:
         except DataUnavailableError as exc:
             return self._unavailable("density_integration", f"density-{kind}", str(exc))
 
+    def dos(self, *, sigma_ev: float = .3, spin: str = "all",
+            energy_min_ev: float | None = None, energy_max_ev: float | None = None,
+            points: int | None = None) -> ResultRecord:
+        """Gaussian orbital-energy DOS (width is sigma in eV)."""
+        return run_analysis_safe(self.data, "dos", sigma_ev=sigma_ev, spin=spin,
+            energy_min_ev=energy_min_ev, energy_max_ev=energy_max_ev, points=points)
+
     def mayer(self, *, threshold: float = .05) -> ResultRecord:
         """Return Mayer bond orders including the spin-density term."""
         return run_analysis_safe(self.data, "mayer", threshold=threshold)

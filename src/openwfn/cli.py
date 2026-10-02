@@ -396,6 +396,14 @@ def main(argv: list[str] | None = None) -> int:
     p_frontier = orbital_commands.add_parser("frontier", help="Report HOMO, LUMO, and energy gap")
     p_frontier.add_argument("--spin", choices=["alpha", "beta", "all"], default="alpha")
 
+    p_dos = orbital_commands.add_parser("dos", help="Gaussian orbital-energy DOS")
+    p_dos.add_argument("--sigma", type=float, default=.3, help="Gaussian standard deviation in eV")
+    p_dos.add_argument("--spin", choices=["alpha", "beta", "all"], default="all")
+    p_dos.add_argument("--energy-min", type=float)
+    p_dos.add_argument("--energy-max", type=float)
+    p_dos.add_argument("--points", type=int)
+    p_dos.add_argument("--export", dest="spectrum_output", type=Path, help="CSV, JSON, PNG or SVG")
+
     p_composition = orbital_commands.add_parser("composition", help="Named Mulliken/Lowdin MO projections")
     p_composition.add_argument("--mo", default="homo")
     p_composition.add_argument("--spin", choices=["alpha", "beta"], default="alpha")
@@ -582,6 +590,17 @@ def main(argv: list[str] | None = None) -> int:
         return execute(lambda: run_analysis(require_calculation(), "mayer", threshold=args.threshold), _context(args))
 
     if args.command == "orbitals":
+        if args.orbital_command == "dos":
+            def spectrum_operation() -> ResultRecord:
+                from .exporters.spectra import write_spectrum
+
+                record = run_analysis(require_calculation(), "dos", sigma_ev=args.sigma,
+                    spin=args.spin, energy_min_ev=args.energy_min,
+                    energy_max_ev=args.energy_max, points=args.points)
+                if args.spectrum_output is not None:
+                    write_spectrum(record, args.spectrum_output, overwrite=args.overwrite)
+                return record
+            return execute(spectrum_operation, _context(args))
         if args.orbital_command == "composition":
             return execute(lambda: run_analysis(require_calculation(), "orbital-composition",
                 mo=args.mo, spin=args.spin, method=args.method), _context(args))
