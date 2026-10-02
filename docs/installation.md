@@ -52,6 +52,14 @@ For older work created with openWFN 0.9.2, use:
 python -m pip install openwfn==0.9.2
 ```
 
+For historical work created with openWFN 0.8.0, use:
+
+```bash
+python -m pip install openwfn==0.8.0
+```
+
+Historical pins are for reproducing older analyses; new work should use the current stable release unless a study requires an older environment.
+
 ## Conda
 
 ```bash
