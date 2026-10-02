@@ -69,3 +69,63 @@ def orbital_dos(data: CalculationData, *, sigma_ev: float = .3, spin: str = 'all
         'analytic_truncated_area': expected_area, 'counting': 'one per supplied spatial orbital per channel; no occupation weighting',
     }, units={'energy_ev': 'eV', 'total_dos': 'orbitals/eV', 'channels': 'orbitals/eV', 'sigma_ev': 'eV'},
         validation_status='Experimental', status='partial' if warnings else 'success', warnings=tuple(warnings))
+
+
+def orbital_pdos(data: CalculationData, *, group_by: str = 'atom', method: str = 'lowdin',
+                 sigma_ev: float = .3, spin: str = 'all', energy_min_ev: float | None = None,
+                 energy_max_ev: float | None = None, points: int | None = None) -> ResultRecord:
+    from .analysis.basis import overlap_matrix
+    from .analysis.composition import orbital_weights
+    from .analysis.spectra import MAX_SPECTRUM_VALUES
+    from .constants import Z_TO_SYMBOL
+
+    if group_by not in {'atom', 'element', 'angular'}:
+        raise ValueError("PDOS group_by must be 'atom', 'element' or 'angular'")
+    if data.basis is None:
+        raise DataUnavailableError('PDOS requires Gaussian basis and orbital coefficients.')
+    dos = orbital_dos(data, sigma_ev=sigma_ev, spin=spin, energy_min_ev=energy_min_ev,
+                      energy_max_ev=energy_max_ev, points=points)
+    channels = _orbital_channels(data, spin)
+    x = np.asarray(dos.data['energy_ev'])
+    labels = []
+    for shell in data.basis.shells:
+        symbol = Z_TO_SYMBOL.get(data.molecule.atoms[shell.atom_index].atomic_number,
+                                 f'Z{data.molecule.atoms[shell.atom_index].atomic_number}')
+        for offset in range(shell.n_functions):
+            momentum = (0 if offset == 0 else 1) if shell.angular_momentum == -1 else shell.angular_momentum
+            label = f'{symbol}{shell.atom_index+1}' if group_by == 'atom' else symbol if group_by == 'element' else f'l={momentum}'
+            labels.append(label)
+    groups = list(dict.fromkeys(labels))
+    if len(groups)*len(x)*len(channels) > MAX_SPECTRUM_VALUES:
+        raise ValueError('PDOS exceeds two-million-value projection safety limit; reduce points or group by element/angular')
+    overlap = overlap_matrix(data.basis, data.molecule)
+    projections = {}
+    warnings = list(dos.warnings)
+    max_norm_error = 0.
+    diagnostic_records = {}
+    for name, orbitals in channels:
+        weights, norms, diagnostics = orbital_weights(np.asarray(orbitals.coefficients), overlap, method)
+        max_norm_error = max(max_norm_error, float(np.max(np.abs(norms-1.))))
+        diagnostic_records[name] = diagnostics
+        # Group rows in normalized AO order; SP angular labels split s/p above.
+        grouped = np.zeros((len(groups), weights.shape[1]))
+        group_indices = {label: i for i, label in enumerate(groups)}
+        for label, row in zip(labels, weights, strict=True):
+            grouped[group_indices[label]] += row
+        broadened = gaussian_spectrum(np.asarray(orbitals.energies)*HARTREE_TO_EV, x, sigma_ev, grouped)
+        projections.update({f'{name}:{label}': broadened[i].tolist() for i, label in enumerate(groups)})
+        condition = diagnostics['overlap_condition_number']
+        if diagnostics['overlap_rank_deficient'] or diagnostics['overlap_min_eigenvalue'] < 1e-8 or (condition is not None and condition > 1e10):
+            warnings.append('PDOS overlap is ill-conditioned; projections may be unreliable.')
+    if max_norm_error > 1e-6:
+        warnings.append('PDOS raw MO metric norms fail 1e-6 tolerance; normalized projections do not repair source orbitals.')
+    projected_sum = np.sum(np.asarray(list(projections.values())), axis=0)
+    residual = float(np.max(np.abs(projected_sum-np.asarray(dos.data['total_dos']))))
+    if residual > 1e-10:
+        warnings.append('Projected DOS sum differs from total DOS by more than 1e-10 orbitals/eV.')
+    return ResultRecord(kind='orbital_pdos', data={**dos.data, 'projections': projections,
+        'projection_method': method, 'group_by': group_by, 'max_raw_mo_norm_error': max_norm_error,
+        'projection_sum_max_error': residual, 'overlap_diagnostics': diagnostic_records},
+        units={**dos.units, 'projections': 'orbitals/eV', 'projection_sum_max_error': 'orbitals/eV'},
+        validation_status='Experimental', status='partial' if warnings else 'success',
+        warnings=tuple(dict.fromkeys(warnings)))

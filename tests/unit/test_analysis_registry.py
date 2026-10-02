@@ -23,6 +23,7 @@ def test_registry_runs_summary_with_versioned_input_provenance() -> None:
         "mayer",
         "mulliken",
         "orbital-composition",
+        "pdos",
         "summary",
     )
     assert result.analysis_name == "summary"

@@ -50,3 +50,41 @@ Experimental. Default read-only DOS is available through batch/reports/MCP.
 DOS stage verification: 647 passed, 1 skipped; lint and strict documentation
 build pass. Twelve DOS tests include analytic line shape/integral checks and
 numerical CSV/SVG exports; default registry parity covers all five interfaces.
+
+## Projected DOS
+
+`PDOS_g(E) = sum_i w_gi G_sigma(E-epsilon_i)`, with weights from the named
+[Mulliken/Löwdin composition convention](orbital-composition.md). Default
+projection is Löwdin, grouped by AO center. `--group-by element` combines centers
+with the same element; `--group-by angular` partitions s/p/d/etc. SP shells split
+into s and p. Each supplied spin channel has separate `spin:group` series.
+Mulliken projections can be negative and are not probabilities.
+
+```bash
+openwfn molecule.fchk orbitals pdos --group-by element --method lowdin --export pdos.svg
+openwfn molecule.fchk orbitals pdos --group-by angular --sigma 0.2 --export pdos.csv
+```
+
+```python
+result = load('molecule.fchk').pdos(group_by='element', method='lowdin')
+```
+
+Additional required data are supported AO basis, overlap and coefficients.
+Raw MO norms and overlap conditioning are checked before interpretation; failed
+norms yield partial status even though normalized projections conserve the
+pointwise total. The output records `projections`, `group_by`,
+`projection_method`, `max_raw_mo_norm_error`, overlap diagnostics and
+`projection_sum_max_error`. All projection/spin series sum to total DOS to
+1e-10 orbitals/eV in the named tests. Output is limited to two million projected
+values across spin channels, before projected spectrum allocation.
+
+Löwdin populations depend on the AO representation. Equivalent contracted and
+uncontracted primitive wavefunctions need not give identical Löwdin atom
+partitions, even when their real-space fields agree. Cross-format composition
+comparisons must specify the same basis representation; no basis-independent
+projection claim is made. Neither method is a unique real-space electron partition.
+
+PDOS stage verification: 656 passed, 1 skipped; lint and strict docs pass.
+Eight PDOS tests cover all six grouping/convention combinations, raw norm
+failures and missing-data/invalid-parameter behavior. Additional cross-format
+Mayer regressions are a separate adapter-fix stage.

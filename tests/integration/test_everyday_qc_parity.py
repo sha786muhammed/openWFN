@@ -13,7 +13,7 @@ from openwfn.reporting import build_report
 WATER = Path(__file__).resolve().parents[2]/'examples/water/water.fchk'
 
 
-@pytest.mark.parametrize('analysis, command', [('orbital-composition', ['orbitals', 'composition']), ('mayer', ['bondorder', 'mayer']), ('dos', ['orbitals', 'dos'])])
+@pytest.mark.parametrize('analysis, command', [('orbital-composition', ['orbitals', 'composition']), ('mayer', ['bondorder', 'mayer']), ('dos', ['orbitals', 'dos']), ('pdos', ['orbitals', 'pdos'])])
 def test_registry_interfaces_have_identical_data(analysis, command, tmp_path, capsys):
     calc = load(WATER)
     reference = calc.analyze(analysis)

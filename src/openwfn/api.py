@@ -156,6 +156,14 @@ class OpenWFNCalculation:
         except DataUnavailableError as exc:
             return self._unavailable("density_integration", f"density-{kind}", str(exc))
 
+    def pdos(self, *, group_by: str = "atom", method: str = "lowdin", sigma_ev: float = .3,
+             spin: str = "all", energy_min_ev: float | None = None,
+             energy_max_ev: float | None = None, points: int | None = None) -> ResultRecord:
+        """Orbital-energy PDOS with explicitly named normalized AO projections."""
+        return run_analysis_safe(self.data, "pdos", group_by=group_by, method=method,
+            sigma_ev=sigma_ev, spin=spin, energy_min_ev=energy_min_ev,
+            energy_max_ev=energy_max_ev, points=points)
+
     def dos(self, *, sigma_ev: float = .3, spin: str = "all",
             energy_min_ev: float | None = None, energy_max_ev: float | None = None,
             points: int | None = None) -> ResultRecord:

@@ -396,13 +396,17 @@ def main(argv: list[str] | None = None) -> int:
     p_frontier = orbital_commands.add_parser("frontier", help="Report HOMO, LUMO, and energy gap")
     p_frontier.add_argument("--spin", choices=["alpha", "beta", "all"], default="alpha")
 
-    p_dos = orbital_commands.add_parser("dos", help="Gaussian orbital-energy DOS")
-    p_dos.add_argument("--sigma", type=float, default=.3, help="Gaussian standard deviation in eV")
-    p_dos.add_argument("--spin", choices=["alpha", "beta", "all"], default="all")
-    p_dos.add_argument("--energy-min", type=float)
-    p_dos.add_argument("--energy-max", type=float)
-    p_dos.add_argument("--points", type=int)
-    p_dos.add_argument("--export", dest="spectrum_output", type=Path, help="CSV, JSON, PNG or SVG")
+    for spectral_name in ("dos", "pdos"):
+        p_spectrum = orbital_commands.add_parser(spectral_name, help="Gaussian orbital-energy " + spectral_name.upper())
+        p_spectrum.add_argument("--sigma", type=float, default=.3, help="Gaussian standard deviation in eV")
+        p_spectrum.add_argument("--spin", choices=["alpha", "beta", "all"], default="all")
+        p_spectrum.add_argument("--energy-min", type=float)
+        p_spectrum.add_argument("--energy-max", type=float)
+        p_spectrum.add_argument("--points", type=int)
+        p_spectrum.add_argument("--export", dest="spectrum_output", type=Path, help="CSV, JSON, PNG or SVG")
+        if spectral_name == "pdos":
+            p_spectrum.add_argument("--group-by", choices=["atom", "element", "angular"], default="atom")
+            p_spectrum.add_argument("--method", choices=["lowdin", "mulliken"], default="lowdin")
 
     p_composition = orbital_commands.add_parser("composition", help="Named Mulliken/Lowdin MO projections")
     p_composition.add_argument("--mo", default="homo")
@@ -590,11 +594,12 @@ def main(argv: list[str] | None = None) -> int:
         return execute(lambda: run_analysis(require_calculation(), "mayer", threshold=args.threshold), _context(args))
 
     if args.command == "orbitals":
-        if args.orbital_command == "dos":
+        if args.orbital_command in {"dos", "pdos"}:
             def spectrum_operation() -> ResultRecord:
                 from .exporters.spectra import write_spectrum
 
-                record = run_analysis(require_calculation(), "dos", sigma_ev=args.sigma,
+                parameters = {"group_by": args.group_by, "method": args.method} if args.orbital_command == "pdos" else {}
+                record = run_analysis(require_calculation(), args.orbital_command, **parameters, sigma_ev=args.sigma,
                     spin=args.spin, energy_min_ev=args.energy_min,
                     energy_max_ev=args.energy_max, points=args.points)
                 if args.spectrum_output is not None:

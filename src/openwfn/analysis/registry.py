@@ -11,7 +11,7 @@ from ..model import MODEL_SCHEMA_VERSION, CalculationData
 from ..orbital_services import orbital_composition
 from ..results import ResultRecord
 from ..services import mayer_bond_orders, molecular_summary, orbital_frontier, population_analysis
-from ..spectral_services import orbital_dos
+from ..spectral_services import orbital_dos, orbital_pdos
 from .structure_summary import structure_summary
 
 AnalysisRunner = Callable[..., ResultRecord]
@@ -38,6 +38,7 @@ _STRUCTURE = CapabilityRequirement("atomic structure", ("structure",))
 
 
 _ANALYSES = {
+    "pdos": AnalysisDefinition("pdos", "1", "orbital_pdos", orbital_pdos, (_ISOLATED, _BASIS, _ORBITALS, _AO_OVERLAP)),
     "dos": AnalysisDefinition("dos", "1", "orbital_dos", orbital_dos, (_ISOLATED, _ORBITALS)),
     "mayer": AnalysisDefinition("mayer", "1", "mayer_bond_order", mayer_bond_orders, (_ISOLATED, _BASIS, _TOTAL_DENSITY, _AO_OVERLAP)),
     "orbital-composition": AnalysisDefinition("orbital-composition", "1", "orbital_composition", orbital_composition, (_ISOLATED, _BASIS, _ORBITALS, _AO_OVERLAP)),

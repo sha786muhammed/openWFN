@@ -179,6 +179,7 @@ The default density-grid spacing is **0.15 bohr** with 6.0 bohr padding. These d
 | `lowdin` | Löwdin populations and charges |
 | `mulliken` | Mulliken populations and charges |
 | `orbital-composition` | Experimental default HOMO/alpha/Lowdin AO projections |
+| `pdos` | Experimental atom-resolved Lowdin PDOS by default |
 | `summary` | Version 2: complete molecular summary or partial structure-only/periodic summary |
 
 Use `available_analyses()` to discover registered names. Run an analysis
