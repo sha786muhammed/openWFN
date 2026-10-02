@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "suite": "everyday-qc",
+  "release": "0.10.1",
+  "source_directory": "examples/everyday-qc",
+  "purpose": "Versioned real-molecule corpus installed with openWFN so wheel users can reproduce the bounded release workflows.",
+  "scientific_status_note": "This file identifies installed inputs. Current scientific capability status is defined by validation/manifest.json; resource-workflow completion is not scientific validation.",
+  "files": [
+    "ammonia.molden",
+    "ammonium_cation.molden",
+    "benzene.molden",
+    "carbon_dioxide.molden",
+    "ethanol.molden",
+    "methane.molden",
+    "oh_diffuse_uhf.molden",
+    "oxygen_triplet.molden",
+    "water.molden",
+    "water_cartesian.molden",
+    "water_dimer.molden"
+  ]
+}
