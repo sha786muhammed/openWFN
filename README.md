@@ -34,17 +34,19 @@ openWFN connects scientific analysis, automation, validation evidence, and resea
 - **Validate** using explicit capability status, parser provenance, transformations, numerical controls, and fixture-backed evidence.
 - **Publish** durable reports, figures, cube files, structures, and batch manifests.
 
-## Stable release 0.10.0
+## Stable release 0.10.1
 
-**openWFN 0.10.0** adds everyday QC interpretation and tested automation and
-resource workflows. Install the exact release with
-`python -m pip install "openwfn[interop,resources]==0.10.0"`.
-See the [release notes](docs/releases/0.10.0.md).
+**openWFN 0.10.1** hardens the 0.10 everyday-QC release around reproducible
+validation evidence and published-package verification without changing the
+scientific numerical kernels. Install the exact release with
+`python -m pip install "openwfn[interop,resources]==0.10.1"`.
+See the [release notes](docs/releases/0.10.1.md).
 
-The release includes [11 real molecular examples](examples/everyday-qc/README.md)
-and an [Experimental coverage audit](docs/project/experimental-coverage.md).
+The release includes [11 real molecular examples](examples/everyday-qc/README.md),
+packages the same corpus with the wheel, and retains the
+[Experimental coverage audit](docs/project/experimental-coverage.md).
 The audit retains convergence failures and unsupported legacy entry points.
-These methods are **Validated** within the documented reference scope;
+Validated methods remain scoped to their documented reference evidence;
 package stability does not change individual scientific validation labels.
 
 | Capability | Scientific controls |
@@ -74,7 +76,7 @@ openwfn --version
 Install the exact release when reproducing research:
 
 ```bash
-python -m pip install openwfn==0.10.0
+python -m pip install openwfn==0.10.1
 ```
 
 ## First analysis
@@ -85,6 +87,9 @@ openwfn ./openwfn-examples/water.fchk doctor
 openwfn ./openwfn-examples/water.fchk summary
 openwfn ./openwfn-examples/water.fchk orbitals frontier
 ```
+
+The same install command also places the versioned 11-molecule release corpus in
+`./openwfn-examples/everyday-qc/` for reproducible workflow checks.
 
 For your own calculation, replace the example path:
 
@@ -137,9 +142,9 @@ The default density spacing of **0.15 bohr** is an accuracy/performance tradeoff
 
 ## Input support
 
-Version 0.10.0 includes optional interoperability support and resource/export safety fixes.
-See the [0.10.0 release notes](docs/releases/0.10.0.md).
-Install `python -m pip install "openwfn[interop]==0.10.0"` for additional formats. The optional reader
+Version 0.10.1 includes optional interoperability support and resource/export safety fixes.
+See the [0.10.1 release notes](docs/releases/0.10.1.md).
+Install `python -m pip install "openwfn[interop]==0.10.1"` for additional formats. The optional reader
 is pinned to IOData 1.0.1 and has a [25-format ingestion matrix](docs/reference/formats-and-exports.md)
 with [capability discovery](docs/reference/capabilities.md). Format ingestion
 does not imply that every file has orbitals, density, or an applicable
@@ -155,7 +160,7 @@ XYZ, MOL/SDF, and PDB inputs provide structure-only records. The optional
 backend also reads structure, periodic, grid, and integral-only formats; use
 `openwfn FILE capabilities` to check the actual data before analysis.
 
-In openWFN 0.10.0, use `--input-format FORMAT_ID` when a
+In openWFN 0.10.1, use `--input-format FORMAT_ID` when a
 filename is ambiguous (for example, a GAMESS `.dat`). A structure without a
 complete wavefunction gets a partial `summary`; it does not get inferred
 orbitals, density, or electron counts. Mixed batches can use `--format-map`
@@ -173,11 +178,11 @@ openwfn calculation.fchk density cube density.cube
 
 ### Output properties preview
 
-Version 0.10.0 can extract source-reported properties from QC text
+Version 0.10.1 can extract source-reported properties from QC text
 output through the optional cclib reader:
 
 ```bash
-python -m pip install "openwfn[outputs]==0.10.0"
+python -m pip install "openwfn[outputs]==0.10.1"
 python -m openwfn.cli --format json calculation.out properties
 ```
 
