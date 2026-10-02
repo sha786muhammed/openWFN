@@ -34,13 +34,18 @@ openWFN connects scientific analysis, automation, validation evidence, and resea
 - **Validate** using explicit capability status, parser provenance, transformations, numerical controls, and fixture-backed evidence.
 - **Publish** durable reports, figures, cube files, structures, and batch manifests.
 
-## Staged QC development branch
+## Release candidate 0.10.0rc1
+
+This source checkout targets **openWFN 0.10.0rc1**. Install the candidate with
+`python -m pip install --pre "openwfn[interop,resources]==0.10.0rc1"`.
+See the [candidate notes](docs/releases/0.10.0rc1.md).
+
 
 The development branch includes [11 real molecular examples](examples/everyday-qc/README.md)
 and a [complete Experimental coverage audit](docs/project/experimental-coverage.md).
 The audit retains ESP convergence failures and unsupported legacy entry points.
 
-The stable release remains **0.9.2**. The `feat/everyday-qc-staged` branch adds
+The stable release remains **0.9.2**. The 0.10.0rc1 candidate adds
 these **Validated** methods within the documented reference scope; they are not yet part of a published release.
 
 | Development capability | Scientific controls |

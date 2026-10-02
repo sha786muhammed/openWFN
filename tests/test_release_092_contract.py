@@ -13,8 +13,8 @@ def test_changelog_marks_082_released() -> None:
     assert "## [0.8.2] - Unreleased" not in changelog
 
 
-def test_citation_targets_092_release() -> None:
-    citation = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
+def test_historical_092_citation_is_retained() -> None:
+    citation = (ROOT / "docs/releases/0.9.2.md").read_text(encoding="utf-8")
     assert 'version: "0.9.2"' in citation
     assert 'url: "https://github.com/sha786muhammed/openWFN/releases/tag/v0.9.2"' in citation
 
