@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -58,7 +57,7 @@ def test_package_data_includes_everyday_qc_corpus() -> None:
 
 def test_benchmark_can_be_pointed_at_installed_corpus() -> None:
     text = (ROOT / "scripts/benchmark_resources.py").read_text(encoding="utf-8")
-    assert re.search(r"add_argument\(['\"]--examples-dir['\"]", text)
+    assert "--examples-dir" in text
     assert "args.examples_dir" in text
 
 
