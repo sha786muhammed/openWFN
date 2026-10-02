@@ -124,7 +124,7 @@ jobs:
           workbench_output = Path("workbench.txt").read_text()
           assert "http://" not in report and "https://" not in report
           assert "Molecular rendering: 3Dmol.js (BSD-3-Clause)" in workbench
-          assert "Status: Experimental" in workbench_output
+          assert "Status: Stable" in workbench_output
           assert '<script src="http' not in workbench
           assert "<script src='http" not in workbench
           PY

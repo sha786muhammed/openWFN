@@ -124,7 +124,7 @@ The default density spacing of **0.15 bohr** is an accuracy/performance tradeoff
 | Grid electronic/total ESP | Numerical Coulomb evaluation | Experimental |
 | Automation | Versioned results, batch manifests, discovery, resume, JSON and CSV | Stable |
 | Research reports | HTML/Markdown reports, tables, figures, and structures | Stable |
-| Interactive workbench | Optional visualization and teaching surface | Experimental |
+| Interactive workbench | Offline workspaces, surfaces and signed geometry readouts | Stable interface; eleven-molecule Chromium evidence; field diagnostics retained |
 | Additional input formats | Optional IOData ingestion and file-specific capabilities | Stable fixture contract; requires the interop extra |
 | QC output properties | Source-reported extraction with optional cclib | Experimental; not a complete wavefunction |
 | Local MCP | Read-only stdio tools for selected analyses | Experimental; no remote service |

@@ -66,7 +66,7 @@ These are the public top-level choices shown by `openwfn --help`.
 | `density` | Integrate or export electron and spin density |
 | `esp` | Evaluate supported electrostatic-potential components |
 | `report` | Build a research report |
-| `workbench` | Build the optional Experimental workbench |
+| `workbench` | Build the optional offline workbench |
 | `cube` | Export an electron-density cube |
 | `convert` | Convert molecular structure formats |
 | `export` | Export a registered result table |
@@ -157,7 +157,7 @@ establish optimization convergence. JSON field names remain unchanged.
 | Command | Syntax | Output |
 |---|---|---|
 | `report` | `report build OUTPUT [--report-format html\|markdown] [--analyses LIST]` | Self-contained research report |
-| `workbench` | `workbench [OUTPUT] [--open]` | Optional Experimental offline visualization |
+| `workbench` | `workbench [OUTPUT] [--open]` | Stable offline interface for the tested Chromium scope |
 | `view` | `view [--save HTML] [--open] [--no-labels] [--style ballstick\|stick]` | Standalone molecular viewer |
 | `xyz` | `xyz OUTPUT` | Legacy XYZ export |
 | `convert` | `convert --to xyz\|pdb\|mol\|sdf --output PATH` | Structure conversion |
@@ -217,3 +217,8 @@ is in eV, `--energy-min`/`--energy-max` set both endpoints, `--points` controls
 resolution, and `--export` writes CSV/JSON/PNG/SVG. PDOS adds `--group-by`
 (atom/element/angular) and `--method` (lowdin/mulliken). These commands are
 Experimental; see [DOS/PDOS](../science/dos-pdos.md).
+
+Guided mode loads normalized molecular inputs and exposes frontier/composition/
+cube/DOS/PDOS orbital submenus with spin selection, Mayer bond analysis, density
+components and point ESP. Its results use the same services and formatter as
+the public API; expected input errors return failed records and keep navigation.

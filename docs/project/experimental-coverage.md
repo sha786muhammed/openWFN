@@ -21,7 +21,7 @@ tolerances are retained with each case in the captured reference report.
 | Density integration/cube when conservation fails | Existing density/conservation regressions plus ESP histories and real workbench coarse density grids | Remains partial/Experimental whenever its actual grid fails; passing other inputs must not override this |
 | Mulliken/Löwdin population when incomplete/unreliable | Existing malformed/source-density/charge and overlap-condition regression tests | Remains partial/Experimental for inconsistent or ill-conditioned input; there is no valid golden population for deliberately invalid data |
 | Frontier orbitals when data are incomplete | Existing restricted/unrestricted/missing-virtual occupation tests; genuine CASSCF log absence case for the output reader | Incomplete frontier results remain partial; unavailable orbital energies cannot be fabricated |
-| HTML workbench | Real water and UHF OH payload tests check embedded HOMO cube against shared core, layout and retained partial density warnings; existing offline/HTML/measurement tests | Experimental visualization; no new interactive browser certification or universal rendering claim |
+| HTML workbench | Real water and UHF OH payload tests check embedded HOMO cube against shared core, layout and retained partial density warnings; existing offline/HTML/measurement tests | Stable interface for the eleven-case offline Chromium set; field-level partial warnings retained; no universal GPU/device claim |
 | Source-reported output properties | Pinned actual ORCA 4.2 MP2 water log: printed SCF energy, Mulliken charges and dipole magnitude; Gaussian09 CASSCF-only water log correctly leaves SCF energy absent | Experimental reader; two source jobs only, not all supported programs/properties |
 | Hidden legacy `mo` preview | Audit confirms CLI explicitly unavailable; regression ensures exported legacy `evaluate_mo` no longer returns an invented zero field | **Unsupported**, use the new normalized-core `orbitals cube` service |
 
@@ -89,5 +89,8 @@ Validated for the named set, retaining partial/Experimental for unmet diagnostic
 The new default integral ESP fixes the charged-grid failure without changing or
 erasing the old grid evidence. Its eleven PySCF comparisons and all-component
 analytic s–h tests are documented in [ESP methods](../science/population-esp.md).
-Interactive HTML browser certification remains pending because the browser
-download failed; the workbench has not been relabeled.
+The local browser download failed, but the GitHub Actions browser runner succeeded
+for all eleven molecules after correcting canvas containment and torsion sign.
+The workbench interface is Stable for that scope; coarse density fields retain
+partial/Experimental warnings. Captured evidence is in
+`validation/everyday-qc/browser-report.json`.

@@ -37,10 +37,10 @@ def test_workbench_export_protects_existing_file(tmp_path: Path) -> None:
     assert output.read_text(encoding="utf-8") == "keep"
 
 
-def test_workbench_record_is_experimental(tmp_path: Path) -> None:
+def test_workbench_record_has_stable_interface(tmp_path: Path) -> None:
     output = tmp_path / "water-workbench.html"
 
     result = export_workbench_record(parse_fchk(WATER), output)
 
-    assert result.validation_status == "Experimental"
+    assert result.validation_status == "Stable"
     assert output.is_file()

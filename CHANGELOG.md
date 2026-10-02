@@ -17,7 +17,9 @@ All notable changes to openWFN are documented in this file.
   the named reference scope; retain partial/Experimental diagnostics.
 - Fix guided terminal Molden loading and format atom/bond tables and bounded
   spectrum summaries while preserving full JSON/verbose output.
-- Retain Experimental HTML workbench status pending interactive browser evidence.
+- Stabilize the offline HTML workbench interface with eleven-molecule Chromium
+  evidence; fix canvas click interception and signed torsion parity while retaining
+  field-level partial conservation warnings.
 
 - Add Experimental signed MO cube export with one-based selection, spin routing,
   shared AO evaluation, bounded grids and normalization/provenance diagnostics.

@@ -83,5 +83,5 @@ def export_workbench_record(
             "offline": True,
             "schema_version": "1.0",
         },
-        validation_status="Experimental",
+        validation_status="Stable",
     )

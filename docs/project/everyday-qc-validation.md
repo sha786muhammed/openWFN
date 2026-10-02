@@ -214,3 +214,25 @@ JavaScript/core regression tests both senses in addition to the browser readout.
 Guided terminal submenus now route composition, cubes, alpha/beta/all frontier,
 Mayer, DOS/PDOS, density components and point ESP through the existing API;
 expected input/data errors remain inside the structured result boundary.
+
+## Completed supported-workflow stage
+
+Final local regression: **757 passed, 1 expected optional-dependency skip**,
+103.39 s, before the following metadata/evidence-only promotion. GitHub Actions
+passed the numerical/reference, Python 3.10–3.13, Windows/macOS, wheel, interface,
+documentation and security jobs. Offline Chromium 151.0.7922.34 passed all eleven
+real molecular workbenches, every workspace/surface selector, keyboard isovalue
+controls and 21 displayed distance/angle/torsion comparisons, with no page errors
+or network requests. Capture: `validation/everyday-qc/browser-report.json`,
+including input hashes and exact tested commit/workflow/job provenance.
+
+The workbench outer ResultRecord now describes a **Stable interface** for this
+documented desktop Chromium scope. Individual coarse density previews retain
+their actual partial/Experimental conservation diagnostics. This is neither a
+GPU/mobile-browser certification nor quantitative integration validation of
+coarse visualization grids. The local-download failure and remote failures
+above are historical findings that were resolved by the recorded CI run.
+A bounded follow-up review found an invalid cube index could end guided mode;
+the expected IndexError now renders a failed record and restores navigation.
+No data are invented for absent/invalid inputs. Source-output readers and
+advanced unimplemented methods retain their documented boundaries.

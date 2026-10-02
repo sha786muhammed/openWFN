@@ -60,3 +60,11 @@ explicit beta/all channels. Browser installation was attempted and failed becaus
 the downloaded Chromium archives were truncated. Therefore browser certification
 and a blanket Stable workbench claim remain pending. Existing payload, embedded
 field, measurement JavaScript and offline-export tests continue to run.
+
+## Completed browser evidence
+
+The remote Chromium runner subsequently passed all eleven real molecules after
+fixing canvas containment and signed-torsion parity. The browser report is
+committed with input and CI provenance. Workbench interface status is Stable
+for that tested scope; preview-field conservation statuses remain independent.
+Guided submenus now expose explicit spin choices and shared QC methods.

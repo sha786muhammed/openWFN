@@ -18,7 +18,7 @@ them whenever your work changes.
 1. Learn the [core terminology](terminology.md).
 2. Follow the [geometry tutorial](../tutorials/geometry.md).
 3. Continue to [orbitals and density](../tutorials/orbitals-density.md).
-4. Optionally use the [Experimental workbench](../workbench.md) to connect numeric results with structure.
+4. Optionally use the [offline workbench](../workbench.md) to connect numeric results with structure.
 5. Read the corresponding method before interpreting a new quantity.
 6. Compare each result with its validation evidence and limitations.
 
