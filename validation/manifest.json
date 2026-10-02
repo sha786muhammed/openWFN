@@ -29,6 +29,26 @@
       "evidence": ["everyday-qc/pyscf-report.json", "tests/validation/test_real_example_corpus.py", "tests/validation/test_coulomb_high_l.py"]
     }
   },
+  "everyday_qc_corpus": {
+    "status": "current",
+    "source_directory": "examples/everyday-qc",
+    "installed_package_directory": "openwfn.example_data/everyday-qc",
+    "reference_report": "everyday-qc/pyscf-report.json",
+    "case_ids": [
+      "water",
+      "methane",
+      "ammonia",
+      "benzene",
+      "oh_diffuse_uhf",
+      "water_cartesian",
+      "carbon_dioxide",
+      "ethanol",
+      "oxygen_triplet",
+      "ammonium_cation",
+      "water_dimer"
+    ],
+    "note": "Per-input SHA-256 values are recorded in the reference report. Packaging regressions require the installed Molden inputs to be byte-identical to this versioned source corpus."
+  },
   "resource_benchmark": {
     "molecules": 11,
     "workflows_per_molecule": 9,
@@ -46,6 +66,7 @@
       "purpose": "Historical grid-ESP convergence capture retained to document successes and the ammonium partial case. It is not the current status source for native integral point ESP."
     }
   },
+  "legacy_fixture_registry_note": "The cases array below is the older core-FCHK validation registry used by the legacy validation runner. Its pending v0.7 slots are historical fixture gaps and do not mean that the corresponding 0.10 everyday-QC Molden examples are absent. Current everyday-QC coverage is recorded separately above.",
   "cases": [
     {
       "id": "water", "status": "active", "path": "examples/water/water.fchk",
