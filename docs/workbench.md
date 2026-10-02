@@ -15,7 +15,7 @@ running.
 
 ## What the file contains
 
-The export can include molecular coordinates, bonds, calculation provenance, analysis properties, volumetric fields, CSS, JavaScript, and the vendored 3D rendering engine. This portability has a privacy consequence: anyone who receives the file can inspect its embedded molecular data. Do not publish a workbench generated from a confidential calculation.
+The export can include molecular coordinates, bonds, calculation provenance, analysis properties, volumetric fields, CSS, JavaScript, and the molecular renderer. This portability has a privacy consequence: anyone who receives the file can inspect its embedded molecular data. Do not publish a workbench generated from a confidential calculation.
 
 Molecular rendering is provided by [3Dmol.js](https://github.com/3dmol/3Dmol.js)
 under the BSD-3-Clause license. The renderer and its attribution are embedded in
@@ -55,7 +55,7 @@ Use a **workbench** for interactive spatial exploration. Use a **report** for a 
 ## Troubleshooting
 
 - If the browser does not open, omit `--open` and open the reported HTML path manually.
-- If a panel has no data, run `doctor`; the source FCHK may lack required records.
+- If a panel has no data, run `doctor`; the source file may lack required records.
 - If generation refuses to replace a file, choose a new filename or deliberately add the global `--overwrite` option before the input file.
 - If a surface is slow, use coarser exploratory data first, then converge settings separately.
 
@@ -63,13 +63,13 @@ See [Formats and exports](reference/formats-and-exports.md), [Security](project/
 
 ## Browser validation scope
 
-The development branch validates all eleven committed everyday-QC molecules in
+The 0.10 stable line validates all eleven committed everyday-QC molecules in
 offline Chromium 151.0.7922.34, with workspace/surface control interaction and
 21 distance/angle/signed-torsion readouts matching the Python API. The canvas
 is contained in the viewer so it cannot intercept sidebar clicks.
 Evidence with input/CI provenance is captured in
 `validation/everyday-qc/browser-report.json`; CI reruns the browser validator.
-This scope does not certify every GPU, browser or mobile device. Each preview
+This scope does not certify every GPU, browser, or mobile device. Each preview
 field retains its scientific validation and conservation status independently
 of the interface. Coarse density fields are partial and explicitly warn about
 failed integration; use convergence-controlled density export for quantitative
