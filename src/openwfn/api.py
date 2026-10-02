@@ -156,6 +156,21 @@ class OpenWFNCalculation:
         except DataUnavailableError as exc:
             return self._unavailable("density_integration", f"density-{kind}", str(exc))
 
+    def orbital_cube(self, output: str | Path, *, mo: int | str = "homo",
+                     spin: str = "alpha", spacing_bohr: float = 0.15,
+                     padding_bohr: float = 6.0, overwrite: bool = False) -> ResultRecord:
+        """Export signed MO amplitudes; public orbital numbers are one-based."""
+        from .orbital_services import orbital_cube_export
+
+        if self.data.calculation is None:
+            return self._unavailable("orbital_cube", "orbital_cube", "MO cube requires a molecular wavefunction.")
+        try:
+            return self._with_provenance(orbital_cube_export(
+                self.data.calculation, mo, spin, spacing_bohr, padding_bohr,
+                Path(output), overwrite))
+        except DataUnavailableError as exc:
+            return self._unavailable("orbital_cube", "orbital_cube", str(exc))
+
     def population(
         self,
         method: Literal["mulliken", "lowdin"] = "mulliken",

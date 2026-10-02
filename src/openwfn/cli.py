@@ -391,6 +391,13 @@ def main(argv: list[str] | None = None) -> int:
     p_frontier = orbital_commands.add_parser("frontier", help="Report HOMO, LUMO, and energy gap")
     p_frontier.add_argument("--spin", choices=["alpha", "beta", "all"], default="alpha")
 
+    p_orbital_cube = orbital_commands.add_parser("cube", help="Export signed MO amplitude as Gaussian cube")
+    p_orbital_cube.add_argument("--mo", default="homo", help="One-based MO number, homo or lumo")
+    p_orbital_cube.add_argument("--spin", choices=["alpha", "beta"], default="alpha")
+    p_orbital_cube.add_argument("--output", dest="orbital_cube_output", required=True, type=Path)
+    p_orbital_cube.add_argument("--spacing", type=float, default=.15, help="Grid spacing in bohr")
+    p_orbital_cube.add_argument("--padding", type=float, default=6., help="Padding in bohr")
+
     p_density = subparsers.add_parser("density", help="Electron and spin-density analysis")
     density_commands = p_density.add_subparsers(dest="density_command", required=True)
     p_density_integrate = density_commands.add_parser("integrate", help="Integrate density on a molecular grid")
@@ -562,6 +569,13 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     if args.command == "orbitals":
+        if args.orbital_command == "cube":
+            from .api import load
+
+            return execute(lambda: load(args.file, format_hint=args.input_format).orbital_cube(
+                args.orbital_cube_output, mo=args.mo, spin=args.spin,
+                spacing_bohr=args.spacing, padding_bohr=args.padding,
+                overwrite=args.overwrite), _context(args))
         analysis = {
             "alpha": "frontier",
             "beta": "beta-frontier",

@@ -22,6 +22,7 @@ from .exporters.cube import write_cube
 from .geometry import angle, center_of_mass, detect_bonds, dihedral, distance, molecular_formula
 from .graph import build_graph
 from .model import CalculationData, DensityMatrix, MolecularOrbitals, Molecule
+from .orbital_services import orbital_cube_export, orbital_grid, select_orbital  # noqa: F401
 from .results import ResultRecord
 from .scientific import expected_electron_count, is_ghost_atom, orbital_reference_kind
 
