@@ -185,7 +185,7 @@ def run_guided_action(action: Callable[[], None], title: str) -> None:
     """Keep expected input/data failures inside the standard result boundary."""
     try:
         action()
-    except (DataUnavailableError, ValueError, FileExistsError) as exc:
+    except (DataUnavailableError, ValueError, IndexError, FileExistsError) as exc:
         record = ResultRecord.failure(kind="guided_workflow", analysis_name=title,
                                       analysis_version="1", exception=exc, elapsed_seconds=0.)
         print(render(record, CommandContext(format="plain")), end="")

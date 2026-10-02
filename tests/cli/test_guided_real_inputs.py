@@ -56,3 +56,18 @@ def test_bad_guided_point_returns_structured_failure_and_navigation(monkeypatch,
     assert 'Result Status: failed' in text
     assert 'Error:' in text
     assert 'Exiting openWFN.' in text
+
+
+def test_invalid_cube_mo_keeps_guided_session_alive(tmp_path, monkeypatch, capsys):
+    pytest.importorskip('iodata')
+    output = tmp_path/'invalid.cube'
+    workflows = iter(['orbitals', 'exit'])
+    inputs = iter(['cube', 'alpha', '999999', str(output)])
+    monkeypatch.setattr(interactive, 'prompt_workflow', lambda: next(workflows))
+    monkeypatch.setattr(interactive, 'prompt_page_navigation', lambda _: 'back')
+    monkeypatch.setattr('builtins.input', lambda _: next(inputs))
+    interactive.run_interactive(None, ROOT/'examples/everyday-qc/water.molden')
+    text = capsys.readouterr().out
+    assert 'Result Status: failed' in text
+    assert 'Exiting openWFN.' in text
+    assert not output.exists()
