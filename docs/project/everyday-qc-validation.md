@@ -206,3 +206,11 @@ assert canvas containment and use actual workspace clicks and keyboard sliders;
 the corpus now covers all eleven molecules. Contracted off-center s–h potentials
 also match independent PySCF analytic integrals in twelve additional tests,
 with explicit Gaussian/PySCF Cartesian ordering and normalization mapping.
+
+Chromium next exposed a signed torsion disagreement on the real ethanol example
+(HTML −60.945396°, Python +60.945396°). The HTML cross-product orientation now
+matches the established core convention. A deterministic 100-geometry signed
+JavaScript/core regression tests both senses in addition to the browser readout.
+Guided terminal submenus now route composition, cubes, alpha/beta/all frontier,
+Mayer, DOS/PDOS, density components and point ESP through the existing API;
+expected input/data errors remain inside the structured result boundary.
