@@ -45,8 +45,8 @@ jobs:
       - name: Publish distributions to PyPI
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33
 
-  release-candidate:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'release:0.10.0rc1')
+  release-stable:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'release:0.10.0')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -54,8 +54,8 @@ jobs:
       actions: read
       id-token: write
     env:
-      RELEASE_VERSION: "0.10.0rc1"
-      RELEASE_TAG: "v0.10.0rc1"
+      RELEASE_VERSION: "0.10.0"
+      RELEASE_TAG: "v0.10.0"
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
@@ -67,7 +67,7 @@ jobs:
           import os, tomllib
           from pathlib import Path
           version = tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"]
-          assert version == os.environ["RELEASE_VERSION"] == "0.10.0rc1"
+          assert version == os.environ["RELEASE_VERSION"] == "0.10.0"
           assert os.environ["RELEASE_TAG"] == "v" + version
           PY
       - name: Require all checks on this exact release commit
@@ -87,7 +87,7 @@ jobs:
           release-smoke/bin/python -m pip install "${wheel_file}[interop,resources]"
           release-smoke/bin/python - <<'PY'
           import openwfn
-          assert openwfn.__version__ == "0.10.0rc1"
+          assert openwfn.__version__ == "0.10.0"
           PY
           release-smoke/bin/openwfn examples install installed-examples
           release-smoke/bin/openwfn --format json installed-examples/water.fchk summary > installed-summary.json
@@ -109,9 +109,9 @@ jobs:
             git tag -a "$RELEASE_TAG" -m "openWFN $RELEASE_VERSION"
             git push origin "$RELEASE_TAG"
           fi
-      - name: Publish release-candidate distributions to PyPI
+      - name: Publish stable distributions to PyPI
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33
-      - name: Publish GitHub prerelease
+      - name: Publish GitHub stable release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -126,8 +126,8 @@ jobs:
                      "X-GitHub-Api-Version": "2022-11-28"}
           payload = {"tag_name": tag, "target_commitish": os.environ["GITHUB_SHA"],
                      "name": "openWFN " + os.environ["RELEASE_VERSION"],
-                     "body": Path("docs/releases/0.10.0rc1.md").read_text(),
-                     "draft": False, "prerelease": True, "make_latest": "false"}
+                     "body": Path("docs/releases/0.10.0.md").read_text(),
+                     "draft": False, "prerelease": False, "make_latest": "true"}
           request = Request(f"https://api.github.com/repos/{repo}/releases",
                             data=json.dumps(payload).encode(), headers=headers, method="POST")
           with urlopen(request, timeout=30) as response:
@@ -140,7 +140,7 @@ jobs:
           published-smoke/bin/python -m pip install --no-cache-dir --index-url https://pypi.org/simple "openwfn==${RELEASE_VERSION}"
           published-smoke/bin/python - <<'PY'
           import openwfn
-          assert openwfn.__version__ == "0.10.0rc1"
+          assert openwfn.__version__ == "0.10.0"
           PY
           published-smoke/bin/openwfn examples install published-examples
           published-smoke/bin/openwfn --format json published-examples/water.fchk summary > published-summary.json

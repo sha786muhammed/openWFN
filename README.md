@@ -34,21 +34,20 @@ openWFN connects scientific analysis, automation, validation evidence, and resea
 - **Validate** using explicit capability status, parser provenance, transformations, numerical controls, and fixture-backed evidence.
 - **Publish** durable reports, figures, cube files, structures, and batch manifests.
 
-## Release candidate 0.10.0rc1
+## Stable release 0.10.0
 
-This source checkout targets **openWFN 0.10.0rc1**. Install the candidate with
-`python -m pip install --pre "openwfn[interop,resources]==0.10.0rc1"`.
-See the [candidate notes](docs/releases/0.10.0rc1.md).
+**openWFN 0.10.0** adds everyday QC interpretation and tested automation and
+resource workflows. Install the exact release with
+`python -m pip install "openwfn[interop,resources]==0.10.0"`.
+See the [release notes](docs/releases/0.10.0.md).
 
+The release includes [11 real molecular examples](examples/everyday-qc/README.md)
+and an [Experimental coverage audit](docs/project/experimental-coverage.md).
+The audit retains convergence failures and unsupported legacy entry points.
+These methods are **Validated** within the documented reference scope;
+package stability does not change individual scientific validation labels.
 
-The development branch includes [11 real molecular examples](examples/everyday-qc/README.md)
-and a [complete Experimental coverage audit](docs/project/experimental-coverage.md).
-The audit retains ESP convergence failures and unsupported legacy entry points.
-
-The stable release remains **0.9.2**. The 0.10.0rc1 candidate adds
-these **Validated** methods within the documented reference scope; they are not yet part of a published release.
-
-| Development capability | Scientific controls |
+| Capability | Scientific controls |
 |---|---|
 | Signed MO cubes, arbitrary MO/HOMO/LUMO, alpha/beta | AO/grid norm diagnostics, bounded chunks, input-hash cube comments |
 | Mulliken/Löwdin MO composition | Named convention, atom/shell/angular partitions, raw norm and overlap conditioning |
@@ -75,7 +74,7 @@ openwfn --version
 Install the exact release when reproducing research:
 
 ```bash
-python -m pip install openwfn==0.9.2
+python -m pip install openwfn==0.10.0
 ```
 
 ## First analysis
@@ -138,9 +137,9 @@ The default density spacing of **0.15 bohr** is an accuracy/performance tradeoff
 
 ## Input support
 
-Version 0.9.2 includes optional interoperability support and resource/export safety fixes.
-See the [0.9.2 release notes](docs/releases/0.9.2.md).
-Install `python -m pip install "openwfn[interop]==0.9.2"` for additional formats. The optional reader
+Version 0.10.0 includes optional interoperability support and resource/export safety fixes.
+See the [0.10.0 release notes](docs/releases/0.10.0.md).
+Install `python -m pip install "openwfn[interop]==0.10.0"` for additional formats. The optional reader
 is pinned to IOData 1.0.1 and has a [25-format ingestion matrix](docs/reference/formats-and-exports.md)
 with [capability discovery](docs/reference/capabilities.md). Format ingestion
 does not imply that every file has orbitals, density, or an applicable
@@ -156,7 +155,7 @@ XYZ, MOL/SDF, and PDB inputs provide structure-only records. The optional
 backend also reads structure, periodic, grid, and integral-only formats; use
 `openwfn FILE capabilities` to check the actual data before analysis.
 
-In openWFN 0.9.2, use `--input-format FORMAT_ID` when a
+In openWFN 0.10.0, use `--input-format FORMAT_ID` when a
 filename is ambiguous (for example, a GAMESS `.dat`). A structure without a
 complete wavefunction gets a partial `summary`; it does not get inferred
 orbitals, density, or electron counts. Mixed batches can use `--format-map`
@@ -174,11 +173,11 @@ openwfn calculation.fchk density cube density.cube
 
 ### Output properties preview
 
-Version 0.9.2 can extract source-reported properties from QC text
+Version 0.10.0 can extract source-reported properties from QC text
 output through the optional cclib reader:
 
 ```bash
-python -m pip install "openwfn[outputs]==0.9.2"
+python -m pip install "openwfn[outputs]==0.10.0"
 python -m openwfn.cli --format json calculation.out properties
 ```
 

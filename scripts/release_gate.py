@@ -1,4 +1,4 @@
-"""Read-only CI gate for the explicitly approved release-candidate commit."""
+"""Read-only CI gate for the explicitly approved release commit."""
 import argparse
 import json
 import os

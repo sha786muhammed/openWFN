@@ -19,9 +19,10 @@ def test_historical_092_citation_is_retained() -> None:
     assert 'url: "https://github.com/sha786muhammed/openWFN/releases/tag/v0.9.2"' in citation
 
 
-def test_readme_pins_092_and_keeps_dynamic_pypi_badge() -> None:
+def test_historical_092_install_and_current_dynamic_pypi_badge() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    assert "python -m pip install openwfn==0.9.2" in readme
+    notes = (ROOT / "docs/releases/0.9.2.md").read_text(encoding="utf-8")
+    assert "python -m pip install openwfn==0.9.2" in notes
     assert "https://img.shields.io/pypi/v/openwfn?label=PyPI" in readme
 
 

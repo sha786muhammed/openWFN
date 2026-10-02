@@ -10,7 +10,7 @@ permissions:
 jobs:
   chromium-real-molecules:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15  # Includes Chromium and system-dependency installation.
     env:
       OPENBLAS_NUM_THREADS: "1"
       OMP_NUM_THREADS: "1"

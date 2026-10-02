@@ -39,8 +39,8 @@ def citation_release_date() -> str:
     return match.group(1)
 
 
-def test_source_version_targets_010_candidate() -> None:
-    assert project_version() == "0.10.0rc1"
+def test_source_version_targets_010_stable() -> None:
+    assert project_version() == "0.10.0"
 
 
 def test_runtime_version_matches_project() -> None:
@@ -121,13 +121,13 @@ def test_citation_contains_verified_software_fields() -> None:
     for required in (
         "type: software",
         'title: "openWFN: Wavefunction post-processing analysis toolkit"',
-        'version: "0.10.0rc1"',
+        'version: "0.10.0"',
         "date-released: 2026-10-02",
         "family-names: Shaji",
         "given-names: Muhammed Shah",
         "license: MIT",
         'repository-code: "https://github.com/sha786muhammed/openWFN"',
-        'url: "https://github.com/sha786muhammed/openWFN/releases/tag/v0.10.0rc1"',
+        'url: "https://github.com/sha786muhammed/openWFN/releases/tag/v0.10.0"',
     ):
         assert required in citation
 
@@ -157,9 +157,9 @@ def test_citation_guide_matches_cff() -> None:
     for field in (
         "Muhammed Shah Shaji",
         "openWFN: Wavefunction post-processing analysis toolkit",
-        "0.10.0rc1",
+        "0.10.0",
         "2026",
-        "https://github.com/sha786muhammed/openWFN/releases/tag/v0.10.0rc1",
+        "https://github.com/sha786muhammed/openWFN/releases/tag/v0.10.0",
         "@software{shaji_openwfn_2026",
     ):
         assert field in guide
@@ -208,7 +208,7 @@ def test_readme_documents_binary_checkpoint_requirement() -> None:
 
 def test_changelog_contains_current_release() -> None:
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    assert "## [0.10.0rc1] - 2026-10-02" in changelog
+    assert "## [0.10.0] - 2026-10-02" in changelog
 
 
 def test_release_notes_document_capability_boundaries() -> None:
@@ -248,3 +248,24 @@ def test_publish_workflow_is_oidc_only_pinned_and_version_gated() -> None:
     assert "API_TOKEN" not in workflow
     assert "dc37677b2e1c63e2034f94d8a5b11f265b73ba33" in workflow
     assert "Verify release tag matches package version" in workflow
+
+
+def test_stable_publication_keeps_exact_commit_and_public_install_gates() -> None:
+    workflow = (ROOT / ".github/workflows/publish.yml").read_text(encoding="utf-8")
+    for required in (
+        "release:0.10.0",
+        'RELEASE_VERSION: "0.10.0"',
+        'RELEASE_TAG: "v0.10.0"',
+        "python scripts/release_gate.py",
+        "python scripts/sync_release_metadata.py --check",
+        "scripts/benchmark_resources.py",
+        '"target_commitish": os.environ["GITHUB_SHA"]',
+        '"prerelease": False, "make_latest": "true"',
+        '--index-url https://pypi.org/simple',
+    ):
+        assert required in workflow
+    notes = (ROOT / "docs/releases/0.10.0.md").read_text(encoding="utf-8")
+    assert "Stable describes the package" in notes
+    assert "Experimental" in notes
+    assert "not included" in notes
+    assert (ROOT / "docs/releases/0.10.0rc1.md").is_file()
