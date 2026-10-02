@@ -7,8 +7,7 @@ openwfn examples install DESTINATION [--overwrite]
 
 Run `openwfn --help` or `openwfn FILE COMMAND --help` for the installed release's authoritative syntax.
 
-For interoperable inputs in this development branch, install
-`openwfn[interop]`, then inspect capabilities before an analysis:
+For interoperable inputs in openWFN 0.10.1, install `openwfn[interop]`, then inspect capabilities before an analysis:
 
 ```bash
 openwfn molecule.molden capabilities
@@ -37,7 +36,9 @@ format-ingestion status alone does not guarantee a `frontier` result.
 ## Installed examples
 
 `openwfn examples install DIRECTORY` copies maintained, redistributable inputs
-from the installed wheel. The command checks every destination before writing
+from the installed wheel. The historical top-level `water.fchk` example is
+preserved, and the complete versioned everyday-QC corpus is installed under
+`DIRECTORY/everyday-qc/`. The command checks every destination before writing
 and refuses to replace existing files. Pass `--overwrite` only when replacement
 is intentional.
 
@@ -60,9 +61,9 @@ These are the public top-level choices shown by `openwfn --help`.
 | `interactive` | Start the guided terminal interface |
 | `graph` | Show molecular fragments |
 | `geometry` | Run distance, angle, and dihedral operations |
-| `bondorder` | Experimental Mayer AO bond orders |
+| `bondorder` | Run Mayer AO bond-order analysis when required electronic data are available |
 | `population` | Run Mulliken or Löwdin population analysis |
-| `orbitals` | Inspect frontier orbitals |
+| `orbitals` | Inspect frontier orbitals, compositions, cubes, DOS, and PDOS |
 | `density` | Integrate or export electron and spin density |
 | `esp` | Evaluate supported electrostatic-potential components |
 | `report` | Build a research report |
@@ -79,10 +80,10 @@ These are the public top-level choices shown by `openwfn --help`.
 
 ## Source-reported output properties
 
-Install the `outputs` extra from this development checkout, then run:
+Install the optional `outputs` extra, then run:
 
 ```bash
-python -m pip install -e ".[outputs]"
+python -m pip install "openwfn[outputs]==0.10.1"
 python -m openwfn.cli --format json calculation.out properties
 ```
 
@@ -92,9 +93,10 @@ orbital energies, dipole, printed atomic charges and normal termination.
 Printed charges are source-reported values, separate from recalculated
 `population` results. Missing fields remain null or empty; warnings mark the
 result partial. Normal termination does not prove optimization convergence.
-This Experimental preview is separate from `load()` and is not yet a
-registered batch analysis. See [output properties](../output-properties.md)
-for units, provenance and the validation boundary.
+This source-output reader remains **Experimental** and is separate from `load()`;
+it is not a complete wavefunction or a blanket source-program compatibility
+claim. See [output properties](../output-properties.md) for units, provenance,
+and the validation boundary.
 
 ## Inspection and structure
 
@@ -117,12 +119,12 @@ CLI atom indices are one-based. The legacy `dist`, `angle`, and `dihedral` forms
 | Command | Syntax and options | Status note |
 |---|---|---|
 | `orbitals` | `orbitals frontier [--spin alpha\|beta\|all]` | Requires MO energies; `all` reports both unrestricted channels and the true overall HOMO |
-| `bondorder` | Experimental Mayer AO bond orders |
+| `bondorder` | `bondorder mayer [--threshold VALUE]` | Mayer result status follows the input diagnostics; Validated for the documented everyday-QC reference scope |
 | `population` | `population mulliken` or `population lowdin` | Requires AO density and overlap data; conservation failures return `partial` with warnings |
 | `density` | `density integrate [--kind total\|alpha\|beta\|spin] [--spacing BOHR] [--padding BOHR]` | Grid integration; validation status comes from the generated grid's conservation check |
 | `density` | `density cube OUTPUT [grid options]` | Cube is written when requested; failed conservation returns `partial`/Experimental rather than a false Validated result |
 | `cube` | `cube OUTPUT [grid options]` | Convenience density-cube command with the same validation behavior |
-| `esp` | `esp point X Y Z [--component COMPONENT] [--method integrals|grid]` | Nuclear/charge-model Stable; default Gaussian-integral electronic/total Validated; explicit grid Experimental |
+| `esp` | `esp point X Y Z [--component COMPONENT] [--method integrals\|grid]` | Nuclear/charge-model Stable; default Gaussian-integral electronic/total Validated for documented scope; explicit grid Experimental |
 | `validate` | `openwfn FILE validate` | Runs default total-density conservation check |
 
 The accepted frontier selector is `--spin alpha|beta|all`. For an unrestricted calculation, use:
@@ -210,13 +212,21 @@ defaults to `summary`.
 
 The hidden `mo` developer preview is intentionally not part of the public command contract.
 
-Development branch: `orbitals cube`, `orbitals composition` and `bondorder mayer` are described in [MO cubes](../science/mo-cubes.md), [composition](../science/orbital-composition.md) and [Mayer](../science/mayer.md). Global options such as `--format json` go before the input path.
+The 0.10 stable line exposes `orbitals cube`, `orbitals composition`, and
+`bondorder mayer` as public commands. Orbital composition and Mayer are
+Validated for the documented everyday-QC reference scope. MO field values have
+independent reference evidence, while each written cube keeps the success or
+partial status of its requested grid. See [MO cubes](../science/mo-cubes.md),
+[composition](../science/orbital-composition.md), and [Mayer](../science/mayer.md).
+Global options such as `--format json` go before the input path.
 
-Development spectrum commands are `orbitals dos` and `orbitals pdos`; `--sigma`
+Supported spectrum commands are `orbitals dos` and `orbitals pdos`; `--sigma`
 is in eV, `--energy-min`/`--energy-max` set both endpoints, `--points` controls
 resolution, and `--export` writes CSV/JSON/PNG/SVG. PDOS adds `--group-by`
-(atom/element/angular) and `--method` (lowdin/mulliken). These commands are
-Experimental; see [DOS/PDOS](../science/dos-pdos.md).
+(atom/element/angular) and `--method` (lowdin/mulliken). DOS and PDOS are
+Validated for the documented same-wavefunction everyday-QC scope; they remain
+finite-molecule orbital-energy analyses, not excited-state or periodic spectra.
+See [DOS/PDOS](../science/dos-pdos.md).
 
 Guided mode loads normalized molecular inputs and exposes frontier/composition/
 cube/DOS/PDOS orbital submenus with spin selection, Mayer bond analysis, density
