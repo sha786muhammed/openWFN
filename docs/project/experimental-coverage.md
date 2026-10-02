@@ -13,10 +13,10 @@ tolerances are retained with each case in the captured reference report.
 
 | Pathway | Evidence in this repository | Remaining boundary/status |
 |---|---|---|
-| MO cubes | Eleven fresh PySCF cases: signed HOMO/LUMO for alpha and available beta; field/order/normalization and serialized cube checks | Experimental; no comprehensive high-l, ECP or correlated orbital validation |
-| Orbital composition | PySCF Mulliken population routine and SciPy symmetric square root on the same wavefunctions; atom partition/metric diagnostics | Experimental; Cartesian Löwdin intentionally excluded across differing AO normalizations |
-| Mayer orders | cclib independently builds occupied densities and contracts its MBO matrices from PySCF wavefunctions | Experimental; conventional HF index, not a validated correlated improved-Mayer implementation |
-| DOS/PDOS | Independent Gaussian expansion from PySCF energies and projections; both population conventions for pure bases, Mulliken for Cartesian | Experimental; all-element/high-l/ECP coverage absent; broadened orbital energies only |
+| MO cubes | Eleven fresh PySCF cases: signed HOMO/LUMO for alpha and available beta; field/order/normalization and serialized cube checks | Validated for the named set; no comprehensive high-l, ECP or correlated orbital validation |
+| Orbital composition | PySCF Mulliken population routine and SciPy symmetric square root on the same wavefunctions; atom partition/metric diagnostics | Validated for the named set; Cartesian Löwdin intentionally excluded across differing AO normalizations |
+| Mayer orders | cclib independently builds occupied densities and contracts its MBO matrices from PySCF wavefunctions | Validated for the named set; conventional HF index, not a validated correlated improved-Mayer implementation |
+| DOS/PDOS | Independent Gaussian expansion from PySCF energies and projections; both population conventions for pure bases, Mulliken for Cartesian | Validated for the named set; all-element/high-l/ECP coverage absent; broadened orbital energies only |
 | Electronic/total grid ESP | Analytic PySCF `int1e_rinv` contraction for water, diffuse UHF OH and ammonium, with spacing histories and electron counts | Experimental; **ammonium fails the declared tested-grid tolerance**, retained as partial evidence |
 | Density integration/cube when conservation fails | Existing density/conservation regressions plus ESP histories and real workbench coarse density grids | Remains partial/Experimental whenever its actual grid fails; passing other inputs must not override this |
 | Mulliken/Löwdin population when incomplete/unreliable | Existing malformed/source-density/charge and overlap-condition regression tests | Remains partial/Experimental for inconsistent or ill-conditioned input; there is no valid golden population for deliberately invalid data |
@@ -81,3 +81,13 @@ formats pass. The molecular/ESP/corpus subset passed, including expected partial
 ESP behavior. A bounded independent read-only review found no Critical/Important
 issues. This review is not scientific certification. The single skip is the
 core-only missing-IOData contract in an environment where IOData is installed.
+
+## Stabilization update
+
+Successful MO cube, composition, Mayer, DOS and PDOS results now report
+Validated for the named set, retaining partial/Experimental for unmet diagnostics.
+The new default integral ESP fixes the charged-grid failure without changing or
+erasing the old grid evidence. Its eleven PySCF comparisons and all-component
+analytic s–h tests are documented in [ESP methods](../science/population-esp.md).
+Interactive HTML browser certification remains pending because the browser
+download failed; the workbench has not been relabeled.

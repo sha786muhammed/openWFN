@@ -264,3 +264,13 @@ Unknown parameters are rejected, including structure-only summaries. The conveni
 methods `mayer(threshold=.05)`, `dos(sigma_ev=.3, spin="all", energy_min_ev=None,
 energy_max_ev=None, points=None)` and `pdos(group_by="atom", method="lowdin", ...)`
 return the same shared result envelopes. See [DOS/PDOS](../science/dos-pdos.md).
+
+Point ESP uses the same Gaussian-integral core as the CLI:
+
+```python
+result = calculation.esp((1.127, 1.434, 1.741), component="total", method="integrals")
+print(result.data["value"])  # hartree/e; input coordinates are angstrom
+```
+
+Unavailable data and singular nuclear potentials return structured failed results.
+The explicit `method="grid"` retains the legacy convergence-controlled method.

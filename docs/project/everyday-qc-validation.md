@@ -4,7 +4,7 @@
 
 Baseline is 0.9.2 / 0991406. This branch implements roadmap units 1–5 plus
 source-spin and MCP resource safeguards. It does **not** complete Phase 1 or
-Phases 2–4. Scientific methods remain Experimental. No release version was
+Phases 2–4. Successful everyday QC results now report Validated for the documented reference scope. No release version was
 changed, no release was published and no phase gate was declared satisfied.
 
 | Capability | Released 0.9.2 | This branch |
@@ -84,7 +84,9 @@ Molden energy rounding. `validation/everyday-qc/pyscf-report.json` is a captured
 external-comparison report, distinct from the original observed snapshots.
 These are same-wavefunction post-processing checks, not validation of HF
 accuracy, all elements, high angular momentum, ECPs or correlated densities.
-All five methods remain **Experimental**.
+The subsequent stabilization stage promotes successful results of these five
+methods to **Validated**, using this reference evidence; conditional partial
+results remain Experimental.
 
 Follow-up verification: **673 passed, 1 skipped** in the full optional-dependency
 environment; clean core-only CI configuration: **611 passed, 62 skipped,
@@ -152,7 +154,7 @@ their own design and independent validation before implementation claims.
 ## Release strategy
 
 Keep 0.9.2 as the stable release. Review the staged commits as a draft PR.
-A future 0.10.0a1 can expose these five methods as Experimental after review;
+A future 0.10.0a1 can expose the five validated methods after review;
 a stable 0.10.0 needs reviewed reference captures, broader restricted/unrestricted
 molecules and completed Phase 1 gates. Use separate prerelease/PR units for
 spectroscopy, transition interpretation and real-space methods. Basin integration
@@ -165,3 +167,27 @@ See [the complete Experimental coverage ledger](experimental-coverage.md) for
 charged, triplet, intermolecular and real output-reader evidence, analytic ESP
 convergence histories (including a retained ammonium failure), and safety fixes.
 The earlier six-case capture above describes the initial stabilization milestone.
+
+## Workflow stabilization follow-up
+
+The design in [workflow stabilization](workflow-stabilization-design.md) adds
+Gaussian-integral point ESP, independent PySCF Coulomb references for all eleven
+examples, analytic s–h tests, shared API/CLI defaults and provenance parity.
+The legacy grid comparison including failed ammonium convergence is preserved.
+The checked-in input hashes are unchanged. Guided terminal mode now loads
+normalized molecular inputs, including Molden; water, triplet oxygen and ammonium
+exercise its orbital workflow. Human output bounds long arrays and formats atom
+composition and Mayer pairs as tables; JSON and verbose output retain full data.
+
+An interactive Chromium verification was attempted but browser downloads were
+truncated in this environment. HTML payload/JavaScript/export regressions pass,
+but this is not an interactive-browser certification: workbench remains
+Experimental. Absent advanced scientific methods remain unsupported.
+
+Observed local verification after stabilization: **725 passed, 1 skipped** in
+the full optional-dependency suite (92.99 s). After adding the eleven committed
+input Coulomb regressions, the complete real-corpus file passed **32 tests**
+(18.59 s). Ruff, documentation checks, strict MkDocs and the internal numerical
+validation runner passed. A bounded independent review found no Critical or
+Important numerical issues. The optional browser download failure is recorded
+above and is not counted as a passing workflow.

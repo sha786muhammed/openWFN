@@ -11,6 +11,14 @@ All notable changes to openWFN are documented in this file.
 
 ## [Unreleased] — staged everyday QC branch
 
+- Add native Gaussian-integral ESP and a shared Python/CLI point interface,
+  independently checked against eleven PySCF wavefunctions and analytic s–h AOs.
+- Promote successful MO cube/composition/Mayer/DOS/PDOS results to Validated for
+  the named reference scope; retain partial/Experimental diagnostics.
+- Fix guided terminal Molden loading and format atom/bond tables and bounded
+  spectrum summaries while preserving full JSON/verbose output.
+- Retain Experimental HTML workbench status pending interactive browser evidence.
+
 - Add Experimental signed MO cube export with one-based selection, spin routing,
   shared AO evaluation, bounded grids and normalization/provenance diagnostics.
 - Add named Mulliken/Löwdin MO compositions, spin-corrected Mayer bond orders,

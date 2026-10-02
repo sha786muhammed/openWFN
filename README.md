@@ -41,7 +41,7 @@ and a [complete Experimental coverage audit](docs/project/experimental-coverage.
 The audit retains ESP convergence failures and unsupported legacy entry points.
 
 The stable release remains **0.9.2**. The `feat/everyday-qc-staged` branch adds
-these **Experimental** methods; they are not yet part of a published release.
+these **Validated** methods within the documented reference scope; they are not yet part of a published release.
 
 | Development capability | Scientific controls |
 |---|---|
@@ -120,6 +120,7 @@ The default density spacing of **0.15 bohr** is an accuracy/performance tradeoff
 | Population | Mulliken and symmetric Löwdin populations and charges | Stable interface; conservation checked and fixture-scoped |
 | Density | Total, alpha, beta, and spin integration and cube export | Validated only for the named active validation fixtures and tolerances |
 | Electrostatic potential | Nuclear and charge-model point ESP | Stable interface; special-case regressions included |
+| Gaussian-integral electronic/total ESP | AO-density Coulomb integrals with independent references | Validated for the eleven-case set |
 | Grid electronic/total ESP | Numerical Coulomb evaluation | Experimental |
 | Automation | Versioned results, batch manifests, discovery, resume, JSON and CSV | Stable |
 | Research reports | HTML/Markdown reports, tables, figures, and structures | Stable |

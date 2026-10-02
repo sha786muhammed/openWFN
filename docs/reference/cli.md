@@ -122,7 +122,7 @@ CLI atom indices are one-based. The legacy `dist`, `angle`, and `dihedral` forms
 | `density` | `density integrate [--kind total\|alpha\|beta\|spin] [--spacing BOHR] [--padding BOHR]` | Grid integration; validation status comes from the generated grid's conservation check |
 | `density` | `density cube OUTPUT [grid options]` | Cube is written when requested; failed conservation returns `partial`/Experimental rather than a false Validated result |
 | `cube` | `cube OUTPUT [grid options]` | Convenience density-cube command with the same validation behavior |
-| `esp` | `esp point X Y Z [--component COMPONENT]` | Nuclear and charge-model components Stable; grid electronic/total Experimental |
+| `esp` | `esp point X Y Z [--component COMPONENT] [--method integrals|grid]` | Nuclear/charge-model Stable; default Gaussian-integral electronic/total Validated; explicit grid Experimental |
 | `validate` | `openwfn FILE validate` | Runs default total-density conservation check |
 
 The accepted frontier selector is `--spin alpha|beta|all`. For an unrestricted calculation, use:
