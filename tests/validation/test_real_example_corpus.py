@@ -29,7 +29,7 @@ def test_checked_in_wavefunction(case):
         result = calc.pdos(group_by='atom', method=method)
         assert result.status == 'success', result.warnings
         assert result.data['projection_sum_max_error'] < 1e-10
-    assert calc.orbital_composition().validation_status == 'Experimental'
+    assert calc.orbital_composition().validation_status == 'Validated'
 
 
 @pytest.mark.parametrize('name', ['water', 'oh_diffuse_uhf'])
@@ -63,3 +63,20 @@ def test_real_charged_open_shell_cli_api_parity(name, analysis, capsys):
     actual = json.loads(capsys.readouterr().out)
     assert actual['data'] == expected.data
     assert actual['provenance']['input_sha256'] == expected.provenance['input_sha256']
+
+
+@pytest.mark.parametrize('case', REPORT['cases'], ids=[case['case'] for case in REPORT['cases']])
+def test_checked_in_electronic_coulomb_reference(case):
+    """The committed input produces the independent reference, not just fresh SCF."""
+    pytest.importorskip('iodata')
+    from openwfn.constants import BOHR_TO_ANGSTROM
+
+    calc = load(ROOT/f"examples/everyday-qc/{case['case']}.molden")
+    for point, expected in zip(case['reference_esp_points_bohr'], case['reference_electronic_esp'], strict=True):
+        coordinates = tuple(value*BOHR_TO_ANGSTROM for value in point)
+        result = calc.esp(coordinates, component='electronic')
+        assert result.status == 'success', result.warnings
+        assert result.validation_status == 'Validated'
+        assert result.data['value'] == pytest.approx(expected, abs=1e-8)
+        assert result.data['quadrature_passed']
+        assert result.data['electron_conservation_error'] < 1e-6

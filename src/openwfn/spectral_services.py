@@ -68,7 +68,7 @@ def orbital_dos(data: CalculationData, *, sigma_ev: float = .3, spin: str = 'all
         'orbital_count': len(energies), 'integrated_dos': integral,
         'analytic_truncated_area': expected_area, 'counting': 'one per supplied spatial orbital per channel; no occupation weighting',
     }, units={'energy_ev': 'eV', 'total_dos': 'orbitals/eV', 'channels': 'orbitals/eV', 'sigma_ev': 'eV'},
-        validation_status='Experimental', status='partial' if warnings else 'success', warnings=tuple(warnings))
+        validation_status='Experimental' if warnings else 'Validated', status='partial' if warnings else 'success', warnings=tuple(warnings))
 
 
 def orbital_pdos(data: CalculationData, *, group_by: str = 'atom', method: str = 'lowdin',
@@ -127,5 +127,5 @@ def orbital_pdos(data: CalculationData, *, group_by: str = 'atom', method: str =
         'projection_method': method, 'group_by': group_by, 'max_raw_mo_norm_error': max_norm_error,
         'projection_sum_max_error': residual, 'overlap_diagnostics': diagnostic_records},
         units={**dos.units, 'projections': 'orbitals/eV', 'projection_sum_max_error': 'orbitals/eV'},
-        validation_status='Experimental', status='partial' if warnings else 'success',
+        validation_status='Experimental' if warnings else 'Validated', status='partial' if warnings else 'success',
         warnings=tuple(dict.fromkeys(warnings)))

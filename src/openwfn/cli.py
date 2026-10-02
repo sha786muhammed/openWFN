@@ -35,7 +35,6 @@ from .results import ResultError, ResultRecord
 from .services import (
     density_cube_export,
     density_integration,
-    electrostatic_potential_point,
     geometry_angle,
     geometry_dihedral,
     geometry_distance,
@@ -441,6 +440,7 @@ def main(argv: list[str] | None = None) -> int:
         choices=["nuclear", "mulliken", "lowdin", "electronic", "total"],
         default="total",
     )
+    p_esp_point.add_argument("--method", choices=("integrals", "grid"), default="integrals")
     p_esp_point.add_argument("--spacing", type=float, default=0.15)
     p_esp_point.add_argument("--padding", type=float, default=6.0)
 
@@ -647,14 +647,12 @@ def main(argv: list[str] | None = None) -> int:
         return execute(density_operation, context)
 
     if args.command == "esp":
+        from .api import load
+
         return execute(
-            lambda: electrostatic_potential_point(
-                require_calculation(),
-                (args.x, args.y, args.z),
-                args.component,
-                args.spacing,
-                args.padding,
-            ),
+            lambda: load(Path(args.file), format_hint=args.input_format).esp(
+                (args.x, args.y, args.z), component=args.component,
+                spacing_bohr=args.spacing, padding_bohr=args.padding, method=args.method),
             _context(args),
         )
 
@@ -895,9 +893,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "interactive":
         try:
-            fchk_file, _scalars, _atomic_numbers, _coordinates = load_data(args.file)
-            lines = read_fchk(fchk_file)
-            run_interactive(lines, fchk_file)
+            run_interactive(None, str(args.file))
             return 0
         except Exception as exc:
             context = _context(args)

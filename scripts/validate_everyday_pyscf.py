@@ -37,6 +37,7 @@ def validate_case(case, directory: Path) -> dict:
     from scipy.linalg import sqrtm
 
     from openwfn.analysis.basis import overlap_matrix
+    from openwfn.analysis.gaussian_coulomb import electronic_potential
     from openwfn.analysis.grids import molecular_grid_points
     from openwfn.analysis.orbitals import evaluate_orbital
     from openwfn.api import load
@@ -48,6 +49,8 @@ def validate_case(case, directory: Path) -> dict:
     charge = case[5] if len(case) > 5 else 0
     directory.mkdir(parents=True, exist_ok=True)
     mol = gto.M(atom=geometry, basis=basis, spin=spin, charge=charge, cart=cartesian, verbose=0)
+    # These deliberately small references fit in memory, including container PID namespaces.
+    mol.incore_anyway = True
     mf = scf.UHF(mol) if spin else scf.RHF(mol)
     mf.conv_tol = 1e-11
     mf.kernel()
@@ -74,6 +77,23 @@ def validate_case(case, directory: Path) -> dict:
     # normalized openWFN Cartesian AOs. Spectrum equality only applies to pure AOs.
     if not cartesian:
         assert overlap_error < 2e-7, (name, overlap_error)
+    # Independent analytic Coulomb integrals also include an electronic-only
+    # nuclear-center point: the electronic potential is finite there.
+    esp_points = np.vstack([mol.atom_coords()[0], mol.atom_coords().mean(axis=0)+
+                            np.array([[2.13, 2.71, 3.29], [8.13, 7.71, 9.29]])])
+    reference_dm = mf.make_rdm1()
+    if spin:
+        reference_dm = reference_dm.sum(axis=0)
+    reference_esp = []
+    for point in esp_points:
+        with mol.with_rinv_origin(point):
+            reference_esp.append(-float(np.einsum('ij,ji', reference_dm, mol.intor('int1e_rinv'))))
+    esp, esp_diagnostics = electronic_potential(data.molecule, data.basis, data.total_density, esp_points)
+    esp_error = float(np.max(np.abs(esp-reference_esp)))
+    assert esp_error < 1e-8, (name, 'Coulomb integrals', esp_error)
+    assert esp_diagnostics['quadrature_passed'], (name, esp_diagnostics)
+    results.update(coulomb_integral_max_error=esp_error, coulomb_diagnostics=esp_diagnostics,
+                   reference_esp_points_bohr=esp_points.tolist(), reference_electronic_esp=reference_esp)
     for channel, coefficients, occupations, energies in channels:
         for selector in ('homo', 'lumo'):
             orbitals, index = select_orbital(data, selector, channel)

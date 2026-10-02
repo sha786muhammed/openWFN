@@ -39,7 +39,7 @@ def test_cube_matches_signed_normalized_gaussian_and_integral(tmp_path):
     assert result.data['squared_amplitude_integral'] == pytest.approx(1., abs=1e-9)
     assert result.data['ao_metric_norm'] == pytest.approx(1., abs=1e-12)
     assert result.units['amplitude'] == 'bohr^-3/2'
-    assert result.validation_status == 'Experimental'
+    assert result.validation_status == 'Validated'
     assert 'mo=1' in (tmp_path/'h.cube').read_text().splitlines()[1]
 
 

@@ -25,6 +25,8 @@ def compare_case(name: str) -> dict:
     entry = next(case for case in report['cases'] if case['case'] == name)
     mol = gto.M(atom=entry['geometry_angstrom'], basis=entry['basis'], spin=entry['spin'],
                 charge=entry['charge'], cart=entry['cartesian'], verbose=0)
+    # These deliberately small references fit in memory, including container PID namespaces.
+    mol.incore_anyway = True
     mf = scf.UHF(mol) if entry['spin'] else scf.RHF(mol)
     mf.conv_tol = 1e-11
     mf.kernel()

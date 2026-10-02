@@ -14,6 +14,7 @@ from .model import MODEL_SCHEMA_VERSION, Molecule
 from .results import ResultRecord
 from .services import (
     density_integration,
+    electrostatic_potential_point,
     geometry_angle,
     geometry_dihedral,
     geometry_distance,
@@ -155,6 +156,21 @@ class OpenWFNCalculation:
             )
         except DataUnavailableError as exc:
             return self._unavailable("density_integration", f"density-{kind}", str(exc))
+
+    def esp(self, coordinates_angstrom: tuple[float, float, float], *,
+            component: str = "total", method: str = "integrals",
+            spacing_bohr: float = .15, padding_bohr: float = 6.) -> ResultRecord:
+        """Point electrostatic potential in hartree/e; coordinates are angstrom."""
+        if self.data.calculation is None:
+            return self._unavailable("electrostatic_potential", "esp-point", "ESP requires a molecular wavefunction.")
+        try:
+            return self._with_provenance(electrostatic_potential_point(
+                self.data.calculation, coordinates_angstrom, component,
+                spacing_bohr, padding_bohr, method=method))
+        except (DataUnavailableError, ValueError) as exc:
+            return self._with_provenance(ResultRecord.failure(
+                kind="electrostatic_potential", analysis_name="esp-point",
+                analysis_version="1", exception=exc, elapsed_seconds=0.0))
 
     def pdos(self, *, group_by: str = "atom", method: str = "lowdin", sigma_ev: float = .3,
              spin: str = "all", energy_min_ev: float | None = None,

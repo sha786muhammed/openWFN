@@ -90,7 +90,7 @@ def orbital_cube_export(data: CalculationData, mo: int | str, spin: str, spacing
         'spacing': spacing_bohr, 'padding': padding_bohr, 'ao_metric_norm': norm,
         'squared_amplitude_integral': integral, 'grid_norm_error': abs(integral-norm),
         }, units={'amplitude': 'bohr^-3/2', 'spacing': 'bohr', 'padding': 'bohr', 'energy_hartree': 'hartree'},
-        validation_status='Experimental', status='partial' if warnings else 'success', warnings=tuple(warnings))
+        validation_status='Experimental' if warnings else 'Validated', status='partial' if warnings else 'success', warnings=tuple(warnings))
 
 
 def orbital_composition(data: CalculationData, mo: int | str = 'homo', spin: str = 'alpha',
@@ -134,4 +134,4 @@ def orbital_composition(data: CalculationData, mo: int | str = 'homo', spin: str
         'angular_contributions': [{'angular_momentum': momentum, 'fraction': value} for momentum, value in sorted(angular.items())],
         'ao_contributions': weights.tolist(), **diagnostics,
     }, units={'atom_contributions': 'fraction and percent', 'ao_contributions': 'fraction'},
-        validation_status='Experimental', status='partial' if warnings else 'success', warnings=tuple(warnings))
+        validation_status='Experimental' if warnings else 'Validated', status='partial' if warnings else 'success', warnings=tuple(warnings))

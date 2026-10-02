@@ -327,7 +327,7 @@ def test_esp_point_supports_mulliken_atomic_charge_model() -> None:
 def test_esp_point_total_is_marked_experimental() -> None:
     result = run_cli(
         "--format", "json", str(WATER), "esp", "point", "5", "0", "0",
-        "--component", "total", "--spacing", "0.3", "--padding", "4.0",
+        "--component", "total", "--method", "grid", "--spacing", "0.3", "--padding", "4.0",
     )
 
     assert result.returncode == 0

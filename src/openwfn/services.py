@@ -552,7 +552,10 @@ def electrostatic_potential_point(
     component: Literal["nuclear", "electronic", "total", "mulliken", "lowdin"],
     spacing_bohr: float,
     padding_bohr: float,
+    *, method: Literal["grid", "integrals"] = "grid",
 ) -> ResultRecord:
+    if method not in {"grid", "integrals"}:
+        raise ValueError("ESP method must be grid or integrals")
     if component not in {"nuclear", "electronic", "total", "mulliken", "lowdin"}:
         raise ValueError(
             "ESP component must be 'nuclear', 'electronic', 'total', 'mulliken', or 'lowdin'"
@@ -598,27 +601,47 @@ def electrostatic_potential_point(
         matrix = density_matrix_for_kind(data, "total")
         density_source = matrix.source
         warnings.extend(_density_source_warnings(data, matrix))
-        grid = density_grid(data, "total", spacing_bohr, padding_bohr)
-        expectation = expected_electron_count(data, "total")
-        conservation = integrate_density(grid, expectation.value)
-        grid_diagnostics = {
-            "grid_electron_count": conservation.electron_count,
-            "expected_electrons": expectation.value,
-            "grid_electron_conservation_error": conservation.absolute_error,
-            "grid_spacing_bohr": spacing_bohr,
-            "grid_padding_bohr": padding_bohr,
-        }
-        if not conservation.passed:
-            result_status = "partial"
-            warnings.append(
-                "ESP density-grid electron conservation failed; refine spacing/padding. "
-                "Charge conservation alone does not establish Coulomb-quadrature convergence."
-            )
-        electronic = float(electronic_esp_from_grid(grid, point)[0])
+        if method == "integrals":
+            from .analysis.gaussian_coulomb import electronic_potential
+
+            if data.basis is None:
+                raise DataUnavailableError("Integral ESP requires Gaussian basis data.")
+            electronic_values, diagnostics = electronic_potential(
+                data.molecule, data.basis, matrix, point)
+            expectation = expected_electron_count(data, "total")
+            electron_count = float(np.trace(np.asarray(matrix.values) @ overlap_matrix(data.basis, data.molecule)))
+            error = abs(electron_count-expectation.value)
+            grid_diagnostics = {**diagnostics, "method": "integrals",
+                                "electron_count": electron_count,
+                                "expected_electrons": expectation.value,
+                                "electron_conservation_error": error}
+            warnings.extend(expectation.warnings)
+            if error > POPULATION_CONSERVATION_TOLERANCE or not diagnostics["quadrature_passed"]:
+                result_status = "partial"
+                warnings.append("Integral ESP electron conservation or auxiliary quadrature convergence failed.")
+            electronic = float(electronic_values[0])
+        else:
+            grid = density_grid(data, "total", spacing_bohr, padding_bohr)
+            expectation = expected_electron_count(data, "total")
+            conservation = integrate_density(grid, expectation.value)
+            grid_diagnostics = {
+                "grid_electron_count": conservation.electron_count,
+                "expected_electrons": expectation.value,
+                "grid_electron_conservation_error": conservation.absolute_error,
+                "grid_spacing_bohr": spacing_bohr,
+                "grid_padding_bohr": padding_bohr,
+            }
+            if not conservation.passed:
+                result_status = "partial"
+                warnings.append(
+                    "ESP density-grid electron conservation failed; refine spacing/padding. "
+                    "Charge conservation alone does not establish Coulomb-quadrature convergence."
+                )
+            electronic = float(electronic_esp_from_grid(grid, point)[0])
         value = electronic
         if component == "total":
             value += nuclear_value
-        status = "Experimental"
+        status = "Validated" if method == "integrals" and result_status == "success" else "Experimental"
     if not np.isfinite(value):
         raise ValueError(
             "Electronic ESP quadrature is singular at a density-grid point. "
@@ -694,5 +717,5 @@ def mayer_bond_orders(data: CalculationData, threshold: float = .05) -> ResultRe
               'bonded_valence': 'dimensionless', 'charge_conservation_error': 'e',
               'spin_electron_count': 'electron', 'expected_spin_electrons': 'electron',
               'spin_conservation_error': 'electron'},
-        validation_status='Experimental', status='partial' if warnings else 'success',
+        validation_status='Experimental' if warnings else 'Validated', status='partial' if warnings else 'success',
         warnings=tuple(dict.fromkeys(warnings)))

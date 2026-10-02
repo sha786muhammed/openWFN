@@ -86,6 +86,37 @@
           }
         }
       ],
+      "coulomb_integral_max_error": 3.352873534367973e-14,
+      "coulomb_diagnostics": {
+        "quadrature_nodes": 96,
+        "quadrature_check_nodes": 64,
+        "quadrature_max_error": 1.5987211554602254e-14,
+        "quadrature_passed": true,
+        "estimated_primitive_node_work": 110880,
+        "method": "Gaussian Coulomb integrals (Cartesian moments and auxiliary Gauss-Legendre quadrature)"
+      },
+      "reference_esp_points_bohr": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          2.13,
+          2.71,
+          4.029512823413127
+        ],
+        [
+          8.13,
+          7.71,
+          10.029512823413127
+        ]
+      ],
+      "reference_electronic_esp": [
+        -23.161323499156428,
+        -1.9313451560568458,
+        -0.6695429054983373
+      ],
       "mayer_max_error": 1.3211653993039363e-14,
       "reference_mayer_matrix": [
         [
@@ -192,6 +223,37 @@
             }
           }
         }
+      ],
+      "coulomb_integral_max_error": 1.1723955140041653e-13,
+      "coulomb_diagnostics": {
+        "quadrature_nodes": 96,
+        "quadrature_check_nodes": 64,
+        "quadrature_max_error": 1.2434497875801753e-14,
+        "quadrature_passed": true,
+        "estimated_primitive_node_work": 181440,
+        "method": "Gaussian Coulomb integrals (Cartesian moments and auxiliary Gauss-Legendre quadrature)"
+      },
+      "reference_esp_points_bohr": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          2.13,
+          2.71,
+          3.29
+        ],
+        [
+          8.13,
+          7.71,
+          9.29
+        ]
+      ],
+      "reference_electronic_esp": [
+        -16.484796202792566,
+        -2.1345677165855594,
+        -0.6874509253429881
       ],
       "mayer_max_error": 3.6193270602780103e-14,
       "reference_mayer_matrix": [
@@ -315,6 +377,37 @@
             }
           }
         }
+      ],
+      "coulomb_integral_max_error": 2.0961010704922955e-13,
+      "coulomb_diagnostics": {
+        "quadrature_nodes": 96,
+        "quadrature_check_nodes": 64,
+        "quadrature_max_error": 1.4654943925052066e-14,
+        "quadrature_passed": true,
+        "estimated_primitive_node_work": 393600,
+        "method": "Gaussian Coulomb integrals (Cartesian moments and auxiliary Gauss-Legendre quadrature)"
+      },
+      "reference_esp_points_bohr": [
+        [
+          0.0,
+          0.0,
+          0.1889726124565062
+        ],
+        [
+          2.13,
+          2.71,
+          3.011265396626653
+        ],
+        [
+          8.13,
+          7.71,
+          9.011265396626653
+        ]
+      ],
+      "reference_electronic_esp": [
+        -19.983604687837293,
+        -2.1993074798161123,
+        -0.6974886030166942
       ],
       "mayer_max_error": 3.6415315207705135e-14,
       "reference_mayer_matrix": [
@@ -459,6 +552,37 @@
             }
           }
         }
+      ],
+      "coulomb_integral_max_error": 1.7053025658242404e-13,
+      "coulomb_diagnostics": {
+        "quadrature_nodes": 96,
+        "quadrature_check_nodes": 64,
+        "quadrature_max_error": 5.684341886080802e-14,
+        "quadrature_passed": true,
+        "estimated_primitive_node_work": 2825280,
+        "method": "Gaussian Coulomb integrals (Cartesian moments and auxiliary Gauss-Legendre quadrature)"
+      },
+      "reference_esp_points_bohr": [
+        [
+          2.6399473960173916,
+          0.0,
+          0.0
+        ],
+        [
+          2.13,
+          2.71,
+          3.29
+        ],
+        [
+          8.13,
+          7.71,
+          9.29
+        ]
+      ],
+      "reference_electronic_esp": [
+        -24.288313938041142,
+        -8.246441459264068,
+        -2.8777454207122855
       ],
       "mayer_max_error": 3.2307490016592055e-14,
       "reference_mayer_matrix": [
@@ -766,6 +890,37 @@
           }
         }
       ],
+      "coulomb_integral_max_error": 2.2737367544323206e-13,
+      "coulomb_diagnostics": {
+        "quadrature_nodes": 96,
+        "quadrature_check_nodes": 64,
+        "quadrature_max_error": 1.3766765505351941e-14,
+        "quadrature_passed": true,
+        "estimated_primitive_node_work": 319680,
+        "method": "Gaussian Coulomb integrals (Cartesian moments and auxiliary Gauss-Legendre quadrature)"
+      },
+      "reference_esp_points_bohr": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          2.13,
+          2.71,
+          4.206517170414055
+        ],
+        [
+          8.13,
+          7.71,
+          10.206517170414054
+        ]
+      ],
+      "reference_electronic_esp": [
+        -22.81508642954896,
+        -1.6877012123982524,
+        -0.5970300894659385
+      ],
       "mayer_max_error": 1.27675647831893e-14,
       "reference_mayer_matrix": [
         [
@@ -857,6 +1012,37 @@
             }
           }
         }
+      ],
+      "coulomb_integral_max_error": 9.592326932761353e-14,
+      "coulomb_diagnostics": {
+        "quadrature_nodes": 96,
+        "quadrature_check_nodes": 64,
+        "quadrature_max_error": 1.4654943925052066e-14,
+        "quadrature_passed": true,
+        "estimated_primitive_node_work": 319680,
+        "method": "Gaussian Coulomb integrals (Cartesian moments and auxiliary Gauss-Legendre quadrature)"
+      },
+      "reference_esp_points_bohr": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          2.13,
+          2.71,
+          4.029512823413127
+        ],
+        [
+          8.13,
+          7.71,
+          10.029512823413127
+        ]
+      ],
+      "reference_electronic_esp": [
+        -23.41643623352639,
+        -1.9250720058085928,
+        -0.6689643357130843
       ],
       "mayer_max_error": 1.9095836023552692e-14,
       "reference_mayer_matrix": [
@@ -955,6 +1141,37 @@
             }
           }
         }
+      ],
+      "coulomb_integral_max_error": 2.2382096176443156e-13,
+      "coulomb_diagnostics": {
+        "quadrature_nodes": 96,
+        "quadrature_check_nodes": 64,
+        "quadrature_max_error": 3.907985046680551e-14,
+        "quadrature_passed": true,
+        "estimated_primitive_node_work": 1713600,
+        "method": "Gaussian Coulomb integrals (Cartesian moments and auxiliary Gauss-Legendre quadrature)"
+      },
+      "reference_esp_points_bohr": [
+        [
+          0.0,
+          0.0,
+          -2.1920823044954716
+        ],
+        [
+          2.13,
+          2.71,
+          3.29
+        ],
+        [
+          8.13,
+          7.71,
+          9.29
+        ]
+      ],
+      "reference_electronic_esp": [
+        -26.79434907407708,
+        -4.712861312428949,
+        -1.5141919307211906
       ],
       "mayer_max_error": 7.327471962526033e-14,
       "reference_mayer_matrix": [
@@ -1066,6 +1283,37 @@
             }
           }
         }
+      ],
+      "coulomb_integral_max_error": 2.1671553440683056e-13,
+      "coulomb_diagnostics": {
+        "quadrature_nodes": 96,
+        "quadrature_check_nodes": 64,
+        "quadrature_max_error": 2.842170943040401e-14,
+        "quadrature_passed": true,
+        "estimated_primitive_node_work": 1555200,
+        "method": "Gaussian Coulomb integrals (Cartesian moments and auxiliary Gauss-Legendre quadrature)"
+      },
+      "reference_esp_points_bohr": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          2.13,
+          2.71,
+          6.769615704032468
+        ],
+        [
+          8.13,
+          7.71,
+          12.769615704032466
+        ]
+      ],
+      "reference_electronic_esp": [
+        -25.206678308116523,
+        -4.091361096682821,
+        -1.3439348939638813
       ],
       "mayer_max_error": 7.549516567451064e-15,
       "reference_mayer_matrix": [
@@ -1222,6 +1470,37 @@
             }
           }
         }
+      ],
+      "coulomb_integral_max_error": 7.72715225139109e-14,
+      "coulomb_diagnostics": {
+        "quadrature_nodes": 96,
+        "quadrature_check_nodes": 64,
+        "quadrature_max_error": 3.552713678800501e-14,
+        "quadrature_passed": true,
+        "estimated_primitive_node_work": 967680,
+        "method": "Gaussian Coulomb integrals (Cartesian moments and auxiliary Gauss-Legendre quadrature)"
+      },
+      "reference_esp_points_bohr": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          4.072218516914091,
+          2.982960440214953,
+          3.29
+        ],
+        [
+          10.072218516914091,
+          7.982960440214954,
+          9.29
+        ]
+      ],
+      "reference_electronic_esp": [
+        -20.50124981635344,
+        -5.806027224913948,
+        -1.84762395627468
       ],
       "mayer_max_error": 3.3306690738754696e-14,
       "reference_mayer_matrix": [
@@ -1460,6 +1739,37 @@
           }
         }
       ],
+      "coulomb_integral_max_error": 2.913225216616411e-13,
+      "coulomb_diagnostics": {
+        "quadrature_nodes": 96,
+        "quadrature_check_nodes": 64,
+        "quadrature_max_error": 2.5757174171303632e-14,
+        "quadrature_passed": true,
+        "estimated_primitive_node_work": 766080,
+        "method": "Gaussian Coulomb integrals (Cartesian moments and auxiliary Gauss-Legendre quadrature)"
+      },
+      "reference_esp_points_bohr": [
+        [
+          0.0,
+          0.0,
+          -1.1432843053618624
+        ],
+        [
+          2.13,
+          2.71,
+          3.29
+        ],
+        [
+          8.13,
+          7.71,
+          9.29
+        ]
+      ],
+      "reference_electronic_esp": [
+        -25.665717798836596,
+        -3.395769481182067,
+        -1.1000338628764856
+      ],
       "mayer_max_error": 3.175237850427948e-14,
       "reference_mayer_matrix": [
         [
@@ -1559,6 +1869,37 @@
             }
           }
         }
+      ],
+      "coulomb_integral_max_error": 2.0605739337042905e-13,
+      "coulomb_diagnostics": {
+        "quadrature_nodes": 96,
+        "quadrature_check_nodes": 64,
+        "quadrature_max_error": 1.554312234475219e-14,
+        "quadrature_passed": true,
+        "estimated_primitive_node_work": 475200,
+        "method": "Gaussian Coulomb integrals (Cartesian moments and auxiliary Gauss-Legendre quadrature)"
+      },
+      "reference_esp_points_bohr": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          2.13,
+          2.71,
+          3.29
+        ],
+        [
+          8.13,
+          7.71,
+          9.29
+        ]
+      ],
+      "reference_electronic_esp": [
+        -20.046152598297247,
+        -2.1162415494393914,
+        -0.6872480320470956
       ],
       "mayer_max_error": 1.554312234475219e-14,
       "reference_mayer_matrix": [
