@@ -8,24 +8,43 @@ import sys
 import tempfile
 from pathlib import Path
 
+import openwfn
 from openwfn.resource_budget import run_resource_command
+
+EXPECTED_MOLECULES = 11
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', required=True, type=Path)
+    parser.add_argument(
+        '--examples-dir',
+        type=Path,
+        default=None,
+        help='Directory containing the versioned everyday-QC .molden corpus',
+    )
     parser.add_argument('--timeout', default=120., type=float)
     parser.add_argument('--ram-mib', default=1024, type=int)
     parser.add_argument('--output-mib', default=128, type=int)
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
+    examples_dir = args.examples_dir or root/'examples/everyday-qc'
+    sources = sorted(examples_dir.glob('*.molden'))
+    if len(sources) != EXPECTED_MOLECULES:
+        parser.error(
+            f'expected {EXPECTED_MOLECULES} everyday-QC Molden inputs in {examples_dir}, '
+            f'found {len(sources)}'
+        )
     executable = str(Path(sys.executable).with_name('openwfn'))
     env = dict(os.environ, OPENBLAS_NUM_THREADS='1', OMP_NUM_THREADS='1', MKL_NUM_THREADS='1')
     records = []
-    source_hashes = {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest()
-        for p in (root/'src/openwfn').rglob('*.py')}
+    package_root = Path(openwfn.__file__).resolve().parent
+    source_hashes = {
+        str(p.relative_to(package_root.parent)): hashlib.sha256(p.read_bytes()).hexdigest()
+        for p in package_root.rglob('*.py')
+    }
     with tempfile.TemporaryDirectory(prefix='openwfn-resources-') as temporary:
-        for source in sorted((root/'examples/everyday-qc').glob('*.molden')):
+        for source in sources:
             molecule = source.stem
             workflows = {
                 'geometry': ['summary'],
@@ -53,6 +72,7 @@ def main():
                 result.pop('stderr_path')
                 records.append(result)
     report = {'python': platform.python_version(), 'platform': platform.platform(),
+        'openwfn_version': openwfn.__version__, 'examples_dir': str(examples_dir),
         'threads': 1, 'source_sha256': source_hashes, 'records': records,
         'limitations': ['Sampled RSS can miss short-lived peaks.',
             'Disk and RAM limits are monitored, not OS hard quotas.',
@@ -66,7 +86,9 @@ def main():
         'max_elapsed_seconds': max((r['elapsed_seconds'] for r in records), default=0),
         'max_observed_rss_bytes': max((r['peak_observed_rss_bytes'] for r in records), default=0),
         'max_output_bytes': max((r['output_bytes'] for r in records), default=0)}))
-    return 0 if all(r['status'] == 'success' for r in records) else 1
+    return 0 if len(records) == EXPECTED_MOLECULES * 9 and all(
+        r['status'] == 'success' for r in records
+    ) else 1
 
 
 if __name__ == '__main__':

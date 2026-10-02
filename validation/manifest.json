@@ -1,6 +1,72 @@
 {
   "schema_version": "1.0",
   "description": "Permanent openWFN scientific validation registry",
+  "current_release": "0.10.1",
+  "capabilities": {
+    "orbital-composition": {
+      "status": "Validated",
+      "scope": "Documented eleven-molecule everyday-QC same-wavefunction post-processing scope; conditioning and normalization failures remain partial or Experimental.",
+      "evidence": ["everyday-qc/pyscf-report.json", "tests/validation/test_real_example_corpus.py"]
+    },
+    "mayer": {
+      "status": "Validated",
+      "scope": "Documented eleven-molecule everyday-QC same-wavefunction post-processing scope with charge/spin conservation checks.",
+      "evidence": ["everyday-qc/pyscf-report.json", "tests/validation/test_everyday_pyscf.py"]
+    },
+    "dos": {
+      "status": "Validated",
+      "scope": "Orbital-energy Gaussian broadening for the documented everyday-QC reference scope; this is not an excited-state spectrum.",
+      "evidence": ["everyday-qc/pyscf-report.json", "tests/validation/test_everyday_pyscf.py"]
+    },
+    "pdos": {
+      "status": "Validated",
+      "scope": "Documented atom/element/angular projection scope with representation-dependent projection conventions and explicit sum-rule diagnostics.",
+      "evidence": ["everyday-qc/pyscf-report.json", "tests/validation/test_everyday_pyscf.py"]
+    },
+    "point-esp": {
+      "status": "Validated",
+      "scope": "Native Gaussian-integral electronic point ESP for the committed everyday-QC reference points and documented work/convergence limits.",
+      "evidence": ["everyday-qc/pyscf-report.json", "tests/validation/test_real_example_corpus.py", "tests/validation/test_coulomb_high_l.py"]
+    }
+  },
+  "everyday_qc_corpus": {
+    "status": "current",
+    "source_directory": "examples/everyday-qc",
+    "installed_package_directory": "openwfn.example_data/everyday-qc",
+    "reference_report": "everyday-qc/pyscf-report.json",
+    "case_ids": [
+      "water",
+      "methane",
+      "ammonia",
+      "benzene",
+      "oh_diffuse_uhf",
+      "water_cartesian",
+      "carbon_dioxide",
+      "ethanol",
+      "oxygen_triplet",
+      "ammonium_cation",
+      "water_dimer"
+    ],
+    "note": "Per-input SHA-256 values are recorded in the reference report. Packaging regressions require the installed Molden inputs to be byte-identical to this versioned source corpus."
+  },
+  "resource_benchmark": {
+    "molecules": 11,
+    "workflows_per_molecule": 9,
+    "workflow_count": 99,
+    "establishes_scientific_validation": false,
+    "purpose": "Checks bounded command completion, runtime, observed RSS and generated-output size for prescribed real workflows. Scientific status is evaluated by capability-specific reference tests and result diagnostics."
+  },
+  "historical_captures": {
+    "everyday-qc/report.json": {
+      "authoritative_status": false,
+      "purpose": "Historical water/methane/ammonia regression snapshot. Values remain useful for regression history but its top-level/record validation labels are not the current capability registry."
+    },
+    "everyday-qc/esp-report.json": {
+      "authoritative_status": false,
+      "purpose": "Historical grid-ESP convergence capture retained to document successes and the ammonium partial case. It is not the current status source for native integral point ESP."
+    }
+  },
+  "legacy_fixture_registry_note": "The cases array below is the older core-FCHK validation registry used by the legacy validation runner. Its pending v0.7 slots are historical fixture gaps and do not mean that the corresponding 0.10 everyday-QC Molden examples are absent. Current everyday-QC coverage is recorded separately above.",
   "cases": [
     {
       "id": "water", "status": "active", "path": "examples/water/water.fchk",

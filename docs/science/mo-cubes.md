@@ -1,16 +1,14 @@
-# Molecular-orbital cubes (Experimental)
+# Molecular-orbital cubes
+
+**Status: independently checked orbital fields; each generated cube retains its own grid-convergence status.**
 
 For a real Gaussian AO basis, the signed field is
-`psi_i(r) = sum_mu C_mu,i chi_mu(r)` in bohr^-3/2. It is an amplitude;
-its square is an orbital density. Overall phase has no physical significance.
-The existing AO evaluator supplies source-normalized Cartesian/pure spherical
-functions. IOData inputs undergo the existing recorded convention transforms.
 
-Required data: isolated geometry, supported Gaussian basis and coefficients for
-the selected spin channel. Public orbital numbers are **one-based**. `alpha`
-uses the restricted channel on restricted inputs; absent beta fails explicitly.
-HOMO/LUMO use occupations, with the same threshold and energy rule as frontier
-analysis; HOMO selection also works when no virtual orbitals are supplied.
+`psi_i(r) = sum_mu C_mu,i chi_mu(r)`
+
+in `bohr^-3/2`. It is an orbital amplitude; its square is an orbital density. Overall MO phase has no physical significance. openWFN evaluates the source-normalized Cartesian or pure-spherical AO basis and applies recorded input-convention transforms where required.
+
+Required data are isolated geometry, a supported Gaussian basis, and coefficients for the selected spin channel. Public orbital numbers are **one-based**. `alpha` uses the restricted channel on restricted inputs; requesting an unavailable beta channel fails explicitly. HOMO/LUMO selection follows the normalized occupations used by frontier analysis and HOMO selection remains usable when no virtual orbitals are present.
 
 ```bash
 openwfn molecule.fchk orbitals cube --mo homo --output homo.cube
@@ -18,34 +16,24 @@ openwfn molecule.fchk orbitals cube --mo lumo --spin beta --output lumo-beta.cub
 openwfn molecule.fchk orbitals cube --mo 25 --output mo25.cube
 ```
 
-Spacing and padding are in **bohr**, matching density commands. The two-million
-point grid limit is checked before allocation. AO evaluation uses bounded chunks.
-Cube comments record MO, spin, spacing, padding and input hash. API/CLI results
-retain parser provenance, orbital energy, occupation/source, grid shape, raw
-`ao_metric_norm = c^T S c`, and `squared_amplitude_integral`.
+Spacing and padding are in **bohr**, matching density commands. The molecular grid is bounded before allocation and AO evaluation uses bounded chunks. Cube comments record MO selection, spin, spacing, padding, and input hash. Structured results retain parser provenance, orbital energy and occupation, grid shape, raw `ao_metric_norm = c^T S c`, and `squared_amplitude_integral`.
 
 ```python
 from openwfn import load
-result = load('molecule.fchk').orbital_cube('homo.cube', mo='homo', spacing_bohr=.2)
+result = load("molecule.fchk").orbital_cube(
+    "homo.cube", mo="homo", spacing_bohr=0.2
+)
 print(result.as_dict())
 ```
 
-Example result data: `{"mo_number": 5, "spin": "restricted",
-"ao_metric_norm": 1.0, "squared_amplitude_integral": 0.9999}`.
-The actual values depend on the input and quadrature settings. Coefficients
-are never renormalized. A metric norm error above 1e-6 or grid error exceeding
-0.5% of metric norm gives a warning and partial status. Refine both spacing and
-padding before quantitative use; the default grid does not guarantee convergence.
+Coefficients are never silently renormalized. A raw metric-norm error or a requested real-space grid that does not reproduce the expected squared-amplitude norm within the documented tolerance produces a warning and a partial result. Refine spacing and padding for quantitative use. A command successfully writing a cube does **not** imply that its chosen grid passed the convergence diagnostic.
 
-Analytic normalized-Gaussian tests establish sign, amplitude and squared norm;
-chunk equivalence and resource/error tests cover safety. Cross-format equivalence
-is regression evidence, not an independent wavefunction reference. The method
-remains Experimental pending broader independent orbital-field benchmarks.
-Cube writes are excluded from the read-only registry/MCP interface.
+## Validation evidence
 
-Verification on 2026-10-02: 11 cube tests pass, including FCHK/Molden/MWFN/WFN/WFX
-water amplitudes (1e-7 absolute tolerance, global phase allowed) and separate
-GBasis 0.1.0 Cartesian/pure d-shell evaluations (1e-12 amplitude tolerance).
-GBasis uses an explicit independently mapped ordering. These are synthetic
-polarized spin-channel checks, not an external unrestricted molecular benchmark.
-Full suite at this stage: 620 passed, 1 skipped; lint passed.
+Analytic normalized-Gaussian tests establish sign, amplitude, and squared norm. Independent GBasis comparisons verify mapped Cartesian and pure-d AO evaluations. Cross-format tests compare equivalent FCHK, Molden, MWFN, WFN, and WFX representations with global MO phase handled explicitly.
+
+The stable everyday-QC reference suite additionally compares HOMO/LUMO fields against PySCF AO evaluations for the documented molecular cases and records serialized cube-value errors in `validation/everyday-qc/pyscf-report.json`. Those field comparisons validate the orbital evaluator for the stated scope.
+
+The **cube result itself remains conditional on the requested grid**. Some deliberately coarse release-corpus cube settings produce `partial` normalization diagnostics even though the field values agree with the independent reference. openWFN preserves that distinction rather than promoting every written file to a clean validated result.
+
+`validation/manifest.json` and the [everyday-QC validation page](../project/everyday-qc-validation.md) define the current evidence scope. The reference set does not establish arbitrary high-angular-momentum molecular coverage, ECP behavior, every program convention, or grid convergence for settings the user has not tested. Cube writing remains outside the read-only MCP interface.

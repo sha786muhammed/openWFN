@@ -1,5 +1,16 @@
 # Release history
 
+## 0.10.1 — release evidence and reproducibility hardening
+
+Corrective release-quality patch for the 0.10 stable line. It removes stale
+release-state documentation, centralizes current validation status in the
+canonical manifest, packages the complete everyday-QC corpus, and verifies the
+same real workflows against both the built wheel and the package downloaded
+from public PyPI. Scientific numerical kernels and validation tolerances are
+unchanged.
+
+[Read the 0.10.1 release notes](../releases/0.10.1.md)
+
 ## 0.10.0 — everyday QC stable release
 
 Stable package release of the candidate's documented everyday QC, interface
@@ -11,7 +22,8 @@ remain unchanged.
 ## 0.10.0rc1 — everyday QC release candidate
 
 An opt-in candidate with MO cubes/composition, Mayer, DOS/PDOS, native point
-ESP, tested interfaces and resource safety. The stable line remains 0.9.2.
+ESP, tested interfaces and resource safety. The stable line at that historical
+candidate stage was 0.9.2.
 
 [Read the candidate notes](../releases/0.10.0rc1.md)
 

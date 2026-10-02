@@ -1,36 +1,33 @@
 # Releasing openWFN
 
-This guide targets the 0.10.0 stable release; 0.9.2 is the previous stable release. Do not execute tagging or
-publication steps without separate owner approval.
+This guide targets the current stable release line. Release publication always
+requires explicit repository-owner approval; preparing a release branch or PR
+does not itself publish, tag, or upload anything.
 
-For a future release whose changelog entry is `Unreleased`,
-`sync_release_metadata.py --check` verifies the citation against the latest
-dated release. Source-version and citation-version differences are intentional
-at this stage. Do not invent a release date to make them match.
+The release version comes from `[project].version` in `pyproject.toml`. Current
+release notes must exist at `docs/releases/<version>.md`, and the dated changelog
+and citation metadata must agree before publication.
 
 ## Release gates
 
-1. Run the read-only repository preflight, then confirm that the working tree is
-   clean:
+1. Run the read-only repository preflight and confirm the working tree is clean:
 
    ```bash
    python scripts/check_repository.py --root .
    git status --short
    ```
 
-2. Confirm that `[project].version` in `pyproject.toml` is `0.10.0`.
+2. Confirm the intended version in `pyproject.toml`, the matching dated
+   `CHANGELOG.md` entry, `CITATION.cff`, citation guide, README, installation
+   guide, security support table, validation manifest, and release notes.
 
-3. Only after the release date is finalized, replace the `Unreleased` changelog
-   heading with that approved date, synchronize `CITATION.cff`, and update the
-   citation guide, installation pages, README, security support table, and
-   release notes to the actual release details. Then check the metadata:
+3. Verify release metadata without silently rewriting it:
 
    ```bash
-   python scripts/sync_release_metadata.py
    python scripts/sync_release_metadata.py --check
    ```
 
-4. Run the static, documentation, scientific, and complete software checks:
+4. Run static, documentation, scientific, and complete software checks:
 
    ```bash
    python -m ruff check src tests scripts
@@ -38,89 +35,115 @@ at this stage. Do not invent a release date to make them match.
    python -m pytest --strict-markers
    python -m mkdocs build --strict
    python scripts/run_validation.py
+   python scripts/run_interop_validation.py
    python scripts/run_external_benchmarks.py --repository-only
    ```
 
-5. Build and validate both distributions:
+5. Run the bounded real-workflow resource matrix against the versioned source
+   corpus. Command/resource success is not scientific validation; inspect the
+   capability-specific reference results separately.
+
+   ```bash
+   python scripts/benchmark_resources.py \
+     --examples-dir examples/everyday-qc \
+     --output resource-report.json
+   ```
+
+6. Build and validate both distributions:
 
    ```bash
    python -m build
    python -m twine check dist/*
    ```
 
-6. Install the wheel into a newly created temporary virtual environment:
+7. Install the wheel in a fresh virtual environment with the same extras used by
+   the stable release workflow. Install the packaged examples and rerun the
+   real-workflow matrix against the **installed** corpus rather than the source
+   checkout:
 
    ```bash
    release_smoke="$(mktemp -d)"
    python -m venv "$release_smoke/venv"
-   "$release_smoke/venv/bin/python" -m pip install dist/openwfn-0.10.0-py3-none-any.whl
-   ```
-
-7. Verify the installed version, console entry point, and reference workflows:
-
-   ```bash
-   "$release_smoke/venv/bin/python" -c "import openwfn; assert openwfn.__version__ == '0.10.0'"
-   "$release_smoke/venv/bin/openwfn" --help
+   wheel_file="$(find dist -name '*.whl' -print -quit)"
+   "$release_smoke/venv/bin/python" -m pip install "${wheel_file}[interop,resources]"
+   "$release_smoke/venv/bin/openwfn" --version
    "$release_smoke/venv/bin/openwfn" examples install "$release_smoke/examples"
-   "$release_smoke/venv/bin/openwfn" --format json --output "$release_smoke/summary.json" "$release_smoke/examples/water.fchk" summary
-   "$release_smoke/venv/bin/openwfn" "$release_smoke/examples/water.fchk" orbitals frontier
-   "$release_smoke/venv/bin/openwfn" "$release_smoke/examples/water.fchk" report build "$release_smoke/report.html"
-   "$release_smoke/venv/bin/openwfn" "$release_smoke/examples/water.fchk" workbench "$release_smoke/workbench.html"
+   "$release_smoke/venv/bin/python" scripts/benchmark_resources.py \
+     --examples-dir "$release_smoke/examples/everyday-qc" \
+     --output "$release_smoke/resource-report.json"
    ```
 
-   Confirm the JSON result reports success and formula `H2O`. The report must be
-   self-contained. The workbench must contain the 3Dmol.js attribution, retain
-   its scoped `Stable` interface status and field-level partial warnings, and load no remote script.
+   The benchmark must contain exactly 99 records for eleven molecular inputs
+   and nine prescribed workflows per input, with no nonzero-exit, timeout, or
+   resource-limit failures. This still does not promote partial/Experimental
+   scientific results.
 
-8. Inspect the wheel and confirm that it contains all Python modules, the
-   vendored JavaScript, its full license, `THIRD_PARTY_NOTICES.md`, the project
-   license, packaged example and provenance summary, package metadata, and the
-   console entry point:
+8. Inspect the wheel and source distribution. Confirm that they contain the
+   Python modules, vendored JavaScript and notices, project license, top-level
+   water example, and the complete `example_data/everyday-qc/` corpus.
 
    ```bash
-   python -m zipfile -l dist/openwfn-0.10.0-py3-none-any.whl
-   python -m tarfile -l dist/openwfn-0.10.0.tar.gz
+   python -m zipfile -l dist/openwfn-*.whl
+   python -m tarfile -l dist/openwfn-*.tar.gz
    ```
 
-   The source archive must also contain the repository citation, conduct,
-   contribution, contributor, maintainer, roadmap, security, provenance, and
-   third-party notice files.
+9. Commit the verified release state. Generated `dist/`, `build/`, local smoke
+   environments, and generated benchmark reports remain untracked.
 
-9. Commit the verified release state. Generated `dist/` and `build/` files remain untracked.
+## Approved stable publication workflow
 
-10. Create the annotated release tag:
+The automated stable path is `.github/workflows/publish.yml`. It is intentionally
+version-driven rather than hard-coded to one release number.
 
-    ```bash
-    git tag -a v0.10.0 -m "openWFN 0.10.0"
-    ```
+A repository-owner-approved main-branch commit whose **subject is exactly**
+`release:<version>` starts the stable publication job. The workflow derives
+`RELEASE_VERSION`, `RELEASE_TAG=v<version>`, and the release-note path from
+`pyproject.toml`; it rejects a mismatched commit subject or missing release note.
 
-11. Push the reviewed branch and tag only after explicit repository-owner approval.
+Before any publication it:
 
-12. Publish a GitHub Release for the reviewed tag. The trusted-publishing
-    workflow checks out that exact tag, verifies its version, rebuilds both
-    distributions, runs `twine check`, and publishes them to PyPI without a
-    repository token.
+1. requires the exact release commit's required CI checks;
+2. runs `python scripts/sync_release_metadata.py --check`;
+3. builds both distributions and runs `python -m twine check dist/*`;
+4. installs the built wheel with `interop,resources` extras;
+5. installs the packaged examples;
+6. reruns all 99 real workflows against the installed eleven-molecule corpus.
 
-13. Verify PyPI from another clean environment:
+Only after those gates pass does the workflow create the annotated tag, publish
+to PyPI through OIDC trusted publishing, and create the GitHub Release for the
+same exact commit.
 
-    ```bash
-    python -m pip install --no-cache-dir openwfn==0.10.0
-    python -c "import openwfn; assert openwfn.__version__ == '0.10.0'"
-    ```
+The annotated tag remains equivalent to the manual form:
 
-14. Create or verify the GitHub release notes, confirm the public tag points to the reviewed commit, and add the approved repository topics through GitHub settings or the GitHub API.
+```bash
+git tag -a v<VERSION> -m "openWFN <VERSION>"
+```
 
-## Historical 0.6.0 provenance
+Do not create or move a release tag outside the approved flow unless the owner
+is deliberately performing a documented recovery operation.
 
-Do not create a historical `v0.6.0` tag unless the exact commit matching the published 0.6.0 wheel is proven. If provenance cannot be established, document the missing tag rather than manufacturing release history.
+## Public-package verification
 
-## Approved stable publication
+Publication is not considered complete merely because upload succeeded. The
+same workflow creates a second clean environment, downloads the exact release
+from public PyPI with the interoperability and resource extras, installs its
+packaged corpus, and reruns the same 99-workflow matrix:
 
-The owner-approved `release:0.10.0` merge invokes a narrowly scoped job in
-`.github/workflows/publish.yml`. It waits for the exact main commit's four CI
-workflows, checks citation/version metadata, builds both distributions, installs
-the wheel into a fresh environment and runs the real molecular resource matrix.
-Only then does it create the annotated stable tag and publish via existing
-PyPI OIDC trust. It creates a GitHub stable release and verifies the public PyPI
-package in another clean environment. This one-version promotion is explicitly
-owner-approved; the job does not publish arbitrary future versions.
+```bash
+python -m pip install --no-cache-dir --index-url https://pypi.org/simple \
+  "openwfn[interop,resources]==<VERSION>"
+openwfn examples install published-examples
+python scripts/benchmark_resources.py \
+  --examples-dir published-examples/everyday-qc \
+  --output published-resource-report.json
+```
+
+This verifies what an outside researcher actually receives from PyPI. The
+benchmark records the imported openWFN version and hashes of the imported Python
+package rather than substituting hashes from the repository checkout.
+
+## Historical provenance
+
+Do not manufacture historical tags. If the exact source commit for an old
+published artifact cannot be proven, document the provenance gap instead of
+creating a tag retroactively.

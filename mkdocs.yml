@@ -74,7 +74,7 @@ nav:
       - Installation: installation.md
       - Interoperability preview: interoperability.md
       - Output properties preview: output-properties.md
-      - Local MCP preview: mcp.md
+      - Local MCP: mcp.md
       - Your first analysis: start/first-analysis.md
       - Quick start: quick-start.md
       - Learning paths: start/learning-paths.md
@@ -87,7 +87,7 @@ nav:
       - CLI workflows: guides/cli-workflows.md
       - Python workflows: guides/python-workflows.md
       - Batch and reports: guides/batch-and-reports.md
-      - Experimental workbench: workbench.md
+      - Offline workbench: workbench.md
       - Troubleshooting: guides/troubleshooting.md
       - Tutorials:
           - Geometry: tutorials/geometry.md
@@ -102,10 +102,10 @@ nav:
       - Geometry and topology: science/geometry-topology.md
       - Orbitals and density: science/orbitals-density.md
       - Population and ESP: science/population-esp.md
-      - MO cubes (development): science/mo-cubes.md
-      - MO composition (development): science/orbital-composition.md
-      - Mayer (development): science/mayer.md
-      - DOS and PDOS (development): science/dos-pdos.md
+      - MO cubes: science/mo-cubes.md
+      - MO composition: science/orbital-composition.md
+      - Mayer bond order: science/mayer.md
+      - DOS and PDOS: science/dos-pdos.md
       - Validation status: science/validation-status.md
       - Methods overview: methods.md
       - Limitations: limitations.md
@@ -126,6 +126,7 @@ nav:
       - Product boundary and benchmarking: project/core-benchmarking-design.md
       - Releasing: releasing.md
       - Releases:
+          - Version 0.10.1: releases/0.10.1.md
           - Version 0.10.0: releases/0.10.0.md
           - Version 0.10.0rc1: releases/0.10.0rc1.md
           - Version 0.9.2: releases/0.9.2.md

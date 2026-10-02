@@ -7,10 +7,10 @@ hide:
 
 !!! note "Current release"
 
-    This site documents openWFN 0.9.2. Install it with
+    This site documents openWFN 0.10.1. Install it with
     `python -m pip install --upgrade openwfn`, or pin the release with
-    `python -m pip install openwfn==0.9.2` for reproducible work.
-    See the [0.9.2 release notes](releases/0.9.2.md) for changes and support boundaries.
+    `python -m pip install openwfn==0.10.1` for reproducible work.
+    See the [0.10.1 release notes](releases/0.10.1.md) for changes and support boundaries.
 
 <div class="ow-home" markdown="1">
 
@@ -122,9 +122,9 @@ Gap         0.738323 hartree
 
 ## Current support, stated precisely
 
-openWFN currently performs its full electronic wavefunction analysis from Gaussian formatted-checkpoint data. Structure-only records can also enter through XYZ, MOL/SDF, and PDB parsers. The internal model and parser boundaries are designed for additional quantum-chemistry formats, but a format is not advertised as supported until its parser and validation evidence are shipped.
+Gaussian formatted-checkpoint data remain the preferred native full-wavefunction path. The optional interoperability layer adds a pinned, fixture-tested multi-format ingestion contract, including the Molden inputs used by the everyday-QC release corpus. Structure-only XYZ, MOL/SDF, and PDB inputs expose only the records they actually contain. Use `capabilities` before analysis when the source format may be incomplete.
 
-[See formats and exports](reference/formats-and-exports.md) · [Follow format development](https://github.com/sha786muhammed/openWFN/issues)
+[See formats and exports](reference/formats-and-exports.md) · [Review validation evidence](project/everyday-qc-validation.md)
 
 </section>
 
