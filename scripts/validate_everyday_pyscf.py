@@ -21,6 +21,11 @@ CASES = (
     ('benzene', 'C 1.397 0 0; C .6985 1.20984 0; C -.6985 1.20984 0; C -1.397 0 0; C -.6985 -1.20984 0; C .6985 -1.20984 0; H 2.48 0 0; H 1.24 2.14774 0; H -1.24 2.14774 0; H -2.48 0 0; H -1.24 -2.14774 0; H 1.24 -2.14774 0', 'sto-3g', 0, False),
     ('oh_diffuse_uhf', 'O 0 0 0; H 0 0 .97', '6-31+g*', 1, False),
     ('water_cartesian', 'O 0 0 0; H 0 -.757 .587; H 0 .757 .587', '6-31g*', 0, True),
+    ('carbon_dioxide', 'O 0 0 -1.16; C 0 0 0; O 0 0 1.16', '6-31g*', 0, False),
+    ('water_dimer', 'O 0 0 0; H 0 -.757 .587; H 0 .757 .587; O 0 0 2.9; H 0 -.757 3.487; H 0 .757 3.487', '6-31+g*', 0, False),
+    ('ethanol', 'C 0 0 0; C 1.5 0 0; O 2.1 1.2 0; H -.4 .5 .9; H -.4 .5 -.9; H -.4 -1 0; H 1.9 -.5 .9; H 1.9 -.5 -.9; H 3.05 1.1 0', 'sto-3g', 0, False),
+    ('oxygen_triplet', 'O 0 0 -.605; O 0 0 .605', '6-31g*', 2, False),
+    ('ammonium_cation', 'N 0 0 0; H .59 .59 .59; H -.59 -.59 .59; H -.59 .59 -.59; H .59 -.59 -.59', '6-31g*', 0, False, 1),
 )
 
 
@@ -39,9 +44,10 @@ def validate_case(case, directory: Path) -> dict:
     from openwfn.spectral_services import HARTREE_TO_EV
 
     lib.num_threads(1)
-    name, geometry, basis, spin, cartesian = case
+    name, geometry, basis, spin, cartesian = case[:5]
+    charge = case[5] if len(case) > 5 else 0
     directory.mkdir(parents=True, exist_ok=True)
-    mol = gto.M(atom=geometry, basis=basis, spin=spin, cart=cartesian, verbose=0)
+    mol = gto.M(atom=geometry, basis=basis, spin=spin, charge=charge, cart=cartesian, verbose=0)
     mf = scf.UHF(mol) if spin else scf.RHF(mol)
     mf.conv_tol = 1e-11
     mf.kernel()
@@ -59,7 +65,7 @@ def validate_case(case, directory: Path) -> dict:
     overlap_error = float(np.max(np.abs(np.linalg.eigvalsh(s) -
                                        np.linalg.eigvalsh(overlap_matrix(data.basis, data.molecule)))))
     slices = mol.aoslice_by_atom()[:, 2:]
-    results = {'case': name, 'basis': basis, 'cartesian': cartesian, 'spin': spin,
+    results = {'case': name, 'basis': basis, 'cartesian': cartesian, 'spin': spin, 'charge': charge,
                'geometry_angstrom': geometry, 'method': 'UHF' if spin else 'RHF',
                'scf_converged': True, 'reference_energy_hartree': float(mf.e_tot),
                'input_sha256': hashlib.sha256(source.read_bytes()).hexdigest(),

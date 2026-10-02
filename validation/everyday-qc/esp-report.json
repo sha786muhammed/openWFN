@@ -1,0 +1,269 @@
+{
+  "validation_status": "Experimental",
+  "reference": "PySCF analytic int1e_rinv contraction; independently summed nuclear potential",
+  "dependencies": {
+    "pyscf": "2.12.1",
+    "qc-iodata": "1.0.1",
+    "numpy": "2.5.3"
+  },
+  "cases": [
+    {
+      "case": "water",
+      "input_sha256": "bc88492d8f32faef01c0aa2a5dbc61840c92f72935dde9bfe64cee1b6531b84f",
+      "points_bohr": [
+        [
+          2.13,
+          2.71,
+          4.029512823413127
+        ],
+        [
+          8.13,
+          7.71,
+          10.029512823413127
+        ]
+      ],
+      "reference_electronic_esp": [
+        -1.9313451560568458,
+        -0.6695429054983373
+      ],
+      "reference_nuclear_esp": [
+        1.9514299414794443,
+        0.6715488991543719
+      ],
+      "history": [
+        {
+          "spacing_bohr": 0.3,
+          "padding_bohr": 4.0,
+          "grid_points": 38610,
+          "electronic_esp_hartree_per_e": [
+            -2.653072844055984,
+            -0.9240425201442777
+          ],
+          "total_esp_hartree_per_e": [
+            -0.7016429025765396,
+            -0.2524936209899058
+          ],
+          "max_absolute_esp_error": 0.7217276879991383,
+          "electron_count": 13.82711008843352,
+          "electron_count_error": 3.8271100884335194,
+          "conservation_passed": false
+        },
+        {
+          "spacing_bohr": 0.2,
+          "padding_bohr": 4.0,
+          "grid_points": 109839,
+          "electronic_esp_hartree_per_e": [
+            -2.075088194491435,
+            -0.720228946820715
+          ],
+          "total_esp_hartree_per_e": [
+            -0.12365825301199052,
+            -0.04868004766634315
+          ],
+          "max_absolute_esp_error": 0.14374303843458924,
+          "electron_count": 10.762225214935587,
+          "electron_count_error": 0.7622252149355866,
+          "conservation_passed": false
+        },
+        {
+          "spacing_bohr": 0.1,
+          "padding_bohr": 4.0,
+          "grid_points": 836163,
+          "electronic_esp_hartree_per_e": [
+            -1.9331170270073388,
+            -0.6701658029591073
+          ],
+          "total_esp_hartree_per_e": [
+            0.0183129144721057,
+            0.0013830961952645549
+          ],
+          "max_absolute_esp_error": 0.0017718709504930263,
+          "electron_count": 10.00939429788366,
+          "electron_count_error": 0.00939429788365942,
+          "conservation_passed": true
+        }
+      ],
+      "status": "passed",
+      "validation_status": "Experimental",
+      "limitations": "Two off-nucleus/off-grid points; fine-grid tolerance 0.005 hartree/e. Padding fixed at 4 bohr, not an independent padding convergence study. Near-field singular quadrature, ECPs and arbitrary diffuse tails remain unvalidated."
+    },
+    {
+      "case": "oh_diffuse_uhf",
+      "input_sha256": "ec222502397e513f400aa33ed79eb7c99b0d3b7208bcac1cebfcb7473acff65b",
+      "points_bohr": [
+        [
+          2.13,
+          2.71,
+          4.206517170414055
+        ],
+        [
+          8.13,
+          7.71,
+          10.206517170414054
+        ]
+      ],
+      "reference_electronic_esp": [
+        -1.6877012123982524,
+        -0.5970300894659385
+      ],
+      "reference_nuclear_esp": [
+        1.7099783220616018,
+        0.5993239603959519
+      ],
+      "history": [
+        {
+          "spacing_bohr": 0.3,
+          "padding_bohr": 4.0,
+          "grid_points": 31500,
+          "electronic_esp_hartree_per_e": [
+            -2.88008158235883,
+            -1.0248539241567056
+          ],
+          "total_esp_hartree_per_e": [
+            -1.1701032602972283,
+            -0.4255299637607537
+          ],
+          "max_absolute_esp_error": 1.1923803699605777,
+          "electron_count": 15.484122041236208,
+          "electron_count_error": 6.484122041236208,
+          "conservation_passed": false
+        },
+        {
+          "spacing_bohr": 0.2,
+          "padding_bohr": 4.0,
+          "grid_points": 85731,
+          "electronic_esp_hartree_per_e": [
+            -1.9699217464499998,
+            -0.6982620293873772
+          ],
+          "total_esp_hartree_per_e": [
+            -0.259943424388398,
+            -0.09893806899142532
+          ],
+          "max_absolute_esp_error": 0.2822205340517474,
+          "electron_count": 10.53420865669627,
+          "electron_count_error": 1.5342086566962703,
+          "conservation_passed": false
+        },
+        {
+          "spacing_bohr": 0.1,
+          "padding_bohr": 4.0,
+          "grid_points": 656100,
+          "electronic_esp_hartree_per_e": [
+            -1.7064902922535414,
+            -0.6037347351146521
+          ],
+          "total_esp_hartree_per_e": [
+            0.0034880298080604,
+            -0.004410774718700217
+          ],
+          "max_absolute_esp_error": 0.018789079855288993,
+          "electron_count": 9.101512709190823,
+          "electron_count_error": 0.101512709190823,
+          "conservation_passed": false
+        },
+        {
+          "spacing_bohr": 0.07,
+          "padding_bohr": 4.0,
+          "grid_points": 1957527,
+          "electronic_esp_hartree_per_e": [
+            -1.6917139463310216,
+            -0.5984353971805173
+          ],
+          "total_esp_hartree_per_e": [
+            0.018264375730580262,
+            0.0008885632154346235
+          ],
+          "max_absolute_esp_error": 0.00401273393276913,
+          "electron_count": 9.021204180543982,
+          "electron_count_error": 0.02120418054398243,
+          "conservation_passed": true
+        }
+      ],
+      "status": "passed",
+      "validation_status": "Experimental",
+      "limitations": "Two off-nucleus/off-grid points; fine-grid tolerance 0.005 hartree/e. Padding fixed at 4 bohr, not an independent padding convergence study. Near-field singular quadrature, ECPs and arbitrary diffuse tails remain unvalidated."
+    },
+    {
+      "case": "ammonium_cation",
+      "input_sha256": "5b4d7133d785ec5d978102fbd8f0ea37038b6acc330e4470e6240296759e142e",
+      "points_bohr": [
+        [
+          2.13,
+          2.71,
+          3.29
+        ],
+        [
+          8.13,
+          7.71,
+          9.29
+        ]
+      ],
+      "reference_electronic_esp": [
+        -2.1162415494393914,
+        -0.6872480320470956
+      ],
+      "reference_nuclear_esp": [
+        2.343297169326944,
+        0.7561311814555607
+      ],
+      "history": [
+        {
+          "spacing_bohr": 0.3,
+          "padding_bohr": 4.0,
+          "grid_points": 50653,
+          "electronic_esp_hartree_per_e": [
+            -2.954765733009683,
+            -0.961749118393237
+          ],
+          "total_esp_hartree_per_e": [
+            -0.6114685636827382,
+            -0.20561793693767627
+          ],
+          "max_absolute_esp_error": 0.8385241835702915,
+          "electron_count": 13.995335566615484,
+          "electron_count_error": 3.995335566615484,
+          "conservation_passed": false
+        },
+        {
+          "spacing_bohr": 0.2,
+          "padding_bohr": 4.0,
+          "grid_points": 148877,
+          "electronic_esp_hartree_per_e": [
+            -2.3083558046512405,
+            -0.750141775936078
+          ],
+          "total_esp_hartree_per_e": [
+            0.03494136467570419,
+            0.005989405519482682
+          ],
+          "max_absolute_esp_error": 0.1921142552118491,
+          "electron_count": 10.915412024276542,
+          "electron_count_error": 0.9154120242765416,
+          "conservation_passed": false
+        },
+        {
+          "spacing_bohr": 0.1,
+          "padding_bohr": 4.0,
+          "grid_points": 1157625,
+          "electronic_esp_hartree_per_e": [
+            -2.1288218541113553,
+            -0.6913647559289635
+          ],
+          "total_esp_hartree_per_e": [
+            0.21447531521558938,
+            0.06476642552659717
+          ],
+          "max_absolute_esp_error": 0.012580304671963916,
+          "electron_count": 10.059918382390027,
+          "electron_count_error": 0.05991838239002689,
+          "conservation_passed": false
+        }
+      ],
+      "status": "partial",
+      "validation_status": "Experimental",
+      "limitations": "Two off-nucleus/off-grid points; fine-grid tolerance 0.005 hartree/e. Padding fixed at 4 bohr, not an independent padding convergence study. Near-field singular quadrature, ECPs and arbitrary diffuse tails remain unvalidated."
+    }
+  ],
+  "status": "partial"
+}

@@ -15,6 +15,7 @@
       "basis": "sto-3g",
       "cartesian": false,
       "spin": 0,
+      "charge": 0,
       "geometry_angstrom": "O 0 0 0; H 0 -.757 .587; H 0 .757 .587",
       "method": "RHF",
       "scf_converged": true,
@@ -113,6 +114,7 @@
       "basis": "sto-3g",
       "cartesian": false,
       "spin": 0,
+      "charge": 0,
       "geometry_angstrom": "C 0 0 0; H .63 .63 .63; H -.63 -.63 .63; H -.63 .63 -.63; H .63 -.63 -.63",
       "method": "RHF",
       "scf_converged": true,
@@ -239,6 +241,7 @@
       "basis": "6-31g*",
       "cartesian": false,
       "spin": 0,
+      "charge": 0,
       "geometry_angstrom": "N 0 0 .1; H 0 .94 -.23; H .814 -.47 -.23; H -.814 -.47 -.23",
       "method": "RHF",
       "scf_converged": true,
@@ -350,6 +353,7 @@
       "basis": "sto-3g",
       "cartesian": false,
       "spin": 0,
+      "charge": 0,
       "geometry_angstrom": "C 1.397 0 0; C .6985 1.20984 0; C -.6985 1.20984 0; C -1.397 0 0; C -.6985 -1.20984 0; C .6985 -1.20984 0; H 2.48 0 0; H 1.24 2.14774 0; H -1.24 2.14774 0; H -2.48 0 0; H -1.24 -2.14774 0; H 1.24 -2.14774 0",
       "method": "RHF",
       "scf_converged": true,
@@ -637,6 +641,7 @@
       "basis": "6-31+g*",
       "cartesian": false,
       "spin": 1,
+      "charge": 0,
       "geometry_angstrom": "O 0 0 0; H 0 0 .97",
       "method": "UHF",
       "scf_converged": true,
@@ -782,6 +787,7 @@
       "basis": "6-31g*",
       "cartesian": true,
       "spin": 0,
+      "charge": 0,
       "geometry_angstrom": "O 0 0 0; H 0 -.757 .587; H 0 .757 .587",
       "method": "RHF",
       "scf_converged": true,
@@ -873,6 +879,729 @@
       "dos_max_error": 3.5600109637989874e-08,
       "pdos_max_error": 3.560023120741107e-08,
       "status": "passed"
+    },
+    {
+      "case": "carbon_dioxide",
+      "basis": "6-31g*",
+      "cartesian": false,
+      "spin": 0,
+      "charge": 0,
+      "geometry_angstrom": "O 0 0 -1.16; C 0 0 0; O 0 0 1.16",
+      "method": "RHF",
+      "scf_converged": true,
+      "reference_energy_hartree": -187.63219574400293,
+      "input_sha256": "8c848e941aa1176d1e76caf61802c0370e1d02438a41ad8044997f564bb67115",
+      "overlap_eigenvalue_max_error": 3.9968028886505635e-15,
+      "orbitals": [
+        {
+          "channel": "alpha",
+          "selector": "homo",
+          "mo_number": 10,
+          "field_max_error": 1.3322676295501878e-15,
+          "serialized_cube_max_error": 4.781274590137663e-07,
+          "cube_status": "partial",
+          "cube_warnings": [
+            "Squared-amplitude grid integral failed 0.5% tolerance against AO-metric norm; refine spacing/padding."
+          ],
+          "composition": {
+            "mulliken": {
+              "max_error": 2.1649348980190553e-15,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.4838899541972085,
+                0.03222009160552679,
+                0.48388995419726444
+              ]
+            },
+            "lowdin": {
+              "max_error": 3.608224830031759e-15,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.4670586735072473,
+                0.06588265298545055,
+                0.46705867350730035
+              ]
+            }
+          }
+        },
+        {
+          "channel": "alpha",
+          "selector": "lumo",
+          "mo_number": 12,
+          "field_max_error": 3.941291737419306e-15,
+          "serialized_cube_max_error": 4.915904742719412e-07,
+          "cube_status": "partial",
+          "cube_warnings": [
+            "Squared-amplitude grid integral failed 0.5% tolerance against AO-metric norm; refine spacing/padding."
+          ],
+          "composition": {
+            "mulliken": {
+              "max_error": 4.218847493575595e-15,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.15702862180697125,
+                0.6859427563860507,
+                0.157028621806978
+              ]
+            },
+            "lowdin": {
+              "max_error": 3.0531133177191805e-15,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.21416942515416945,
+                0.5716611496916528,
+                0.21416942515417464
+              ]
+            }
+          }
+        }
+      ],
+      "mayer_max_error": 7.327471962526033e-14,
+      "reference_mayer_matrix": [
+        [
+          0.0,
+          1.9330410691221571,
+          0.1634188982903423
+        ],
+        [
+          1.9330410691221571,
+          0.0,
+          1.9330410691220745
+        ],
+        [
+          0.1634188982903423,
+          1.9330410691220745,
+          0.0
+        ]
+      ],
+      "dos_max_error": 1.3020493461191052e-07,
+      "pdos_max_error": 1.304519130496118e-07,
+      "status": "passed",
+      "lowdin_pdos_max_error": 1.2796036263917898e-07
+    },
+    {
+      "case": "water_dimer",
+      "basis": "6-31+g*",
+      "cartesian": false,
+      "spin": 0,
+      "charge": 0,
+      "geometry_angstrom": "O 0 0 0; H 0 -.757 .587; H 0 .757 .587; O 0 0 2.9; H 0 -.757 3.487; H 0 .757 3.487",
+      "method": "RHF",
+      "scf_converged": true,
+      "reference_energy_hartree": -152.03647433944957,
+      "input_sha256": "e4eb9896ef0dd0d4c01a3647e1834e8986a4aed5db41304ee13d40edda326275",
+      "overlap_eigenvalue_max_error": 1.3322676295501878e-14,
+      "orbitals": [
+        {
+          "channel": "alpha",
+          "selector": "homo",
+          "mo_number": 10,
+          "field_max_error": 4.718447854656915e-16,
+          "serialized_cube_max_error": 4.472426912982552e-07,
+          "cube_status": "partial",
+          "cube_warnings": [
+            "Squared-amplitude grid integral failed 0.5% tolerance against AO-metric norm; refine spacing/padding."
+          ],
+          "composition": {
+            "mulliken": {
+              "max_error": 1.1102230246251565e-16,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.9935733389665077,
+                -5.440039294203208e-32,
+                5.4371676241366756e-30,
+                0.006426661033492372,
+                -3.170103346703365e-32,
+                4.101423199417949e-31
+              ]
+            },
+            "lowdin": {
+              "max_error": 8.770761894538737e-15,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.9932193264135283,
+                1.5697450696600878e-31,
+                5.3117654416214825e-30,
+                0.006780673586480271,
+                1.9364938832347972e-31,
+                3.1277606895018963e-31
+              ]
+            }
+          }
+        },
+        {
+          "channel": "alpha",
+          "selector": "lumo",
+          "mo_number": 11,
+          "field_max_error": 4.218847493575595e-15,
+          "serialized_cube_max_error": 4.204299410837109e-07,
+          "cube_status": "partial",
+          "cube_warnings": [
+            "Squared-amplitude grid integral failed 0.5% tolerance against AO-metric norm; refine spacing/padding."
+          ],
+          "composition": {
+            "mulliken": {
+              "max_error": 4.3298697960381105e-15,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.18073490664108366,
+                -0.010062357535256106,
+                -0.010062357535242298,
+                1.2082551441797513,
+                -0.1844326678751992,
+                -0.18443266787513754
+              ]
+            },
+            "lowdin": {
+              "max_error": 3.1363800445660672e-15,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.1060116879698525,
+                0.010366165507329045,
+                0.010366165507330494,
+                0.7472614249619228,
+                0.06299727802677602,
+                0.06299727802678733
+              ]
+            }
+          }
+        }
+      ],
+      "mayer_max_error": 7.549516567451064e-15,
+      "reference_mayer_matrix": [
+        [
+          0.0,
+          0.6882858098443914,
+          0.6882858098444271,
+          0.011002086707787073,
+          -0.00024966974627481576,
+          -0.0002496697462742874
+        ],
+        [
+          0.6882858098443914,
+          0.0,
+          -0.0013782097447532973,
+          0.002323780236783506,
+          -0.00014682334644487775,
+          -0.0005552543282447041
+        ],
+        [
+          0.6882858098444271,
+          -0.0013782097447532973,
+          0.0,
+          0.00232378023678444,
+          -0.0005552543282448925,
+          -0.00014682334644500455
+        ],
+        [
+          0.011002086707787073,
+          0.002323780236783506,
+          0.00232378023678444,
+          0.0,
+          0.6879398700247488,
+          0.6879398700247336
+        ],
+        [
+          -0.00024966974627481576,
+          -0.00014682334644487775,
+          -0.0005552543282448925,
+          0.6879398700247488,
+          0.0,
+          -0.002241251489260127
+        ],
+        [
+          -0.0002496697462742874,
+          -0.0005552543282447041,
+          -0.00014682334644500455,
+          0.6879398700247336,
+          -0.002241251489260127,
+          0.0
+        ]
+      ],
+      "dos_max_error": 1.407854788304519e-07,
+      "pdos_max_error": 1.402142847384269e-07,
+      "status": "passed",
+      "lowdin_pdos_max_error": 1.401572612413915e-07
+    },
+    {
+      "case": "ethanol",
+      "basis": "sto-3g",
+      "cartesian": false,
+      "spin": 0,
+      "charge": 0,
+      "geometry_angstrom": "C 0 0 0; C 1.5 0 0; O 2.1 1.2 0; H -.4 .5 .9; H -.4 .5 -.9; H -.4 -1 0; H 1.9 -.5 .9; H 1.9 -.5 -.9; H 3.05 1.1 0",
+      "method": "RHF",
+      "scf_converged": true,
+      "reference_energy_hartree": -152.10946340318378,
+      "input_sha256": "5dea76d46b2fd6a0cf6c264b5ffb65e67dfb2354d6dd4844780d252dcdab6276",
+      "overlap_eigenvalue_max_error": 2.7200464103316335e-15,
+      "orbitals": [
+        {
+          "channel": "alpha",
+          "selector": "homo",
+          "mo_number": 13,
+          "field_max_error": 2.095545958979983e-15,
+          "serialized_cube_max_error": 4.825849658079973e-07,
+          "cube_status": "partial",
+          "cube_warnings": [
+            "Squared-amplitude grid integral failed 0.5% tolerance against AO-metric norm; refine spacing/padding."
+          ],
+          "composition": {
+            "mulliken": {
+              "max_error": 2.2898349882893854e-15,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.004824116973688971,
+                0.06925248644162274,
+                0.7246806887469698,
+                0.007281084648727151,
+                0.007281084648727424,
+                1.3866695599588092e-31,
+                0.093340269270132,
+                0.0933402692701321,
+                8.320017359752856e-32
+              ]
+            },
+            "lowdin": {
+              "max_error": 1.8596235662471372e-15,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.005142373092176611,
+                0.0714930365680691,
+                0.7278558380533429,
+                0.007234680293276332,
+                0.007234680293276597,
+                2.550683305611078e-31,
+                0.09051969584992876,
+                0.09051969584992871,
+                3.3132311060383726e-32
+              ]
+            }
+          }
+        },
+        {
+          "channel": "alpha",
+          "selector": "lumo",
+          "mo_number": 14,
+          "field_max_error": 2.4424906541753444e-14,
+          "serialized_cube_max_error": 4.866657035418331e-07,
+          "cube_status": "partial",
+          "cube_warnings": [
+            "Squared-amplitude grid integral failed 0.5% tolerance against AO-metric norm; refine spacing/padding."
+          ],
+          "composition": {
+            "mulliken": {
+              "max_error": 7.105427357601002e-15,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.07549340029853077,
+                0.282403770840991,
+                0.16492674246796715,
+                0.016158722114419773,
+                0.016158722114420543,
+                0.07775244876882376,
+                0.06658898061380941,
+                0.06658898061380944,
+                0.23392823216722794
+              ]
+            },
+            "lowdin": {
+              "max_error": 5.662137425588298e-15,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.07458397615781623,
+                0.2656477119389233,
+                0.2112769017343888,
+                0.01781567367569482,
+                0.017815673675695354,
+                0.0768444193098141,
+                0.06318007167398172,
+                0.06318007167398208,
+                0.20965550015970377
+              ]
+            }
+          }
+        }
+      ],
+      "mayer_max_error": 3.3306690738754696e-14,
+      "reference_mayer_matrix": [
+        [
+          0.0,
+          0.9974016108906343,
+          0.009649106496742287,
+          0.9810112419761805,
+          0.9810112419761816,
+          0.9810174718199769,
+          0.0024822036183486124,
+          0.0024822036183485604,
+          0.010404233794885049
+        ],
+        [
+          0.9974016108906343,
+          0.0,
+          0.9831986044301053,
+          0.002217376030566941,
+          0.002217376030566916,
+          0.0029900710101974943,
+          0.9624562425713756,
+          0.9624562425713761,
+          0.01891768694342845
+        ],
+        [
+          0.009649106496742287,
+          0.9831986044301053,
+          0.0,
+          0.001130114115014421,
+          0.0011301141150144279,
+          0.005480376344321313,
+          0.020308594721433308,
+          0.020308594721433537,
+          0.929162579564959
+        ],
+        [
+          0.9810112419761805,
+          0.002217376030566941,
+          0.001130114115014421,
+          0.0,
+          0.001585894721580974,
+          0.00121544450717599,
+          0.0009051127286465639,
+          0.007614987997382079,
+          2.444631399294141e-05
+        ],
+        [
+          0.9810112419761816,
+          0.002217376030566916,
+          0.0011301141150144279,
+          0.001585894721580974,
+          0.0,
+          0.0012154445071761505,
+          0.007614987997382178,
+          0.000905112728646624,
+          2.4446313992945413e-05
+        ],
+        [
+          0.9810174718199769,
+          0.0029900710101974943,
+          0.005480376344321313,
+          0.00121544450717599,
+          0.0012154445071761505,
+          0.0,
+          0.0009231140024445216,
+          0.0009231140024445319,
+          0.0015317988075399123
+        ],
+        [
+          0.0024822036183486124,
+          0.9624562425713756,
+          0.020308594721433308,
+          0.0009051127286465639,
+          0.007614987997382178,
+          0.0009231140024445216,
+          0.0,
+          0.0034669813604823177,
+          0.0003434122814863521
+        ],
+        [
+          0.0024822036183485604,
+          0.9624562425713761,
+          0.020308594721433537,
+          0.007614987997382079,
+          0.000905112728646624,
+          0.0009231140024445319,
+          0.0034669813604823177,
+          0.0,
+          0.00034341228148634614
+        ],
+        [
+          0.010404233794885049,
+          0.01891768694342845,
+          0.929162579564959,
+          2.444631399294141e-05,
+          2.4446313992945413e-05,
+          0.0015317988075399123,
+          0.0003434122814863521,
+          0.00034341228148634614,
+          0.0
+        ]
+      ],
+      "dos_max_error": 1.2288113071523554e-07,
+      "pdos_max_error": 1.2311302477474584e-07,
+      "status": "passed",
+      "lowdin_pdos_max_error": 1.227555987970419e-07
+    },
+    {
+      "case": "oxygen_triplet",
+      "basis": "6-31g*",
+      "cartesian": false,
+      "spin": 2,
+      "charge": 0,
+      "geometry_angstrom": "O 0 0 -.605; O 0 0 .605",
+      "method": "UHF",
+      "scf_converged": true,
+      "reference_energy_hartree": -149.61192712781883,
+      "input_sha256": "de3772f8c8b1ccea8f4c9fc219eec623955a6aa55eaec4986619490c34cec584",
+      "overlap_eigenvalue_max_error": 3.9968028886505635e-15,
+      "orbitals": [
+        {
+          "channel": "alpha",
+          "selector": "homo",
+          "mo_number": 8,
+          "field_max_error": 3.6637359812630166e-15,
+          "serialized_cube_max_error": 4.95678749656836e-07,
+          "cube_status": "partial",
+          "cube_warnings": [
+            "Squared-amplitude grid integral failed 0.5% tolerance against AO-metric norm; refine spacing/padding."
+          ],
+          "composition": {
+            "mulliken": {
+              "max_error": 5.551115123125783e-15,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.4999999999999852,
+                0.500000000000015
+              ]
+            },
+            "lowdin": {
+              "max_error": 4.884981308350689e-15,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.49999999999998684,
+                0.5000000000000137
+              ]
+            }
+          }
+        },
+        {
+          "channel": "alpha",
+          "selector": "lumo",
+          "mo_number": 10,
+          "field_max_error": 9.048317650695026e-15,
+          "serialized_cube_max_error": 4.6900984307374216e-07,
+          "cube_status": "partial",
+          "cube_warnings": [
+            "Squared-amplitude grid integral failed 0.5% tolerance against AO-metric norm; refine spacing/padding."
+          ],
+          "composition": {
+            "mulliken": {
+              "max_error": 1.0602629885170245e-14,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.49999999999999944,
+                0.5000000000000011
+              ]
+            },
+            "lowdin": {
+              "max_error": 4.773959005888173e-15,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.4999999999999966,
+                0.5000000000000085
+              ]
+            }
+          }
+        },
+        {
+          "channel": "beta",
+          "selector": "homo",
+          "mo_number": 6,
+          "field_max_error": 3.0531133177191805e-15,
+          "serialized_cube_max_error": 4.29354718389785e-07,
+          "cube_status": "partial",
+          "cube_warnings": [
+            "Squared-amplitude grid integral failed 0.5% tolerance against AO-metric norm; refine spacing/padding."
+          ],
+          "composition": {
+            "mulliken": {
+              "max_error": 2.6645352591003757e-15,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.5000000000000081,
+                0.49999999999999195
+              ]
+            },
+            "lowdin": {
+              "max_error": 2.6645352591003757e-15,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.500000000000008,
+                0.4999999999999929
+              ]
+            }
+          }
+        },
+        {
+          "channel": "beta",
+          "selector": "lumo",
+          "mo_number": 8,
+          "field_max_error": 2.6645352591003757e-15,
+          "serialized_cube_max_error": 4.975662082906673e-07,
+          "cube_status": "partial",
+          "cube_warnings": [
+            "Squared-amplitude grid integral failed 0.5% tolerance against AO-metric norm; refine spacing/padding."
+          ],
+          "composition": {
+            "mulliken": {
+              "max_error": 2.6645352591003757e-15,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.4999999999999975,
+                0.5000000000000026
+              ]
+            },
+            "lowdin": {
+              "max_error": 2.3869795029440866e-15,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.4999999999999983,
+                0.5000000000000018
+              ]
+            }
+          }
+        }
+      ],
+      "mayer_max_error": 3.175237850427948e-14,
+      "reference_mayer_matrix": [
+        [
+          0.0,
+          1.8462654844821826
+        ],
+        [
+          1.8462654844821826,
+          0.0
+        ]
+      ],
+      "dos_max_error": 1.3683942912123825e-07,
+      "pdos_max_error": 6.841878552599212e-08,
+      "status": "passed",
+      "lowdin_pdos_max_error": 6.841878497088061e-08
+    },
+    {
+      "case": "ammonium_cation",
+      "basis": "6-31g*",
+      "cartesian": false,
+      "spin": 0,
+      "charge": 1,
+      "geometry_angstrom": "N 0 0 0; H .59 .59 .59; H -.59 -.59 .59; H -.59 .59 -.59; H .59 -.59 -.59",
+      "method": "RHF",
+      "scf_converged": true,
+      "reference_energy_hartree": -56.529408097751286,
+      "input_sha256": "5b4d7133d785ec5d978102fbd8f0ea37038b6acc330e4470e6240296759e142e",
+      "overlap_eigenvalue_max_error": 9.769962616701378e-15,
+      "orbitals": [
+        {
+          "channel": "alpha",
+          "selector": "homo",
+          "mo_number": 3,
+          "field_max_error": 1.887379141862766e-15,
+          "serialized_cube_max_error": 4.906947076444013e-07,
+          "cube_status": "partial",
+          "cube_warnings": [
+            "Squared-amplitude grid integral failed 0.5% tolerance against AO-metric norm; refine spacing/padding."
+          ],
+          "composition": {
+            "mulliken": {
+              "max_error": 5.551115123125783e-16,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.717611120753099,
+                0.1471647093207912,
+                0.006529900758116685,
+                0.1259777063308903,
+                0.00271656283710295
+              ]
+            },
+            "lowdin": {
+              "max_error": 3.4416913763379853e-15,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.689451239299645,
+                0.16184000666131673,
+                0.007181063904986198,
+                0.138540231050408,
+                0.0029874590836467606
+              ]
+            }
+          }
+        },
+        {
+          "channel": "alpha",
+          "selector": "lumo",
+          "mo_number": 6,
+          "field_max_error": 1.509903313490213e-14,
+          "serialized_cube_max_error": 4.2397323862797265e-06,
+          "cube_status": "partial",
+          "cube_warnings": [
+            "Squared-amplitude grid integral failed 0.5% tolerance against AO-metric norm; refine spacing/padding."
+          ],
+          "composition": {
+            "mulliken": {
+              "max_error": 4.4297898682543746e-14,
+              "compared": true,
+              "reference_atom_fractions": [
+                -0.27101589978958956,
+                0.3177539749472476,
+                0.3177539749474762,
+                0.3177539749474536,
+                0.31775397494741214
+              ]
+            },
+            "lowdin": {
+              "max_error": 1.7208456881689926e-14,
+              "compared": true,
+              "reference_atom_fractions": [
+                0.304478126028,
+                0.17388046849291577,
+                0.17388046849304484,
+                0.1738804684930315,
+                0.17388046849300898
+              ]
+            }
+          }
+        }
+      ],
+      "mayer_max_error": 1.554312234475219e-14,
+      "reference_mayer_matrix": [
+        [
+          0.0,
+          0.7391526732626926,
+          0.7391526732626832,
+          0.7391526732626882,
+          0.7391526732626855
+        ],
+        [
+          0.7391526732626926,
+          0.0,
+          -0.002792503549827128,
+          -0.0027925035498273976,
+          -0.002792503549827287
+        ],
+        [
+          0.7391526732626832,
+          -0.002792503549827128,
+          0.0,
+          -0.0027925035498269544,
+          -0.0027925035498270715
+        ],
+        [
+          0.7391526732626882,
+          -0.0027925035498273976,
+          -0.0027925035498269544,
+          0.0,
+          -0.002792503549827005
+        ],
+        [
+          0.7391526732626855,
+          -0.002792503549827287,
+          -0.0027925035498270715,
+          -0.002792503549827005,
+          0.0
+        ]
+      ],
+      "dos_max_error": 2.7839740512902722e-08,
+      "pdos_max_error": 2.7839740512902722e-08,
+      "status": "passed",
+      "lowdin_pdos_max_error": 2.7839738292456673e-08
     }
   ],
   "status": "passed"
