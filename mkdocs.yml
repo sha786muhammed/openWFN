@@ -121,6 +121,7 @@ nav:
       - QC design and roadmap: project/everyday-qc-design.md
       - QC validation and gates: project/everyday-qc-validation.md
       - Experimental coverage: project/experimental-coverage.md
+      - Runtime and resource validation: project/resource-validation.md
       - Workflow stabilization: project/workflow-stabilization-design.md
       - Product boundary and benchmarking: project/core-benchmarking-design.md
       - Releasing: releasing.md

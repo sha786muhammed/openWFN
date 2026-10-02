@@ -11,6 +11,12 @@ All notable changes to openWFN are documented in this file.
 
 ## [Unreleased] — staged everyday QC branch
 
+- Reduce coordinate-grid temporaries, account for primitive/Cartesian AO work,
+  cache contraction normalization and stream atomic density/MO cube exports.
+- Add optional trusted-workflow timeout/RSS/output supervision, real-molecule
+  resource benchmarking and Linux/macOS/Windows resource-safety CI. Preserve
+  all scientific validation labels and document sampled-monitor limitations.
+
 - Add native Gaussian-integral ESP and a shared Python/CLI point interface,
   independently checked against eleven PySCF wavefunctions and analytic s–h AOs.
 - Promote successful MO cube/composition/Mayer/DOS/PDOS results to Validated for

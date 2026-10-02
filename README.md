@@ -216,3 +216,6 @@ Project policies: [Code of Conduct](CODE_OF_CONDUCT.md) ·
 Cite the exact version used and the project repository; see the [citation guide](https://sha786muhammed.github.io/openWFN/citation/). openWFN is released under the [MIT License](LICENSE).
 
 **Author:** Muhammed Shah Shaji
+
+Development resource checks and their measured scope are documented in
+[Runtime and resource validation](docs/project/resource-validation.md).
