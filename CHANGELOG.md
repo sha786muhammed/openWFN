@@ -2,6 +2,17 @@
 
 All notable changes to openWFN are documented in this file.
 
+## [0.10.1] - 2026-10-02
+
+Release-evidence and published-package reproducibility hardening for the 0.10 stable line.
+
+- Keep scientific numerical kernels, schemas and validation tolerances unchanged.
+- Replace stale development-state validation prose with a current-state evidence page and extend the canonical validation manifest with current capability status and explicit historical-capture roles.
+- Package the complete eleven-molecule everyday-QC corpus so installed wheels can reproduce the bounded real-workflow matrix without a repository checkout.
+- Make the resource benchmark consume an explicit corpus, reject incomplete corpora, and record hashes for the actually imported package.
+- Distinguish 99/99 prescribed command/resource completion from scientific validation status.
+- Make the stable publication path version-driven and rerun the complete installed-corpus benchmark after downloading the exact release from public PyPI with interoperability/resource extras.
+
 ## [0.10.0] - 2026-10-02
 
 Stable package release for the documented everyday QC and automation scope.
