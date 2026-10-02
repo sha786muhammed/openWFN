@@ -539,7 +539,7 @@ def test_documented_capability_states_are_defined() -> None:
         assert f"**{state}**" in validation
 
 
-def test_workbench_is_presented_as_optional_and_experimental() -> None:
+def test_workbench_has_scoped_stable_interface_and_preserves_field_evidence() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     workbench = (ROOT / "docs" / "workbench.md").read_text(encoding="utf-8")
     quick_start = (ROOT / "docs" / "quick-start.md").read_text(encoding="utf-8")
@@ -547,8 +547,11 @@ def test_workbench_is_presented_as_optional_and_experimental() -> None:
 
     assert "| Research reports |" in readme
     assert "| Interactive workbench |" in readme
-    assert "| Interactive workbench | Optional visualization" in readme
-    assert "Experimental" in workbench
+    assert "| Interactive workbench | Offline workspaces" in readme
+    assert "Stable interface" in readme
+    assert "Stable interface" in workbench
+    assert "conservation status independently" in workbench
+    assert "browser-report.json" in workbench
     assert "not a numerical reference" in workbench
     assert "workbench" not in quick_start.lower()
     assert "offline workbench" not in metadata.lower()

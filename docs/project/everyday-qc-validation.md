@@ -236,3 +236,10 @@ A bounded follow-up review found an invalid cube index could end guided mode;
 the expected IndexError now renders a failed record and restores navigation.
 No data are invented for absent/invalid inputs. Source-output readers and
 advanced unimplemented methods retain their documented boundaries.
+
+The common-registry parity matrix now covers native water FCHK plus all eleven
+committed real Molden molecules: four analyses times twelve inputs, comparing
+full numerical data through CLI, Python, batch, HTML reports and MCP. Existing
+stdio, containment, malformed-data and resource tests remain active. The local
+MCP interface is Stable for this documented scope; individual scientific result
+statuses and source-reader limitations remain independent.

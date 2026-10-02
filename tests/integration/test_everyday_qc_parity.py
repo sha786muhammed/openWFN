@@ -10,17 +10,21 @@ from openwfn.batch import run_batch
 from openwfn.cli import main
 from openwfn.reporting import build_report
 
-WATER = Path(__file__).resolve().parents[2]/'examples/water/water.fchk'
+ROOT = Path(__file__).resolve().parents[2]
+SOURCES = [ROOT/'examples/water/water.fchk', *sorted((ROOT/'examples/everyday-qc').glob('*.molden'))]
 
 
+@pytest.mark.parametrize('source', SOURCES, ids=[path.stem+path.suffix for path in SOURCES])
 @pytest.mark.parametrize('analysis, command', [('orbital-composition', ['orbitals', 'composition']), ('mayer', ['bondorder', 'mayer']), ('dos', ['orbitals', 'dos']), ('pdos', ['orbitals', 'pdos'])])
-def test_registry_interfaces_have_identical_data(analysis, command, tmp_path, capsys):
-    calc = load(WATER)
+def test_registry_interfaces_have_identical_data(source, analysis, command, tmp_path, capsys):
+    if source.suffix == '.molden':
+        pytest.importorskip('iodata')
+    calc = load(source)
     reference = calc.analyze(analysis)
-    assert main(['--format', 'json', str(WATER), *command]) == 0
+    assert main(['--format', 'json', str(source), *command]) == 0
     cli = json.loads(capsys.readouterr().out)
     assert cli['data'] == reference.data
-    batch = run_batch([WATER], None, 1, tmp_path/'batch', analyses=(analysis,))
+    batch = run_batch([source], None, 1, tmp_path/'batch', analyses=(analysis,))
     assert batch.records[0].results[0].data == reference.data
     report = build_report(calc.data.calculation, (analysis,), tmp_path/'report.html', 'html', 'parity', {})
     text = report.read_text()
@@ -34,7 +38,7 @@ def test_registry_interfaces_have_identical_data(analysis, command, tmp_path, ca
     from openwfn.mcp_server import create_server
 
     async def check():
-        async with Client(create_server(WATER.parent)) as client:
-            result = await client.call_tool('run_analysis', {'path': WATER.name, 'analysis': analysis})
+        async with Client(create_server(source.parent)) as client:
+            result = await client.call_tool('run_analysis', {'path': source.name, 'analysis': analysis})
             assert result.structured_content['data'] == reference.data
     asyncio.run(check())

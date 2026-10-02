@@ -127,7 +127,7 @@ The default density spacing of **0.15 bohr** is an accuracy/performance tradeoff
 | Interactive workbench | Offline workspaces, surfaces and signed geometry readouts | Stable interface; eleven-molecule Chromium evidence; field diagnostics retained |
 | Additional input formats | Optional IOData ingestion and file-specific capabilities | Stable fixture contract; requires the interop extra |
 | QC output properties | Source-reported extraction with optional cclib | Experimental; not a complete wavefunction |
-| Local MCP | Read-only stdio tools for selected analyses | Experimental; no remote service |
+| Local MCP | Read-only stdio tools for selected registered analyses | Stable local interface; real CLI/API/batch/report parity; no remote service |
 
 “Validated” is deliberately scoped. Review the [validation evidence](https://sha786muhammed.github.io/openWFN/science/validation-status/) and [limitations](https://sha786muhammed.github.io/openWFN/limitations/) before research use.
 
