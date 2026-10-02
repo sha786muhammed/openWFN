@@ -19,14 +19,13 @@ def test_current_validation_page_has_no_stale_release_instructions() -> None:
 
 
 def test_validation_manifest_declares_current_and_historical_evidence() -> None:
-    manifest_path = ROOT / "validation/everyday-qc/manifest.json"
-    assert manifest_path.is_file()
+    manifest_path = ROOT / "validation/manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     assert manifest["schema_version"] == "1.0"
     assert manifest["current_release"] == "0.10.1"
     assert manifest["resource_benchmark"]["establishes_scientific_validation"] is False
-    assert manifest["historical_captures"]["report.json"]["authoritative_status"] is False
-    assert manifest["historical_captures"]["esp-report.json"]["authoritative_status"] is False
+    assert manifest["historical_captures"]["everyday-qc/report.json"]["authoritative_status"] is False
+    assert manifest["historical_captures"]["everyday-qc/esp-report.json"]["authoritative_status"] is False
     for capability in ("orbital-composition", "mayer", "dos", "pdos", "point-esp"):
         assert capability in manifest["capabilities"]
         assert manifest["capabilities"][capability]["status"] in {"Validated", "Experimental"}
