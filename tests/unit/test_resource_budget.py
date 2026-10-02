@@ -125,6 +125,9 @@ def test_group_permission_race_preserves_owned_process_cleanup(tmp_path, monkeyp
     monkeypatch.setattr(os, 'killpg', denied)
     code = ("import time; print('completed'); time.sleep(.1)" if completed
             else "import time; time.sleep(30)")
-    result = run(tmp_path, code, timeout_seconds=.3)
+    # A successful command needs headroom for interpreter startup on slower
+    # hosted macOS runners.  The timeout case remains deliberately tight.
+    timeout = 2.0 if completed else .3
+    result = run(tmp_path, code, timeout_seconds=timeout)
     assert result['status'] == ('success' if completed else 'timeout')
     assert result['elapsed_seconds'] < 3.
