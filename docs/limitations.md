@@ -24,7 +24,9 @@
 - Density integration and cube validation depend on the numerical grid. The default **0.15 bohr** spacing is an accuracy/performance tradeoff and may be insufficient for tightly localized core density, heavy atoms, diffuse tails, or unusually demanding quantitative targets. Converge spacing and padding for the system being reported.
 - Density-grid AO evaluation is chunked to limit peak memory, but the Cartesian point grid and final scalar values still occupy memory. Extremely large boxes or very fine grids can therefore remain expensive.
 - Molecular-summary bonds and fragments are inferred with a covalent-radius heuristic. This may not represent unusual coordination, transition states, stretched bonds, metals, or other nonstandard bonding situations.
-- Electronic and total ESP use grid quadrature and are Experimental.
+- Gaussian-integral electronic and total point ESP is Validated for the documented
+  eleven-case reference set. The explicit grid-based electronic/total ESP
+  quadrature pathway remains Experimental and requires system-specific convergence.
 - Embedded coarse workbench grids are visualization data unless separately converged and validated; they are not final quantitative integration evidence.
 - Independent `qc-iodata==1.0.1` comparisons currently cover parsed total energies and alpha frontier orbitals for six cases. They do not validate Mulliken, Löwdin, ESP, or density algorithms.
 - Multiwfn same-wavefunction comparisons validate frontier orbitals, Mulliken charges, and Löwdin charges only for restricted water and unrestricted LiH; broader chemical coverage remains pending.
@@ -42,13 +44,17 @@
 
 Always record the openWFN version, source-file checksum, grid spacing, padding, units, warnings, execution status, and validation status in research outputs.
 
-## Development-branch QC expansion
+## Everyday-QC validation scope
 
-The new MO cube/composition/Mayer/DOS/PDOS methods are Experimental and have
-limited validation sets. Löwdin partitions depend on AO representation;
+MO cube, orbital composition, Mayer, DOS and PDOS are **Validated** for the
+documented eleven-molecule reference scope; that scope is not universal
+validation across all elements, high angular momentum, ECPs, correlated
+densities or programs. Löwdin partitions depend on AO representation;
 Mulliken fractions/PDOS may be signed. Mayer row sums are bonded-valence
 diagnostics, and correlated improved Mayer definitions are absent. DOS is
 finite-molecule orbital-energy broadening with one count per supplied spatial
-orbital/channel, without occupancy weighting or periodic bands. Hirshfeld,
-typed spectroscopy/NTO and real-space topology/basins are not implemented.
+orbital/channel, without occupancy weighting or periodic bands. Failed source,
+conditioning, normalization or convergence diagnostics remain failed or
+partial/Experimental. Hirshfeld, typed spectroscopy/NTO and real-space
+topology/basins are not implemented.
 See the [completion and gate record](project/everyday-qc-validation.md).
