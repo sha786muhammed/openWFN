@@ -3,11 +3,6 @@ name: Publish to PyPI
 on:
   push:
     branches: [main]
-    paths:
-      - pyproject.toml
-      - docs/releases/**
-      - validation/manifest.json
-      - .github/workflows/publish.yml
 
 permissions:
   contents: read
@@ -98,7 +93,7 @@ jobs:
             test "$existing_target" = "$GITHUB_SHA"
           else
             git config user.name "github-actions[bot]"
-            git config user.email "418982961+github-actions[bot]@users.noreply.github.com"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git tag -a "$RELEASE_TAG" -m "openWFN $RELEASE_VERSION"
             git push origin "$RELEASE_TAG"
           fi
@@ -145,8 +140,17 @@ jobs:
       - name: Verify the published PyPI package in a clean environment
         run: |
           python -m venv published-smoke
-          published-smoke/bin/python -m pip install --no-cache-dir --index-url https://pypi.org/simple \
-            "openwfn[interop,resources]==${RELEASE_VERSION}"
+          for attempt in 1 2 3 4 5 6; do
+            if published-smoke/bin/python -m pip install --no-cache-dir --index-url https://pypi.org/simple \
+              "openwfn[interop,resources]==${RELEASE_VERSION}"; then
+              break
+            fi
+            if [ "$attempt" = 6 ]; then
+              echo "Published package did not become installable from public PyPI" >&2
+              exit 1
+            fi
+            sleep 10
+          done
           published-smoke/bin/python - <<'PY'
           import os, openwfn
           assert openwfn.__version__ == os.environ["RELEASE_VERSION"]
