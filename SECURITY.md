@@ -4,7 +4,8 @@
 
 | Version | Security fixes |
 |---|---|
-| `0.10.0rc1` | Prerelease feedback and fixes |
+| `0.10.0` | Supported |
+| `0.10.0rc1` | Superseded by 0.10.0 |
 | `0.9.2` | Supported |
 | `0.9.1` | Not supported |
 | `0.9.0` | Not supported |

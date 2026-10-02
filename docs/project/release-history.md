@@ -1,5 +1,13 @@
 # Release history
 
+## 0.10.0 — everyday QC stable release
+
+Stable package release of the candidate's documented everyday QC, interface
+and resource scope. Individual scientific validation labels and limitations
+remain unchanged.
+
+[Read the release notes](../releases/0.10.0.md)
+
 ## 0.10.0rc1 — everyday QC release candidate
 
 An opt-in candidate with MO cubes/composition, Mayer, DOS/PDOS, native point

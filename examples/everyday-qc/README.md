@@ -20,7 +20,7 @@ Generated data are distributed under the openWFN project's MIT license.
 | oxygen_triplet | UHF/6-31G*, triplet | Open-shell spin-density treatment |
 | ammonium_cation | RHF/6-31G*, charge +1 | Charged electron-count convention |
 
-Install the development branch and optional parser:
+Install the source checkout and optional parser:
 
 ```bash
 python -m pip install -e '.[interop]'
@@ -31,11 +31,13 @@ openwfn examples/everyday-qc/ethanol.molden orbitals cube --mo homo --spacing .1
 openwfn examples/everyday-qc/water_dimer.molden orbitals pdos --group-by element --export water-dimer-pdos.svg
 ```
 
-Methods remain **Experimental**. Read status/warnings, including cube/grid
-conservation warnings, before interpreting numbers. Mulliken populations can
-be negative; Löwdin populations depend on AO representation. DOS is an orbital
-energy spectrum, not a periodic band structure. Mayer values are indices,
-not an automatic bond classification, particularly for intermolecular pairs.
+MO cube, orbital-composition, Mayer, DOS and PDOS results are **Validated** for
+the documented eleven-molecule reference scope. Read status/warnings, including
+cube/grid conservation warnings, before interpreting numbers; failed or partial
+diagnostics retain their actual status. Mulliken populations can be negative;
+Löwdin populations depend on AO representation. DOS is an orbital energy
+spectrum, not a periodic band structure. Mayer values are indices, not an
+automatic bond classification, particularly for intermolecular pairs.
 
 The source SHA-256, charge, spin, coordinates, basis and converged SCF energy
 for each file are in `validation/everyday-qc/pyscf-report.json`, together with

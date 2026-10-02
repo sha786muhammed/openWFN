@@ -2,6 +2,20 @@
 
 All notable changes to openWFN are documented in this file.
 
+## [0.10.0] - 2026-10-02
+
+Stable package release for the documented everyday QC and automation scope.
+
+- Promote the tested 0.10.0rc1 implementation without changing scientific
+  algorithms, schemas, numerical controls or individual validation labels.
+- Retain the candidate's MO cubes/composition, Mayer, DOS/PDOS, native point ESP,
+  interface parity and resource safeguards described below.
+- Align version, citation, installation, support policy and release notes.
+- Publish only after exact-commit CI, distribution and installed-wheel checks;
+  verify installation and the water workflow from public PyPI.
+- Allow fifteen minutes for browser CI including Chromium dependency setup.
+  Native Hirshfeld and later spectroscopy/real-space phases remain unshipped.
+
 ## [0.10.0rc1] - 2026-10-02
 
 Release candidate; 0.9.2 remains the stable release.
