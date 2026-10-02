@@ -4,7 +4,7 @@ from typing import Literal
 
 import numpy as np
 
-from .analysis.basis import ao_atom_indices, overlap_matrix
+from .analysis.basis import ao_atom_indices, bounded_ao_chunk_size, overlap_matrix
 from .analysis.density import density_matrix_for_kind, evaluate_density, integrate_density
 from .analysis.electrostatics import electronic_esp_from_grid, nuclear_esp, point_charge_esp
 from .analysis.grids import iter_point_chunks, molecular_grid_points, scalar_grid
@@ -451,7 +451,7 @@ def density_grid(
     )
     values = np.empty(len(points), dtype=float)
     # Bound AO evaluation temporaries as well as the number of grid points.
-    chunk_size = min(chunk_size, max(1, 8_000_000 // max(1, data.basis.n_functions)))
+    chunk_size = bounded_ao_chunk_size(data.basis, chunk_size)
     offset = 0
     for chunk in iter_point_chunks(points, chunk_size):
         chunk_values = evaluate_density(data.molecule, data.basis, matrix, chunk)

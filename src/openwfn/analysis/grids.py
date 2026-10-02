@@ -42,8 +42,12 @@ def molecular_grid_points(
         + np.arange(shape[index]) * spacing_bohr
         for index in range(3)
     ]
-    mesh = np.meshgrid(*axes, indexing="ij")
-    points = np.column_stack(tuple(component.ravel() for component in mesh))
+    # Broadcast into the final array: no three full-size mesh temporaries.
+    points = np.empty((count, 3), dtype=float)
+    ordered = points.reshape((*shape, 3))
+    ordered[..., 0] = axes[0][:, None, None]
+    ordered[..., 1] = axes[1][None, :, None]
+    ordered[..., 2] = axes[2][None, None, :]
     return points, tuple(float(value) for value in lower), tuple(len(axis) for axis in axes)
 
 

@@ -3,11 +3,11 @@ from pathlib import Path
 
 import numpy as np
 
-from .analysis.basis import overlap_matrix
+from .analysis.basis import bounded_ao_chunk_size, overlap_matrix
 from .analysis.grids import iter_point_chunks, molecular_grid_points, scalar_grid
 from .analysis.orbitals import OCCUPATION_THRESHOLD, evaluate_orbital
 from .errors import DataUnavailableError
-from .exporters.cube import format_cube
+from .exporters.cube import write_cube
 from .model import CalculationData, MolecularOrbitals
 from .results import ResultRecord
 
@@ -53,7 +53,7 @@ def orbital_grid(data: CalculationData, mo: int | str, spin: str, spacing_bohr: 
     points, origin, shape = molecular_grid_points(data.molecule, spacing_bohr=spacing_bohr,
                                                  padding_bohr=padding_bohr)
     values = np.empty(len(points))
-    chunk_size = min(chunk_size, max(1, 8_000_000 // max(1, data.basis.n_functions)))
+    chunk_size = bounded_ao_chunk_size(data.basis, chunk_size)
     offset = 0
     for chunk in iter_point_chunks(points, chunk_size):
         stop = offset + len(chunk)
@@ -79,10 +79,8 @@ def orbital_cube_export(data: CalculationData, mo: int | str, spin: str, spacing
         warnings.append('Squared-amplitude grid integral failed 0.5% tolerance against AO-metric norm; refine spacing/padding.')
     source = data.molecule.provenance
     metadata = f'units: bohr^-3/2; mo={index+1}; spin={orbitals.spin}; spacing_bohr={spacing_bohr}; padding_bohr={padding_bohr}; sha256={source.sha256 if source else "unavailable"}'
-    lines = format_cube(grid, data.molecule).splitlines()
-    lines[1] = metadata
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text('\n'.join(lines)+'\n', encoding='utf-8')
+    write_cube(grid, data.molecule, output_path, overwrite=overwrite, comment=metadata)
     return ResultRecord(kind='orbital_cube', data={
         'mo_number': index+1, 'spin': orbitals.spin, 'energy_hartree': orbitals.energies[index],
         'occupation': orbitals.occupations[index], 'occupation_source': orbitals.occupation_source,

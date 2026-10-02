@@ -1,7 +1,7 @@
 """Vectorized normalized Gaussian basis evaluation with spherical D/F/G/H support."""
 
 import math
-from functools import cache
+from functools import cache, lru_cache
 
 import numpy as np
 
@@ -81,13 +81,7 @@ def _evaluate_contraction(
 ) -> np.ndarray:
     coefficient_array = np.asarray(coefficients, dtype=float)
     exponent_array = np.asarray(exponents, dtype=float)
-    overlap = np.array(
-        [[_primitive_overlap(alpha, beta, powers) for beta in exponent_array] for alpha in exponent_array]
-    )
-    norm_squared = float(coefficient_array @ overlap @ coefficient_array)
-    if norm_squared <= 0.0:
-        raise ValueError("contracted Gaussian normalization is not positive")
-    contraction_scale = 1.0 / math.sqrt(norm_squared)
+    contraction_scale = _contraction_scale(exponents, coefficients, powers)
     radial_squared = np.sum(displacements * displacements, axis=1)
     radial = np.exp(-np.outer(radial_squared, exponent_array))
     primitive_norms = np.asarray([_primitive_normalization(alpha, powers) for alpha in exponent_array])
@@ -342,6 +336,7 @@ def ao_atom_indices(basis: BasisSet) -> tuple[int, ...]:
     )
 
 
+@lru_cache(maxsize=4096)
 def _contraction_scale(
     exponents: tuple[float, ...],
     coefficients: tuple[float, ...],
@@ -426,3 +421,21 @@ def overlap_matrix(basis: BasisSet, molecule: Molecule) -> np.ndarray:
 
     transform = _basis_transform(basis)
     return transform @ cartesian_matrix @ transform.T
+
+
+def bounded_ao_chunk_size(basis: BasisSet, requested: int, *, working_bytes: int = 128*1024**2) -> int:
+    """Conservative AO temporary estimate, including Cartesian/pure expansion.
+
+    This bounds point-dependent arrays, not total process RSS or density-matrix
+    storage. Contraction normalization and NumPy/library overhead are separate.
+    """
+    if isinstance(requested, bool) or not isinstance(requested, int) or requested <= 0:
+        raise ValueError("chunk size must be a positive integer")
+    if isinstance(working_bytes, bool) or not isinstance(working_bytes, int) or working_bytes <= 0:
+        raise ValueError("working memory budget must be a positive integer")
+    cartesian_count = len(_function_specs(basis))
+    max_primitives = max((len(shell.exponents) for shell in basis.shells), default=0)
+    per_point = 8*(3*cartesian_count + 2*basis.n_functions + 2*max_primitives + 20)
+    if per_point > working_bytes:
+        raise ValueError("AO temporary memory estimate exceeds budget even for one point")
+    return min(requested, max(1, working_bytes//per_point))
