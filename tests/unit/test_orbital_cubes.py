@@ -81,6 +81,8 @@ def test_api_cli_cube_parity_and_provenance(tmp_path, capsys):
 
 @pytest.mark.parametrize('format_id', ['fchk', 'molden', 'mwfn', 'wfn', 'wfx'])
 def test_cross_format_signed_orbital_field(format_id):
+    if format_id != 'fchk':
+        pytest.importorskip('iodata')
     root = WATER.parents[2]
     source = WATER if format_id == 'fchk' else root/f'tests/fixtures/interop/{format_id}/water.{format_id}'
     native = services.orbital_grid(load(WATER).data.calculation, 'homo', 'alpha', .5, 3.)
