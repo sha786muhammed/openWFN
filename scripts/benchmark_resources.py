@@ -14,6 +14,12 @@ from openwfn.resource_budget import run_resource_command
 EXPECTED_MOLECULES = 11
 
 
+def resolve_examples_dir(examples_dir: Path | None, root: Path) -> Path:
+    """Resolve the corpus before resource runners change each workflow's cwd."""
+    selected = examples_dir if examples_dir is not None else root/'examples/everyday-qc'
+    return selected.resolve()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', required=True, type=Path)
@@ -28,7 +34,7 @@ def main():
     parser.add_argument('--output-mib', default=128, type=int)
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
-    examples_dir = args.examples_dir or root/'examples/everyday-qc'
+    examples_dir = resolve_examples_dir(args.examples_dir, root)
     sources = sorted(examples_dir.glob('*.molden'))
     if len(sources) != EXPECTED_MOLECULES:
         parser.error(
