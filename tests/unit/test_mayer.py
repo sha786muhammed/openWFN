@@ -62,7 +62,7 @@ def test_open_shell_without_spin_matrix_fails_instead_of_assuming_zero():
     result = run_analysis_safe(data, 'mayer')
     assert result.status == 'failed'
     assert 'Spin density' in result.error.message
-    data = replace(data, spin_density=DensityMatrix(((1.,),), 'spin'))
+    data = replace(data, spin_density=DensityMatrix(((1.,),), 'spin'), records={'Number of alpha electrons': 1, 'Number of beta electrons': 0})
     assert run_analysis_safe(data, 'mayer').status == 'success'
     for threshold in (-1., float('nan')):
         assert run_analysis_safe(data, 'mayer', threshold=threshold).status == 'failed'
@@ -97,3 +97,14 @@ def test_independent_cclib_mbo_contraction(unrestricted):
     pb = np.zeros((2, 2)) if unrestricted else pa
     result = mayer_matrix(pa+pb, pa-pb, s, (0, 1), 2)
     assert result == pytest.approx(reference.fragresults.sum(axis=0), abs=1e-12)
+
+
+def test_mayer_spin_conservation_rejects_inflated_bond_order_success():
+    data = load(WATER).data.calculation
+    corrupted = replace(data, spin_density=DensityMatrix(data.total_density.values, 'spin', source=data.total_density.source))
+    result = run_analysis_safe(corrupted, 'mayer')
+    assert result.status == 'partial'
+    assert result.data['spin_electron_count'] == pytest.approx(10., abs=1e-6)
+    assert result.data['expected_spin_electrons'] == 0.
+    assert result.data['spin_conservation_error'] > 9.9
+    assert any('Spin conservation' in warning for warning in result.warnings)

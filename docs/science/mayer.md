@@ -62,3 +62,10 @@ the source alpha/beta difference as a spin matrix, including nonzero ROHF spin.
 The optional packaged LiH-cation ROHF/UHF fixtures verify integrated spin against
 source occupations (2e-7 electrons). These comparisons share source wavefunctions
 and are regression evidence, not new independently executed ORCA/Multiwfn captures.
+
+Review hardening: `trace(Q S)` is compared against authoritative source
+alpha-minus-beta electron counts or explicit unrestricted occupations. A spin
+error above 1e-6 electrons produces partial status and a warning; an unavailable
+spin expectation is also partial. Results expose `spin_electron_count`,
+`expected_spin_electrons` and `spin_conservation_error`. This check catches
+inflated spin matrices even when their reported density source matches.

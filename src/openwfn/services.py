@@ -645,6 +645,18 @@ def mayer_bond_orders(data: CalculationData, threshold: float = .05) -> ResultRe
                           ao_atom_indices(data.basis), len(data.molecule.atoms))
     population = population_analysis(data, 'mulliken')
     warnings = list(population.warnings)
+    spin_count = float(np.trace(np.asarray(spin.values) @ overlap))
+    expected_spin = None
+    spin_error = None
+    try:
+        expectation = expected_electron_count(data, "spin")
+        expected_spin = expectation.value
+        spin_error = abs(spin_count-expected_spin)
+        warnings.extend(expectation.warnings)
+        if spin_error > POPULATION_CONSERVATION_TOLERANCE:
+            warnings.append(f"Spin conservation failed: error {spin_error:.6g} e exceeds 1e-6 e.")
+    except DataUnavailableError:
+        warnings.append("Spin conservation could not be checked: authoritative spin electron count is unavailable.")
     if spin.source != data.total_density.source:
         warnings.append('Total and spin density sources differ; Mayer spin consistency is unconfirmed.')
     if _is_post_hf_method(data.molecule.metadata.method) and data.total_density.source != 'scf':
@@ -659,7 +671,11 @@ def mayer_bond_orders(data: CalculationData, threshold: float = .05) -> ResultRe
         'charge_conservation_error': population.data['conservation_error'],
         'density_source': data.total_density.source, 'spin_density_source': spin.source,
         'reference_kind': orbital_reference_kind(data),
+        'spin_electron_count': spin_count, 'expected_spin_electrons': expected_spin,
+        'spin_conservation_error': spin_error,
     }, units={'bond_order_matrix': 'dimensionless', 'pairs': 'dimensionless',
-              'bonded_valence': 'dimensionless', 'charge_conservation_error': 'e'},
+              'bonded_valence': 'dimensionless', 'charge_conservation_error': 'e',
+              'spin_electron_count': 'electron', 'expected_spin_electrons': 'electron',
+              'spin_conservation_error': 'electron'},
         validation_status='Experimental', status='partial' if warnings else 'success',
         warnings=tuple(dict.fromkeys(warnings)))
