@@ -35,8 +35,10 @@ def validate_case(browser, name, output):
             for index in range(options):
                 page.locator('#field-select').select_option(index=index)
                 assert page.locator('#surface-metadata').inner_text()
-                page.locator('#isovalue').fill('0.025')
-                page.locator('#isovalue').dispatch_event('input')
+                page.locator('#isovalue').focus()
+                page.locator('#isovalue').press('Home')
+                page.locator('#isovalue').press('ArrowRight')
+                assert float(page.locator('#isovalue-output').inner_text()) > 0
     measurements = []
     definitions = [('distance', (1, 2), calc.geometry_distance)]
     if len(calc.molecule.atoms) >= 3:
