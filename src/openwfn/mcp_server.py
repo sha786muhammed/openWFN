@@ -6,14 +6,15 @@ from time import perf_counter
 from typing import Any, Callable
 
 from . import __version__
-from .analysis.registry import available_analyses, run_analysis_safe
+from .analysis.registry import _resolve, available_analyses, run_analysis_safe
 from .ingest import load_input
 from .inspection import build_capabilities_result
 from .output_properties import read_output
 from .results import ResultRecord
 
 
-def create_server(data_root: str | Path, *, max_file_bytes: int = 100 * 1024 * 1024) -> Any:
+def create_server(data_root: str | Path, *, max_file_bytes: int = 100 * 1024 * 1024,
+                  max_basis_functions: int = 256) -> Any:
     """Create an MCP server restricted to regular files beneath ``data_root``.
 
     No server is started here. The caller owns the directory and must keep it
@@ -22,6 +23,8 @@ def create_server(data_root: str | Path, *, max_file_bytes: int = 100 * 1024 * 1
     root = Path(data_root).expanduser().resolve()
     if not root.is_dir():
         raise ValueError("data_root must be an existing directory")
+    if max_basis_functions <= 0:
+        raise ValueError("max_basis_functions must be positive")
     if max_file_bytes <= 0:
         raise ValueError("max_file_bytes must be positive")
     try:
@@ -93,7 +96,15 @@ def create_server(data_root: str | Path, *, max_file_bytes: int = 100 * 1024 * 1
         def execute() -> ResultRecord:
             if analysis not in available_analyses():
                 raise ValueError(f"Unknown analysis: {analysis}")
-            return run_analysis_safe(load_input(source, format_hint=format_hint), analysis)
+            data = load_input(source, format_hint=format_hint)
+            definition = _resolve(analysis)
+            needs_overlap = any("ao_overlap" in requirement.alternatives
+                                for requirement in definition.requirements)
+            if needs_overlap and data.calculation is not None and data.calculation.basis is not None:
+                count = data.calculation.basis.n_functions
+                if count > max_basis_functions:
+                    raise ValueError(f"AO resource limit: {count} basis functions exceed configured {max_basis_functions}; run dense analyses outside MCP or explicitly raise the server limit.")
+            return run_analysis_safe(data, analysis)
 
         return result(execute, analysis)
 
@@ -111,9 +122,11 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data-root", required=True, help="Directory containing permitted input files")
     parser.add_argument("--max-file-bytes", type=int, default=100 * 1024 * 1024)
+    parser.add_argument("--max-basis-functions", type=int, default=256, help="AO limit for overlap-based registry analyses")
     args = parser.parse_args(argv)
     try:
-        server = create_server(args.data_root, max_file_bytes=args.max_file_bytes)
+        server = create_server(args.data_root, max_file_bytes=args.max_file_bytes,
+                               max_basis_functions=args.max_basis_functions)
     except (ValueError, RuntimeError) as exc:
         parser.error(str(exc))
     server.run(transport="stdio")

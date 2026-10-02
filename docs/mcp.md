@@ -87,3 +87,15 @@ the server runs. This local preview is not a sandbox for hostile files and
 has no CPU, memory, or execution-time isolation. Results include source paths;
 consider that before sharing them with an external client. Remote deployment
 needs separate access-control, upload, and resource-limit work.
+
+## Development-branch dense analysis limit
+
+The staged QC branch adds default read-only `orbital-composition`, `mayer`,
+`dos` and `pdos` registry analyses. Cube/CSV/plot writes remain outside MCP.
+Overlap-based analyses (including existing Mulliken/Löwdin) are limited to 256
+AO functions by default before overlap construction. Configure an intentional
+higher limit with `--max-basis-functions N` or
+`create_server(root, max_basis_functions=N)`; this is a resource bound, not a
+runtime guarantee. DOS grids are independently limited to 100000 points and
+PDOS to two million output projection values. Expensive grids/cubes/real-space
+methods are not exposed. Existing file-size and data-root restrictions remain.

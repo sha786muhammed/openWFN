@@ -1,6 +1,7 @@
 """Versioned registry for analyses shared by every public interface."""
 
 from dataclasses import dataclass, replace
+from inspect import signature
 from time import perf_counter
 from typing import Callable
 
@@ -167,6 +168,7 @@ def run_analysis(data: AnalysisInput, name: str, **parameters) -> ResultRecord:
 
     definition = _resolve(name)
     normalized = _normalize(data)
+    signature(definition.runner).bind(normalized.calculation, **parameters)
     _require_analysis_capabilities(normalized, definition)
     if normalized.calculation is None and definition.name != "summary":
         raise DataUnavailableError(
