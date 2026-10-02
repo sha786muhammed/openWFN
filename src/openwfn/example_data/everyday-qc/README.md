@@ -20,7 +20,7 @@ Generated data are distributed under the openWFN project's MIT license.
 | oxygen_triplet | UHF/6-31G*, triplet | Open-shell spin-density treatment |
 | ammonium_cation | RHF/6-31G*, charge +1 | Charged electron-count convention |
 
-Install the source checkout and optional parser:
+## Use from a source checkout
 
 ```bash
 python -m pip install -e '.[interop]'
@@ -31,18 +31,42 @@ openwfn examples/everyday-qc/ethanol.molden orbitals cube --mo homo --spacing .1
 openwfn examples/everyday-qc/water_dimer.molden orbitals pdos --group-by element --export water-dimer-pdos.svg
 ```
 
-MO cube, orbital-composition, Mayer, DOS and PDOS results are **Validated** for
-the documented eleven-molecule reference scope. Read status/warnings, including
-cube/grid conservation warnings, before interpreting numbers; failed or partial
-diagnostics retain their actual status. Mulliken populations can be negative;
-Löwdin populations depend on AO representation. DOS is an orbital energy
-spectrum, not a periodic band structure. Mayer values are indices, not an
+## Use from the installed 0.10.1 package
+
+The same versioned corpus is bundled with the wheel. Install it without cloning
+the repository:
+
+```bash
+python -m pip install "openwfn[interop,resources]==0.10.1"
+openwfn examples install installed-examples
+openwfn installed-examples/everyday-qc/oxygen_triplet.molden orbitals frontier --spin all
+```
+
+The packaged Molden inputs are byte-identical copies of this source corpus. The
+release resource benchmark uses these installed files when checking the built
+wheel and again after downloading the exact release from public PyPI.
+
+Orbital-composition, Mayer, DOS and PDOS results are **Validated** for the
+documented eleven-molecule same-wavefunction reference scope. Native integral
+point ESP also has independent reference evidence. MO field values are checked
+against independent evaluators, while an individual cube remains partial when
+its requested grid fails the normalization diagnostic. Read status and warnings
+before interpreting numbers; failed or partial diagnostics retain their actual
+status.
+
+Mulliken populations can be negative; Löwdin populations depend on AO
+representation. DOS is an orbital-energy spectrum, not periodic band structure
+or an experimental excited-state spectrum. Mayer values are indices, not an
 automatic bond classification, particularly for intermolecular pairs.
 
-The source SHA-256, charge, spin, coordinates, basis and converged SCF energy
-for each file are in `validation/everyday-qc/pyscf-report.json`, together with
-independent same-wavefunction comparisons and declared tolerances. Repository
-tests verify the committed hashes. Regenerate into a separate directory:
+The source SHA-256, charge, spin, coordinates, basis, and converged SCF energy
+for each file are recorded in `validation/everyday-qc/pyscf-report.json`,
+together with independent same-wavefunction comparisons and declared
+tolerances. `validation/manifest.json` is the authoritative current status
+index. Repository tests verify the committed input hashes and the installed
+package corpus.
+
+Regenerate reference calculations into a separate directory:
 
 ```bash
 python -m pip install -e '.[test,interop,outputs]' pyscf==2.12.1
@@ -51,8 +75,7 @@ python scripts/validate_experimental_esp.py --output /tmp/openwfn-esp.json
 ```
 
 Compare scientific values within tolerances when regenerating; degeneracy,
-global MO phases and numerical library details can change file bytes. The
-committed files and their manifest are the immutable regression inputs.
-See `docs/project/experimental-coverage.md` for all Experimental pathways,
-the ESP convergence failure deliberately retained, and unsupported legacy MO
-calls. These files are source-checkout examples, not bundled wheel assets.
+global MO phases, and numerical-library details can change file bytes. The
+committed files are immutable regression inputs. Historical captures remain in
+the repository for provenance; current capability status is defined by the
+canonical validation manifest and versioned release documentation.
