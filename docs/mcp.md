@@ -1,17 +1,19 @@
 # Local MCP interface
 
-The published openWFN 0.9.2 adapter is Experimental. The development branch
-provides a Stable local interface for the selected registered analyses, backed
-by real molecular CLI/Python/batch/report/MCP parity checks.
-It runs locally over stdio and reads files inside one configured directory.
-It does not provide a public HTTP service, upload endpoint, or authentication.
+openWFN 0.10.1 provides a **Stable local MCP interface** for the selected
+read-only registered analyses, backed by real molecular
+CLI/Python/batch/report/MCP parity checks. Individual analysis results retain
+their own scientific validation status and limitations.
+
+It runs locally over stdio and reads files inside one configured directory. It
+does not provide a public HTTP service, upload endpoint, or authentication.
 
 ## Install
 
 Use a separate environment, then install the optional features:
 
 ```bash
-python -m pip install "openwfn[mcp,interop,outputs]==0.9.2"
+python -m pip install "openwfn[mcp,interop,outputs]==0.10.1"
 ```
 
 The adapter is tested with MCP SDK 2.2.0. The base openWFN installation does
@@ -55,10 +57,11 @@ including when a format hint or an existing `.fchk` sidecar is provided.
 Convert them outside MCP with Gaussian's `formchk`, then supply the `.fchk`
 file. The existing CLI/API checkpoint workflow is unchanged.
 
-The supported registry currently includes `summary`, `frontier`, `beta-frontier`,
-`frontier-all`, `mulliken`, and `lowdin`. Availability depends on the file's data.
-Geometry measurements, density grids, ESP, exports, and batch execution are not
-exposed by this initial adapter. They remain available through existing interfaces.
+The registry includes the established summary/frontier/population analyses plus
+`orbital-composition`, `mayer`, `dos`, and `pdos`. Availability still depends on
+the records actually present in the input file. File-writing cube/CSV/plot
+operations, batch execution, and expensive real-space export workflows remain
+outside the read-only MCP surface.
 
 For a wavefunction input, inspect it first and request only an available analysis.
 For a QC output log, use `output_properties` directly; it does not construct a
@@ -69,8 +72,8 @@ distinction between source-reported and recomputed properties.
 
 Scientific results use the existing `ResultRecord` envelope. Keep the `status`,
 `units`, `warnings`, and `provenance` when reporting results. `partial` means
-incomplete data, and `failed` is not a valid scientific answer. Analyses cannot
-recover properties absent from a file.
+incomplete or conditionally valid data, and `failed` is not a valid scientific
+answer. Analyses cannot recover properties absent from a file.
 
 Invalid paths and inputs larger than the configured limit produce MCP tool
 errors. Parsing and analysis failures return structured records with
@@ -81,34 +84,31 @@ itself succeeds.
 
 The adapter does not write output files or execute shell commands. Symlinks
 resolving outside the data root are rejected. The default per-file limit is
-100 MiB; `--max-file-bytes` changes it. This is an input-size check, not a bound
-on parser memory or analysis runtime.
+100 MiB; `--max-file-bytes` changes it. This is an input-size check, not a hard
+bound on parser memory or analysis runtime.
+
+Overlap-based analyses are limited to 256 AO functions by default before
+overlap construction. Configure an intentional higher limit with
+`--max-basis-functions N` or `create_server(root, max_basis_functions=N)`; this
+is a resource bound, not a runtime guarantee. DOS grids are independently
+limited to 100000 points and PDOS to two million output projection values.
+Expensive grids/cubes/real-space methods are not exposed.
 
 Use a dedicated input directory that untrusted processes cannot modify while
-the server runs. This local preview is not a sandbox for hostile files and
-has no CPU, memory, or execution-time isolation. Results include source paths;
-consider that before sharing them with an external client. Remote deployment
-needs separate access-control, upload, and resource-limit work.
+the server runs. The local interface is not an adversarial sandbox and has no
+OS-enforced CPU, memory, or execution-time isolation. Results include source
+paths; consider that before sharing them with an external client. Remote
+deployment needs separate access-control, upload, and resource-limit work.
 
-## Development-branch dense analysis limit
-
-The staged QC branch adds default read-only `orbital-composition`, `mayer`,
-`dos` and `pdos` registry analyses. Cube/CSV/plot writes remain outside MCP.
-Overlap-based analyses (including existing Mulliken/Löwdin) are limited to 256
-AO functions by default before overlap construction. Configure an intentional
-higher limit with `--max-basis-functions N` or
-`create_server(root, max_basis_functions=N)`; this is a resource bound, not a
-runtime guarantee. DOS grids are independently limited to 100000 points and
-PDOS to two million output projection values. Expensive grids/cubes/real-space
-methods are not exposed. Existing file-size and data-root restrictions remain.
-
-## Development-branch interface evidence
+## Interface evidence
 
 The common-registry parity matrix checks composition, Mayer, DOS and PDOS on
-the native water FCHK plus all eleven actual everyday-QC Molden inputs. Each
+the native water FCHK plus all eleven versioned everyday-QC Molden inputs. Each
 case compares full numerical data across CLI, Python, batch manifests, embedded
 HTML report JSON and an in-process MCP client/server session. Existing tests
 also exercise a real stdio session, malformed input, missing capabilities,
-file-size/resource bounds and filesystem containment. The pinned optional SDK
-remains 2.2.0. Stable describes this local interface, not universal source-program
-or molecule validation; each returned analysis retains its own scientific status.
+file-size/resource bounds and filesystem containment.
+
+Stable describes this documented local interface—not universal source-program,
+molecule, or method validation. Each returned analysis retains its own
+scientific status, provenance, warnings, and reference boundary.
