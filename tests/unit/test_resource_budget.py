@@ -15,7 +15,7 @@ def run(tmp_path, code, **limits):
 
 
 def test_success_has_observed_rss_and_bounded_capture(tmp_path):
-    result = run(tmp_path, "print('real result')")
+    result = run(tmp_path, "import time; print('real result'); time.sleep(.1)")
     assert result['status'] == 'success'
     assert result['peak_observed_rss_bytes'] > 0
     assert result['output_bytes'] >= len('real result\n')
@@ -101,3 +101,14 @@ def test_existing_logs_are_preserved(tmp_path):
     with pytest.raises(FileExistsError):
         run(tmp_path, "print('must not replace')")
     assert (tmp_path/'stdout.log').read_text() == 'previous record'
+
+
+def test_short_commands_preserve_results_without_inventing_rss(tmp_path):
+    result = run(tmp_path, "print('short result')")
+    assert result['returncode'] == 0
+    assert result['status'] in {'success', 'measurement_unavailable'}
+    assert (tmp_path/'stdout.log').read_text() == 'short result\n'
+    if result['status'] == 'measurement_unavailable':
+        assert result['peak_observed_rss_bytes'] == 0
+    else:
+        assert result['peak_observed_rss_bytes'] > 0

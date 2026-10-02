@@ -55,6 +55,8 @@ def run_resource_command(command: list[str], workspace: Path, *, timeout_seconds
                 own_status = Path('/proc/self/status').read_text()
                 host_parent = next(line.split()[1] for line in own_status.splitlines()
                                    if line.startswith('Pid:'))
+                if int(host_parent) == os.getpid():
+                    return psutil.Process(process.pid)
                 for candidate in Path('/proc').glob('[0-9]*/status'):
                     try:
                         fields = dict(line.split(':', 1) for line in candidate.read_text().splitlines()

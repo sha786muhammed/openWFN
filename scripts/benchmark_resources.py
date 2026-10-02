@@ -61,6 +61,11 @@ def main():
             'Resource success does not establish scientific validation.']}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2)+'\n')
+    print(json.dumps({'workflows': len(records),
+        'successes': sum(r['status'] == 'success' for r in records),
+        'max_elapsed_seconds': max((r['elapsed_seconds'] for r in records), default=0),
+        'max_observed_rss_bytes': max((r['peak_observed_rss_bytes'] for r in records), default=0),
+        'max_output_bytes': max((r['output_bytes'] for r in records), default=0)}))
     return 0 if all(r['status'] == 'success' for r in records) else 1
 
 
