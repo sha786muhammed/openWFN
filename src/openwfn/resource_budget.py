@@ -30,6 +30,7 @@ def run_resource_command(command: list[str], workspace: Path, *, timeout_seconds
     stdout, stderr = workspace/'stdout.log', workspace/'stderr.log'
     if stdout.exists() or stderr.exists():
         raise FileExistsError('Resource log files already exist; choose a fresh workspace.')
+
     def disk_bytes():
         total = 0
         for path in workspace.rglob('*'):
@@ -39,6 +40,7 @@ def run_resource_command(command: list[str], workspace: Path, *, timeout_seconds
             except FileNotFoundError:
                 pass
         return total
+
     initial_bytes = disk_bytes()
     if shutil.disk_usage(workspace).free < max_output_bytes:
         raise ValueError('Insufficient free disk space for the configured output budget.')
@@ -49,6 +51,7 @@ def run_resource_command(command: list[str], workspace: Path, *, timeout_seconds
                                    env=env, start_new_session=(os.name == 'posix'))
         monitored = None
         tracked = {}
+
         def resolve_process():
             # /proc may expose host PIDs while Popen uses a nested namespace.
             if os.name == 'posix' and Path('/proc/self/status').exists():
@@ -78,6 +81,40 @@ def run_resource_command(command: list[str], workspace: Path, *, timeout_seconds
                 return member.is_running() and member.status() != psutil.STATUS_ZOMBIE
             except psutil.NoSuchProcess:
                 return False
+
+        def session_members():
+            """Return live members of our POSIX process group on non-/proc systems.
+
+            Darwin can reap a short-lived parent before ``children(recursive=True)``
+            ever observes its child.  Because the supervised root starts a new
+            session, ordinary descendants inherit a process-group id equal to the
+            root PID even after the group leader exits.  Scanning that group closes
+            the cleanup race without relying on parent/child linkage that may
+            already have disappeared.  Linux keeps the existing /proc-aware path
+            because host/container PID namespaces can make ``getpgid`` ambiguous.
+            """
+            if os.name != 'posix' or Path('/proc/self/status').exists():
+                return []
+            members = []
+            for candidate in psutil.process_iter():
+                if candidate.pid == process.pid:
+                    continue
+                try:
+                    if os.getpgid(candidate.pid) == process.pid and alive(candidate):
+                        members.append(candidate)
+                except (ProcessLookupError, PermissionError, psutil.NoSuchProcess):
+                    continue
+            return members
+
+        def remember_members():
+            try:
+                members = ([monitored, *monitored.children(recursive=True)]
+                           if monitored is not None else [])
+            except psutil.NoSuchProcess:
+                members = []
+            members.extend(session_members())
+            for member in members:
+                tracked[member.pid] = member
 
         def terminate():
             # Observed descendants may have escaped the original session.
@@ -112,27 +149,22 @@ def run_resource_command(command: list[str], workspace: Path, *, timeout_seconds
                     monitored.kill()
                 except psutil.NoSuchProcess:
                     pass
+
         try:
             try:
                 monitored = resolve_process()
             except psutil.NoSuchProcess:
                 pass
             while True:
-                try:
-                    members = ([monitored, *monitored.children(recursive=True)]
-                               if monitored is not None else [])
-                    for member in members:
-                        tracked[member.pid] = member
-                    rss = 0
-                    for member in tracked.values():
-                        try:
-                            rss += member.memory_info().rss
-                        except psutil.NoSuchProcess:
-                            pass
-                    peak = max(peak, rss)
-                    samples += 1
-                except psutil.NoSuchProcess:
-                    pass
+                remember_members()
+                rss = 0
+                for member in tracked.values():
+                    try:
+                        rss += member.memory_info().rss
+                    except psutil.NoSuchProcess:
+                        pass
+                peak = max(peak, rss)
+                samples += 1
                 elapsed = time.perf_counter()-started
                 output_bytes = disk_bytes()-initial_bytes
                 if peak > max_rss_bytes:
@@ -142,10 +174,14 @@ def run_resource_command(command: list[str], workspace: Path, *, timeout_seconds
                 elif elapsed > timeout_seconds:
                     status, reason = 'timeout', 'Wall-clock deadline exceeded.'
                 if status != 'success':
+                    remember_members()
                     terminate()
                     process.wait()
                     break
                 if process.poll() is not None:
+                    # Re-scan after observing root exit so a surviving child whose
+                    # parent relation already vanished is still classified/cleaned.
+                    remember_members()
                     survivors = [member for member in tracked.values()
                                  if member is not monitored and alive(member)]
                     if survivors:
@@ -154,6 +190,7 @@ def run_resource_command(command: list[str], workspace: Path, *, timeout_seconds
                     break
                 time.sleep(poll_seconds)
         except BaseException:
+            remember_members()
             terminate()
             process.wait()
             raise
