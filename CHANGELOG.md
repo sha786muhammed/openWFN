@@ -1,5 +1,12 @@
 # Changelog
 
+Experimental-validation development follow-up: include 11 actual PySCF molecular
+inputs with immutable reference hashes; analytic ESP comparisons and real
+ORCA/Gaussian output-reader evidence. Retain the ammonium ESP convergence failure.
+Grid ESP now warns/returns partial when density electron conservation fails;
+legacy `evaluate_mo` explicitly fails instead of returning an invented zero field.
+No scientific validation label or release version is promoted by these additions.
+
 All notable changes to openWFN are documented in this file.
 
 ## [Unreleased] — staged everyday QC branch

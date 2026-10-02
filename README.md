@@ -36,6 +36,10 @@ openWFN connects scientific analysis, automation, validation evidence, and resea
 
 ## Staged QC development branch
 
+The development branch includes [11 real molecular examples](examples/everyday-qc/README.md)
+and a [complete Experimental coverage audit](docs/project/experimental-coverage.md).
+The audit retains ESP convergence failures and unsupported legacy entry points.
+
 The stable release remains **0.9.2**. The `feat/everyday-qc-staged` branch adds
 these **Experimental** methods; they are not yet part of a published release.
 

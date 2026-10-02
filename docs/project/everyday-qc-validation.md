@@ -157,3 +157,11 @@ a stable 0.10.0 needs reviewed reference captures, broader restricted/unrestrict
 molecules and completed Phase 1 gates. Use separate prerelease/PR units for
 spectroscopy, transition interpretation and real-space methods. Basin integration
 is a separate advanced project. No date is promised for the later scientific gates.
+
+## Extended Experimental audit
+
+The reference corpus now has 11 real cases committed under `examples/everyday-qc/`.
+See [the complete Experimental coverage ledger](experimental-coverage.md) for
+charged, triplet, intermolecular and real output-reader evidence, analytic ESP
+convergence histories (including a retained ammonium failure), and safety fixes.
+The earlier six-case capture above describes the initial stabilization milestone.
