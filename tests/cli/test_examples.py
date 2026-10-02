@@ -36,15 +36,16 @@ def test_install_examples_copies_exact_maintained_fixture(tmp_path: Path) -> Non
     assert digest(installed[0]) == digest(SOURCE_WATER)
 
 
-def test_install_everyday_qc_suite_copies_exact_maintained_corpus(tmp_path: Path) -> None:
+def test_install_examples_also_copies_exact_everyday_qc_corpus(tmp_path: Path) -> None:
     destination = tmp_path / "examples"
-    installed = install_examples(destination, suite="everyday-qc")
+    installed = install_examples(destination)
     suite_dir = destination / "everyday-qc"
+    copied = tuple(sorted(suite_dir.glob("*.molden")))
 
-    assert len(installed) == 11
-    assert tuple(path.name for path in installed) == EVERYDAY_QC_FILENAMES
-    for target in installed:
-        assert target.parent == suite_dir
+    assert installed == (destination / "water.fchk",)
+    assert len(copied) == 11
+    assert tuple(path.name for path in copied) == EVERYDAY_QC_FILENAMES
+    for target in copied:
         assert digest(target) == digest(SOURCE_EVERYDAY_QC / target.name)
 
 
@@ -70,9 +71,9 @@ def test_examples_install_cli_and_summary_workflow(tmp_path: Path) -> None:
     assert '"formula": "H2O"' in summary.stdout
 
 
-def test_examples_install_cli_everyday_qc_suite(tmp_path: Path) -> None:
+def test_examples_install_cli_includes_everyday_qc_corpus(tmp_path: Path) -> None:
     destination = tmp_path / "openwfn-examples"
-    installed = run_cli("examples", "install", str(destination), "--suite", "everyday-qc")
+    installed = run_cli("examples", "install", str(destination))
 
     assert installed.returncode == 0, installed.stderr
     suite_dir = destination / "everyday-qc"
