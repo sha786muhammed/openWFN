@@ -174,6 +174,7 @@ The default density-grid spacing is **0.15 bohr** with 6.0 bohr padding. These d
 | `beta-frontier` | Beta-spin HOMO, LUMO, and gap |
 | `frontier` | Alpha/default HOMO, LUMO, and gap |
 | `frontier-all` | Alpha and beta frontiers plus the true overall HOMO for unrestricted calculations |
+| `mayer` | Experimental spin-corrected Mayer bond orders |
 | `lowdin` | Löwdin populations and charges |
 | `mulliken` | Mulliken populations and charges |
 | `orbital-composition` | Experimental default HOMO/alpha/Lowdin AO projections |

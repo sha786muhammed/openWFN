@@ -625,3 +625,41 @@ def electrostatic_potential_point(
         status=result_status,  # type: ignore[arg-type]
         warnings=tuple(dict.fromkeys(warnings)),
     )
+
+
+def mayer_bond_orders(data: CalculationData, threshold: float = .05) -> ResultRecord:
+    """Conventional Mayer bond orders; row sums are bonded-valence diagnostics."""
+    from math import isfinite
+
+    from .analysis.bondorder import mayer_matrix
+
+    if not isfinite(threshold) or threshold < 0:
+        raise ValueError('bond-order threshold must be finite and nonnegative')
+    if data.basis is None or data.total_density is None:
+        raise DataUnavailableError('Mayer analysis requires Gaussian basis and total AO density.')
+    # This helper refuses absent open-shell spin density; no fabricated Q=0.
+    spin = density_matrix_for_kind(data, 'spin')
+    overlap = overlap_matrix(data.basis, data.molecule)
+    total = np.asarray(data.total_density.values)
+    matrix = mayer_matrix(total, np.asarray(spin.values), overlap,
+                          ao_atom_indices(data.basis), len(data.molecule.atoms))
+    population = population_analysis(data, 'mulliken')
+    warnings = list(population.warnings)
+    if spin.source != data.total_density.source:
+        warnings.append('Total and spin density sources differ; Mayer spin consistency is unconfirmed.')
+    if _is_post_hf_method(data.molecule.metadata.method) and data.total_density.source != 'scf':
+        warnings.append('Conventional Mayer index applied to a correlated density; improved correlated Mayer definitions are not implemented.')
+    return ResultRecord(kind='mayer_bond_order', data={
+        'convention': 'Mayer: PS products + spin QS products',
+        'bond_order_matrix': matrix.tolist(),
+        'pairs': [{'atom1': i+1, 'atom2': j+1, 'bond_order': float(matrix[i, j])}
+                  for i in range(len(matrix)) for j in range(i+1, len(matrix))
+                  if abs(matrix[i, j]) >= threshold],
+        'threshold': threshold, 'bonded_valence': matrix.sum(axis=1).tolist(),
+        'charge_conservation_error': population.data['conservation_error'],
+        'density_source': data.total_density.source, 'spin_density_source': spin.source,
+        'reference_kind': orbital_reference_kind(data),
+    }, units={'bond_order_matrix': 'dimensionless', 'pairs': 'dimensionless',
+              'bonded_valence': 'dimensionless', 'charge_conservation_error': 'e'},
+        validation_status='Experimental', status='partial' if warnings else 'success',
+        warnings=tuple(dict.fromkeys(warnings)))

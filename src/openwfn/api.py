@@ -156,6 +156,10 @@ class OpenWFNCalculation:
         except DataUnavailableError as exc:
             return self._unavailable("density_integration", f"density-{kind}", str(exc))
 
+    def mayer(self, *, threshold: float = .05) -> ResultRecord:
+        """Return Mayer bond orders including the spin-density term."""
+        return run_analysis_safe(self.data, "mayer", threshold=threshold)
+
     def orbital_composition(self, *, mo: int | str = "homo", spin: str = "alpha",
                             method: str = "lowdin") -> ResultRecord:
         """Return explicitly named AO/atom/shell MO projection fractions."""

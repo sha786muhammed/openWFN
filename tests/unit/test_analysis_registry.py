@@ -19,6 +19,7 @@ def test_registry_runs_summary_with_versioned_input_provenance() -> None:
         "frontier",
         "frontier-all",
         "lowdin",
+        "mayer",
         "mulliken",
         "orbital-composition",
         "summary",

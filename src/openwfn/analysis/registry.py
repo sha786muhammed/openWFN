@@ -10,7 +10,7 @@ from ..errors import DataUnavailableError
 from ..model import MODEL_SCHEMA_VERSION, CalculationData
 from ..orbital_services import orbital_composition
 from ..results import ResultRecord
-from ..services import molecular_summary, orbital_frontier, population_analysis
+from ..services import mayer_bond_orders, molecular_summary, orbital_frontier, population_analysis
 from .structure_summary import structure_summary
 
 AnalysisRunner = Callable[..., ResultRecord]
@@ -37,6 +37,7 @@ _STRUCTURE = CapabilityRequirement("atomic structure", ("structure",))
 
 
 _ANALYSES = {
+    "mayer": AnalysisDefinition("mayer", "1", "mayer_bond_order", mayer_bond_orders, (_ISOLATED, _BASIS, _TOTAL_DENSITY, _AO_OVERLAP)),
     "orbital-composition": AnalysisDefinition("orbital-composition", "1", "orbital_composition", orbital_composition, (_ISOLATED, _BASIS, _ORBITALS, _AO_OVERLAP)),
     "beta-frontier": AnalysisDefinition(
         "beta-frontier",

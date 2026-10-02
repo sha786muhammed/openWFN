@@ -386,6 +386,11 @@ def main(argv: list[str] | None = None) -> int:
     population_commands.add_parser("mulliken", help="Compute Mulliken atomic populations and charges")
     population_commands.add_parser("lowdin", help="Compute symmetric Löwdin populations and charges")
 
+    p_bondorder = subparsers.add_parser("bondorder", help="AO bond-order analysis")
+    bondorder_commands = p_bondorder.add_subparsers(dest="bondorder_method", required=True)
+    p_mayer = bondorder_commands.add_parser("mayer", help="Mayer bond orders with spin-density term")
+    p_mayer.add_argument("--threshold", type=float, default=.05)
+
     p_orbitals = subparsers.add_parser("orbitals", help="Molecular orbital analysis")
     orbital_commands = p_orbitals.add_subparsers(dest="orbital_command", required=True)
     p_frontier = orbital_commands.add_parser("frontier", help="Report HOMO, LUMO, and energy gap")
@@ -572,6 +577,9 @@ def main(argv: list[str] | None = None) -> int:
             ),
             _context(args),
         )
+
+    if args.command == "bondorder":
+        return execute(lambda: run_analysis(require_calculation(), "mayer", threshold=args.threshold), _context(args))
 
     if args.command == "orbitals":
         if args.orbital_command == "composition":
