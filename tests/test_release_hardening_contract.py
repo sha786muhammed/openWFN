@@ -42,6 +42,7 @@ def test_publish_workflow_is_version_driven_and_retests_public_package() -> None
     assert 'RELEASE_VERSION: "0.10.0"' not in text
     assert 'RELEASE_TAG: "v0.10.0"' not in text
     assert 'contains(github.event.head_commit.message, \'release:0.10.0\')' not in text
+    assert "paths:" not in text
     assert "openwfn[interop,resources]==${RELEASE_VERSION}" in text
     assert "benchmark_resources.py" in text
     assert "--examples-dir" in text
