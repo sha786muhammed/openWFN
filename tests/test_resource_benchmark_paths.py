@@ -1,13 +1,10 @@
 from pathlib import Path
 
-import pytest
-
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_relative_installed_corpus_is_resolved_before_workspace_chdir(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch
 ) -> None:
     from scripts.benchmark_resources import resolve_examples_dir
 
