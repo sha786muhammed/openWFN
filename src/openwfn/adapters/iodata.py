@@ -545,6 +545,23 @@ def _calculation_from_loaded(
             bonds=structure.bonds,
         )
         total_density, spin_density = _density_from_orbitals(alpha, beta)
+        electron_records = {}
+        if alpha.spin == "restricted":
+            # Preserve source spin occupations even for ROHF/fractional inputs;
+            # combining them for spatial orbitals must not erase Q=Palpha-Pbeta.
+            occsa = np.asarray(_safe_attr(mo, "occsa"), dtype=float).reshape(-1)
+            occsb = np.asarray(_safe_attr(mo, "occsb"), dtype=float).reshape(-1)
+            if (not np.all(np.isfinite(occsa)) or not np.all(np.isfinite(occsb))
+                    or np.any(occsa < -1e-8) or np.any(occsb < -1e-8)
+                    or np.any(occsa > 1+1e-8) or np.any(occsb > 1+1e-8)):
+                raise ValueError("source restricted spin occupations must be finite and within 0..1")
+            coefficients = np.asarray(alpha.coefficients, dtype=float)
+            values = (coefficients * (occsa-occsb)[None, :]) @ coefficients.T
+            spin_density = DensityMatrix(tuple(tuple(float(v) for v in row) for row in values),
+                                         "spin", source="iodata-orbitals")
+            electron_records = {"Number of alpha electrons": float(occsa.sum()),
+                                "Number of beta electrons": float(occsb.sum())}
+            transformations.append("spin density derived from source IOData alpha/beta occupations")
         if not np.allclose(ao_scales, 1.0, atol=1e-12, rtol=0.0):
             transformations.append(
                 "MO coefficients rescaled for openWFN contraction normalization"
@@ -560,6 +577,7 @@ def _calculation_from_loaded(
             beta_orbitals=beta,
             total_density=total_density,
             spin_density=spin_density,
+            records=electron_records,
         )
     except (TypeError, ValueError) as exc:
         warnings.append(f"IOData wavefunction was withheld: {exc}")

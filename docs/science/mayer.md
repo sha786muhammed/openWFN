@@ -55,3 +55,10 @@ parsing or overlap evaluation independently.
 
 Stage verification: 634 passed, 1 skipped; lint and strict documentation build
 passed. Seven Mayer tests include the two independent cclib contractions.
+
+Cross-format adapter verification now includes equivalent water in Molden,
+MWFN, WFN and WFX (2e-7 matrix tolerance). IOData restricted occupations retain
+the source alpha/beta difference as a spin matrix, including nonzero ROHF spin.
+The optional packaged LiH-cation ROHF/UHF fixtures verify integrated spin against
+source occupations (2e-7 electrons). These comparisons share source wavefunctions
+and are regression evidence, not new independently executed ORCA/Multiwfn captures.
