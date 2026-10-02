@@ -4,7 +4,8 @@ openWFN requires Python 3.10–3.13.
 
 !!! note "Current release"
 
-    This handbook documents openWFN 0.9.2. See the
+    The stable release is 0.9.2; this checkout also documents the 0.10.0rc1
+    release candidate. See the
     [0.9.2 release notes](releases/0.9.2.md) for support boundaries.
 
 ## Optional features
@@ -60,3 +61,14 @@ python -m pip install --upgrade openwfn
 ```
 
 Binary `.chk` conversion requires Gaussian's licensed `formchk` program on `PATH`. FCHK files do not require Gaussian.
+
+## Release candidate
+
+For the new everyday QC and resource workflows, opt in explicitly:
+
+```bash
+python -m pip install --pre "openwfn[interop,resources]==0.10.0rc1"
+```
+
+See the [candidate notes](releases/0.10.0rc1.md). The `resources` extra enables
+optional trusted-process monitoring; it does not change scientific labels.

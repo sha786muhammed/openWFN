@@ -1,5 +1,13 @@
 # Release history
 
+## 0.10.0rc1 — everyday QC release candidate
+
+An opt-in candidate with MO cubes/composition, Mayer, DOS/PDOS, native point
+ESP, tested interfaces and resource safety. The stable line remains 0.9.2.
+
+[Read the candidate notes](../releases/0.10.0rc1.md)
+
+
 ## 0.9.2 — summary and CLI clarity
 
 This patch retains element composition in structure-only summaries, separates

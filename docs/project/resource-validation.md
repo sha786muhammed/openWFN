@@ -1,7 +1,7 @@
 # Runtime, RAM and output validation
 
-This development stage preserves openWFN 0.9.2 package/model versions and all
-scientific validation labels. Resource success does not imply density-grid
+The resource implementation was verified before the 0.10.0rc1 version bump.
+It preserves model/result schema versions and scientific validation labels. Resource success does not imply density-grid
 convergence or validate an unimplemented scientific method.
 
 ## Scope and controls
