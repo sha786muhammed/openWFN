@@ -31,10 +31,10 @@ schema stays 1.0. Existing numerical kernels and safeguards were retained.
 | Unit | Numerical evidence | Boundaries |
 |---|---|---|
 | MO cube | Normalized Gaussian signed field/norm, chunk equivalence; independent GBasis 0.1.0 Cartesian and pure d values at 3 points, 1e-12 tolerance; five-format water fields 1e-7 | Synthetic d-shell spin channel, not broad molecular/high-l external validation |
-| Composition | Analytic two-AO metric, half/half bonding case, signed Mulliken vs positive Löwdin, partition closure, invalid norms/overlap; same contracted-basis Molden/MWFN equivalence 2e-7 | No independently executed molecular orbital-population golden set; Löwdin is representation dependent |
+| Composition | Analytic two-AO metric, half/half bonding case, signed Mulliken vs positive Löwdin, partition closure, invalid norms/overlap; same contracted-basis Molden/MWFN equivalence 2e-7 | Fresh PySCF molecular comparisons below; Löwdin is representation dependent |
 | Mayer | Analytic restricted bond 1.0, one-alpha bond 0.5; independent cclib 1.8.1 MBO contractions 1e-12; water matrix equivalence four formats 2e-7; charge/spin closure and corrupted spin regression | cclib comparisons share orbital and overlap input; no new Multiwfn/ORCA run |
-| DOS | Closed-form Gaussian peak/line shape/unit area, channel counting, analytic truncated area, resource/error cases, CSV/SVG export | No independent molecular DOS capture; spectrum is orbital-energy broadening |
-| PDOS | Six grouping/method combinations, pointwise projection closure, raw norm corruption, missing data, bounded outputs | No independent molecular PDOS capture; signed Mulliken weights and AO-basis sensitivity |
+| DOS | Closed-form Gaussian peak/line shape/unit area, channel counting, analytic truncated area, resource/error cases, CSV/SVG export | Independent expansion from fresh PySCF energies below; spectrum is orbital-energy broadening |
+| PDOS | Six grouping/method combinations, pointwise projection closure, raw norm corruption, missing data, bounded outputs | Fresh molecular projection comparisons below; signed Mulliken weights and AO-basis sensitivity |
 | All registered defaults | Numerical data match CLI, Python, batch, embedded HTML report manifest and in-process read-only MCP | MCP parameters use defaults; expensive export remains outside MCP |
 
 Stage full-suite results: MO 620 passed/1 skipped; composition 626/1;
@@ -45,6 +45,63 @@ Independent bounded review found one Important issue: unchecked Mayer spin
 closure. Its reproducing test failed before the fix and passes afterwards.
 No other Critical/Important findings were reported. This is a bounded code
 review, not an independent scientific certification.
+
+## Follow-up molecular reference validation
+
+PR CI exposed four missing optional-dependency guards in the MO field tests.
+A clean core-only installation reproduced all four failures; those cases now
+skip only when IOData is absent. The dedicated interoperability job explicitly
+runs both the cube and everyday cross-format tests with IOData installed.
+The optional-interface job now includes registered-analysis parity and the
+independent cclib Mayer comparisons. No numerical assertions were relaxed.
+
+`scripts/validate_everyday_pyscf.py` freshly computes six bounded reference cases
+using PySCF 2.12.1: RHF water/STO-3G, methane/STO-3G, ammonia/6-31G*,
+benzene/STO-3G, UHF OH/6-31+G*, and Cartesian RHF water/6-31G*.
+Each converged SCF wavefunction is exported by PySCF to Molden and independently
+ingested by openWFN through IOData. The report records geometry, basis, spin,
+SCF energy, source hash, dependency versions, observed errors and cube warnings.
+
+Comparisons cover alpha HOMO/LUMO and UHF beta HOMO/LUMO fields against PySCF's
+AO evaluator, actual cube serialization/layout, atom compositions using
+PySCF Mulliken populations (SciPy symmetric square root for Löwdin), Mayer
+matrices independently constructed by cclib from PySCF coefficients/overlap,
+and DOS/atom PDOS from an independent Gaussian expansion. Pure-basis PDOS is
+compared for both conventions; Cartesian PDOS is compared for Mulliken.
+The molecular validation job runs these six comparisons in CI.
+
+Cartesian AO normalization differs between PySCF and openWFN. Mulliken
+populations, Mayer indices and physical fields can be compared after source
+normalization; Löwdin partitions and overlap eigenvalues depend on the AO
+representation and are explicitly **not compared** for that Cartesian case.
+The report preserves the unasserted Löwdin difference with `compared: false`.
+The coarse cube grid can yield `partial` norm diagnostics; reference field
+agreement does not erase those warnings.
+
+Tolerances are 2e-7 for fields, compositions and Mayer, 5e-6 for serialized cube
+values (limited by text precision), and 2e-6 orbitals/eV for DOS/PDOS after
+Molden energy rounding. `validation/everyday-qc/pyscf-report.json` is a captured
+external-comparison report, distinct from the original observed snapshots.
+These are same-wavefunction post-processing checks, not validation of HF
+accuracy, all elements, high angular momentum, ECPs or correlated densities.
+All five methods remain **Experimental**.
+
+Follow-up verification: **673 passed, 1 skipped** in the full optional-dependency
+environment; clean core-only CI configuration: **611 passed, 62 skipped,
+1 docs test deselected**. Ruff, repository/documentation checks and strict
+MkDocs pass; internal validation and all 25 interoperability formats pass.
+The core-only optional skips are expected and are not scientific evidence.
+
+Reproduce the external comparisons with:
+
+```bash
+python -m pip install -e '.[test,interop,outputs]' pyscf==2.12.1
+python scripts/validate_everyday_pyscf.py --output-dir /tmp/openwfn-pyscf-validation
+python -m pytest tests/validation/test_everyday_pyscf.py -q
+```
+
+Primary API references: [PySCF Molden export](https://pyscf.org/_modules/pyscf/tools/molden.html)
+and [PySCF AO evaluation](https://pyscf.org/pyscf_api_docs/pyscf.gto.html).
 
 `validation/everyday-qc/report.json` contains bounded water/methane/ammonia
 snapshots with input hashes and dependency versions. They are observed values,
