@@ -6,11 +6,11 @@ from . import (
     utils,  # type: ignore
 )
 from . import commands as cmd  # type: ignore
+from .api import load
 from .app import CommandContext
-from .fchk import parse_fchk_arrays, parse_fchk_scalars, print_atom_table  # type: ignore
+from .fchk import print_atom_table  # type: ignore
 from .geometry import molecular_formula  # type: ignore
 from .palette import prompt_workflow
-from .parsers.registry import load as load_calculation
 from .presentation import render
 from .reporting import build_report_record
 from .services import density_integration, orbital_frontier
@@ -27,7 +27,7 @@ OPENWFN_ASCII = [
 
 PRODUCT_NAME = "openWFN"
 PRODUCT_EXPANSION = "Open WaveFunction Network"
-PRODUCT_TAGLINE = "Scientific geometry, topology, and structure analysis for Gaussian formatted checkpoint data."
+PRODUCT_TAGLINE = "Scientific geometry, orbitals, and density analysis for normalized molecular wavefunctions."
 AUTHOR_CREDIT = "Muhammed Shah Shaji"
 
 
@@ -200,10 +200,18 @@ def run_input_page(title: str, description: str, action: Callable[[], None]) -> 
 
 
 def run_interactive(lines, filename):
-    scalars = parse_fchk_scalars(lines)
-    atomic_numbers, coordinates = parse_fchk_arrays(lines)
+    client = load(Path(filename))
+    calculation = client.data.calculation
+    if calculation is None:
+        from .errors import DataUnavailableError
+
+        raise DataUnavailableError("Guided wavefunction workflows require an isolated molecular calculation.")
+    molecule = calculation.molecule
+    atomic_numbers = [atom.atomic_number for atom in molecule.atoms]
+    coordinates = [atom.coordinates for atom in molecule.atoms]
+    scalars = {"Charge": molecule.charge, "Multiplicity": molecule.multiplicity,
+               "Number of atoms": len(molecule.atoms)}
     menu_filename = str(Path(filename).name)
-    calculation = load_calculation(Path(filename))
 
     def show_result(result) -> None:
         print(render(result, CommandContext(input_path=Path(filename), format="plain")), end="")
