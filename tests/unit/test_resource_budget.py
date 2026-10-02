@@ -112,3 +112,19 @@ def test_short_commands_preserve_results_without_inventing_rss(tmp_path):
         assert result['peak_observed_rss_bytes'] == 0
     else:
         assert result['peak_observed_rss_bytes'] > 0
+
+
+@pytest.mark.skipif(sys.platform == 'win32', reason='POSIX process-group signaling')
+@pytest.mark.parametrize('completed', [True, False])
+def test_group_permission_race_preserves_owned_process_cleanup(tmp_path, monkeypatch, completed):
+    import os
+
+    def denied(_pid, _signal):
+        raise PermissionError('simulated process-group signal race')
+
+    monkeypatch.setattr(os, 'killpg', denied)
+    code = ("import time; print('completed'); time.sleep(.1)" if completed
+            else "import time; time.sleep(30)")
+    result = run(tmp_path, code, timeout_seconds=.3)
+    assert result['status'] == ('success' if completed else 'timeout')
+    assert result['elapsed_seconds'] < 3.

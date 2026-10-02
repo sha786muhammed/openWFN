@@ -81,6 +81,16 @@ def run_resource_command(command: list[str], workspace: Path, *, timeout_seconds
 
         def terminate():
             # Observed descendants may have escaped the original session.
+            if os.name == 'posix':
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                except PermissionError:
+                    # Darwin can reject a group signal during parent-exit races.
+                    # Still terminate our owned root and observed descendants.
+                    if process.poll() is None:
+                        process.kill()
             for member in reversed(list(tracked.values())):
                 if not alive(member):
                     continue
@@ -97,12 +107,7 @@ def run_resource_command(command: list[str], workspace: Path, *, timeout_seconds
                         member.kill()
                 except (ProcessLookupError, FileNotFoundError, psutil.NoSuchProcess):
                     pass
-            if os.name == 'posix':
-                try:
-                    os.killpg(process.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
-            elif monitored is not None:
+            if os.name != 'posix' and monitored is not None:
                 try:
                     monitored.kill()
                 except psutil.NoSuchProcess:
