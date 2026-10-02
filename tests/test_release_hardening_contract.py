@@ -59,3 +59,26 @@ def test_benchmark_can_be_pointed_at_installed_corpus() -> None:
     text = (ROOT / "scripts/benchmark_resources.py").read_text(encoding="utf-8")
     assert re.search(r"add_argument\(['\"]--examples-dir['\"]", text)
     assert "args.examples_dir" in text
+
+
+def test_current_method_docs_do_not_retain_pre_release_labels() -> None:
+    pages = {
+        "docs/science/mayer.md": ("# Mayer bond orders (Experimental)",),
+        "docs/science/orbital-composition.md": ("# Orbital composition (Experimental)",),
+        "docs/science/dos-pdos.md": ("Experimental development",),
+        "docs/reference/cli.md": ("Development branch:", "Development spectrum commands"),
+    }
+    for relative_path, stale_phrases in pages.items():
+        text = (ROOT / relative_path).read_text(encoding="utf-8")
+        for phrase in stale_phrases:
+            assert phrase not in text
+
+
+def test_source_and_packaged_everyday_qc_readmes_are_synchronized() -> None:
+    source = (ROOT / "examples/everyday-qc/README.md").read_text(encoding="utf-8")
+    packaged = (
+        ROOT / "src/openwfn/example_data/everyday-qc/README.md"
+    ).read_text(encoding="utf-8")
+    assert source == packaged
+    assert "not bundled wheel assets" not in source
+    assert "openwfn examples install installed-examples" in source
