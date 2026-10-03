@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - run: python -m pip install numpy pyscf==2.12.1
+      - run: python -m pip install numpy==2.5.3 pyscf==2.12.1
       - name: Generate references with captured diagnostics
         shell: bash
         run: |
