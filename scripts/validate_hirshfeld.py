@@ -109,7 +109,8 @@ def _horton_charges(path: Path) -> tuple[np.ndarray, float, dict[str, Any]]:
         from iodata import load_one
     except ImportError as exc:
         raise RuntimeError(
-            "Independent validation requires horton-part==1.1.8 and openWFN's interop dependencies."
+            "Independent validation requires horton-part==1.1.8, scipy<1.17, "
+            "and openWFN's interop dependencies."
         ) from exc
 
     mol = load_one(str(path))
@@ -167,6 +168,7 @@ def _horton_charges(path: Path) -> tuple[np.ndarray, float, dict[str, Any]]:
         moldens=density,
         proatomdb=database,
         lmax=3,
+        grid_type=3,
     )
     partition.do_charges()
     charges = np.asarray(partition.cache["charges"], dtype=float).copy()
@@ -175,11 +177,14 @@ def _horton_charges(path: Path) -> tuple[np.ndarray, float, dict[str, Any]]:
 
     metadata = {
         "horton_part_version": _package_version("horton-part"),
+        "scipy_version": _package_version("scipy"),
         "qc_grid_version": _package_version("qc-grid"),
         "qc_iodata_version": _package_version("qc-iodata"),
         "gbasis_version": _package_version("qc-gbasis") or _package_version("gbasis"),
         "grid_size": int(grid.size),
+        "grid_type": 3,
         "density_electrons": integrated_electrons,
+        "charge_sum_e": float(np.sum(charges)),
         "mo_kind": mol.mo.kind,
     }
     return charges, integrated_electrons, metadata
