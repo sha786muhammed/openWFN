@@ -5,10 +5,10 @@ ADC_N_ROOTS 2
 $end
 Charge = 0 Multiplicity = 1
 ADC Excitation Energies
-Excited state   1: excitation energy (eV) = 4.750000
+Excited state   1: excitation energy (eV) = 4.880000
 Multiplicity: Singlet
-Trans. Mom.: 0.150000 X 0.050000 Y 0.000000 Z
-Strength   : 0.045000
+Trans. Mom.: 0.050000 X 0.010000 Y 0.000000 Z
+Strength   : 0.032000
 Excited state   2: excitation energy (eV) = 5.250000
 Multiplicity: Singlet
 Strength   : 0.000000
