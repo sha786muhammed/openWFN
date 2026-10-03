@@ -17,7 +17,7 @@ WATER = ROOT / "examples" / "water" / "water.fchk"
 def _assert_hirshfeld_record(record) -> None:
     assert record.kind == "hirshfeld_population"
     assert record.status == "success"
-    assert record.validation_status == "Experimental"
+    assert record.validation_status == "Validated"
     assert record.data["method"] == "Hirshfeld"
     assert len(record.data["atoms"]) == 3
     assert record.data["atoms"][0]["atom_index"] == 1
