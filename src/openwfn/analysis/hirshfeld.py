@@ -11,7 +11,11 @@ from openwfn.scientific import effective_nuclear_charge, expected_electron_count
 
 from .atom_quadrature import AtomQuadratureSettings, iter_atom_centered_chunks
 from .density import evaluate_density
-from .hirshfeld_reference import HirshfeldReferenceLibrary, ReferenceDensity, load_hirshfeld_reference_library
+from .hirshfeld_reference import (
+    HirshfeldReferenceLibrary,
+    ReferenceDensity,
+    load_hirshfeld_reference_library,
+)
 
 
 @dataclass(frozen=True, slots=True)
