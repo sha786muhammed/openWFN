@@ -79,7 +79,18 @@ class AmplitudeBlock:
     def nto_ready(self) -> bool:
         """Return whether this convention is approved for NTO construction."""
 
-        return False
+        from .parsers.excited.conventions import amplitude_semantics
+
+        semantics = amplitude_semantics(self.convention)
+        if not semantics.nto_ready:
+            return False
+        if self.dimensions and len(self.dimensions) != 2:
+            return False
+        if self.dimensions:
+            expected = self.dimensions[0] * self.dimensions[1]
+            if len(self.values) != expected:
+                return False
+        return bool(self.values)
 
 
 @dataclass(frozen=True, slots=True)
