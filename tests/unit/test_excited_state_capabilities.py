@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_excited_state_capabilities_follow_typed_record_contents() -> None:
+    from openwfn.capabilities import infer_capabilities
     from openwfn.excited_states import (
         AmplitudeBlock,
         ExcitedState,
@@ -15,8 +16,6 @@ def test_excited_state_capabilities_follow_typed_record_contents() -> None:
         ExcitedStateJob,
         TransitionContribution,
     )
-
-    from openwfn.capabilities import infer_capabilities
 
     calculation = parse_fchk(ROOT / "examples" / "water" / "water.fchk")
     record = ExcitedStateCollection(
@@ -70,9 +69,8 @@ def test_excited_state_capabilities_follow_typed_record_contents() -> None:
 
 
 def test_dark_state_counts_as_reported_optical_strength() -> None:
-    from openwfn.excited_states import ExcitedState, ExcitedStateCollection, ExcitedStateJob
-
     from openwfn.capabilities import infer_capabilities
+    from openwfn.excited_states import ExcitedState, ExcitedStateCollection, ExcitedStateJob
 
     calculation = parse_fchk(ROOT / "examples" / "water" / "water.fchk")
     record = ExcitedStateCollection(
