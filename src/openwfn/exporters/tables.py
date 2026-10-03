@@ -53,6 +53,64 @@ def _write_vibrational_modes_csv(result: ResultRecord, request: ExportRequest) -
     return request.path
 
 
+def _write_excited_states_csv(result: ResultRecord, request: ExportRequest) -> Path:
+    columns = (
+        "job",
+        "source_program",
+        "method_family",
+        "method_detail",
+        "state",
+        "source_state",
+        "energy_ev",
+        "wavelength_nm",
+        "oscillator_strength",
+        "multiplicity",
+        "symmetry",
+        "transition_kind",
+    )
+    with request.path.open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.writer(stream, lineterminator="\n")
+        writer.writerow(columns)
+        for job in result.data.get("jobs", []):
+            for state in job.get("states", []):
+                writer.writerow(
+                    [
+                        job.get("job"),
+                        job.get("source_program"),
+                        job.get("method_family"),
+                        job.get("method_detail"),
+                        state.get("state"),
+                        state.get("source_state"),
+                        state.get("energy_ev"),
+                        state.get("wavelength_nm"),
+                        state.get("oscillator_strength"),
+                        state.get("multiplicity"),
+                        state.get("symmetry"),
+                        state.get("transition_kind"),
+                    ]
+                )
+    return request.path
+
+
+def _write_transition_dipoles_csv(result: ResultRecord, request: ExportRequest) -> Path:
+    with request.path.open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.writer(stream, lineterminator="\n")
+        writer.writerow(("job", "state", "source_state", "energy_ev", "dipole_x", "dipole_y", "dipole_z", "unit"))
+        for row in result.data.get("dipoles", []):
+            vector = row.get("transition_dipole") or (None, None, None)
+            writer.writerow(
+                (
+                    result.data.get("job"),
+                    row.get("state"),
+                    row.get("source_state"),
+                    row.get("energy_ev"),
+                    *vector,
+                    row.get("unit"),
+                )
+            )
+    return request.path
+
+
 def write_result_table(result: ResultRecord, request: ExportRequest) -> Path:
     normalized = request.format.lower().lstrip(".")
     if normalized not in {"json", "csv"}:
@@ -71,6 +129,10 @@ def write_result_table(result: ResultRecord, request: ExportRequest) -> Path:
         return request.path
     if result.kind == "vibrational_modes":
         return _write_vibrational_modes_csv(result, request)
+    if result.kind == "excited_states":
+        return _write_excited_states_csv(result, request)
+    if result.kind == "transition_dipoles":
+        return _write_transition_dipoles_csv(result, request)
     with request.path.open("w", encoding="utf-8", newline="") as stream:
         writer = csv.writer(stream, lineterminator="\n")
         writer.writerow(
