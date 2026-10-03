@@ -24,7 +24,7 @@ def test_hirshfeld_water_preserves_population_and_charge_closure_diagnostics() -
     result = hirshfeld_population(data)
 
     assert result.method == "Hirshfeld"
-    assert result.validation_status == "Experimental"
+    assert result.validation_status == "Validated"
     assert len(result.atoms) == 3
     assert sum(atom.electron_population for atom in result.atoms) == pytest.approx(
         result.diagnostics.population_sum, abs=1.0e-10
@@ -101,6 +101,7 @@ def test_hirshfeld_does_not_renormalize_failed_coarse_grid_to_molecular_charge()
     assert result.diagnostics.charge_closure_residual > 0.1
     assert result.diagnostics.integrated_charge != pytest.approx(data.molecule.charge, abs=0.1)
     assert result.result_status == "partial"
+    assert result.validation_status == "Experimental"
 
 
 def test_hirshfeld_requires_basis_and_total_density() -> None:
