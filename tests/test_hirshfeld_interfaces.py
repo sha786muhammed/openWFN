@@ -54,6 +54,10 @@ def test_hirshfeld_service_registry_and_python_api_have_numeric_parity() -> None
 
     assert registered.analysis_name == "hirshfeld"
     assert registered.analysis_version == "1"
+    assert dedicated.analysis_name == "hirshfeld"
+    assert dedicated.analysis_version == "1"
+    assert discoverable.analysis_name == "hirshfeld"
+    assert discoverable.analysis_version == "1"
     assert registered.data == dedicated.data == discoverable.data
     assert registered.status == dedicated.status == discoverable.status
     assert registered.validation_status == dedicated.validation_status == discoverable.validation_status
