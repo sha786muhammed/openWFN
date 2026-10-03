@@ -73,9 +73,8 @@ def test_qchem_multi_job_roots_remain_separate() -> None:
 
 
 def test_qchem_parser_enforces_state_limit_before_record_construction() -> None:
-    from openwfn.parsers.excited.qchem import parse_qchem_excited_states
-
     from openwfn.excited_states import MAX_EXCITED_STATES_PER_JOB
+    from openwfn.parsers.excited.qchem import parse_qchem_excited_states
 
     text = "Q-Chem 6.3\n$rem\nMETHOD EOM-CCSD\n$end\n" + "".join(
         f"Excited state {index}: excitation energy (eV) = 5.0\n"
