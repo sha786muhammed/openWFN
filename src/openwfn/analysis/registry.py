@@ -14,6 +14,7 @@ from ..results import ResultRecord
 from ..services import mayer_bond_orders, molecular_summary, orbital_frontier, population_analysis
 from ..spectral_services import orbital_dos, orbital_pdos
 from .structure_summary import structure_summary
+from .vibrations import ir_spectrum, normal_mode, raman_spectrum, vibrations
 
 AnalysisRunner = Callable[..., ResultRecord]
 AnalysisInput = CalculationData | OpenWFNData
@@ -36,6 +37,10 @@ _BASIS = CapabilityRequirement("basis", ("basis",))
 _TOTAL_DENSITY = CapabilityRequirement("total density", ("total_density",))
 _AO_OVERLAP = CapabilityRequirement("AO overlap", ("ao_overlap",))
 _STRUCTURE = CapabilityRequirement("atomic structure", ("structure",))
+_VIBRATIONS = CapabilityRequirement("vibrational modes", ("vibrations",))
+_IR_INTENSITIES = CapabilityRequirement("IR intensities", ("ir_intensities",))
+_RAMAN_ACTIVITIES = CapabilityRequirement("Raman activities", ("raman_activities",))
+_NORMAL_MODE_VECTORS = CapabilityRequirement("normal mode vectors", ("normal_mode_vectors",))
 
 
 _ANALYSES = {
@@ -64,6 +69,13 @@ _ANALYSES = {
         lambda data: orbital_frontier(data, "all"),
         (_ORBITALS,),
     ),
+    "ir-spectrum": AnalysisDefinition(
+        "ir-spectrum",
+        "1",
+        "vibrational_spectrum",
+        ir_spectrum,
+        (_VIBRATIONS, _IR_INTENSITIES),
+    ),
     "lowdin": AnalysisDefinition(
         "lowdin",
         "1",
@@ -78,12 +90,33 @@ _ANALYSES = {
         lambda data: population_analysis(data, "mulliken"),
         (_ISOLATED, _BASIS, _TOTAL_DENSITY, _AO_OVERLAP),
     ),
+    "normal-mode": AnalysisDefinition(
+        "normal-mode",
+        "1",
+        "normal_mode",
+        normal_mode,
+        (_VIBRATIONS, _NORMAL_MODE_VECTORS),
+    ),
+    "raman-spectrum": AnalysisDefinition(
+        "raman-spectrum",
+        "1",
+        "vibrational_spectrum",
+        raman_spectrum,
+        (_VIBRATIONS, _RAMAN_ACTIVITIES),
+    ),
     "summary": AnalysisDefinition(
         "summary",
         "2",
         "summary",
         molecular_summary,
         (_STRUCTURE,),
+    ),
+    "vibrations": AnalysisDefinition(
+        "vibrations",
+        "1",
+        "vibrational_modes",
+        vibrations,
+        (_VIBRATIONS,),
     ),
 }
 
