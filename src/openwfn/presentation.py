@@ -30,6 +30,103 @@ def _summarize_arrays(value: Any) -> Any:
     return value
 
 
+def _csv_vibrational_modes(result: ResultRecord) -> str:
+    stream = io.StringIO()
+    writer = csv.writer(stream, lineterminator="\n")
+    columns = (
+        "mode",
+        "frequency_cm1",
+        "imaginary",
+        "symmetry",
+        "reduced_mass_amu",
+        "force_constant_mdyne_per_angstrom",
+        "ir_intensity_km_mol",
+        "raman_activity_a4_amu",
+    )
+    writer.writerow(columns)
+    for row in result.data.get("modes", []):
+        writer.writerow([row.get(column) for column in columns])
+    return stream.getvalue()
+
+
+def _csv_vibrational_spectrum(result: ResultRecord) -> str:
+    stream = io.StringIO()
+    writer = csv.writer(stream, lineterminator="\n")
+    writer.writerow(("frequency_cm1", "intensity"))
+    for frequency, intensity in zip(
+        result.data.get("frequency_cm1", []), result.data.get("intensity", []), strict=True
+    ):
+        writer.writerow((frequency, intensity))
+    return stream.getvalue()
+
+
+def _status_lines(result: ResultRecord, context: CommandContext) -> list[str]:
+    lines = [
+        f"Analysis Validation Status: {result.validation_status}",
+        f"Result Status: {result.status}",
+    ]
+    source_format = result.provenance.get("source_format")
+    if source_format == "fchk" or (
+        context.input_path is not None
+        and context.input_path.suffix.lower() in {".fchk", ".fch", ".chk"}
+    ):
+        lines.append("Source Calculation Status: Unknown from FCHK (convergence is not established)")
+    if result.error is not None:
+        lines.append(f"Error: {result.error.message}")
+    lines.extend(f"Warning: {warning}" for warning in result.warnings)
+    return lines
+
+
+def _render_vibrational_modes(result: ResultRecord, context: CommandContext) -> str:
+    lines = [
+        "Vibrational Modes",
+        "Mode  Frequency (cm^-1)  Imaginary  Symmetry  IR (km/mol)  Raman activity (A^4/amu)",
+    ]
+    for row in result.data.get("modes", []):
+        symmetry = row.get("symmetry") or "-"
+        ir = "-" if row.get("ir_intensity_km_mol") is None else str(row["ir_intensity_km_mol"])
+        raman = (
+            "-"
+            if row.get("raman_activity_a4_amu") is None
+            else str(row["raman_activity_a4_amu"])
+        )
+        lines.append(
+            f"{row['mode']:>4}  {row['frequency_cm1']:>17.4f}  "
+            f"{str(row['imaginary']):>9}  {symmetry:<8}  {ir:>11}  {raman:>24}"
+        )
+    lines.extend(
+        (
+            f"IR Available: {result.data.get('ir_available')}",
+            f"Raman Available: {result.data.get('raman_available')}",
+            f"Normal-mode Vectors Available: {result.data.get('displacements_available')}",
+        )
+    )
+    lines.extend(_status_lines(result, context))
+    return "\n".join(lines) + "\n"
+
+
+def _render_vibrational_spectrum(result: ResultRecord, context: CommandContext) -> str:
+    spectrum_type = str(result.data.get("spectrum_type", "spectrum"))
+    is_ir = spectrum_type == "ir"
+    title = "IR Vibrational Spectrum" if is_ir else "Raman Vibrational Spectrum"
+    strength_key = "intensity" if is_ir else "activity"
+    strength_label = "IR Intensity (km/mol)" if is_ir else "Raman Activity (A^4/amu)"
+    lines = [title, f"Mode  Frequency (cm^-1)  {strength_label}  Imaginary"]
+    for row in result.data.get("lines", []):
+        lines.append(
+            f"{row['mode']:>4}  {row['frequency_cm1']:>17.4f}  "
+            f"{row[strength_key]:>23.6g}  {str(row['imaginary']):>9}"
+        )
+    broadening = result.data.get("broadening", {})
+    lines.append(f"FWHM: {broadening.get('fwhm_cm1')} cm^-1")
+    lines.append(f"Grid Points: {len(result.data.get('frequency_cm1', []))}")
+    frequency_range = result.data.get("frequency_range_cm1")
+    if frequency_range:
+        lines.append(f"Frequency Range: {frequency_range[0]} to {frequency_range[1]} cm^-1")
+    lines.extend(_status_lines(result, context))
+    return "\n".join(lines) + "\n"
+
+
 def render(result: ResultRecord, context: CommandContext) -> str:
     """Render a result without performing scientific calculations."""
 
@@ -37,6 +134,10 @@ def render(result: ResultRecord, context: CommandContext) -> str:
         return json.dumps(result.as_dict(), indent=2, sort_keys=True) + "\n"
 
     if context.format == "csv":
+        if result.kind == "vibrational_modes":
+            return _csv_vibrational_modes(result)
+        if result.kind == "vibrational_spectrum":
+            return _csv_vibrational_spectrum(result)
         stream = io.StringIO()
         writer = csv.writer(stream, lineterminator="\n")
         headings = [
@@ -54,6 +155,11 @@ def render(result: ResultRecord, context: CommandContext) -> str:
             lines.append("Use this HTML file directly or share it for download; no extra viewer assets are required.")
         lines.extend(result.warnings)
         return "\n".join(lines) + "\n"
+
+    if result.kind == "vibrational_modes" and not context.verbose:
+        return _render_vibrational_modes(result, context)
+    if result.kind == "vibrational_spectrum" and not context.verbose:
+        return _render_vibrational_spectrum(result, context)
 
     lines = [_display_name(result.kind)]
     table_keys = set()
@@ -77,14 +183,5 @@ def render(result: ResultRecord, context: CommandContext) -> str:
         if not context.verbose:
             value = _summarize_arrays(value)
         lines.append(f"{_display_name(key)}: {_plain_value(key, value, result.units)}")
-    lines.append(f"Analysis Validation Status: {result.validation_status}")
-    lines.append(f"Result Status: {result.status}")
-    source_format = result.provenance.get("source_format")
-    if source_format == "fchk" or (
-        context.input_path is not None and context.input_path.suffix.lower() in {".fchk", ".fch", ".chk"}
-    ):
-        lines.append("Source Calculation Status: Unknown from FCHK (convergence is not established)")
-    if result.error is not None:
-        lines.append(f"Error: {result.error.message}")
-    lines.extend(f"Warning: {warning}" for warning in result.warnings)
+    lines.extend(_status_lines(result, context))
     return "\n".join(lines) + "\n"
