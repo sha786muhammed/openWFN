@@ -1,0 +1,21 @@
+O   R   C   A
+! B3LYP def2-SVP TightSCF
+Total Charge : 0
+Multiplicity : 1
+CARTESIAN COORDINATES (ANGSTROEM)
+---------------------------------
+O      0.000000      0.000000      0.117790
+H      0.000000      0.755453     -0.471161
+H      0.000000     -0.755453     -0.471161
+
+FINAL SINGLE POINT ENERGY     -76.3000000000
+
+TD-DFT/TDA-EXCITATION SPECTRA
+ABSORPTION SPECTRUM VIA TRANSITION ELECTRIC DIPOLE MOMENTS
+-------------------------------------------------------------------------------------------------
+Transition                    Energy(eV)  Energy(cm-1) Wavelength(nm) fosc(D2)    D2       DX       DY       DZ
+-------------------------------------------------------------------------------------------------
+0-1A -> 1-1A                   4.294795     34639.9       288.7       0.003830922  0.03615  0.19012  0.00000  0.00000
+0-1A -> 2-1A                   5.100000     41135.0       243.1       0.000000000  0.00000  0.00000  0.00000  0.00000
+
+ORCA TERMINATED NORMALLY

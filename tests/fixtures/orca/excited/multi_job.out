@@ -1,0 +1,14 @@
+O   R   C   A
+JOB NUMBER 1
+! TDDFT B3LYP def2-SVP
+Total Charge : 0
+Multiplicity : 1
+STATE 1: E= 0.150000 au  4.081708 eV  32920.0 cm**-1
+
+JOB NUMBER 2
+! EOM-CCSD def2-SVP
+Total Charge : 1
+Multiplicity : 2
+STATE 1: E= 0.220000 au  5.986705 eV  48288.0 cm**-1
+
+ORCA TERMINATED NORMALLY
