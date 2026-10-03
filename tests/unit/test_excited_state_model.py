@@ -229,5 +229,5 @@ def test_get_collection_reads_typed_record_and_rejects_missing_record() -> None:
 
     assert getter(with_record) is collection
     assert getter(wrap_calculation(with_record)) is collection
-    with pytest.raises(DataUnavailableError, match="excited-state"):
+    with pytest.raises(DataUnavailableError, match="Excited-state"):
         getter(calculation)
