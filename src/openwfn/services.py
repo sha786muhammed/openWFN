@@ -6,9 +6,9 @@ import numpy as np
 
 from .analysis.basis import ao_atom_indices, bounded_ao_chunk_size, overlap_matrix
 from .analysis.density import density_matrix_for_kind, evaluate_density, integrate_density
-from .analysis.hirshfeld import HirshfeldSettings, hirshfeld_population
 from .analysis.electrostatics import electronic_esp_from_grid, nuclear_esp, point_charge_esp
 from .analysis.grids import iter_point_chunks, molecular_grid_points, scalar_grid
+from .analysis.hirshfeld import HirshfeldSettings, hirshfeld_population
 from .analysis.orbitals import (
     HARTREE_TO_EV,
     OCCUPATION_THRESHOLD,
