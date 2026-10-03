@@ -79,7 +79,9 @@ def test_excited_states_and_uvvis_export_row_oriented_csv(tmp_path: Path) -> Non
     assert uvvis.returncode == 0, uvvis.stderr
     state_rows = list(csv.reader(states_csv.open(encoding="utf-8")))
     uv_rows = list(csv.reader(uv_csv.open(encoding="utf-8")))
-    assert state_rows[0][:4] == ["job", "source_program", "method_family", "state"]
+    assert state_rows[0][:5] == [
+        "job", "source_program", "method_family", "method_detail", "state"
+    ]
     assert len(state_rows) == 3
     assert uv_rows[0][0:2] in (["energy_ev", "intensity"], ["domain", "x"])
 
