@@ -1,0 +1,59 @@
+name: Hirshfeld validation
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/hirshfeld-validation.yml"
+      - "src/openwfn/analysis/hirshfeld.py"
+      - "src/openwfn/analysis/hirshfeld_reference.py"
+      - "src/openwfn/analysis/atom_quadrature.py"
+      - "src/openwfn/reference_data/hirshfeld/**"
+      - "src/openwfn/exporters/tables.py"
+      - "src/openwfn/reporting.py"
+      - "src/openwfn/mcp_server.py"
+      - "scripts/validate_hirshfeld.py"
+      - "tests/test_hirshfeld*.py"
+      - "tests/integration/test_hirshfeld*.py"
+      - "tests/validation/test_hirshfeld*.py"
+      - "validation/hirshfeld/**"
+permissions:
+  contents: read
+concurrency:
+  group: hirshfeld-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  workflow-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e ".[test,interop,mcp]"
+      - run: >-
+          python -m pytest -q
+          tests/integration/test_hirshfeld_workflows.py
+          tests/test_hirshfeld_mcp.py
+
+  independent-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e ".[interop]" "horton-part==1.1.8"
+      - run: >-
+          python scripts/validate_hirshfeld.py
+          --external
+          --cases water
+          --output-dir hirshfeld-validation
+      - if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: hirshfeld-independent-smoke
+          path: hirshfeld-validation
+          if-no-files-found: warn
