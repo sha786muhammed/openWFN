@@ -113,9 +113,10 @@ def _render_vibrational_spectrum(result: ResultRecord, context: CommandContext) 
     strength_label = "IR Intensity (km/mol)" if is_ir else "Raman Activity (A^4/amu)"
     lines = [title, f"Mode  Frequency (cm^-1)  {strength_label}  Imaginary"]
     for row in result.data.get("lines", []):
+        strength = str(row[strength_key])
         lines.append(
             f"{row['mode']:>4}  {row['frequency_cm1']:>17.4f}  "
-            f"{row[strength_key]:>23.6g}  {str(row['imaginary']):>9}"
+            f"{strength:>23}  {str(row['imaginary']):>9}"
         )
     broadening = result.data.get("broadening", {})
     lines.append(f"FWHM: {broadening.get('fwhm_cm1')} cm^-1")
