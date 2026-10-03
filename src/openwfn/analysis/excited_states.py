@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from math import ceil, isfinite, log
+from math import isfinite
 
 import numpy as np
 
@@ -16,7 +16,7 @@ from ..excited_states import (
 )
 from ..model import CalculationData
 from ..results import ResultRecord
-from ..vibrational_services import MAX_SPECTRUM_POINTS
+from ..spectrum_math import gaussian_broaden
 
 DEFAULT_UVVIS_FWHM_EV = 0.20
 
@@ -152,7 +152,8 @@ def excited_state(
             "energy_ev": "eV",
             "wavelength_nm": "nm",
             "oscillator_strength": "dimensionless",
-            "transition_dipole": selected_job.states[state - 1].transition_dipole_unit or "unavailable",
+            "transition_dipole": selected_job.states[state - 1].transition_dipole_unit
+            or "unavailable",
         },
         validation_status="Experimental",
     )
@@ -197,33 +198,6 @@ def _line_eligibility(state: ExcitedState) -> tuple[bool, str | None]:
     return True, None
 
 
-def _uvvis_grid(
-    centers: tuple[float, ...],
-    *,
-    fwhm_ev: float,
-    energy_min_ev: float | None,
-    energy_max_ev: float | None,
-    points: int | None,
-) -> np.ndarray:
-    if not isfinite(fwhm_ev) or fwhm_ev <= 0.0:
-        raise ValueError("FWHM must be a positive finite value")
-    margin = max(0.5, 5.0 * fwhm_ev)
-    lower = float(energy_min_ev) if energy_min_ev is not None else max(0.0, min(centers) - margin)
-    upper = float(energy_max_ev) if energy_max_ev is not None else max(centers) + margin
-    if not isfinite(lower) or not isfinite(upper) or lower >= upper:
-        raise ValueError("energy range must contain finite min < max values")
-    if points is None:
-        points = max(501, int(ceil((upper - lower) * 500.0)) + 1)
-        points = min(points, MAX_SPECTRUM_POINTS)
-    if isinstance(points, bool) or not isinstance(points, int):
-        raise ValueError("points must be an integer")
-    if points < 2 or points > MAX_SPECTRUM_POINTS:
-        raise ValueError(
-            f"points must be between 2 and {MAX_SPECTRUM_POINTS} to bound memory use"
-        )
-    return np.linspace(lower, upper, points, dtype=float)
-
-
 def uvvis_spectrum(
     data: CalculationData,
     *,
@@ -237,6 +211,8 @@ def uvvis_spectrum(
     """Return source UV-Vis sticks and a peak-height Gaussian curve in energy space."""
 
     selected_job = _select_job(_collection(data), job)
+    if not isfinite(fwhm_ev) or fwhm_ev <= 0.0:
+        raise ValueError("FWHM must be a positive finite value")
     lines: list[dict[str, object]] = []
     centers: list[float] = []
     strengths: list[float] = []
@@ -275,17 +251,18 @@ def uvvis_spectrum(
             "No excited states with nonnegative source oscillator strength and positive excitation energy are available for a UV-Vis curve."
         )
 
-    grid = _uvvis_grid(
-        tuple(centers),
-        fwhm_ev=float(fwhm_ev),
-        energy_min_ev=energy_min_ev,
-        energy_max_ev=energy_max_ev,
+    margin = max(0.5, 5.0 * float(fwhm_ev))
+    grid, curve = gaussian_broaden(
+        centers,
+        strengths,
+        fwhm=fwhm_ev,
+        lower=energy_min_ev,
+        upper=energy_max_ev,
         points=points,
+        margin=margin,
+        lower_floor=0.0,
+        default_step=0.002,
     )
-    curve = np.zeros(grid.size, dtype=float)
-    coefficient = -4.0 * log(2.0) / (float(fwhm_ev) ** 2)
-    for center, strength in zip(centers, strengths, strict=True):
-        curve += strength * np.exp(coefficient * (grid - center) ** 2)
 
     result_data: dict[str, object] = {
         "spectrum_type": "uvvis",
@@ -298,13 +275,9 @@ def uvvis_spectrum(
         "energy_range_ev": [float(grid[0]), float(grid[-1])],
     }
     if include_wavelength:
-        if grid[0] <= 0.0:
-            positive = grid > 0.0
-            wavelength_grid = grid[positive]
-            wavelength_curve = curve[positive]
-        else:
-            wavelength_grid = grid
-            wavelength_curve = curve
+        positive = grid > 0.0
+        wavelength_grid = grid[positive]
+        wavelength_curve = curve[positive]
         wavelength = HC_EV_NM / wavelength_grid[::-1]
         transformed = wavelength_curve[::-1] * HC_EV_NM / wavelength**2
         result_data["wavelength_nm"] = wavelength.tolist()
