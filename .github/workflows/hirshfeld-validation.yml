@@ -36,9 +36,9 @@ jobs:
           tests/integration/test_hirshfeld_workflows.py
           tests/test_hirshfeld_mcp.py
 
-  independent-smoke:
+  independent-validation:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
@@ -53,11 +53,10 @@ jobs:
       - run: >-
           python scripts/validate_hirshfeld.py
           --external
-          --cases water
           --output-dir hirshfeld-validation
       - if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: hirshfeld-independent-smoke
+          name: hirshfeld-independent-validation
           path: hirshfeld-validation
           if-no-files-found: warn
