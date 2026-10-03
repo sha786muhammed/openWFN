@@ -44,12 +44,12 @@ change. Open a feature proposal to discuss a roadmap item before implementation.
 ## Everyday QC staged project
 
 The first everyday-QC units — MO cubes, named MO composition, Mayer, DOS and
-PDOS — reached their documented scoped validation state in the 0.10 series.
-Native ordinary Hirshfeld populations and charges are implemented on the 0.11
-development branch and independently validated for the named H/C/N/O
-all-electron scope, including charged and open-shell examples. Unsupported
-elements, ECP/pseudopotential cases and ghost-center ambiguity remain outside
-that validation boundary.
+PDOS — have reached their documented scoped validation state. Native ordinary
+Hirshfeld populations and charges are implemented on the current development
+branch and independently validated for the named H/C/N/O all-electron scope,
+including charged and open-shell examples. Unsupported elements,
+ECP/pseudopotential cases and ghost-center ambiguity remain outside that
+validation boundary.
 
 The next gated scientific unit is spectroscopy. NTOs, analytic density
 derivatives, QTAIM, ELF/LOL, NCI and basin integration follow only after their
