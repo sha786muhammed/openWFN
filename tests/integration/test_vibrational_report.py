@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 
 import openwfn
-
 from openwfn.reporting import build_report
 
 ROOT = Path(__file__).resolve().parents[2]
