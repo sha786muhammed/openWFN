@@ -19,6 +19,7 @@ def test_registry_runs_summary_with_versioned_input_provenance() -> None:
         "dos",
         "frontier",
         "frontier-all",
+        "hirshfeld",
         "lowdin",
         "mayer",
         "mulliken",
