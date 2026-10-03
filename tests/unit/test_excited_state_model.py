@@ -1,3 +1,5 @@
+"""RED contract for the universal excited-state model."""
+
 from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
 
