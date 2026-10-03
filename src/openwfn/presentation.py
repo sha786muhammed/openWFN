@@ -60,6 +60,51 @@ def _csv_vibrational_spectrum(result: ResultRecord) -> str:
     return stream.getvalue()
 
 
+def _csv_excited_states(result: ResultRecord) -> str:
+    stream = io.StringIO()
+    writer = csv.writer(stream, lineterminator="\n")
+    columns = (
+        "job",
+        "source_program",
+        "method_family",
+        "state",
+        "source_state",
+        "energy_ev",
+        "wavelength_nm",
+        "oscillator_strength",
+        "multiplicity",
+        "symmetry",
+    )
+    writer.writerow(columns)
+    for job in result.data.get("jobs", []):
+        for state in job.get("states", []):
+            writer.writerow(
+                (
+                    job.get("job"),
+                    job.get("source_program"),
+                    job.get("method_family"),
+                    state.get("state"),
+                    state.get("source_state"),
+                    state.get("energy_ev"),
+                    state.get("wavelength_nm"),
+                    state.get("oscillator_strength"),
+                    state.get("multiplicity"),
+                    state.get("symmetry"),
+                )
+            )
+    return stream.getvalue()
+
+
+def _csv_uvvis(result: ResultRecord) -> str:
+    stream = io.StringIO()
+    writer = csv.writer(stream, lineterminator="\n")
+    writer.writerow(("energy_ev", "intensity"))
+    writer.writerows(
+        zip(result.data.get("energy_ev", []), result.data.get("intensity", []), strict=True)
+    )
+    return stream.getvalue()
+
+
 def _status_lines(result: ResultRecord, context: CommandContext) -> list[str]:
     lines = [
         f"Analysis Validation Status: {result.validation_status}",
@@ -128,6 +173,50 @@ def _render_vibrational_spectrum(result: ResultRecord, context: CommandContext) 
     return "\n".join(lines) + "\n"
 
 
+def _render_excited_states(result: ResultRecord, context: CommandContext) -> str:
+    lines = [
+        "Excited States",
+        "Job  State  Energy (eV)  Wavelength (nm)  f          Mult  Symmetry  Method",
+    ]
+    for job in result.data.get("jobs", []):
+        for state in job.get("states", []):
+            wavelength = state.get("wavelength_nm")
+            strength = state.get("oscillator_strength")
+            lines.append(
+                f"{job['job']:>3}  {state['state']:>5}  {state['energy_ev']:>11.6f}  "
+                f"{('-' if wavelength is None else f'{wavelength:.3f}'):>15}  "
+                f"{('-' if strength is None else f'{strength:.6g}'):>9}  "
+                f"{('-' if state.get('multiplicity') is None else state['multiplicity']):>4}  "
+                f"{(state.get('symmetry') or '-'):>8}  {job.get('method_family', '-')}"
+            )
+    lines.extend(_status_lines(result, context))
+    return "\n".join(lines) + "\n"
+
+
+def _render_uvvis(result: ResultRecord, context: CommandContext) -> str:
+    lines = [
+        "UV-Vis Spectrum",
+        "State  Energy (eV)  Wavelength (nm)  Oscillator Strength  Curve",
+    ]
+    for row in result.data.get("lines", []):
+        wavelength = row.get("wavelength_nm")
+        strength = row.get("oscillator_strength")
+        curve_status = "included" if row.get("eligible") else f"excluded: {row.get('exclusion_reason')}"
+        lines.append(
+            f"{row['state']:>5}  {row['energy_ev']:>11.6f}  "
+            f"{('-' if wavelength is None else f'{wavelength:.3f}'):>15}  "
+            f"{('-' if strength is None else f'{strength:.6g}'):>19}  {curve_status}"
+        )
+    broadening = result.data.get("broadening", {})
+    lines.append(f"Gaussian FWHM: {broadening.get('fwhm_ev')} eV")
+    lines.append(f"Energy Grid Points: {len(result.data.get('energy_ev', []))}")
+    if result.data.get("wavelength_nm"):
+        lines.append(f"Wavelength Grid Points: {len(result.data['wavelength_nm'])}")
+    lines.append("Curve Quantity: simulated oscillator-strength profile (not absorbance/extinction)")
+    lines.extend(_status_lines(result, context))
+    return "\n".join(lines) + "\n"
+
+
 def render(result: ResultRecord, context: CommandContext) -> str:
     """Render a result without performing scientific calculations."""
 
@@ -139,6 +228,10 @@ def render(result: ResultRecord, context: CommandContext) -> str:
             return _csv_vibrational_modes(result)
         if result.kind == "vibrational_spectrum":
             return _csv_vibrational_spectrum(result)
+        if result.kind == "excited_states":
+            return _csv_excited_states(result)
+        if result.kind == "uvvis_spectrum":
+            return _csv_uvvis(result)
         stream = io.StringIO()
         writer = csv.writer(stream, lineterminator="\n")
         headings = [
@@ -161,6 +254,10 @@ def render(result: ResultRecord, context: CommandContext) -> str:
         return _render_vibrational_modes(result, context)
     if result.kind == "vibrational_spectrum" and not context.verbose:
         return _render_vibrational_spectrum(result, context)
+    if result.kind == "excited_states" and not context.verbose:
+        return _render_excited_states(result, context)
+    if result.kind == "uvvis_spectrum" and not context.verbose:
+        return _render_uvvis(result, context)
 
     lines = [_display_name(result.kind)]
     table_keys = set()
