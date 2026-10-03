@@ -5,20 +5,17 @@ openwfn [GLOBAL OPTIONS] FILE COMMAND [COMMAND OPTIONS]
 openwfn examples install DESTINATION [--overwrite]
 ```
 
-Run `openwfn --help` or `openwfn FILE COMMAND --help` for the installed release's authoritative syntax.
+Run `openwfn --help` or `openwfn FILE COMMAND --help` for the installed release's authoritative syntax. Global options such as `--format json` go before the input path.
 
-For interoperable inputs in openWFN 0.10.1, install `openwfn[interop]`, then inspect capabilities before an analysis:
+For interoperable inputs, install the appropriate optional extra and inspect capabilities before requesting analyses that may not be present in the source file:
 
 ```bash
 openwfn molecule.molden capabilities
 openwfn molecule.wfx orbitals frontier
 openwfn calculation.out summary
-openwfn batch ./calculations --analyses summary,frontier --output-dir ./results
 ```
 
-Some output files contain geometry and energy but no complete wavefunction.
-`capabilities` shows which analyses have their required fields; a Stable
-format-ingestion status alone does not guarantee a `frontier` result.
+A parser being able to read a file does not mean every analysis is available. Missing records fail explicitly rather than being reconstructed silently.
 
 ## Global options
 
@@ -26,21 +23,12 @@ format-ingestion status alone does not guarantee a `frontier` result.
 |---|---|
 | `--version` | Print the installed version without requiring a file |
 | `--format table\|plain\|json\|csv` | Select result rendering |
-| `--input-format FORMAT_ID` | Select a registered parser for one ambiguous input or a homogeneous batch; place before `FILE` or `batch` |
+| `--input-format FORMAT_ID` | Select a registered parser for an ambiguous input |
 | `--output PATH` | Write supported rendered output to a file |
 | `--quiet`, `--verbose`, `--debug` | Control diagnostic detail |
 | `--no-color`, `--plain`, `--compact` | Control terminal presentation |
-| `--overwrite` | Permit replacement of an existing output |
+| `--overwrite` | Permit intentional replacement of an existing output |
 | `--non-interactive` | Disable interactive behavior |
-
-## Installed examples
-
-`openwfn examples install DIRECTORY` copies maintained, redistributable inputs
-from the installed wheel. The historical top-level `water.fchk` example is
-preserved, and the complete versioned everyday-QC corpus is installed under
-`DIRECTORY/everyday-qc/`. The command checks every destination before writing
-and refuses to replace existing files. Pass `--overwrite` only when replacement
-is intentional.
 
 ## Command families
 
@@ -61,174 +49,130 @@ These are the public top-level choices shown by `openwfn --help`.
 | `interactive` | Start the guided terminal interface |
 | `graph` | Show molecular fragments |
 | `geometry` | Run distance, angle, and dihedral operations |
-| `bondorder` | Run Mayer AO bond-order analysis when required electronic data are available |
 | `population` | Run Mulliken or Löwdin population analysis |
+| `bondorder` | Run Mayer AO bond-order analysis |
 | `orbitals` | Inspect frontier orbitals, compositions, cubes, DOS, and PDOS |
+| `vibrations` | Inspect source-reported vibrational modes or one normal mode |
+| `spectra` | Generate IR or Raman-activity stick/broadened spectra from source modes |
 | `density` | Integrate or export electron and spin density |
 | `esp` | Evaluate supported electrostatic-potential components |
-| `report` | Build a research report |
-| `workbench` | Build the optional offline workbench |
+| `report` | Build a reproducible research report |
+| `workbench` | Build the offline molecular workbench |
 | `cube` | Export an electron-density cube |
 | `convert` | Convert molecular structure formats |
 | `export` | Export a registered result table |
 | `plot` | Create a supported scientific figure |
 | `batch` | Analyze multiple inputs |
 | `validate` | Run the density-conservation check |
-| `doctor` | Inspect input type and available capabilities |
 | `capabilities` | Report normalized component and analysis availability |
-| `properties` | Extract source-reported QC output properties using the optional cclib reader |
-
-## Source-reported output properties
-
-Install the optional `outputs` extra, then run:
-
-```bash
-python -m pip install "openwfn[outputs]==0.10.1"
-python -m openwfn.cli --format json calculation.out properties
-```
-
-The command detects the program from file contents; omit `--input-format`.
-It reports available geometry, charge/multiplicity, SCF energy, frontier
-orbital energies, dipole, printed atomic charges and normal termination.
-Printed charges are source-reported values, separate from recalculated
-`population` results. Missing fields remain null or empty; warnings mark the
-result partial. Normal termination does not prove optimization convergence.
-This source-output reader remains **Experimental** and is separate from `load()`;
-it is not a complete wavefunction or a blanket source-program compatibility
-claim. See [output properties](../output-properties.md) for units, provenance,
-and the validation boundary.
+| `doctor` | Inspect input type and available capabilities |
+| `properties` | Extract source-reported QC output properties with the optional cclib reader |
 
 ## Inspection and structure
 
 | Command | Syntax | Result |
 |---|---|---|
-| `summary` | `openwfn FILE summary` | Full calculation summary when data permit; otherwise a partial structure summary with unknown fields explicit |
-| `info` | `openwfn FILE info` | Parsed FCHK scalar metadata |
-| `doctor` | `openwfn FILE doctor` | Input kind, legacy availability fields, and normalized capability/analysis report |
-| `capabilities` | `openwfn FILE capabilities` | Component states, parser/backend provenance, and registered-analysis requirements |
+| `summary` | `openwfn FILE summary` | Complete molecular summary when data permit; partial structure summary otherwise |
+| `info` | `openwfn FILE info` | Parsed source metadata |
+| `doctor` | `openwfn FILE doctor` | Input kind and normalized capability report |
+| `capabilities` | `openwfn FILE capabilities` | Component states and registered-analysis requirements |
 | `bonds` | `openwfn FILE bonds` | Covalent-radius bond heuristic |
 | `graph` | `openwfn FILE graph` | Connected molecular fragments |
 | `geometry` | `geometry distance I J` | Interatomic distance in ångströms |
 | `geometry` | `geometry angle I J K` | Three-atom angle in degrees |
 | `geometry` | `geometry dihedral I J K L` | Signed four-atom dihedral in degrees |
 
-CLI atom indices are one-based. The legacy `dist`, `angle`, and `dihedral` forms remain accepted for existing scripts. Summary bond and fragment counts use a covalent-radius heuristic rather than authoritative FCHK connectivity; ghost centers are excluded from those physical structural summaries.
+CLI atom indices are one-based. Summary bonds and fragments use a geometry heuristic rather than authoritative quantum-chemical bond orders.
 
 ## Electronic analyses
 
 | Command | Syntax and options | Status note |
 |---|---|---|
 | `orbitals` | `orbitals frontier [--spin alpha\|beta\|all]` | Requires MO energies; `all` reports both unrestricted channels and the true overall HOMO |
-| `bondorder` | `bondorder mayer [--threshold VALUE]` | Mayer result status follows the input diagnostics; Validated for the documented everyday-QC reference scope |
+| `orbitals` | `orbitals composition`, `orbitals cube`, `orbitals dos`, `orbitals pdos` | Availability depends on the required wavefunction records |
+| `bondorder` | `bondorder mayer [--threshold VALUE]` | Mayer status follows input diagnostics and the documented validation boundary |
 | `population` | `population mulliken` or `population lowdin` | Requires AO density and overlap data; conservation failures return `partial` with warnings |
-| `density` | `density integrate [--kind total\|alpha\|beta\|spin] [--spacing BOHR] [--padding BOHR]` | Grid integration; validation status comes from the generated grid's conservation check |
-| `density` | `density cube OUTPUT [grid options]` | Cube is written when requested; failed conservation returns `partial`/Experimental rather than a false Validated result |
-| `cube` | `cube OUTPUT [grid options]` | Convenience density-cube command with the same validation behavior |
-| `esp` | `esp point X Y Z [--component COMPONENT] [--method integrals\|grid]` | Nuclear/charge-model Stable; default Gaussian-integral electronic/total Validated for documented scope; explicit grid Experimental |
-| `validate` | `openwfn FILE validate` | Runs default total-density conservation check |
+| `density` | `density integrate [--kind total\|alpha\|beta\|spin]` | Grid integration with explicit conservation diagnostics |
+| `density` | `density cube OUTPUT [grid options]` | Generated grid keeps its actual success/partial and validation state |
+| `esp` | `esp point X Y Z [--component COMPONENT] [--method integrals\|grid]` | Integral electronic/total ESP and explicitly selected grid route retain separate validation boundaries |
+| `validate` | `openwfn FILE validate` | Runs the default total-density conservation check |
 
-The accepted frontier selector is `--spin alpha|beta|all`. For an unrestricted calculation, use:
+For unrestricted calculations, use the spin-complete selector when appropriate:
 
 ```bash
 openwfn FILE orbitals frontier --spin all
 ```
 
-The alpha-only default remains for backward compatibility and warns when a beta channel is also present. ECP and ghost-center electrostatics use effective nuclear charges from the FCHK source record when available.
+The accepted selector is `--spin alpha|beta|all`. The alpha-only default remains for backward compatibility and warns when a beta channel is present.
 
-Post-HF calculations do not silently imply use of a correlated density. When the parsed matrix is the SCF density, population and density results name that SCF density source and emit a warning. openWFN does not claim post-SCF density support unless such a density is explicitly parsed and selected.
+Post-HF calculations do not silently imply a correlated density. When the parsed matrix is the SCF density, population and density results identify the **SCF density** source and warn accordingly. A scientifically usable but incomplete result is retained as `partial`; it is not promoted to a clean success.
 
-The default density spacing is **0.15 bohr** with 6.0 bohr padding. This is an accuracy/performance starting point, not a universal convergence setting; check the result status and converge the grid for quantitative work.
+The default density spacing is **0.15 bohr** with 6.0 bohr padding. These are starting values, not universal convergence settings.
 
-ESP components are `nuclear`, `mulliken`, `lowdin`, `electronic`, and `total`. Coordinates are Cartesian; consult [methods and units](../science/population-esp.md).
+## Vibrational spectroscopy
 
-Point ESP rejects a singular evaluation with an explanation: nuclear/total
-values are undefined at nonzero nuclear-charge centers, atomic-charge models
-are singular at nonzero charge centers, and grid electronic quadrature can be
-singular at a charged density voxel. Choose a different point or, for a grid
-singularity, different grid settings. Zero-charge ghost centers do not create a
-nuclear singularity.
+Vibrational spectroscopy is **Experimental** on this feature line. The native Gaussian text-output path preserves source values and does not infer unavailable observables.
 
-Human-readable output separates `Analysis Validation Status` from `Result
-Status`. Neither establishes convergence of the source QC calculation. FCHK
-results explicitly report source convergence as unknown; output properties
-report source-job termination separately. Normal termination alone does not
-establish optimization convergence. JSON field names remain unchanged.
+```bash
+openwfn frequency.log vibrations
+openwfn --format json frequency.log vibrations mode 3
+openwfn frequency.log spectra ir --fwhm 20 --points 2001
+openwfn frequency.log spectra raman --fwhm 20 --export raman.svg
+openwfn frequency.log vibrations --export modes.csv
+```
+
+`vibrations` reports source frequencies, imaginary-mode sign, symmetry when present, reduced masses, force constants, IR intensities, Raman activities, and whether Cartesian normal-mode vectors are available. `vibrations mode N` returns one one-based normal mode and its displacement vectors when present.
+
+`spectra ir` and `spectra raman` preserve a source stick table and also generate a deterministic Gaussian-broadened visualization curve. Options are:
+
+| Option | Meaning |
+|---|---|
+| `--fwhm CM-1` | Gaussian full width at half maximum; default 20 cm^-1 |
+| `--min CM-1`, `--max CM-1` | Explicit wavenumber range |
+| `--points N` | Number of broadened-curve grid points |
+| `--export PATH` | CSV, JSON, PNG, or SVG spectrum export |
+| `--dpi N` | Raster resolution for PNG export |
+
+Imaginary modes remain signed and visible in mode/stick data; they are excluded from the broadened physical spectrum with an explicit warning. Missing IR or Raman source data fail explicitly.
+
+Gaussian `Raman Activ` values are **Raman activities**, not laser- and temperature-dependent Raman intensities. openWFN does not silently convert activity to intensity because that requires additional physical assumptions and experimental conditions. See [Vibrational spectroscopy](../science/vibrational-spectroscopy.md).
+
+## Source-reported output properties
+
+The optional `properties` reader is separate from the wavefunction-analysis registry:
+
+```bash
+python -m pip install "openwfn[outputs]"
+python -m openwfn.cli --format json calculation.out properties
+```
+
+It can expose geometry, charge/multiplicity, SCF energy, selected orbital energies, dipole, printed charges, and termination information when the source program and file contain them. Missing values remain missing. Printed atomic charges are not recalculated populations, and normal termination does not establish optimization convergence.
 
 ## Reports, exports, and visualization
 
 | Command | Syntax | Output |
 |---|---|---|
-| `report` | `report build OUTPUT [--report-format html\|markdown] [--analyses LIST]` | Self-contained research report |
-| `workbench` | `workbench [OUTPUT] [--open]` | Stable offline interface for the tested Chromium scope |
+| `report` | `report build OUTPUT [--report-format html\|markdown] [--analyses LIST]` | Self-contained research report; spectroscopy analyses render mode tables and inline spectra when requested |
+| `workbench` | `workbench [OUTPUT] [--open]` | Offline interface; vibrational inputs add a Vibrations workspace |
 | `view` | `view [--save HTML] [--open] [--no-labels] [--style ballstick\|stick]` | Standalone molecular viewer |
-| `xyz` | `xyz OUTPUT` | Legacy XYZ export |
+| `xyz` | `xyz OUTPUT` | XYZ export |
 | `convert` | `convert --to xyz\|pdb\|mol\|sdf --output PATH` | Structure conversion |
-| `export` | `export frontier\|mulliken\|lowdin OUTPUT` | Result table selected by extension |
+| `export` | `export frontier\|mulliken\|lowdin OUTPUT` | Registered result table selected by extension |
 | `plot` | `plot frontier OUTPUT [--dpi N]` | Frontier-orbital figure |
 | `formchk` | `formchk [OUTPUT]` | Calls Gaussian's external `formchk` utility |
 
+Vibrational CSV is row-per-mode; spectrum CSV is row-per-wavenumber point. JSON keeps the complete versioned `ResultRecord`, including units, validation status, warnings, and provenance. PNG/SVG spectrum figures are views of the same arrays rather than independent calculations.
+
+## DOS and PDOS
+
+`orbitals dos` and `orbitals pdos` are finite-molecule orbital-energy analyses, not vibrational or excited-state spectra. `--sigma` is in eV; `--energy-min`/`--energy-max` control the range; `--points` controls resolution; `--export` writes CSV/JSON/PNG/SVG. PDOS adds `--group-by atom|element|angular` and `--method lowdin|mulliken`. See [DOS/PDOS](../science/dos-pdos.md).
+
 ## Batch and guided mode
 
-`batch` accepts the primary file plus additional inputs, comma-separated
-`--analyses`, `--workers`, required `--output-dir`, and optional `--fail-fast`,
-`--resume`, `--format-map MAP.json`, and `--spin alpha|beta|all` controls. The spin selector applies to a requested `frontier` analysis; for example:
+`batch` accepts files/directories, comma-separated `--analyses`, worker and output controls, deterministic manifests, resume fingerprints, format hints, and fail-fast behavior. The spin selector applies to a requested frontier analysis. Machine-readable records preserve `success`, `partial`, or failed status instead of discarding usable partial results.
 
-```bash
-openwfn batch ./calculations \
-  --analyses frontier \
-  --spin all \
-  --output-dir ./results
-```
+`interactive` launches the guided terminal. With a file but no command, a terminal session enters guided mode; redirected input or `--non-interactive` defaults to `summary`. The guided interface includes **Analyze vibrations and spectra** when working with a supported vibrational source and routes to the same registered analyses as the CLI/Python/MCP surfaces.
 
-This maps the requested frontier analysis to the spin-complete `frontier-all` result. Resume fingerprints include the frontier spin choice, so changing spin selection does not reuse incompatible cached results.
+With `--format json`, successful parsed commands emit one result envelope on stdout. Runtime/input failures use structured failure records where applicable and return a nonzero exit code. Help and argument-syntax errors remain ordinary text.
 
-Batch records preserve scientifically usable `partial` analyses. A record is `error` only when every requested analysis fails; otherwise partial values, warnings, and result data are retained in the manifest.
-
-The top-level batch result is `success`/exit 0 only when every input succeeds,
-`partial`/exit 0 when at least one record is partial and none fail, and
-`failed`/nonzero when an input errors or discovery finds an unsupported file.
-An all-unsupported directory still writes a manifest. Its `unsupported_details`
-list includes paths, reasons, and checksums when readable; `attempted_count`
-and `stopped_early` describe fail-fast runs. A JSON format map resolves keys
-relative to the map file, and unknown or conflicting format hints fail before
-analysis records are written.
-
-Resume requires matching input checksums and configuration fingerprints, including software, backend, analysis versions, and effective format hints; failed inputs are retried. Inputs may be files or directories. `--recursive` scans subdirectories and `--dry-run` previews supported and unsupported files without requiring `--output-dir`. Completed runs write `batch-manifest.json`, per-input JSON records, and `batch-summary.csv`. Progress uses stderr and global `--quiet` suppresses it, but `--quiet --format json` still emits the final result.
-It writes result schema `1.0` envelopes inside batch manifest schema `1.0`.
-The older `--operation summary` form remains supported.
-
-With `--format json`, parsed commands emit one result envelope on stdout.
-Runtime/input failures have `status="failed"`, structured error details, and
-a nonzero exit code. `--output PATH` also saves that envelope to the requested
-file. Help and argument-syntax errors remain ordinary text.
-
-With multiple workers, openWFN keeps a bounded queue proportional to the worker
-count. Per-input records are saved as workers finish, while the final manifest
-and CSV index remain in deterministic input order.
-
-`interactive` launches the guided terminal menu. With a file but no command, a
-terminal session enters guided mode; redirected input or `--non-interactive`
-defaults to `summary`.
-
-The hidden `mo` developer preview is intentionally not part of the public command contract.
-
-The 0.10 stable line exposes `orbitals cube`, `orbitals composition`, and
-`bondorder mayer` as public commands. Orbital composition and Mayer are
-Validated for the documented everyday-QC reference scope. MO field values have
-independent reference evidence, while each written cube keeps the success or
-partial status of its requested grid. See [MO cubes](../science/mo-cubes.md),
-[composition](../science/orbital-composition.md), and [Mayer](../science/mayer.md).
-Global options such as `--format json` go before the input path.
-
-Supported spectrum commands are `orbitals dos` and `orbitals pdos`; `--sigma`
-is in eV, `--energy-min`/`--energy-max` set both endpoints, `--points` controls
-resolution, and `--export` writes CSV/JSON/PNG/SVG. PDOS adds `--group-by`
-(atom/element/angular) and `--method` (lowdin/mulliken). DOS and PDOS are
-Validated for the documented same-wavefunction everyday-QC scope; they remain
-finite-molecule orbital-energy analyses, not excited-state or periodic spectra.
-See [DOS/PDOS](../science/dos-pdos.md).
-
-Guided mode loads normalized molecular inputs and exposes frontier/composition/
-cube/DOS/PDOS orbital submenus with spin selection, Mayer bond analysis, density
-components and point ESP. Its results use the same services and formatter as
-the public API; expected input errors return failed records and keep navigation.
+The hidden `mo` developer preview is intentionally outside the public command contract.

@@ -58,6 +58,8 @@ FEATURE_ALIASES = {
     "10": "view",
     "view": "view",
     "viewer": "view",
+    "vibrations": "vibrations",
+    "spectra": "vibrations",
     "0": "exit",
     "exit": "exit",
     "quit": "exit",
@@ -147,6 +149,7 @@ def print_landing_page(filename: str, atomic_numbers: list[int], scalars: dict[s
         "Analyze geometry",
         "Explore bonds and fragments",
         "Analyze molecular orbitals",
+        "Analyze vibrations and spectra",
         "Calculate density and ESP",
         "Open 3D workbench",
         "Export or convert data",
@@ -298,6 +301,22 @@ def run_interactive(lines, filename):
         else:
             utils.print_error("Unknown orbital analysis.")
 
+    def show_vibrations() -> None:
+        operation = ask(
+            "Vibrational workflow [modes/ir/raman/mode; default modes]: ", "modes"
+        ).casefold()
+        if operation in {"modes", "vibrations"}:
+            show_result(client.analyze("vibrations"))
+        elif operation == "ir":
+            show_result(client.analyze("ir-spectrum"))
+        elif operation == "raman":
+            show_result(client.analyze("raman-spectrum"))
+        elif operation == "mode":
+            mode = int(ask("One-based mode number [1]: ", "1"))
+            show_result(client.analyze("normal-mode", mode=mode))
+        else:
+            utils.print_error("Unknown vibrational workflow.")
+
     def show_density() -> None:
         operation = ask("Density workflow [integrate/esp; default integrate]: ", "integrate").casefold()
         if operation == "integrate":
@@ -370,6 +389,12 @@ def run_interactive(lines, filename):
             nav = run_static_page("Detected Bonds", "List covalent bonds using tabulated covalent radii.", show_bonds)
         elif action == "orbitals":
             nav = run_static_page("Frontier Orbitals", "Report HOMO, LUMO, and energy gap.", show_orbitals)
+        elif action == "vibrations":
+            nav = run_static_page(
+                "Vibrational Spectroscopy",
+                "Inspect source vibrational modes, IR/Raman spectra, or one normal mode.",
+                show_vibrations,
+            )
         elif action in {"density", "validate"}:
             nav = run_static_page(
                 "Density Validation",

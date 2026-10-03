@@ -7,6 +7,13 @@ def test_palette_search_filters_workflows_case_insensitively() -> None:
     assert [item.command for item in matches] == ["density"]
 
 
+def test_palette_exposes_vibrational_spectroscopy_workflow() -> None:
+    matches = filter_workflows(WORKFLOWS, "vibrations")
+
+    assert [item.command for item in matches] == ["vibrations"]
+    assert matches[0].label == "Analyze vibrations and spectra"
+
+
 def test_palette_quit_returns_success_without_running_operation() -> None:
     choices = iter(["q"])
 

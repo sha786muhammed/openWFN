@@ -1,24 +1,18 @@
 # Local MCP interface
 
-openWFN 0.10.1 provides a **Stable local MCP interface** for the selected
-read-only registered analyses, backed by real molecular
-CLI/Python/batch/report/MCP parity checks. Individual analysis results retain
-their own scientific validation status and limitations.
+openWFN provides a local, read-only MCP interface for registered analyses. The MCP adapter is an interface layer over the same analysis registry used by Python and the CLI; it does not maintain a separate scientific implementation. Individual results retain their own validation status and limitations.
 
-It runs locally over stdio and reads files inside one configured directory. It
-does not provide a public HTTP service, upload endpoint, or authentication.
+It runs locally over stdio and reads files inside one configured directory. It does not provide a public HTTP/REST service, upload endpoint, or authentication layer.
 
 ## Install
 
 Use a separate environment, then install the optional features:
 
 ```bash
-python -m pip install "openwfn[mcp,interop,outputs]==0.10.1"
+python -m pip install "openwfn[mcp,interop,outputs]"
 ```
 
-The adapter is tested with MCP SDK 2.2.0. The base openWFN installation does
-not require that SDK. The `interop` and `outputs` extras enable the existing
-IOData and cclib readers respectively.
+The base openWFN installation does not require the MCP SDK. The `interop` and `outputs` extras enable the existing IOData and cclib readers respectively.
 
 ## Connect a client
 
@@ -38,77 +32,79 @@ Configure an MCP host using absolute paths to your environment and input folder:
 }
 ```
 
-Host configuration syntax can vary. The command starts a server that waits for
-MCP messages on standard input; running it alone does not open a chat interface.
-Standard output is reserved for protocol messages.
+Host configuration syntax can vary. The command starts a server that waits for MCP messages on standard input; running it alone does not open a chat interface. Standard output is reserved for protocol messages.
 
 ## Tools
 
 | Tool | Purpose |
 | --- | --- |
 | `list_analyses` | List supported registry analyses. |
-| `inspect_file(path, format_hint=None)` | Report file-specific wavefunction capabilities. |
-| `run_analysis(path, analysis, format_hint=None)` | Run one registered analysis. |
+| `inspect_file(path, format_hint=None)` | Report file-specific capabilities. |
+| `run_analysis(path, analysis, format_hint=None, parameters=None)` | Run one registered analysis with an optional validated scalar parameter mapping. |
 | `output_properties(path)` | Extract source-reported QC output properties with cclib. |
 
-Paths can be relative to the data root. Absolute paths must also be inside it.
-Binary Gaussian `.chk` files are rejected by every file-reading MCP tool,
-including when a format hint or an existing `.fchk` sidecar is provided.
-Convert them outside MCP with Gaussian's `formchk`, then supply the `.fchk`
-file. The existing CLI/API checkpoint workflow is unchanged.
+`parameters` is a JSON object whose values are simple scalars accepted by the selected registered analysis. Nested objects/lists and non-finite numeric values are rejected rather than forwarded ambiguously. For example, an agent may request:
 
-The registry includes the established summary/frontier/population analyses plus
-`orbital-composition`, `mayer`, `dos`, and `pdos`. Availability still depends on
-the records actually present in the input file. File-writing cube/CSV/plot
-operations, batch execution, and expensive real-space export workflows remain
-outside the read-only MCP surface.
+```json
+{
+  "path": "water_freq.log",
+  "analysis": "ir-spectrum",
+  "parameters": {
+    "fwhm_cm1": 20.0,
+    "points": 1001
+  }
+}
+```
 
-For a wavefunction input, inspect it first and request only an available analysis.
-For a QC output log, use `output_properties` directly; it does not construct a
-complete wavefunction. See [output properties](output-properties.md) for the
-distinction between source-reported and recomputed properties.
+or one normal mode:
+
+```json
+{
+  "path": "water_freq.log",
+  "analysis": "normal-mode",
+  "parameters": {
+    "mode": 2
+  }
+}
+```
+
+Paths can be relative to the data root. Absolute paths must also remain inside it. Binary Gaussian `.chk` files are rejected by every file-reading MCP tool. Convert them outside MCP with Gaussian's `formchk`, then provide the `.fchk` file.
+
+## Registered spectroscopy analyses
+
+The same registry now exposes these **Experimental** vibrational analyses when the input contains the necessary typed records:
+
+| Analysis | MCP data |
+|---|---|
+| `vibrations` | Source mode table and capability flags |
+| `ir-spectrum` | Source IR sticks plus broadened arrays |
+| `raman-spectrum` | Source Raman-activity sticks plus broadened activity arrays |
+| `normal-mode` | One mode's source metadata and Cartesian displacement vectors |
+
+The MCP server returns structured numerical data, not a plot. A client may visualize those arrays, but the returned `ResultRecord` remains the scientific record.
+
+Gaussian Raman values are returned as **Raman activities**, not experimental Raman intensities. openWFN does not infer laser frequency, temperature, or other assumptions required for an activity-to-intensity conversion. Imaginary modes remain signed in source data and are excluded from broadened physical spectra with an explicit warning.
+
+For a vibrational input, `inspect_file` can be used first to confirm available spectroscopy capabilities. Missing IR/Raman/vector records remain unavailable; the MCP layer does not synthesize them.
 
 ## Results and failures
 
-Scientific results use the existing `ResultRecord` envelope. Keep the `status`,
-`units`, `warnings`, and `provenance` when reporting results. `partial` means
-incomplete or conditionally valid data, and `failed` is not a valid scientific
-answer. Analyses cannot recover properties absent from a file.
+Scientific results use the existing `ResultRecord` envelope. Preserve `status`, `validation_status`, `units`, `warnings`, and `provenance` when communicating results. `partial` means incomplete or conditionally valid data, and `failed` is not a scientific answer.
 
-Invalid paths and inputs larger than the configured limit produce MCP tool
-errors. Parsing and analysis failures return structured records with
-`status: "failed"`; clients must check this field even when the protocol call
-itself succeeds.
+The MCP result for a given analysis/parameter set is parity-tested against the Python registry result. This establishes interface consistency, not independent scientific validation of every method or source-program variant.
 
-## Limits
+Invalid paths and inputs larger than the configured limit produce MCP tool errors. Parsing and analysis failures return structured records with `status: "failed"`; clients must check this field even when the protocol call itself succeeds.
 
-The adapter does not write output files or execute shell commands. Symlinks
-resolving outside the data root are rejected. The default per-file limit is
-100 MiB; `--max-file-bytes` changes it. This is an input-size check, not a hard
-bound on parser memory or analysis runtime.
+## Limits and security boundary
 
-Overlap-based analyses are limited to 256 AO functions by default before
-overlap construction. Configure an intentional higher limit with
-`--max-basis-functions N` or `create_server(root, max_basis_functions=N)`; this
-is a resource bound, not a runtime guarantee. DOS grids are independently
-limited to 100000 points and PDOS to two million output projection values.
-Expensive grids/cubes/real-space methods are not exposed.
+The adapter does not write output files or execute shell commands. Symlinks resolving outside the data root are rejected. The default per-file limit is 100 MiB; `--max-file-bytes` changes it. This is an input-size check, not a hard bound on parser memory or analysis runtime.
 
-Use a dedicated input directory that untrusted processes cannot modify while
-the server runs. The local interface is not an adversarial sandbox and has no
-OS-enforced CPU, memory, or execution-time isolation. Results include source
-paths; consider that before sharing them with an external client. Remote
-deployment needs separate access-control, upload, and resource-limit work.
+Overlap-based analyses are limited to 256 AO functions by default before overlap construction. Configure an intentional higher limit with `--max-basis-functions N` or `create_server(root, max_basis_functions=N)`. DOS/PDOS retain their own bounded output limits. File-writing plots/cubes/reports, batch execution, and Workbench generation remain outside the read-only MCP surface.
+
+Use a dedicated input directory that untrusted processes cannot modify while the server runs. The local interface is not an adversarial sandbox and has no OS-enforced CPU, memory, or execution-time isolation. Results include source paths; consider that before sharing them with an external client. Remote deployment requires separate access control, upload validation, authentication, and resource isolation.
 
 ## Interface evidence
 
-The common-registry parity matrix checks composition, Mayer, DOS and PDOS on
-the native water FCHK plus all eleven versioned everyday-QC Molden inputs. Each
-case compares full numerical data across CLI, Python, batch manifests, embedded
-HTML report JSON and an in-process MCP client/server session. Existing tests
-also exercise a real stdio session, malformed input, missing capabilities,
-file-size/resource bounds and filesystem containment.
+The existing MCP suite exercises path containment, malformed input, missing capabilities, resource limits, real stdio sessions, and registered-analysis parity. Vibrational parity additionally checks parameter forwarding and equality of scientific data, units, warnings, validation status, and provenance with the Python API.
 
-Stable describes this documented local interface—not universal source-program,
-molecule, or method validation. Each returned analysis retains its own
-scientific status, provenance, warnings, and reference boundary.
+Stable describes the documented **local interface**, not universal scientific validation. The new vibrational analyses remain Experimental pending independent validation evidence. See [Vibrational spectroscopy](science/vibrational-spectroscopy.md) for scientific semantics and boundaries.

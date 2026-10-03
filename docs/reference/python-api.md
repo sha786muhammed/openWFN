@@ -175,12 +175,16 @@ The default density-grid spacing is **0.15 bohr** with 6.0 bohr padding. These d
 | `dos` | Experimental Gaussian orbital-energy DOS |
 | `frontier` | Alpha/default HOMO, LUMO, and gap |
 | `frontier-all` | Alpha and beta frontiers plus the true overall HOMO for unrestricted calculations |
-| `mayer` | Experimental spin-corrected Mayer bond orders |
+| `ir-spectrum` | Experimental source IR sticks plus Gaussian-broadened curve |
 | `lowdin` | Löwdin populations and charges |
+| `mayer` | Experimental spin-corrected Mayer bond orders |
 | `mulliken` | Mulliken populations and charges |
+| `normal-mode` | Experimental source normal-mode metadata and displacement vectors |
 | `orbital-composition` | Experimental default HOMO/alpha/Lowdin AO projections |
 | `pdos` | Experimental atom-resolved Lowdin PDOS by default |
+| `raman-spectrum` | Experimental source Raman activities plus Gaussian-broadened activity curve |
 | `summary` | Version 2: complete molecular summary or partial structure-only/periodic summary |
+| `vibrations` | Experimental source-reported vibrational mode table |
 
 Use `available_analyses()` to discover registered names. Run an analysis
 with `calculation.analyze(name)` after `load(path)`, or use

@@ -15,6 +15,7 @@ WORKFLOWS = (
     Workflow("Analyze geometry", "geometry"),
     Workflow("Explore bonds and fragments", "bonds"),
     Workflow("Analyze molecular orbitals", "orbitals"),
+    Workflow("Analyze vibrations and spectra", "vibrations"),
     Workflow("Calculate density and ESP", "density"),
     Workflow("Open 3D workbench", "workbench"),
     Workflow("Export or convert data", "export"),

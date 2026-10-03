@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from .data import OpenWFNData
+from .vibrational import VibrationalRecord
 
 CapabilityState = Literal["available", "derived", "missing", "unsupported"]
 
@@ -72,6 +73,13 @@ def infer_capabilities(data: OpenWFNData) -> dict[str, Capability]:
     energy_present = data.metadata.energy_hartree is not None or (
         calculation is not None and calculation.molecule.metadata.energy_hartree is not None
     )
+    vibrational_record = (
+        calculation.records.get("vibrations") if calculation is not None else None
+    )
+    vibrations_present = isinstance(vibrational_record, VibrationalRecord)
+    ir_present = vibrations_present and vibrational_record.ir_available
+    raman_present = vibrations_present and vibrational_record.raman_available
+    vectors_present = vibrations_present and vibrational_record.displacements_available
 
     return {
         "structure": _capability(
@@ -117,6 +125,18 @@ def infer_capabilities(data: OpenWFNData) -> dict[str, Capability]:
         ),
         "integrals": _capability(
             "integrals", "available" if data.integrals is not None else "missing"
+        ),
+        "vibrations": _capability(
+            "vibrations", "available" if vibrations_present else "missing"
+        ),
+        "ir_intensities": _capability(
+            "ir_intensities", "available" if ir_present else "missing"
+        ),
+        "raman_activities": _capability(
+            "raman_activities", "available" if raman_present else "missing"
+        ),
+        "normal_mode_vectors": _capability(
+            "normal_mode_vectors", "available" if vectors_present else "missing"
         ),
     }
 

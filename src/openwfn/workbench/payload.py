@@ -11,11 +11,29 @@ from ..analysis.density import integrate_density
 from ..analysis.electrostatics import point_charge_esp
 from ..analysis.grids import iter_point_chunks, molecular_grid_points, scalar_grid
 from ..analysis.orbitals import evaluate_orbital
+from ..analysis.registry import run_analysis_safe
 from ..constants import BOHR_TO_ANGSTROM, Z_TO_SYMBOL
 from ..exporters.cube import format_cube
 from ..model import CalculationData
 from ..scientific import expected_electron_count, is_ghost_atom
 from ..services import density_grid, orbital_frontier, population_analysis
+
+
+def _result_property(result) -> dict[str, Any]:
+    if result.status == "failed":
+        return {
+            "status": "Unavailable",
+            "validation_status": result.validation_status,
+            "error": result.error.message if result.error else "Analysis unavailable",
+            "warnings": list(result.warnings),
+        }
+    return {
+        **result.data,
+        "units": result.units,
+        "validation_status": result.validation_status,
+        "status": result.status,
+        "warnings": list(result.warnings),
+    }
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,6 +89,29 @@ class WorkbenchPayload:
                 }
             except Exception as exc:
                 properties[name] = {"status": "Unavailable", "error": str(exc)}
+
+        if "vibrations" in data.records:
+            vibrations = run_analysis_safe(data, "vibrations")
+            properties["vibrations"] = _result_property(vibrations)
+            for analysis in ("ir-spectrum", "raman-spectrum"):
+                properties[analysis] = _result_property(run_analysis_safe(data, analysis))
+            if vibrations.status != "failed" and vibrations.data.get("displacements_available"):
+                normal_modes = []
+                for mode in range(1, int(vibrations.data.get("mode_count", 0)) + 1):
+                    result = run_analysis_safe(data, "normal-mode", mode=mode)
+                    if result.status != "failed":
+                        normal_modes.append(result.data)
+                properties["normal_modes"] = {
+                    "available": bool(normal_modes),
+                    "modes": normal_modes,
+                }
+            else:
+                properties["normal_modes"] = {
+                    "available": False,
+                    "modes": [],
+                    "message": "Normal-mode displacement vectors are unavailable for this source file.",
+                }
+
         provenance = data.molecule.provenance
         fields: list[dict[str, Any]] = []
         if include_fields and data.basis is not None:

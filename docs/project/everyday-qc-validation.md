@@ -1,6 +1,6 @@
 # Everyday QC validation and evidence
 
-This page describes the **current** everyday-QC validation state for openWFN 0.10.1. Historical development captures remain in the repository for provenance, but they do not override the current capability registry in `validation/manifest.json`.
+This page describes the **current** everyday-QC validation state for openWFN 0.10.1 plus separately staged feature work. Historical development captures remain in the repository for provenance, but they do not override the current capability registry in `validation/manifest.json`.
 
 ## Current status
 
@@ -12,8 +12,9 @@ This page describes the **current** everyday-QC validation state for openWFN 0.1
 | PDOS | Validated | Atom/element/angular projections with explicit projection-sum diagnostics; representation-dependent conventions remain documented. |
 | Native point ESP | Validated | Gaussian-integral electronic ESP is checked against independent PySCF Coulomb references at committed points and analytic high-angular-momentum tests. |
 | MO cube fields | Conditional | Field values are compared against independent references; a generated cube remains partial when its requested coarse grid fails the normalization/conservation diagnostic. |
-| Offline workbench interface | Stable interface | Tested in offline desktop Chromium for the documented corpus. Individual displayed scientific fields retain their own success/partial/Experimental status. |
-| Local read-only MCP interface | Stable interface | Common registered analyses are parity-tested against CLI/Python/batch/report results within the documented containment limits. |
+| Native vibrational spectroscopy | Experimental | Gaussian harmonic frequency/IR/Raman-activity parsing, normal-mode vectors, deterministic Gaussian broadening and cross-interface parity are implemented. Current fixtures/regressions are not an independent external scientific validation corpus. Raman activity is not converted to experimental intensity. |
+| Offline workbench interface | Stable interface | Tested in offline desktop Chromium for the documented corpus. Individual displayed scientific fields retain their own success/partial/Experimental status; the new Vibrations workspace does not promote spectroscopy beyond Experimental. |
+| Local read-only MCP interface | Stable interface | Common registered analyses are parity-tested against CLI/Python/batch/report results within the documented containment limits. Spectroscopy parameters are forwarded through the same registry. |
 | Source-output property readers | Experimental | Source-reported extraction remains dependent on program/file-version coverage and does not imply a complete wavefunction. |
 
 The machine-readable status index is `validation/manifest.json`. It identifies current capability status, the resource benchmark contract, and historical captures that must not be interpreted as current validation labels.
@@ -32,6 +33,21 @@ openwfn examples install installed-examples
 
 The 11 Molden inputs are then available under `installed-examples/everyday-qc/`, allowing the built wheel and the package downloaded back from public PyPI to run the same bounded workflow matrix used by release CI.
 
+### Vibrational spectroscopy evidence
+
+The staged spectroscopy implementation deliberately remains Experimental. Its current evidence is recorded in `validation/vibrational-spectroscopy/README.md` and covers:
+
+- typed Gaussian frequency-block parsing and source units;
+- signed imaginary frequencies;
+- analytic Gaussian broadening behavior;
+- explicit missing IR/Raman/vector failure states;
+- Python/MCP parity for the same parameters;
+- CLI table/CSV/plot routing;
+- HTML report numerical payload parity;
+- Workbench numerical payload parity and vector-availability behavior.
+
+These are implementation and regression checks. They do **not** compare a declared molecular/program/method corpus against an independent vibrational-analysis implementation with fixed tolerances. They therefore do not justify a Validated label.
+
 ## Resource workflow evidence
 
 The release resource benchmark runs nine prescribed CLI workflows for each of eleven real molecular inputs:
@@ -48,7 +64,9 @@ The release resource benchmark runs nine prescribed CLI workflows for each of el
 
 That is 99 commands in total. The benchmark checks command completion, timeout, observed process-tree RSS and generated-output size. **Resource/command success does not establish scientific validation.** Scientific status is evaluated separately by capability-specific reference tests and by each result's diagnostics.
 
-The benchmark now accepts an explicit corpus directory so release verification can run against installed package data instead of silently falling back to repository fixtures:
+The spectroscopy feature does not silently expand this stable release benchmark with a different input class. Its parser/API/CLI/report/Workbench tests are gated separately until a provenance-complete vibrational validation corpus is established.
+
+The benchmark accepts an explicit corpus directory so release verification can run against installed package data instead of silently falling back to repository fixtures:
 
 ```bash
 python scripts/benchmark_resources.py \
@@ -69,7 +87,7 @@ These files remain useful for provenance and regression history. `validation/man
 
 ## Reproduction
 
-Full source-checkout reference validation can be reproduced with:
+Full source-checkout validation can be reproduced with:
 
 ```bash
 python -m pip install -e '.[test,interop,outputs,mcp,docs,resources]' pyscf==2.12.1 qc-gbasis==0.1.0
@@ -87,10 +105,10 @@ Release CI additionally builds the wheel, installs it into a clean environment, 
 
 ## Remaining scientific boundaries
 
-The following are not promoted by this release hardening work: native Hirshfeld stockholder charges, typed vibrational/IR/Raman workflows, excited-state/UV-Vis analysis, genuine transition-data NTOs, analytic density derivatives, QTAIM/ELF/LOL/NCI topology or basin integration. Each requires its own method definition, reference data and validation gate.
+Native typed Gaussian vibrational/IR/Raman workflows are implemented on their own feature line but remain Experimental until independent reference data and acceptance tolerances are committed. Native Hirshfeld remains gated separately. Excited-state/UV-Vis analysis, genuine transition-data NTOs, analytic density derivatives, QTAIM/ELF/LOL/NCI topology and basin integration each require their own method definition, reference data and validation gate.
 
 Cartesian AO normalization can differ across programs. Physical fields and representation-invariant quantities are compared where appropriate; representation-dependent Löwdin quantities are not claimed equivalent when the AO normalization convention differs. ECPs, arbitrary diffuse tails, broad high-angular-momentum molecular coverage and correlated post-SCF densities retain their documented limitations.
 
 ## Historical development record
 
-The 0.10.0 development cycle progressed through staged numerical checks, independent PySCF comparisons, workflow stabilization, browser fixes and resource hardening before the stable release. Those milestone descriptions are historical context only. Current release status is defined by the versioned release notes, `validation/manifest.json`, current tests and the exact release CI evidence.
+The 0.10.0 development cycle progressed through staged numerical checks, independent PySCF comparisons, workflow stabilization, browser fixes and resource hardening before the stable release. Those milestone descriptions are historical context only. Current release status is defined by the versioned release notes, `validation/manifest.json`, current tests and the exact release CI evidence. Separately staged spectroscopy work remains Experimental unless and until its validation gate is satisfied.
