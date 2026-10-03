@@ -92,9 +92,8 @@ def test_gaussian_without_excited_states_returns_none() -> None:
 
 
 def test_gaussian_parser_enforces_state_limit_before_record_construction() -> None:
-    from openwfn.parsers.excited.gaussian import parse_gaussian_excited_states
-
     from openwfn.excited_states import MAX_EXCITED_STATES_PER_JOB
+    from openwfn.parsers.excited.gaussian import parse_gaussian_excited_states
 
     header = (
         " Entering Gaussian System\n"
