@@ -2,11 +2,16 @@ from pathlib import Path
 
 import pytest
 
-from openwfn.model import CalculationData
 from openwfn.parsers.gaussian.output import parse_gaussian_output
 
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "gaussian" / "vibrations"
+
+
+def _assert_calculation(parsed: object) -> None:
+    from openwfn.model import CalculationData
+
+    assert isinstance(parsed, CalculationData)
 
 
 def test_gaussian_output_extracts_route_energy_and_status(tmp_path: Path) -> None:
@@ -45,7 +50,7 @@ def test_gaussian_frequency_output_uses_final_geometry_and_exact_source_values()
 
     parsed = parse_gaussian_output(FIXTURES / "water_freq.log")
 
-    assert isinstance(parsed, CalculationData)
+    _assert_calculation(parsed)
     assert parsed.molecule.charge == 0
     assert parsed.molecule.multiplicity == 1
     assert parsed.molecule.atoms[0].coordinates == pytest.approx((0.0, 0.0, 0.11779))
@@ -69,7 +74,7 @@ def test_gaussian_linear_frequency_output_preserves_four_modes() -> None:
     from openwfn.vibrational import get_vibrational_record
 
     parsed = parse_gaussian_output(FIXTURES / "co2_freq.log")
-    assert isinstance(parsed, CalculationData)
+    _assert_calculation(parsed)
     record = get_vibrational_record(parsed)
 
     assert len(parsed.molecule.atoms) == 3
@@ -83,7 +88,7 @@ def test_gaussian_imaginary_frequency_preserves_sign_and_flag() -> None:
     from openwfn.vibrational import get_vibrational_record
 
     parsed = parse_gaussian_output(FIXTURES / "imaginary_freq.log")
-    assert isinstance(parsed, CalculationData)
+    _assert_calculation(parsed)
     mode = get_vibrational_record(parsed).modes[0]
 
     assert mode.frequency_cm1 == pytest.approx(-512.25)
@@ -94,7 +99,7 @@ def test_gaussian_missing_raman_is_unavailable_not_zero() -> None:
     from openwfn.vibrational import get_vibrational_record
 
     parsed = parse_gaussian_output(FIXTURES / "no_raman.log")
-    assert isinstance(parsed, CalculationData)
+    _assert_calculation(parsed)
     record = get_vibrational_record(parsed)
 
     assert record.ir_available is True
@@ -106,7 +111,7 @@ def test_gaussian_missing_vectors_are_unavailable_not_empty() -> None:
     from openwfn.vibrational import get_vibrational_record
 
     parsed = parse_gaussian_output(FIXTURES / "no_vectors.log")
-    assert isinstance(parsed, CalculationData)
+    _assert_calculation(parsed)
     record = get_vibrational_record(parsed)
 
     assert record.displacements_available is False
