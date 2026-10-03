@@ -12,6 +12,7 @@ from ...excited_states import (
     ExcitedStateCollection,
     ExcitedStateJob,
 )
+from .conventions import classify_method
 
 _FLOAT = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[EeDd][-+]?\d+)?"
 _JOB_SPLIT_RE = re.compile(r"(?m)^\s*@@@\s*$")
@@ -84,31 +85,37 @@ def _method_detail(segment: str) -> str:
     return "Q-Chem excited-state output"
 
 
+def _classification_label(segment: str, detail: str) -> str:
+    """Add only method-control context, never property labels such as ``Trans. Mom.``."""
+
+    upper = segment.upper()
+    markers: list[str] = []
+    for marker in (
+        "TDDFT",
+        "TDA",
+        "EOM-EE",
+        "EOM-IP",
+        "EOM-EA",
+        "EOM-SF",
+        "ADC",
+        "RAS-SF",
+        "STEX",
+        "CASSCF",
+        "CASPT2",
+        "NEVPT2",
+        "NOCI",
+    ):
+        if marker in upper:
+            markers.append(marker)
+    if "CIS_N_ROOTS" in upper and not any(
+        marker in markers for marker in ("EOM-EE", "EOM-IP", "EOM-EA", "EOM-SF", "ADC")
+    ):
+        markers.append("TDDFT")
+    return " ".join((detail, *markers))
+
+
 def _method_family(segment: str, detail: str) -> str:
-    upper = f"{detail}\n{segment}".upper()
-    if "STEOM" in upper:
-        return "steom"
-    if "EOM" in upper:
-        return "eom"
-    if "ADC" in upper:
-        return "adc"
-    if "RAS" in upper or "SPIN-FLIP" in upper or "SF-" in upper:
-        return "ras"
-    if "CASSCF" in upper or "CAS-SCF" in upper:
-        return "casscf"
-    if "CASPT2" in upper:
-        return "caspt2"
-    if "NEVPT2" in upper:
-        return "nevpt2"
-    if "STEX" in upper or "CORE-EXCIT" in upper or "CVS" in upper:
-        return "core"
-    if "MOM" in upper or "DELTASCF" in upper or "DELTA-SCF" in upper:
-        return "dscf"
-    if "TDDFT" in upper or "TDA" in upper:
-        return "tddft"
-    if re.search(r"\bCIS\b", upper):
-        return "cis"
-    return "other"
+    return classify_method("Q-Chem", _classification_label(segment, detail)).family
 
 
 def _parse_geometry(segment: str) -> tuple[tuple[int, ...], tuple[tuple[float, float, float], ...]]:
