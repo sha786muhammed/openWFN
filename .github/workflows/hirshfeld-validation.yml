@@ -45,7 +45,11 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - run: python -m pip install -e ".[interop]" "horton-part==1.1.8"
+      - run: >-
+          python -m pip install
+          "scipy<1.17"
+          -e ".[interop]"
+          "horton-part==1.1.8"
       - run: >-
           python scripts/validate_hirshfeld.py
           --external
