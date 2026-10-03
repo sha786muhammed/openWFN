@@ -25,12 +25,7 @@ def _require_finite(label: str, value: float | None) -> None:
 
 @dataclass(frozen=True, slots=True)
 class TransitionContribution:
-    """One source-reported transition/configuration contribution.
-
-    ``quantity`` names the reported quantity explicitly (for example
-    ``coefficient``, ``percent`` or ``weight``). Contributions are deliberately
-    distinct from mathematically defined amplitude blocks.
-    """
+    """One source-reported transition/configuration contribution."""
 
     source_label: str
     target_label: str
@@ -52,11 +47,7 @@ class TransitionContribution:
 
 @dataclass(frozen=True, slots=True)
 class AmplitudeBlock:
-    """Convention-labelled numeric amplitudes from one source state.
-
-    Unknown conventions remain representable. NTO readiness is intentionally
-    conservative until the method/convention registry validates a convention.
-    """
+    """Convention-labelled numeric amplitudes from one source state."""
 
     convention: str
     values: tuple[float, ...]
@@ -86,12 +77,7 @@ class AmplitudeBlock:
 
     @property
     def nto_ready(self) -> bool:
-        """Return whether this convention is approved for NTO construction.
-
-        Task 5 replaces the conservative default with the explicit convention
-        registry. Numeric coefficients alone are never enough to imply NTO
-        semantics.
-        """
+        """Return whether this convention is approved for NTO construction."""
 
         return False
 
@@ -166,6 +152,12 @@ class ExcitedStateJob:
     source_program_version: str | None = None
     reference_state: str | None = None
     source_job_label: str | None = None
+    charge: int | None = None
+    multiplicity: int | None = None
+    reference_energy_hartree: float | None = None
+    atomic_numbers: tuple[int, ...] = ()
+    coordinates_angstrom: tuple[tuple[float, float, float], ...] = ()
+    terminated_normally: bool | None = None
     diagnostics: tuple[tuple[str, str], ...] = ()
 
     def __post_init__(self) -> None:
@@ -181,6 +173,21 @@ class ExcitedStateJob:
         ):
             if value is not None:
                 _require_nonblank(label, value)
+        if self.multiplicity is not None and self.multiplicity < 1:
+            raise ValueError("job multiplicity must be at least one when present")
+        _require_finite("reference energy", self.reference_energy_hartree)
+        if bool(self.atomic_numbers) != bool(self.coordinates_angstrom):
+            raise ValueError("job atomic numbers and coordinates must be supplied together")
+        if self.atomic_numbers:
+            if len(self.atomic_numbers) != len(self.coordinates_angstrom):
+                raise ValueError("job atomic numbers and coordinates must have matching lengths")
+            if any(number < 1 for number in self.atomic_numbers):
+                raise ValueError("job atomic numbers must be positive")
+            if any(
+                len(vector) != 3 or any(not isfinite(value) for value in vector)
+                for vector in self.coordinates_angstrom
+            ):
+                raise ValueError("job coordinates must contain finite three-component vectors")
         if not self.states:
             raise ValueError("excited-state job must contain at least one state")
         if len(self.states) > MAX_EXCITED_STATES_PER_JOB:
