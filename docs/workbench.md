@@ -86,7 +86,7 @@ See [Formats and exports](reference/formats-and-exports.md), [Security](project/
 
 ## Browser validation scope
 
-The stable Workbench line validates the established everyday-QC workspaces in offline desktop Chromium with workspace/surface interaction and geometry readouts matching the Python API. The canvas is contained in the viewer so it cannot intercept sidebar clicks.
+The stable Workbench line validates the established everyday-QC workspaces in offline desktop Chromium with workspace/surface interaction and geometry readouts matching the Python API. The canvas is contained in the viewer so it cannot intercept sidebar clicks. Evidence with input/CI provenance is captured in `validation/everyday-qc/browser-report.json`; CI reruns the browser validator.
 
 The vibrational feature additionally has payload/HTML contract tests that require the Workbench to reuse registered spectroscopy numerical data and to represent missing displacement vectors explicitly. Browser CI remains the gate for preserving existing workspaces as the Vibrations workspace is added. This scope does not certify every GPU, browser, or mobile device.
 
