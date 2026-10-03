@@ -60,6 +60,62 @@ def _write_vibrational_spectrum(
     return path
 
 
+def _write_uvvis_spectrum(result: ResultRecord, path: Path, dpi: int) -> Path:
+    energy = result.data["energy_ev"]
+    intensity = result.data["intensity"]
+    if path.suffix.lower() == ".json":
+        path.write_text(json.dumps(result.as_dict(), indent=2) + "\n", encoding="utf-8")
+        return path
+    if path.suffix.lower() == ".csv":
+        wavelength = result.data.get("wavelength_nm")
+        wavelength_intensity = result.data.get("wavelength_intensity")
+        with path.open("w", encoding="utf-8", newline="") as stream:
+            writer = csv.writer(stream, lineterminator="\n")
+            if wavelength is None:
+                writer.writerow(["energy_ev", "intensity"])
+                writer.writerows(zip(energy, intensity, strict=True))
+            else:
+                writer.writerow(["domain", "x", "intensity"])
+                writer.writerows(("energy_ev", x, y) for x, y in zip(energy, intensity, strict=True))
+                writer.writerows(
+                    ("wavelength_nm", x, y)
+                    for x, y in zip(wavelength, wavelength_intensity, strict=True)
+                )
+        return path
+
+    from matplotlib.figure import Figure
+
+    figure = Figure(figsize=(6.4, 4.2), layout="constrained")
+    axis = figure.subplots()
+    axis.plot(energy, intensity, lw=1.4)
+    for line in result.data.get("lines", []):
+        strength = line.get("oscillator_strength")
+        if line.get("eligible") and strength is not None:
+            axis.vlines(line["energy_ev"], 0.0, strength, lw=0.7, alpha=0.45)
+    axis.set(xlabel="Excitation energy (eV)", ylabel="Relative oscillator-strength profile")
+    axis.spines[["top", "right"]].set_visible(False)
+    axis.tick_params(direction="in")
+    axis.margins(x=0)
+    metadata = None
+    if path.suffix.lower() == ".svg":
+        metadata = {
+            "Description": json.dumps(
+                {
+                    "software": "openWFN",
+                    "analysis": result.analysis_name,
+                    "validation_status": result.validation_status,
+                    "warnings": result.warnings,
+                    "provenance": result.provenance,
+                    "quantity": result.data.get("quantity"),
+                },
+                sort_keys=True,
+            )
+        }
+    figure.savefig(path, dpi=dpi, metadata=metadata)
+    figure.clear()
+    return path
+
+
 def write_spectrum(
     result: ResultRecord,
     path: str | Path,
@@ -67,12 +123,13 @@ def write_spectrum(
     overwrite: bool = False,
     dpi: int = 300,
 ) -> Path:
-    """Write an orbital or vibrational spectrum without recalculating it."""
+    """Write an orbital, vibrational, or UV-Vis spectrum without recalculating it."""
 
     if result.status == "failed" or result.kind not in {
         "orbital_dos",
         "orbital_pdos",
         "vibrational_spectrum",
+        "uvvis_spectrum",
     }:
         raise ValueError("spectrum export requires a usable spectrum result")
     path = Path(path)
@@ -83,6 +140,8 @@ def write_spectrum(
 
     if result.kind == "vibrational_spectrum":
         return _write_vibrational_spectrum(result, path, request, dpi)
+    if result.kind == "uvvis_spectrum":
+        return _write_uvvis_spectrum(result, path, dpi)
 
     series = {
         "total_dos": result.data["total_dos"],
