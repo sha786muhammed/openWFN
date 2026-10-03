@@ -1,0 +1,9 @@
+Q-Chem 6.3
+$rem
+METHOD MYSTERY-EXCITED
+$end
+Charge = 0 Multiplicity = 1
+MYSTERY-EXCITED Excitation Energies
+Excited state   1: excitation energy (eV) = 4.081708
+Multiplicity: Singlet
+Thank you very much for using Q-Chem.
