@@ -18,8 +18,25 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: python -m pip install numpy pyscf==2.12.1
-      - run: python scripts/generate_hirshfeld_references.py --output-dir generated-hirshfeld-v1
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - name: Generate references with captured diagnostics
+        shell: bash
+        run: |
+          set +e
+          python scripts/generate_hirshfeld_references.py --output-dir generated-hirshfeld-v1 > generator.log 2>&1
+          status=$?
+          cat generator.log
+          echo "$status" > generator.exitcode
+          exit "$status"
+      - if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: hirshfeld-generator-diagnostics
+          path: |
+            generator.log
+            generator.exitcode
+          if-no-files-found: error
+      - if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: hirshfeld-proatoms-v1
           path: generated-hirshfeld-v1
