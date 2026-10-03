@@ -29,7 +29,7 @@ openWFN connects scientific analysis, automation, validation evidence, and resea
 
 ## Analyze · Automate · Validate · Publish
 
-- **Analyze** molecular structure, orbitals, electron density, atomic populations, electrostatic potential, and derived properties.
+- **Analyze** molecular structure, orbitals, electron density, atomic populations, electrostatic potential, vibrational modes/spectra, and derived properties.
 - **Automate** with stable CLI commands, a typed Python API, structured results, resumable batches, and JSON/CSV exports.
 - **Validate** using explicit capability status, parser provenance, transformations, numerical controls, and fixture-backed evidence.
 - **Publish** durable reports, figures, cube files, structures, and batch manifests.
@@ -58,9 +58,31 @@ package stability does not change individual scientific validation labels.
 
 See the [design and roadmap](docs/project/everyday-qc-design.md),
 [validation and limitations](docs/project/everyday-qc-validation.md), and
-[method documentation](docs/science/dos-pdos.md). Native Hirshfeld and later
-spectroscopy/real-space phases are not implemented; the validation document
-records their scientific gates. Existing CLI/API/result schemas are retained.
+[method documentation](docs/science/dos-pdos.md). Native Hirshfeld remains on a
+separate gated feature line. The source tree also contains native Gaussian
+vibrational/IR/Raman-activity work on its own feature line; that spectroscopy
+remains **Experimental** and is not a claim about the published stable 0.10.1
+package. Existing CLI/API/result schemas are retained.
+
+## Experimental vibrational spectroscopy
+
+The spectroscopy feature adds typed Gaussian harmonic modes, source IR
+intensities, source Raman activities, normal-mode vectors, deterministic
+Gaussian broadening, CLI/Python/MCP parity, research-report plots, and a
+Vibrations workspace in the offline Workbench.
+
+```bash
+openwfn frequency.log vibrations
+openwfn frequency.log spectra ir --fwhm 20 --points 2001 --export ir.csv
+openwfn frequency.log spectra raman --export raman.svg
+```
+
+Gaussian Raman activities are not silently converted to experimental Raman
+intensities. Imaginary modes remain signed in source data and are excluded from
+the broadened physical curve with a warning. Current parser/regression/interface
+parity is not independent scientific validation, so all spectroscopy analyses
+remain Experimental. See the
+[vibrational spectroscopy method page](docs/science/vibrational-spectroscopy.md).
 
 ## Install
 
@@ -131,12 +153,13 @@ The default density spacing of **0.15 bohr** is an accuracy/performance tradeoff
 | Electrostatic potential | Nuclear and charge-model point ESP | Stable interface; special-case regressions included |
 | Gaussian-integral electronic/total ESP | AO-density Coulomb integrals with independent references | Validated for the eleven-case set |
 | Grid electronic/total ESP | Numerical Coulomb evaluation | Experimental |
+| Vibrational spectroscopy | Native Gaussian modes, IR intensity, Raman activity, broadened curves, source vectors | Experimental; implementation/interface parity only, independent validation pending |
 | Automation | Versioned results, batch manifests, discovery, resume, JSON and CSV | Stable |
-| Research reports | HTML/Markdown reports, tables, figures, and structures | Stable |
-| Interactive workbench | Offline workspaces, surfaces and signed geometry readouts | Stable interface; eleven-molecule Chromium evidence; field diagnostics retained |
+| Research reports | HTML/Markdown reports, tables, figures, structures, vibrational tables/plots | Stable interface; individual analysis status retained |
+| Interactive workbench | Offline workspaces, surfaces, signed geometry readouts, optional Vibrations workspace | Stable interface; displayed scientific status retained |
 | Additional input formats | Optional IOData ingestion and file-specific capabilities | Stable fixture contract; requires the interop extra |
 | QC output properties | Source-reported extraction with optional cclib | Experimental; not a complete wavefunction |
-| Local MCP | Read-only stdio tools for selected registered analyses | Stable local interface; real CLI/API/batch/report parity; no remote service |
+| Local MCP | Read-only stdio tools for registered analyses with validated scalar parameters | Stable local interface; no remote service |
 
 “Validated” is deliberately scoped. Review the [validation evidence](https://sha786muhammed.github.io/openWFN/science/validation-status/) and [limitations](https://sha786muhammed.github.io/openWFN/limitations/) before research use.
 
@@ -195,6 +218,7 @@ missing-data behavior and the current Experimental validation boundary.
 - [Complete CLI reference](https://sha786muhammed.github.io/openWFN/reference/cli/)
 - [Python API](https://sha786muhammed.github.io/openWFN/reference/python-api/)
 - [Scientific methods](https://sha786muhammed.github.io/openWFN/science/geometry-topology/)
+- [Vibrational spectroscopy](docs/science/vibrational-spectroscopy.md)
 - [Validation status](https://sha786muhammed.github.io/openWFN/science/validation-status/)
 - [Optional workbench](https://sha786muhammed.github.io/openWFN/workbench/)
 - [Troubleshooting](https://sha786muhammed.github.io/openWFN/guides/troubleshooting/)
