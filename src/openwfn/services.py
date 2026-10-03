@@ -6,6 +6,7 @@ import numpy as np
 
 from .analysis.basis import ao_atom_indices, bounded_ao_chunk_size, overlap_matrix
 from .analysis.density import density_matrix_for_kind, evaluate_density, integrate_density
+from .analysis.hirshfeld import HirshfeldSettings, hirshfeld_population
 from .analysis.electrostatics import electronic_esp_from_grid, nuclear_esp, point_charge_esp
 from .analysis.grids import iter_point_chunks, molecular_grid_points, scalar_grid
 from .analysis.orbitals import (
@@ -330,6 +331,80 @@ def population_analysis(
         },
         validation_status="Experimental" if partial else "Stable",
         status="partial" if partial else "success",
+        warnings=tuple(dict.fromkeys(warnings)),
+    )
+
+
+def hirshfeld_population_analysis(
+    data: CalculationData,
+    *,
+    settings: HirshfeldSettings | None = None,
+) -> ResultRecord:
+    """Return native neutral-pro-atom Hirshfeld populations in the common result envelope."""
+
+    result = hirshfeld_population(data, settings=settings)
+    diagnostics = result.diagnostics
+    quadrature = diagnostics.quadrature
+    warnings = list(result.warnings)
+    if data.total_density is not None:
+        warnings.extend(_density_source_warnings(data, data.total_density))
+
+    return ResultRecord(
+        kind="hirshfeld_population",
+        data={
+            "method": result.method,
+            "atoms": [
+                {
+                    "atom_index": atom.atom_index + 1,
+                    "element": atom.symbol,
+                    "effective_nuclear_charge": atom.effective_nuclear_charge,
+                    "electron_population": atom.electron_population,
+                    "charge": atom.net_charge,
+                }
+                for atom in result.atoms
+            ],
+            "diagnostics": {
+                "expected_electrons": diagnostics.expected_electrons,
+                "integrated_electrons": diagnostics.integrated_electrons,
+                "electron_count_residual": diagnostics.electron_count_residual,
+                "population_sum": diagnostics.population_sum,
+                "population_partition_residual": diagnostics.population_partition_residual,
+                "expected_molecular_charge": diagnostics.expected_molecular_charge,
+                "integrated_charge": diagnostics.integrated_charge,
+                "charge_closure_residual": diagnostics.charge_closure_residual,
+                "negligible_promolecule_points": diagnostics.negligible_promolecule_points,
+                "unresolved_promolecule_points": diagnostics.unresolved_promolecule_points,
+                "passed": diagnostics.passed,
+            },
+            "quadrature": {
+                "radial_points": quadrature.radial_points,
+                "theta_points": quadrature.theta_points,
+                "phi_points": quadrature.phi_points,
+                "radial_extent_bohr": quadrature.radial_extent_bohr,
+                "chunk_size": quadrature.chunk_size,
+            },
+            "reference_library": {
+                "id": diagnostics.reference_library_id,
+                "sha256": diagnostics.reference_library_hash,
+            },
+            "density_source": diagnostics.density_source,
+        },
+        units={
+            "effective_nuclear_charge": "e",
+            "electron_population": "electron",
+            "charge": "e",
+            "expected_electrons": "electron",
+            "integrated_electrons": "electron",
+            "electron_count_residual": "electron",
+            "population_sum": "electron",
+            "population_partition_residual": "electron",
+            "expected_molecular_charge": "e",
+            "integrated_charge": "e",
+            "charge_closure_residual": "e",
+            "radial_extent_bohr": "bohr",
+        },
+        validation_status=result.validation_status,
+        status=result.result_status,
         warnings=tuple(dict.fromkeys(warnings)),
     )
 

@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 import sys
@@ -49,6 +50,55 @@ Current cartesian coordinates R N= 3
 
     assert result.returncode == 0
     assert "Atoms:" in result.stdout
+
+
+def test_cli_hirshfeld_population_json_contract():
+    result = run_cli([
+        "--format",
+        "json",
+        "examples/water/water.fchk",
+        "population",
+        "hirshfeld",
+    ])
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["kind"] == "hirshfeld_population"
+    assert payload["status"] == "success"
+    assert payload["validation_status"] == "Experimental"
+    assert payload["data"]["method"] == "Hirshfeld"
+    assert payload["data"]["reference_library"]["id"] == "openwfn-hirshfeld-proatoms-v1"
+    assert payload["data"]["diagnostics"]["charge_closure_residual"] <= 5.0e-3
+
+
+def test_cli_hirshfeld_expert_grid_controls_are_explicit():
+    result = run_cli([
+        "--format",
+        "json",
+        "examples/water/water.fchk",
+        "population",
+        "hirshfeld",
+        "--radial-points",
+        "8",
+        "--theta-points",
+        "4",
+        "--phi-points",
+        "8",
+        "--radial-extent",
+        "0.5",
+        "--chunk-size",
+        "512",
+    ])
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "partial"
+    assert payload["data"]["quadrature"]["radial_points"] == 8
+    assert payload["data"]["quadrature"]["theta_points"] == 4
+    assert payload["data"]["quadrature"]["phi_points"] == 8
+    assert payload["data"]["quadrature"]["radial_extent_bohr"] == 0.5
+    assert payload["data"]["quadrature"]["chunk_size"] == 512
+    assert payload["data"]["diagnostics"]["charge_closure_residual"] > 0.1
 
 
 def test_cli_invalid_geometry_returns_nonzero():
