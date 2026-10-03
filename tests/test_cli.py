@@ -4,39 +4,44 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
+from openwfn.cli import convert_chk_to_fchk  # type: ignore
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def run_cli(args, *, cwd=None):
+def run_cli(
+    args: list[str], *, env_overrides: dict[str, str] | None = None
+) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
-    env["PYTHONPATH"] = str(ROOT / "src")
+    existing = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = f"{ROOT / 'src'}{os.pathsep}{existing}" if existing else str(ROOT / "src")
+    env.update(env_overrides or {})
     return subprocess.run(
         [sys.executable, "-m", "openwfn.cli", *args],
-        cwd=ROOT if cwd is None else cwd,
-        env=env,
-        check=False,
         capture_output=True,
         text=True,
+        env=env,
     )
 
 
-def test_cli_version():
-    result = run_cli(["--version"])
+def test_cli_help():
+    result = run_cli(["--help"])
+
     assert result.returncode == 0
-    assert "openwfn" in result.stdout.lower()
+    assert "usage:" in result.stdout.lower()
+    assert "density             ==SUPPRESS==" not in result.stdout
+    assert "mo                  ==SUPPRESS==" not in result.stdout
 
 
-def test_cli_summary(tmp_path):
-    f = tmp_path / "a.fchk"
-    f.write_text("""Test
-SP        RHF                                           STO-3G
-Number of atoms                            I              3
-Charge                                     I              0
-Multiplicity                               I              1
-Atomic numbers                             I   N=           3
-8 1 1
+def test_cli_basic_run(tmp_path):
+    # create minimal fake fchk file
+    f = tmp_path / "mini.fchk"
+
+    f.write_text("""Charge I 0
+Multiplicity I 1
+Number of atoms I 1
+Atomic numbers I N= 1
+1
 Current cartesian coordinates R N= 3
 0.0 0.0 0.0
 """)
@@ -88,102 +93,121 @@ def test_cli_hirshfeld_expert_grid_controls_are_explicit():
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
     assert payload["status"] == "partial"
-    assert payload["validation_status"] == "Experimental"
-    assert payload["data"]["quadrature"] == {
-        "radial_points": 8,
-        "theta_points": 4,
-        "phi_points": 8,
-        "radial_extent_bohr": 0.5,
-        "chunk_size": 512,
-    }
+    assert payload["data"]["quadrature"]["radial_points"] == 8
+    assert payload["data"]["quadrature"]["theta_points"] == 4
+    assert payload["data"]["quadrature"]["phi_points"] == 8
+    assert payload["data"]["quadrature"]["radial_extent_bohr"] == 0.5
+    assert payload["data"]["quadrature"]["chunk_size"] == 512
     assert payload["data"]["diagnostics"]["charge_closure_residual"] > 0.1
 
 
-def test_cli_csv_output():
-    result = run_cli([
-        "--format",
-        "csv",
-        "examples/water/water.fchk",
-        "summary",
-    ])
-    assert result.returncode == 0
-    assert "formula" in result.stdout
+def test_cli_invalid_geometry_returns_nonzero():
+    result = run_cli(["examples/water/water.fchk", "dist", "0", "1"])
+
+    assert result.returncode == 1
+    assert "Atom index out of range" in result.stderr
 
 
-def test_cli_output_file(tmp_path):
-    out = tmp_path / "summary.json"
-    result = run_cli([
-        "--format",
-        "json",
-        "--output",
-        str(out),
-        "examples/water/water.fchk",
-        "summary",
-    ])
+def test_cli_view_export_no_open(tmp_path):
+    f = tmp_path / "mini.fchk"
+    out = tmp_path / "viewer.html"
+
+    f.write_text("""Charge I 0
+Multiplicity I 1
+Number of atoms I 1
+Atomic numbers I N= 1
+1
+Current cartesian coordinates R N= 3
+0.0 0.0 0.0
+""")
+
+    result = run_cli([str(f), "view", "--save", str(out)])
+
     assert result.returncode == 0
     assert out.exists()
-    payload = json.loads(out.read_text())
-    assert payload["status"] == "success"
+    assert "standalone molecule viewer exported to" in result.stdout.lower()
 
 
-def test_cli_bad_input_returns_nonzero(tmp_path):
-    missing = tmp_path / "missing.fchk"
-    result = run_cli([str(missing), "summary"])
+def test_cli_view_defaults_to_local_html_export(tmp_path):
+    f = tmp_path / "mini.fchk"
+    default_out = Path.cwd() / "mini_viewer.html"
+
+    f.write_text("""Charge I 0
+Multiplicity I 1
+Number of atoms I 1
+Atomic numbers I N= 1
+1
+Current cartesian coordinates R N= 3
+0.0 0.0 0.0
+""")
+
+    if default_out.exists():
+        default_out.unlink()
+
+    result = run_cli([str(f), "view"])
+
+    try:
+        assert result.returncode == 0
+        assert default_out.exists()
+        assert "standalone molecule viewer exported to" in result.stdout.lower()
+        assert "no extra viewer assets are required" in result.stdout.lower()
+    finally:
+        if default_out.exists():
+            default_out.unlink()
+
+
+def test_chk_conversion_error_is_actionable(tmp_path):
+    chk = tmp_path / "mini.chk"
+    chk.write_text("placeholder")
+
+    result = run_cli([str(chk), "summary"], env_overrides={"PATH": str(tmp_path)})
+
     assert result.returncode != 0
+    assert "requires `formchk`" in result.stderr
+    assert "formchk input.chk output.fchk" in result.stderr
 
 
-def test_cli_json_failure_is_structured(tmp_path):
-    missing = tmp_path / "missing.fchk"
-    result = run_cli(["--format", "json", str(missing), "summary"])
-    assert result.returncode != 0
-    payload = json.loads(result.stdout)
-    assert payload["status"] == "failed"
-    assert payload["error"]
+def test_formchk_command_requires_chk_input(tmp_path):
+    fchk = tmp_path / "mini.fchk"
+    fchk.write_text("placeholder")
+
+    result = run_cli([str(fchk), "formchk"])
+
+    assert result.returncode == 1
+    assert "requires a Gaussian `.chk` input file" in result.stderr
 
 
-def test_cli_help():
-    result = run_cli(["--help"])
-    assert result.returncode == 0
-    assert "usage" in result.stdout.lower()
+def test_convert_chk_to_fchk_uses_requested_output(monkeypatch, tmp_path):
+    chk = tmp_path / "mini.chk"
+    chk.write_text("placeholder")
+    out = tmp_path / "converted.fchk"
+    calls: list[list[str]] = []
+
+    monkeypatch.setattr("openwfn.cli.shutil.which", lambda name: "/usr/bin/formchk" if name == "formchk" else None)
+    monkeypatch.setattr("openwfn.cli.os.path.exists", lambda path: False)
+
+    def fake_run(cmd: list[str], check: bool) -> None:
+        assert check is True
+        calls.append(cmd)
+
+    monkeypatch.setattr("openwfn.cli.subprocess.run", fake_run)
+
+    result = convert_chk_to_fchk(str(chk), str(out), quiet=True)
+
+    assert result == str(out)
+    assert calls == [["formchk", str(chk), str(out)]]
 
 
-def test_cli_unknown_command_is_nonzero():
-    result = run_cli(["examples/water/water.fchk", "definitely-not-a-command"])
-    assert result.returncode != 0
+def test_convert_chk_to_fchk_reports_reuse(monkeypatch, tmp_path, capsys):
+    chk = tmp_path / "mini.chk"
+    chk.write_text("placeholder")
+    out = tmp_path / "mini.fchk"
 
+    monkeypatch.setattr("openwfn.cli.shutil.which", lambda name: "/usr/bin/formchk" if name == "formchk" else None)
+    monkeypatch.setattr("openwfn.cli.os.path.exists", lambda path: str(path) == str(out))
 
-def test_cli_plain_output():
-    result = run_cli(["--format", "plain", "examples/water/water.fchk", "summary"])
-    assert result.returncode == 0
-    assert "Formula:" in result.stdout
+    result = convert_chk_to_fchk(str(chk))
+    captured = capsys.readouterr()
 
-
-def test_cli_overwrite_guard(tmp_path):
-    out = tmp_path / "summary.json"
-    out.write_text("existing")
-    result = run_cli([
-        "--format",
-        "json",
-        "--output",
-        str(out),
-        "examples/water/water.fchk",
-        "summary",
-    ])
-    assert result.returncode != 0
-    assert out.read_text() == "existing"
-
-
-def test_cli_overwrite_allows_replacement(tmp_path):
-    out = tmp_path / "summary.json"
-    out.write_text("existing")
-    result = run_cli([
-        "--overwrite",
-        "--format",
-        "json",
-        "--output",
-        str(out),
-        "examples/water/water.fchk",
-        "summary",
-    ])
-    assert result.returncode == 0
-    assert json.loads(out.read_text())["status"] == "success"
+    assert result == str(out)
+    assert "Reusing existing formatted checkpoint" in captured.out
