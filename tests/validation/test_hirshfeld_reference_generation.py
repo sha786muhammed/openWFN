@@ -17,6 +17,13 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _trapezoid(values: np.ndarray, coordinates: np.ndarray) -> float:
+    trapezoid = getattr(np, "trapezoid", None)
+    if trapezoid is not None:
+        return float(trapezoid(values, coordinates))
+    return float(np.trapz(values, coordinates))  # type: ignore[attr-defined]
+
+
 def test_hirshfeld_reference_manifest_and_files_are_provenance_complete() -> None:
     assert MANIFEST.is_file()
     payload = json.loads(MANIFEST.read_text(encoding="utf-8"))
@@ -66,7 +73,7 @@ def test_hirshfeld_reference_arrays_are_normalized_finite_and_nonnegative() -> N
         assert np.all(np.diff(radius) > 0.0)
         assert np.all(density >= 0.0)
 
-        electron_count = 4.0 * np.pi * np.trapz(density * radius * radius, radius)
+        electron_count = 4.0 * np.pi * _trapezoid(density * radius * radius, radius)
         assert abs(float(electron_count) - atomic_number) <= 1.0e-6
 
 
