@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,7 +36,7 @@ def _normalized(value: str) -> str:
 def classify_method(source_program: str, source_label: str) -> MethodClassification:
     """Map source labels to stable families without discarding source wording."""
 
-    del source_program  # Program is retained in the caller; classification is label-driven.
+    del source_program
     detail = _normalized(source_label)
     upper = detail.upper().replace("Δ", "DELTA")
 
