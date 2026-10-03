@@ -22,6 +22,8 @@ def test_mcp_adapter_exists():
 def inputs(tmp_path):
     source = Path(openwfn.__file__).parent / "example_data/water.fchk"
     shutil.copyfile(source, tmp_path / "water molecule.fchk")
+    vibrations = Path(__file__).parent / "fixtures/gaussian/vibrations/water_freq.log"
+    shutil.copyfile(vibrations, tmp_path / "water_freq.log")
     return tmp_path
 
 
@@ -42,7 +44,9 @@ def test_tools_preserve_results_and_reject_unsafe_paths(inputs, tmp_path):
             }
             assert all(tool.annotations.read_only_hint for tool in listing.tools)
             catalog = (await client.call_tool("list_analyses", {})).structured_content
-            assert "summary" in catalog["analyses"]
+            assert {
+                "summary", "vibrations", "ir-spectrum", "raman-spectrum", "normal-mode"
+            }.issubset(catalog["analyses"])
             inspection = await client.call_tool("inspect_file", {"path": "water molecule.fchk"})
             assert inspection.structured_content["data"]["analyses"]["summary"]["available"]
             result = await client.call_tool("run_analysis", {
@@ -66,6 +70,72 @@ def test_tools_preserve_results_and_reject_unsafe_paths(inputs, tmp_path):
             for path in (str(outside), "../" + outside.name, "escape.fchk", ".", "missing"):
                 rejected = await client.call_tool("inspect_file", {"path": path})
                 assert rejected.is_error
+
+    asyncio.run(check())
+
+
+def test_mcp_spectroscopy_parameters_match_python_api(inputs):
+    from mcp import Client
+
+    from openwfn.mcp_server import create_server
+
+    python_ir = openwfn.load(inputs / "water_freq.log").analyze(
+        "ir-spectrum", fwhm_cm1=12.0, points=321
+    )
+    python_mode = openwfn.load(inputs / "water_freq.log").analyze("normal-mode", mode=2)
+
+    async def check():
+        async with Client(create_server(inputs)) as client:
+            ir = await client.call_tool(
+                "run_analysis",
+                {
+                    "path": "water_freq.log",
+                    "analysis": "ir-spectrum",
+                    "parameters": {"fwhm_cm1": 12.0, "points": 321},
+                },
+            )
+            assert not ir.is_error
+            ir_record = ir.structured_content
+            assert ir_record["status"] == "success"
+            assert ir_record["data"] == python_ir.data
+            assert ir_record["units"] == python_ir.units
+            assert ir_record["validation_status"] == python_ir.validation_status
+            assert ir_record["warnings"] == list(python_ir.warnings)
+            assert ir_record["provenance"] == python_ir.provenance
+
+            mode = await client.call_tool(
+                "run_analysis",
+                {
+                    "path": "water_freq.log",
+                    "analysis": "normal-mode",
+                    "parameters": {"mode": 2},
+                },
+            )
+            assert not mode.is_error
+            mode_record = mode.structured_content
+            assert mode_record["data"] == python_mode.data
+            assert mode_record["units"] == python_mode.units
+            assert mode_record["provenance"] == python_mode.provenance
+
+    asyncio.run(check())
+
+
+def test_mcp_analysis_parameters_reject_nested_values(inputs):
+    from mcp import Client
+
+    from openwfn.mcp_server import create_server
+
+    async def check():
+        async with Client(create_server(inputs)) as client:
+            result = await client.call_tool(
+                "run_analysis",
+                {
+                    "path": "water_freq.log",
+                    "analysis": "ir-spectrum",
+                    "parameters": {"points": {"nested": 321}},
+                },
+            )
+            assert result.is_error or result.structured_content["status"] == "failed"
 
     asyncio.run(check())
 
