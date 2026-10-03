@@ -27,6 +27,11 @@
       "status": "Validated",
       "scope": "Native Gaussian-integral electronic point ESP for the committed everyday-QC reference points and documented work/convergence limits.",
       "evidence": ["everyday-qc/pyscf-report.json", "tests/validation/test_real_example_corpus.py", "tests/validation/test_coulomb_high_l.py"]
+    },
+    "hirshfeld": {
+      "status": "Validated",
+      "scope": "Ordinary neutral-pro-atom Hirshfeld populations and charges for H/C/N/O all-electron wavefunctions in the named ten-case validation set, including charged and open-shell cases. Unrestricted inputs use the total density. Unsupported elements, ECP/pseudopotential cases, and ghost-center ambiguity remain unsupported.",
+      "evidence": ["hirshfeld/reference-report.json", "hirshfeld/convergence-report.json", "tests/validation/test_hirshfeld_evidence.py"]
     }
   },
   "everyday_qc_corpus": {
@@ -51,8 +56,8 @@
   },
   "resource_benchmark": {
     "molecules": 11,
-    "workflows_per_molecule": 9,
-    "workflow_count": 99,
+    "workflows_per_molecule": 10,
+    "workflow_count": 110,
     "establishes_scientific_validation": false,
     "purpose": "Checks bounded command completion, runtime, observed RSS and generated-output size for prescribed real workflows. Scientific status is evaluated by capability-specific reference tests and result diagnostics."
   },
