@@ -32,8 +32,14 @@ def test_hirshfeld_reference_manifest_and_files_are_provenance_complete() -> Non
     assert payload["schema_version"] == "1.0"
     assert payload["generator"]["software"] == "PySCF"
     assert payload["generator"]["software_version"] == "2.12.1"
-    assert payload["generator"]["method"] == "UKS/PBE"
+    assert payload["generator"]["method"] == "spherical fractional-occupation RKS/PBE"
+    assert payload["generator"]["atom_solver"] == "pyscf.scf.atom_ks.get_atm_nrks"
+    assert payload["generator"]["fractional_occupations"] is True
     assert payload["generator"]["basis"] == "aug-cc-pVQZ"
+    assert payload["generator"]["atomic_grid"] == {
+        "radial_points": 100,
+        "angular_points": 434,
+    }
     assert payload["units"] == {
         "radius": "bohr",
         "density": "electron/bohr^3",
@@ -48,7 +54,7 @@ def test_hirshfeld_reference_manifest_and_files_are_provenance_complete() -> Non
         record = records[symbol]
         assert record["atomic_number"] == atomic_number
         assert record["neutral_electrons"] == atomic_number
-        assert record["multiplicity"] in {2, 3, 4}
+        assert record["occupation_model"] == "spherical fractional occupation"
         data_path = REFERENCE_DIR / record["file"]
         assert data_path.is_file()
         assert record["sha256"] == _sha256(data_path)
