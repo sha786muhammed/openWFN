@@ -36,7 +36,7 @@ jobs:
             generator.exitcode
           if-no-files-found: error
       - if: success()
-        uses: actions/upload-artifact@ea165f8d65b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: hirshfeld-proatoms-v1
           path: generated-hirshfeld-v1
