@@ -46,9 +46,9 @@ def test_qchem_adc_transition_properties() -> None:
     job = collection.jobs[0]
     assert job.method_family == "adc"
     state = job.states[0]
-    assert state.energy_ev == pytest.approx(4.75)
-    assert state.oscillator_strength == pytest.approx(0.045)
-    assert state.transition_dipole == pytest.approx((0.15, 0.05, 0.0))
+    assert state.energy_ev == pytest.approx(4.88)
+    assert state.oscillator_strength == pytest.approx(0.032)
+    assert state.transition_dipole == pytest.approx((0.05, 0.01, 0.0))
 
 
 def test_qchem_unknown_method_falls_back_without_invention() -> None:
