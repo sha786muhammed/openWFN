@@ -41,6 +41,11 @@
   discovered inputs. An unsupported file makes the top-level batch fail, even
   if other files succeed. Format hints help with ambiguous filenames; they
   cannot make a damaged or unrecognized scientific record valid.
+- Native vibrational spectroscopy currently targets the documented Gaussian harmonic frequency text-output grammar. Other programs, anharmonic jobs, arbitrary Gaussian output variants, thermochemistry, and experimental spectral assignment are outside the current typed parser scope.
+- `IR Inten` is preserved as source IR intensity. `Raman Activ` is preserved as Raman activity; openWFN does not silently convert it to experimental Raman intensity because excitation frequency, temperature/population treatment, and convention-dependent factors are not known from the activity alone.
+- Imaginary frequencies remain signed source data and are omitted from the broadened physical IR/Raman curve with a warning. Their physical interpretation is calculation-dependent.
+- Normal-mode animation arrows require source Cartesian displacement vectors. Missing vectors are reported unavailable and are never synthesized. Workbench amplitude changes only visualization scale.
+- The current spectroscopy fixtures, analytic broadening tests, and CLI/Python/MCP/report/Workbench parity tests establish implementation consistency but not independent scientific validation across methods, molecules, or program versions. Spectroscopy remains **Experimental**.
 
 Always record the openWFN version, source-file checksum, grid spacing, padding, units, warnings, execution status, and validation status in research outputs.
 
@@ -55,6 +60,9 @@ diagnostics, and correlated improved Mayer definitions are absent. DOS is
 finite-molecule orbital-energy broadening with one count per supplied spatial
 orbital/channel, without occupancy weighting or periodic bands. Failed source,
 conditioning, normalization or convergence diagnostics remain failed or
-partial/Experimental. Hirshfeld, typed spectroscopy/NTO and real-space
+partial/Experimental. Native Hirshfeld remains gated separately. Native typed
+Gaussian vibrational/IR/Raman workflows are implemented but remain
+**Experimental** pending an independent validation corpus. NTO and real-space
 topology/basins are not implemented.
-See the [completion and gate record](project/everyday-qc-validation.md).
+See the [completion and gate record](project/everyday-qc-validation.md) and
+[vibrational spectroscopy semantics](science/vibrational-spectroscopy.md).
