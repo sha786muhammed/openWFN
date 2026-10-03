@@ -34,6 +34,25 @@ class ExportRequest:
         self.path.parent.mkdir(parents=True, exist_ok=True)
 
 
+def _write_vibrational_modes_csv(result: ResultRecord, request: ExportRequest) -> Path:
+    columns = (
+        "mode",
+        "frequency_cm1",
+        "imaginary",
+        "symmetry",
+        "reduced_mass_amu",
+        "force_constant_mdyne_per_angstrom",
+        "ir_intensity_km_mol",
+        "raman_activity_a4_amu",
+    )
+    with request.path.open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.writer(stream, lineterminator="\n")
+        writer.writerow(columns)
+        for row in result.data.get("modes", []):
+            writer.writerow([row.get(column) for column in columns])
+    return request.path
+
+
 def write_result_table(result: ResultRecord, request: ExportRequest) -> Path:
     normalized = request.format.lower().lstrip(".")
     if normalized not in {"json", "csv"}:
@@ -50,6 +69,8 @@ def write_result_table(result: ResultRecord, request: ExportRequest) -> Path:
             json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
         return request.path
+    if result.kind == "vibrational_modes":
+        return _write_vibrational_modes_csv(result, request)
     with request.path.open("w", encoding="utf-8", newline="") as stream:
         writer = csv.writer(stream, lineterminator="\n")
         writer.writerow(
