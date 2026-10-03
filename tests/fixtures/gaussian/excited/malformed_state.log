@@ -1,0 +1,6 @@
+ Entering Gaussian System
+ #P TD(NStates=1) B3LYP/6-31G(d)
+ Charge = 0 Multiplicity = 1
+ SCF Done:  E(RB3LYP) =  -76.0000000000 A.U. after 10 cycles
+ Excited State   1:      Singlet-A1     1.0E309 eV  0.0000 nm  f=0.1000  <S**2>=0.000
+ Normal termination of Gaussian 16

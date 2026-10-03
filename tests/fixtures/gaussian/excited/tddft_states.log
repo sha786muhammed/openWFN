@@ -1,0 +1,24 @@
+ Entering Gaussian System
+ #P TD(NStates=2) B3LYP/6-31G(d)
+ ------------------------------------------------------------
+ Charge = 0 Multiplicity = 1
+ Standard orientation:
+ ---------------------------------------------------------------------
+ Center     Atomic      Atomic             Coordinates (Angstroms)
+ Number     Number       Type             X           Y           Z
+ ---------------------------------------------------------------------
+      1          8           0        0.000000    0.000000    0.117790
+      2          1           0        0.000000    0.755453   -0.471161
+      3          1           0        0.000000   -0.755453   -0.471161
+ ---------------------------------------------------------------------
+ SCF Done:  E(RB3LYP) =  -76.4212345678 A.U. after 10 cycles
+ Excited State   1:      Singlet-A1     4.0000 eV  309.9605 nm  f=0.1000  <S**2>=0.000
+      5 -> 6         0.70000
+      4 -> 7        -0.10000
+ Excited State   2:      Triplet-B1     3.5000 eV  354.2406 nm  f=0.0000  <S**2>=2.000
+      5 -> 6         0.65000
+ Ground to excited state transition electric dipole moments (Au):
+       state          X           Y           Z        Dip. S.      Osc.
+         1          0.1000      0.2000      0.3000      0.1400      0.1000
+         2          0.0000      0.0000      0.0000      0.0000      0.0000
+ Normal termination of Gaussian 16
