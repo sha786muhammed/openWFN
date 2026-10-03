@@ -4,6 +4,7 @@ from typing import Sequence
 
 import numpy as np
 
+from .spectrum_math import MAX_SPECTRUM_POINTS as MAX_SPECTRUM_POINTS
 from .spectrum_math import gaussian_broaden
 
 DEFAULT_FWHM_CM1 = 20.0
