@@ -9,7 +9,6 @@ from openwfn.data import wrap_calculation
 from openwfn.model import CalculationData
 from openwfn.parsers.gaussian.output import parse_gaussian_output
 
-
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "gaussian" / "vibrations"
 
 
