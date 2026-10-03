@@ -419,13 +419,25 @@ def main(argv: list[str] | None = None) -> int:
     p_orbital_cube.add_argument("--spacing", type=float, default=.15, help="Grid spacing in bohr")
     p_orbital_cube.add_argument("--padding", type=float, default=6., help="Padding in bohr")
 
+    p_excited = subparsers.add_parser("excited", help="Source excited states and transition properties")
+    excited_commands = p_excited.add_subparsers(dest="excited_command", required=True)
+    p_excited_states = excited_commands.add_parser("states", help="List source-reported excited states")
+    p_excited_states.add_argument("--job", type=int)
+    p_excited_states.add_argument("--export", dest="excited_output", type=Path, help="CSV or JSON state table")
+    p_excited_state = excited_commands.add_parser("state", help="Inspect one one-based excited state")
+    p_excited_state.add_argument("state", type=int)
+    p_excited_state.add_argument("--job", type=int)
+    p_excited_dipoles = excited_commands.add_parser("dipoles", help="List source-reported transition dipoles")
+    p_excited_dipoles.add_argument("--job", type=int)
+    p_excited_dipoles.add_argument("--export", dest="excited_output", type=Path, help="CSV or JSON dipole table")
+
     p_vibrations = subparsers.add_parser("vibrations", help="Source vibrational modes and normal-mode vectors")
     p_vibrations.add_argument("--export", dest="vibrations_output", type=Path, help="CSV or JSON mode table")
     vibration_commands = p_vibrations.add_subparsers(dest="vibration_command")
     p_normal_mode = vibration_commands.add_parser("mode", help="Inspect one one-based normal mode")
     p_normal_mode.add_argument("mode", type=int)
 
-    p_vib_spectra = subparsers.add_parser("spectra", help="IR and Raman vibrational spectra")
+    p_vib_spectra = subparsers.add_parser("spectra", help="IR, Raman, and UV-Vis spectra")
     vib_spectrum_commands = p_vib_spectra.add_subparsers(dest="vibrational_spectrum_kind", required=True)
     for spectrum_kind in ("ir", "raman"):
         p_vib_spectrum = vib_spectrum_commands.add_parser(spectrum_kind)
@@ -438,6 +450,15 @@ def main(argv: list[str] | None = None) -> int:
             help="CSV, JSON, PNG or SVG",
         )
         p_vib_spectrum.add_argument("--dpi", type=int, default=300)
+    p_uvvis = vib_spectrum_commands.add_parser("uvvis", help="Simulated UV-Vis oscillator-strength profile")
+    p_uvvis.add_argument("--job", type=int)
+    p_uvvis.add_argument("--fwhm", type=float, default=0.20, dest="fwhm_ev")
+    p_uvvis.add_argument("--min", type=float, dest="energy_min_ev")
+    p_uvvis.add_argument("--max", type=float, dest="energy_max_ev")
+    p_uvvis.add_argument("--points", type=int)
+    p_uvvis.add_argument("--no-wavelength", action="store_false", dest="include_wavelength")
+    p_uvvis.add_argument("--export", dest="vibrational_spectrum_output", type=Path, help="CSV, JSON, PNG or SVG")
+    p_uvvis.add_argument("--dpi", type=int, default=300)
 
     p_density = subparsers.add_parser("density", help="Electron and spin-density analysis")
     density_commands = p_density.add_subparsers(dest="density_command", required=True)
@@ -613,6 +634,24 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "bondorder":
         return execute(lambda: run_analysis(require_calculation(), "mayer", threshold=args.threshold), _context(args))
 
+    if args.command == "excited":
+        def excited_operation() -> ResultRecord:
+            calculation = require_calculation()
+            if args.excited_command == "state":
+                return run_analysis(calculation, "excited-state", state=args.state, job=args.job)
+            analysis = "transition-dipoles" if args.excited_command == "dipoles" else "excited-states"
+            parameters = {"job": args.job} if args.job is not None else {}
+            record = run_analysis(calculation, analysis, **parameters)
+            if getattr(args, "excited_output", None) is not None:
+                output_format = args.excited_output.suffix.lstrip(".").lower()
+                write_result_table(
+                    record,
+                    ExportRequest(args.excited_output, output_format, args.overwrite),
+                )
+            return record
+
+        return execute(excited_operation, _context(args))
+
     if args.command == "vibrations":
         def vibrations_operation() -> ResultRecord:
             calculation = require_calculation()
@@ -630,18 +669,30 @@ def main(argv: list[str] | None = None) -> int:
         return execute(vibrations_operation, _context(args))
 
     if args.command == "spectra":
-        def vibrational_spectrum_operation() -> ResultRecord:
+        def spectrum_operation() -> ResultRecord:
             from .exporters.spectra import write_spectrum
 
-            analysis = f"{args.vibrational_spectrum_kind}-spectrum"
-            record = run_analysis(
-                require_calculation(),
-                analysis,
-                fwhm_cm1=args.fwhm_cm1,
-                frequency_min_cm1=args.frequency_min_cm1,
-                frequency_max_cm1=args.frequency_max_cm1,
-                points=args.points,
-            )
+            if args.vibrational_spectrum_kind == "uvvis":
+                record = run_analysis(
+                    require_calculation(),
+                    "uvvis-spectrum",
+                    job=args.job,
+                    fwhm_ev=args.fwhm_ev,
+                    energy_min_ev=args.energy_min_ev,
+                    energy_max_ev=args.energy_max_ev,
+                    points=args.points,
+                    include_wavelength=args.include_wavelength,
+                )
+            else:
+                analysis = f"{args.vibrational_spectrum_kind}-spectrum"
+                record = run_analysis(
+                    require_calculation(),
+                    analysis,
+                    fwhm_cm1=args.fwhm_cm1,
+                    frequency_min_cm1=args.frequency_min_cm1,
+                    frequency_max_cm1=args.frequency_max_cm1,
+                    points=args.points,
+                )
             if args.vibrational_spectrum_output is not None:
                 write_spectrum(
                     record,
@@ -651,7 +702,7 @@ def main(argv: list[str] | None = None) -> int:
                 )
             return record
 
-        return execute(vibrational_spectrum_operation, _context(args))
+        return execute(spectrum_operation, _context(args))
 
     if args.command == "orbitals":
         if args.orbital_command in {"dos", "pdos"}:
