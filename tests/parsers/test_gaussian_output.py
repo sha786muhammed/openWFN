@@ -65,6 +65,22 @@ def test_gaussian_frequency_output_uses_final_geometry_and_exact_source_values()
     assert record.displacements_available is True
 
 
+def test_gaussian_link1_vibrations_keep_frequency_job_metadata() -> None:
+    parsed = parse_gaussian_output(FIXTURES / "link1_freq_then_sp.log")
+
+    _assert_calculation(parsed)
+    assert parsed.molecule.charge == 0
+    assert parsed.molecule.multiplicity == 1
+    assert parsed.molecule.metadata.method == "B3LYP"
+    assert parsed.molecule.metadata.basis == "6-31G(d)"
+    assert parsed.molecule.metadata.energy_hartree == pytest.approx(-76.4212345678)
+    assert parsed.molecule.atoms[0].coordinates == pytest.approx((0.0, 0.0, 0.11779))
+    record = get_vibrational_record(parsed)
+    assert [mode.frequency_cm1 for mode in record.modes] == pytest.approx(
+        [1595.1234, 3657.4567, 3755.6789]
+    )
+
+
 def test_gaussian_linear_frequency_output_preserves_four_modes() -> None:
     parsed = parse_gaussian_output(FIXTURES / "co2_freq.log")
     _assert_calculation(parsed)
