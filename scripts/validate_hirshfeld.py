@@ -45,6 +45,19 @@ CASES = {
     "water_dimer": CORPUS / "water_dimer.molden",
 }
 
+CASE_METADATA = {
+    "water": {"molecular_charge": 0, "open_shell": False},
+    "methane": {"molecular_charge": 0, "open_shell": False},
+    "ammonia": {"molecular_charge": 0, "open_shell": False},
+    "carbon_dioxide": {"molecular_charge": 0, "open_shell": False},
+    "benzene": {"molecular_charge": 0, "open_shell": False},
+    "ethanol": {"molecular_charge": 0, "open_shell": False},
+    "ammonium_cation": {"molecular_charge": 1, "open_shell": False},
+    "oxygen_triplet": {"molecular_charge": 0, "open_shell": True},
+    "oh_diffuse_uhf": {"molecular_charge": 0, "open_shell": True},
+    "water_dimer": {"molecular_charge": 0, "open_shell": False},
+}
+
 STANDARD = AtomQuadratureSettings()
 FINE = AtomQuadratureSettings(
     radial_points=144,
@@ -117,7 +130,6 @@ def _horton_charges(path: Path) -> tuple[np.ndarray, float, dict[str, Any]]:
     if mol.obasis is None or mol.mo is None:
         raise ValueError(f"Independent validator could not recover a wavefunction from {path}.")
 
-    # Independent molecular quadrature: the HORTON-PART documented Becke/Lebedev workflow.
     transform = ExpRTransform(5.0e-4, 2.0e1, 120 - 1)
     radial_grid = transform.transform_1d_grid(UniformInteger(120))
     grid = MolGrid.from_preset(
@@ -210,18 +222,18 @@ def validate_case(name: str, path: Path, external: bool) -> tuple[dict[str, Any]
     standard_charges, standard = _openwfn_charges(path, STANDARD)
     fine_charges, fine = _openwfn_charges(path, FINE)
     convergence_shift = np.abs(standard_charges - fine_charges)
+    metadata = CASE_METADATA[name]
+
     convergence = {
-        "case": name,
-        "input": str(path.relative_to(ROOT)),
+        "id": name,
+        "input_path": str(path.relative_to(ROOT)),
         "input_sha256": _sha256(path),
         "standard_status": standard.status,
         "fine_status": fine.status,
         "standard_charges_e": standard_charges.tolist(),
         "fine_charges_e": fine_charges.tolist(),
-        "absolute_charge_shifts_e": convergence_shift.tolist(),
-        "max_absolute_charge_shift_e": float(np.max(convergence_shift)),
-        "tolerance_e": CONVERGENCE_TOLERANCE_E,
-        "passed": bool(
+        "max_abs_charge_shift_e": float(np.max(convergence_shift)),
+        "convergence_gate_passed": bool(
             standard.status == "success"
             and fine.status == "success"
             and float(np.max(convergence_shift)) <= CONVERGENCE_TOLERANCE_E
@@ -229,15 +241,17 @@ def validate_case(name: str, path: Path, external: bool) -> tuple[dict[str, Any]
     }
 
     reference: dict[str, Any] = {
-        "case": name,
-        "input": str(path.relative_to(ROOT)),
+        "id": name,
+        "input_path": str(path.relative_to(ROOT)),
         "input_sha256": _sha256(path),
-        "openwfn_status": standard.status,
-        "openwfn_charges_e": standard_charges.tolist(),
-        "external_available": external,
+        "molecular_charge": metadata["molecular_charge"],
+        "open_shell": metadata["open_shell"],
+        "ordinary_hirshfeld_uses_total_density": True,
+        "openwfn_standard_status": standard.status,
+        "openwfn_standard_charges_e": standard_charges.tolist(),
     }
     if external:
-        independent, independent_electrons, metadata = _horton_charges(path)
+        independent, independent_electrons, external_metadata = _horton_charges(path)
         if independent.shape != standard_charges.shape:
             raise RuntimeError(
                 f"Charge-vector shape mismatch for {name}: {independent.shape} != {standard_charges.shape}."
@@ -245,14 +259,12 @@ def validate_case(name: str, path: Path, external: bool) -> tuple[dict[str, Any]
         differences = np.abs(standard_charges - independent)
         reference.update(
             {
-                "independent_tool": "HORTON-PART HirshfeldWPart",
-                "independent_metadata": metadata,
-                "independent_density_electrons": independent_electrons,
-                "independent_charges_e": independent.tolist(),
-                "absolute_charge_differences_e": differences.tolist(),
-                "max_absolute_charge_difference_e": float(np.max(differences)),
-                "tolerance_e": REFERENCE_TOLERANCE_E,
-                "passed": bool(
+                "external_tool_version": external_metadata["horton_part_version"],
+                "external_metadata": external_metadata,
+                "external_density_electrons": independent_electrons,
+                "external_charges_e": independent.tolist(),
+                "max_abs_external_difference_e": float(np.max(differences)),
+                "external_gate_passed": bool(
                     standard.status == "success"
                     and float(np.max(differences)) <= REFERENCE_TOLERANCE_E
                 ),
@@ -290,27 +302,53 @@ def main() -> int:
         references.append(ref)
         convergence.append(conv)
 
+    convergence_by_id = {case["id"]: case for case in convergence}
+    validated_case_ids = sorted(
+        case["id"]
+        for case in references
+        if args.external
+        and case.get("external_gate_passed", False)
+        and convergence_by_id[case["id"]]["convergence_gate_passed"]
+    )
+    full_validation_set = set(names) == set(CASES)
+    promotion_status = (
+        "Validated"
+        if args.external and full_validation_set and set(validated_case_ids) == set(CASES)
+        else "Experimental"
+    )
+
     reference_report = {
         "schema_version": "1.0",
-        "purpose": "independent same-proatom Hirshfeld charge comparison",
-        "openwfn_reference_library": {
+        "method": "Hirshfeld",
+        "external_reference": {
+            "tool": "HORTON-PART",
+            "version": _package_version("horton-part") if args.external else None,
+            "runtime_dependency": False,
+            "integration_mode": "common molecular grid (grid_type=3)",
+        },
+        "reference_library": {
             "id": library.library_id,
             "sha256": library.library_sha256,
             "version": library.version,
         },
-        "external_tool": "HORTON-PART 1.1.8" if args.external else None,
-        "external_runtime_only_for_validation": True,
-        "reference_tolerance_e": REFERENCE_TOLERANCE_E,
-        "standard_grid": _grid_dict(STANDARD),
+        "acceptance": {
+            "max_per_atom_external_difference_e": REFERENCE_TOLERANCE_E,
+        },
+        "standard_settings": _grid_dict(STANDARD),
         "python_version": platform.python_version(),
+        "validated_case_ids": validated_case_ids,
+        "promotion_status": promotion_status,
         "cases": references,
     }
     convergence_report = {
         "schema_version": "1.0",
-        "purpose": "openWFN Hirshfeld numerical grid refinement",
-        "convergence_tolerance_e": CONVERGENCE_TOLERANCE_E,
-        "standard_grid": _grid_dict(STANDARD),
-        "fine_grid": _grid_dict(FINE),
+        "method": "Hirshfeld",
+        "acceptance": {
+            "max_per_atom_grid_shift_e": CONVERGENCE_TOLERANCE_E,
+        },
+        "standard_settings": _grid_dict(STANDARD),
+        "fine_settings": _grid_dict(FINE),
+        "validated_case_ids": validated_case_ids,
         "cases": convergence,
     }
     (args.output_dir / "reference-report.json").write_text(
@@ -320,10 +358,15 @@ def main() -> int:
         json.dumps(convergence_report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
 
-    reference_failures = [case["case"] for case in references if args.external and not case["passed"]]
-    convergence_failures = [case["case"] for case in convergence if not case["passed"]]
+    reference_failures = [
+        case["id"] for case in references if args.external and not case["external_gate_passed"]
+    ]
+    convergence_failures = [
+        case["id"] for case in convergence if not case["convergence_gate_passed"]
+    ]
     print(f"Reference cases: {len(references)}; failures: {reference_failures}")
     print(f"Convergence cases: {len(convergence)}; failures: {convergence_failures}")
+    print(f"Promotion status: {promotion_status}; validated cases: {len(validated_case_ids)}")
     return 1 if reference_failures or convergence_failures else 0
 
 
