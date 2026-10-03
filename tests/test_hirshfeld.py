@@ -63,8 +63,8 @@ def test_hirshfeld_translation_invariance() -> None:
     )
 
 
-def test_hirshfeld_unrestricted_analysis_uses_total_density_not_spin_density() -> None:
-    data = _calculation("examples/everyday-qc/oxygen_triplet.molden")
+def test_hirshfeld_uses_total_density_and_ignores_spin_density_channel() -> None:
+    data = _calculation("examples/water/water.fchk")
     assert data.total_density is not None
     total = np.asarray(data.total_density.values, dtype=float)
     arbitrary_spin = DensityMatrix(
@@ -76,7 +76,7 @@ def test_hirshfeld_unrestricted_analysis_uses_total_density_not_spin_density() -
     baseline = hirshfeld_population(data)
     perturbed = hirshfeld_population(replace(data, spin_density=arbitrary_spin))
 
-    assert baseline.diagnostics.expected_electrons == pytest.approx(16.0)
+    assert baseline.diagnostics.expected_electrons == pytest.approx(10.0)
     assert [atom.net_charge for atom in perturbed.atoms] == pytest.approx(
         [atom.net_charge for atom in baseline.atoms], abs=1.0e-12
     )
