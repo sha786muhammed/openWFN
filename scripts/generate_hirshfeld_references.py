@@ -20,8 +20,10 @@ import numpy as np
 PYSCF_VERSION = "2.12.1"
 LIBRARY_ID = "openwfn-hirshfeld-proatoms-v1"
 SCHEMA_VERSION = "1.0"
-METHOD = "UKS/PBE"
+METHOD = "spherical fractional-occupation RKS/PBE"
+ATOM_SOLVER = "pyscf.scf.atom_ks.get_atm_nrks"
 BASIS = "aug-cc-pVQZ"
+ATOMIC_GRID = (100, 434)
 OUTER_RADIUS_BOHR = 40.0
 RADIAL_POINTS = 8193
 THETA_POINTS = 16
@@ -31,12 +33,13 @@ TAIL_DENSITY_TOLERANCE = 1.0e-12
 NEGATIVE_NOISE_TOLERANCE = 1.0e-12
 RADIAL_CHUNK = 32
 
-# Neutral-atom ground-state multiplicities used for the v1 H/C/N/O library.
-ATOMS: dict[str, tuple[int, int]] = {
-    "H": (1, 2),
-    "C": (6, 3),
-    "N": (7, 4),
-    "O": (8, 3),
+# The first reference library is deliberately limited to the elements covered
+# by the existing everyday-QC validation corpus.
+ATOMS: dict[str, int] = {
+    "H": 1,
+    "C": 6,
+    "N": 7,
+    "O": 8,
 }
 
 
@@ -86,10 +89,16 @@ def _radial_grid() -> np.ndarray:
     return OUTER_RADIUS_BOHR * t**3
 
 
-def _build_atom(symbol: str, multiplicity: int):
+def _build_atom(
+    symbol: str,
+    atomic_number: int,
+) -> tuple[object, np.ndarray, float, np.ndarray]:
+    """Return molecule, spherical fractional-occupation AO density, energy and occupations."""
+
     try:
         import pyscf
-        from pyscf import dft, gto
+        from pyscf import gto, lib
+        from pyscf.scf import atom_ks
     except ImportError as exc:  # pragma: no cover - exercised in generator environments
         raise RuntimeError(f"PySCF {PYSCF_VERSION} is required to generate the v1 library.") from exc
 
@@ -98,33 +107,53 @@ def _build_atom(symbol: str, multiplicity: int):
             f"Reference generation requires PySCF {PYSCF_VERSION}; found {pyscf.__version__}."
         )
 
+    # Fix PySCF's linear-algebra thread count so the versioned reference-data
+    # generator is reproducible across CI hosts. get_atm_nrks then constructs
+    # AtomSphericAverageRKS internally, uses electron-parity spin and spherical
+    # fractional occupations, and applies its atomic ADIIS/VSAP machinery.
+    lib.num_threads(1)
     mol = gto.M(
         atom=f"{symbol} 0 0 0",
         basis=BASIS,
         charge=0,
-        spin=multiplicity - 1,
+        spin=atomic_number % 2,
         unit="Bohr",
         cart=False,
         verbose=0,
     )
-    mf = dft.UKS(mol)
-    mf.xc = "PBE"
-    mf.conv_tol = 1.0e-12
-    mf.max_cycle = 200
-    mf.grids.level = 6
-    energy = float(mf.kernel())
-    if not mf.converged:
-        raise RuntimeError(f"{symbol} UKS/PBE reference atom did not converge.")
-    return mol, mf, energy
+    atomic_results = atom_ks.get_atm_nrks(mol, xc="PBE", grid=ATOMIC_GRID)
+    try:
+        energy, _mo_energy, mo_coeff, mo_occ = atomic_results[symbol]
+    except KeyError as exc:
+        raise RuntimeError(f"PySCF atomic solver did not return a {symbol} record.") from exc
+
+    occupations = np.asarray(mo_occ, dtype=float)
+    coefficients = np.asarray(mo_coeff, dtype=float)
+    if coefficients.ndim != 2 or occupations.ndim != 1:
+        raise RuntimeError(f"Unexpected PySCF atomic orbital result for {symbol}.")
+    if coefficients.shape[1] != occupations.size:
+        raise RuntimeError(f"Atomic coefficient/occupation dimensions disagree for {symbol}.")
+    occupied_electrons = float(np.sum(occupations))
+    if abs(occupied_electrons - atomic_number) > 1.0e-10:
+        raise RuntimeError(
+            f"{symbol} fractional occupations sum to {occupied_electrons:.12g}, "
+            f"expected {atomic_number}."
+        )
+    density_matrix = (coefficients * occupations[None, :]) @ coefficients.T
+    if not np.all(np.isfinite(density_matrix)) or not np.isfinite(float(energy)):
+        raise RuntimeError(f"Non-finite spherical atomic result for {symbol}.")
+    return mol, density_matrix, float(energy), occupations
 
 
-def _spherical_density(mol, mf, radius_bohr: np.ndarray) -> np.ndarray:
+def _spherical_density(
+    mol: object,
+    density_matrix: np.ndarray,
+    radius_bohr: np.ndarray,
+) -> np.ndarray:
     from pyscf.dft import numint
 
     directions, angular_weights = _angular_grid()
-    dm = np.asarray(mf.make_rdm1(), dtype=float)
-    if dm.ndim == 3:
-        dm = np.sum(dm, axis=0)
+    dm = np.asarray(density_matrix, dtype=float)
     if dm.ndim != 2:
         raise RuntimeError(f"Unexpected PySCF density-matrix shape: {dm.shape!r}")
 
@@ -165,9 +194,9 @@ def generate(output_dir: Path) -> dict[str, object]:
     radius = _radial_grid()
     element_records: dict[str, object] = {}
 
-    for symbol, (atomic_number, multiplicity) in ATOMS.items():
-        mol, mf, energy = _build_atom(symbol, multiplicity)
-        density = _spherical_density(mol, mf, radius)
+    for symbol, atomic_number in ATOMS.items():
+        mol, density_matrix, energy, occupations = _build_atom(symbol, atomic_number)
+        density = _spherical_density(mol, density_matrix, radius)
         electron_count = 4.0 * np.pi * _trapezoid(density * radius * radius, radius)
         normalization_error = abs(electron_count - atomic_number)
         tail_density = float(density[-1])
@@ -188,7 +217,10 @@ def generate(output_dir: Path) -> dict[str, object]:
         element_records[symbol] = {
             "atomic_number": atomic_number,
             "neutral_electrons": atomic_number,
-            "multiplicity": multiplicity,
+            "occupation_model": "spherical fractional occupation",
+            "nonzero_orbital_occupations": [
+                float(value) for value in occupations if abs(float(value)) > 1.0e-14
+            ],
             "file": filename,
             "sha256": _sha256(data_path),
             "scf_energy_hartree": energy,
@@ -205,9 +237,16 @@ def generate(output_dir: Path) -> dict[str, object]:
         "generator": {
             "software": "PySCF",
             "software_version": PYSCF_VERSION,
+            "numpy_version": np.__version__,
             "method": METHOD,
+            "atom_solver": ATOM_SOLVER,
             "basis": BASIS,
-            "open_shell": "unrestricted Kohn-Sham with neutral ground-state multiplicity",
+            "fractional_occupations": True,
+            "atomic_grid": {
+                "radial_points": ATOMIC_GRID[0],
+                "angular_points": ATOMIC_GRID[1],
+            },
+            "linear_algebra_threads": 1,
             "spherical_average": {
                 "theta_quadrature": "Gauss-Legendre in cos(theta)",
                 "theta_points": THETA_POINTS,
