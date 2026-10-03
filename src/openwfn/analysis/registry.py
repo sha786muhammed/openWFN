@@ -13,6 +13,7 @@ from ..orbital_services import orbital_composition
 from ..results import ResultRecord
 from ..services import mayer_bond_orders, molecular_summary, orbital_frontier, population_analysis
 from ..spectral_services import orbital_dos, orbital_pdos
+from .excited_states import excited_state, excited_states, transition_dipoles, uvvis_spectrum
 from .structure_summary import structure_summary
 from .vibrations import ir_spectrum, normal_mode, raman_spectrum, vibrations
 
@@ -41,6 +42,11 @@ _VIBRATIONS = CapabilityRequirement("vibrational modes", ("vibrations",))
 _IR_INTENSITIES = CapabilityRequirement("IR intensities", ("ir_intensities",))
 _RAMAN_ACTIVITIES = CapabilityRequirement("Raman activities", ("raman_activities",))
 _NORMAL_MODE_VECTORS = CapabilityRequirement("normal mode vectors", ("normal_mode_vectors",))
+_EXCITED_STATES = CapabilityRequirement("excited states", ("excited_states",))
+_OSCILLATOR_STRENGTHS = CapabilityRequirement(
+    "optical oscillator strengths", ("optical_oscillator_strengths",)
+)
+_TRANSITION_DIPOLES = CapabilityRequirement("transition dipoles", ("transition_dipoles",))
 
 
 _ANALYSES = {
@@ -54,6 +60,20 @@ _ANALYSES = {
         "frontier_orbitals",
         lambda data: orbital_frontier(data, "beta"),
         (_BETA,),
+    ),
+    "excited-state": AnalysisDefinition(
+        "excited-state",
+        "1",
+        "excited_state",
+        excited_state,
+        (_EXCITED_STATES,),
+    ),
+    "excited-states": AnalysisDefinition(
+        "excited-states",
+        "1",
+        "excited_states",
+        excited_states,
+        (_EXCITED_STATES,),
     ),
     "frontier": AnalysisDefinition(
         "frontier",
@@ -110,6 +130,20 @@ _ANALYSES = {
         "summary",
         molecular_summary,
         (_STRUCTURE,),
+    ),
+    "transition-dipoles": AnalysisDefinition(
+        "transition-dipoles",
+        "1",
+        "transition_dipoles",
+        transition_dipoles,
+        (_EXCITED_STATES, _TRANSITION_DIPOLES),
+    ),
+    "uvvis-spectrum": AnalysisDefinition(
+        "uvvis-spectrum",
+        "1",
+        "uvvis_spectrum",
+        uvvis_spectrum,
+        (_EXCITED_STATES, _OSCILLATOR_STRENGTHS),
     ),
     "vibrations": AnalysisDefinition(
         "vibrations",
