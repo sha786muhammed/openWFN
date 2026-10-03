@@ -18,6 +18,23 @@ def _float(value: str) -> float:
     return float(value.replace("D", "E").replace("d", "e"))
 
 
+def _frequency_job_lines(lines: list[str]) -> list[str]:
+    """Return the Link1 job containing the final vibrational frequency block."""
+
+    frequency_indices = [
+        index for index, line in enumerate(lines) if line.strip().startswith("Frequencies --")
+    ]
+    if not frequency_indices:
+        return lines
+    target = frequency_indices[-1]
+    link1_indices = [
+        index for index, line in enumerate(lines) if line.strip().lower() == "--link1--"
+    ]
+    start = max((index + 1 for index in link1_indices if index < target), default=0)
+    end = min((index for index in link1_indices if index > target), default=len(lines))
+    return lines[start:end]
+
+
 def _metadata(lines: list[str]) -> CalculationMetadata:
     route_lines = [line.strip() for line in lines if line.lstrip().startswith("#")]
     route = " ".join(route_lines) if route_lines else None
@@ -271,10 +288,11 @@ def parse_gaussian_output(path: Path) -> CalculationData | CalculationMetadata:
     source = Path(path)
     content = source.read_bytes()
     lines = content.decode("utf-8", errors="replace").splitlines()
-    metadata = _metadata(lines)
-    blocks = _frequency_blocks(lines)
-    selected = _selected_frequency_job(_orientations(lines), blocks)
-    charge_multiplicity = _charge_and_multiplicity(lines)
+    analysis_lines = _frequency_job_lines(lines)
+    metadata = _metadata(analysis_lines)
+    blocks = _frequency_blocks(analysis_lines)
+    selected = _selected_frequency_job(_orientations(analysis_lines), blocks)
+    charge_multiplicity = _charge_and_multiplicity(analysis_lines)
     if selected is None or charge_multiplicity is None:
         return metadata
 
