@@ -112,9 +112,8 @@ def test_orca_attach_preserves_existing_wavefunction_and_records() -> None:
 
 
 def test_orca_parser_enforces_state_limit_before_record_construction() -> None:
-    from openwfn.parsers.excited.orca import parse_orca_excited_states
-
     from openwfn.excited_states import MAX_EXCITED_STATES_PER_JOB
+    from openwfn.parsers.excited.orca import parse_orca_excited_states
 
     text = "O   R   C   A\n! EOM-CCSD def2-SVP\n" + "".join(
         f"STATE {index}: E= 0.2 au 5.44 eV 43898 cm**-1\n"
