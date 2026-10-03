@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 
 import openwfn
-
 from openwfn.workbench.export import export_workbench
 from openwfn.workbench.payload import WorkbenchPayload
 
