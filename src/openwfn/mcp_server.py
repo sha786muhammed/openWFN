@@ -1,6 +1,7 @@
 """Optional read-only stdio MCP adapter for selected existing analyses."""
 
 import argparse
+from math import isfinite
 from pathlib import Path
 from time import perf_counter
 from typing import Any, Callable
@@ -11,6 +12,30 @@ from .ingest import load_input
 from .inspection import build_capabilities_result
 from .output_properties import read_output
 from .results import ResultRecord
+
+JsonScalar = str | int | float | bool | None
+MAX_ANALYSIS_PARAMETERS = 32
+
+
+def _analysis_parameters(parameters: dict[str, JsonScalar] | None) -> dict[str, JsonScalar]:
+    """Validate a small JSON-scalar parameter mapping before registry dispatch."""
+
+    if parameters is None:
+        return {}
+    if len(parameters) > MAX_ANALYSIS_PARAMETERS:
+        raise ValueError(
+            f"Analysis parameters are limited to {MAX_ANALYSIS_PARAMETERS} entries."
+        )
+    cleaned: dict[str, JsonScalar] = {}
+    for key, value in parameters.items():
+        if not isinstance(key, str) or not key.strip():
+            raise ValueError("Analysis parameter names must be non-blank strings.")
+        if value is not None and not isinstance(value, (str, int, float, bool)):
+            raise ValueError("Analysis parameter values must be JSON scalars.")
+        if isinstance(value, float) and not isfinite(value):
+            raise ValueError("Analysis parameter values must be finite.")
+        cleaned[key] = value
+    return cleaned
 
 
 def create_server(data_root: str | Path, *, max_file_bytes: int = 100 * 1024 * 1024,
@@ -89,13 +114,19 @@ def create_server(data_root: str | Path, *, max_file_bytes: int = 100 * 1024 * 1
         return result(lambda: build_capabilities_result(source, format_hint=format_hint), "capabilities")
 
     @server.tool(annotations=annotations, structured_output=True)
-    def run_analysis(path: str, analysis: str, format_hint: str | None = None) -> dict[str, Any]:
-        """Run one registered analysis. Missing scientific data returns status=failed."""
+    def run_analysis(
+        path: str,
+        analysis: str,
+        format_hint: str | None = None,
+        parameters: dict[str, JsonScalar] | None = None,
+    ) -> dict[str, Any]:
+        """Run one registered analysis with optional scalar parameters."""
         source = checked_path(path)
 
         def execute() -> ResultRecord:
             if analysis not in available_analyses():
                 raise ValueError(f"Unknown analysis: {analysis}")
+            clean_parameters = _analysis_parameters(parameters)
             data = load_input(source, format_hint=format_hint)
             definition = _resolve(analysis)
             needs_overlap = any("ao_overlap" in requirement.alternatives
@@ -104,7 +135,7 @@ def create_server(data_root: str | Path, *, max_file_bytes: int = 100 * 1024 * 1
                 count = data.calculation.basis.n_functions
                 if count > max_basis_functions:
                     raise ValueError(f"AO resource limit: {count} basis functions exceed configured {max_basis_functions}; run dense analyses outside MCP or explicitly raise the server limit.")
-            return run_analysis_safe(data, analysis)
+            return run_analysis_safe(data, analysis, **clean_parameters)
 
         return result(execute, analysis)
 
