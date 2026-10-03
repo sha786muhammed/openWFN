@@ -1,0 +1,12 @@
+Q-Chem 6.3
+$rem
+METHOD EOM-CCSD
+EE_STATES 2
+$end
+Charge = 0 Multiplicity = 1
+EOM-CCSD Excitation Energies
+Excited state   1: excitation energy (eV) = 5.442277
+Multiplicity: Singlet
+Excited state   2: excitation energy (eV) = 6.258618
+Multiplicity: Singlet
+Thank you very much for using Q-Chem.
