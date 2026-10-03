@@ -49,9 +49,9 @@ Units 1–5 (MO cubes, named MO composition, Mayer, DOS and PDOS) have completed
 their documented staged implementation and validation work for the stated
 reference scope. Native Hirshfeld remains isolated on its own gated feature PR.
 
-Native Gaussian harmonic **vibrational spectroscopy is now implemented on the
-separate `feat/0.12-vibrational-spectroscopy` feature line** with typed mode
-records, IR/Raman-activity spectra, normal-mode vectors, CLI/Python/MCP parity,
+Native Gaussian harmonic **vibrational spectroscopy is now implemented on a
+separate vibrational-spectroscopy feature line** with typed mode records,
+IR/Raman-activity spectra, normal-mode vectors, CLI/Python/MCP parity,
 research-report rendering, and an offline Workbench workspace. It remains
 **Experimental** because parser/regression/interface parity is not an independent
 scientific validation corpus.
