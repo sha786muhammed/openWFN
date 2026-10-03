@@ -6,7 +6,6 @@ from openwfn.model import CalculationData
 from openwfn.parsers.gaussian.output import parse_gaussian_output
 from openwfn.vibrational import VibrationalMode, get_vibrational_record
 
-
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "gaussian" / "vibrations"
 
 
