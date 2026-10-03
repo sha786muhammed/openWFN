@@ -44,6 +44,15 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _trapezoid(values: np.ndarray, coordinates: np.ndarray) -> float:
+    """Integrate with NumPy 1.x/2.x compatibility without changing the rule."""
+
+    trapezoid = getattr(np, "trapezoid", None)
+    if trapezoid is not None:
+        return float(trapezoid(values, coordinates))
+    return float(np.trapz(values, coordinates))  # type: ignore[attr-defined]
+
+
 def _angular_grid() -> tuple[np.ndarray, np.ndarray]:
     """Return deterministic unit vectors and normalized spherical-average weights."""
 
@@ -159,7 +168,7 @@ def generate(output_dir: Path) -> dict[str, object]:
     for symbol, (atomic_number, multiplicity) in ATOMS.items():
         mol, mf, energy = _build_atom(symbol, multiplicity)
         density = _spherical_density(mol, mf, radius)
-        electron_count = float(4.0 * np.pi * np.trapz(density * radius * radius, radius))
+        electron_count = 4.0 * np.pi * _trapezoid(density * radius * radius, radius)
         normalization_error = abs(electron_count - atomic_number)
         tail_density = float(density[-1])
         if normalization_error > NORMALIZATION_TOLERANCE_E:
