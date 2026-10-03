@@ -106,6 +106,7 @@ nav:
       - MO composition: science/orbital-composition.md
       - Mayer bond order: science/mayer.md
       - DOS and PDOS: science/dos-pdos.md
+      - Vibrational spectroscopy: science/vibrational-spectroscopy.md
       - Validation status: science/validation-status.md
       - Methods overview: methods.md
       - Limitations: limitations.md
