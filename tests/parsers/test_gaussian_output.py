@@ -2,15 +2,15 @@ from pathlib import Path
 
 import pytest
 
+from openwfn.model import CalculationData
 from openwfn.parsers.gaussian.output import parse_gaussian_output
+from openwfn.vibrational import VibrationalMode, get_vibrational_record
 
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "gaussian" / "vibrations"
 
 
 def _assert_calculation(parsed: object) -> None:
-    from openwfn.model import CalculationData
-
     assert isinstance(parsed, CalculationData)
 
 
@@ -35,8 +35,6 @@ def test_gaussian_output_extracts_route_energy_and_status(tmp_path: Path) -> Non
 
 
 def test_vibrational_types_reject_invalid_mode_values() -> None:
-    from openwfn.vibrational import VibrationalMode
-
     with pytest.raises(ValueError, match="mode index"):
         VibrationalMode(index=0, frequency_cm1=1000.0)
     with pytest.raises(ValueError, match="finite"):
@@ -46,8 +44,6 @@ def test_vibrational_types_reject_invalid_mode_values() -> None:
 
 
 def test_gaussian_frequency_output_uses_final_geometry_and_exact_source_values() -> None:
-    from openwfn.vibrational import get_vibrational_record
-
     parsed = parse_gaussian_output(FIXTURES / "water_freq.log")
 
     _assert_calculation(parsed)
@@ -71,8 +67,6 @@ def test_gaussian_frequency_output_uses_final_geometry_and_exact_source_values()
 
 
 def test_gaussian_linear_frequency_output_preserves_four_modes() -> None:
-    from openwfn.vibrational import get_vibrational_record
-
     parsed = parse_gaussian_output(FIXTURES / "co2_freq.log")
     _assert_calculation(parsed)
     record = get_vibrational_record(parsed)
@@ -85,8 +79,6 @@ def test_gaussian_linear_frequency_output_preserves_four_modes() -> None:
 
 
 def test_gaussian_imaginary_frequency_preserves_sign_and_flag() -> None:
-    from openwfn.vibrational import get_vibrational_record
-
     parsed = parse_gaussian_output(FIXTURES / "imaginary_freq.log")
     _assert_calculation(parsed)
     mode = get_vibrational_record(parsed).modes[0]
@@ -96,8 +88,6 @@ def test_gaussian_imaginary_frequency_preserves_sign_and_flag() -> None:
 
 
 def test_gaussian_missing_raman_is_unavailable_not_zero() -> None:
-    from openwfn.vibrational import get_vibrational_record
-
     parsed = parse_gaussian_output(FIXTURES / "no_raman.log")
     _assert_calculation(parsed)
     record = get_vibrational_record(parsed)
@@ -108,8 +98,6 @@ def test_gaussian_missing_raman_is_unavailable_not_zero() -> None:
 
 
 def test_gaussian_missing_vectors_are_unavailable_not_empty() -> None:
-    from openwfn.vibrational import get_vibrational_record
-
     parsed = parse_gaussian_output(FIXTURES / "no_vectors.log")
     _assert_calculation(parsed)
     record = get_vibrational_record(parsed)
