@@ -4,7 +4,7 @@
 
 Add a source-faithful, method-general excited-state subsystem for Gaussian, ORCA, and Q-Chem that supports source state inspection and UV–Vis analysis through the same openWFN registry/result architecture used by existing analyses.
 
-The design must be broad enough to represent all parser-detectable excited-state method families without pretending that method-specific amplitudes are mathematically interchangeable. Gaussian, ORCA, and Q-Chem adapters normalize into one typed record. CLI, Python, MCP, reports, exports, and Workbench consume the same registered ResultRecords and never implement separate spectroscopy mathematics.
+The design must be broad enough to represent all parser-detectable excited-state method families without pretending that method-specific amplitudes are mathematically interchangeable. Gaussian, ORCA, and Q-Chem adapters normalize into one typed record hierarchy. CLI, Python, MCP, reports, exports, and Workbench consume the same registered ResultRecords and never implement separate spectroscopy mathematics.
 
 Initial scientific status is **Experimental** until independent validation evidence justifies narrower promotions.
 
@@ -13,12 +13,13 @@ Initial scientific status is **Experimental** until independent validation evide
 1. **One universal state model, many source adapters.** Program-specific parsing ends at the typed record boundary.
 2. **Source values are preserved.** Energies, oscillator strengths, transition moments, labels, coefficients, and diagnostics remain traceable to the source output.
 3. **Method conventions are explicit.** TDDFT/RPA X/Y amplitudes, CIS/CI coefficients, ADC amplitudes, EOM left/right vectors, spin-flip quantities, multireference state data, and ΔSCF states are never silently cast into one another.
-4. **Missing data stay missing.** No oscillator strength, transition dipole, amplitude, or multiplicity is invented.
+4. **Missing data stay missing.** No oscillator strength, transition dipole, amplitude, multiplicity, symmetry, or source state number is invented.
 5. **Optical eligibility is capability-based.** A state can be represented even when it cannot contribute to a UV–Vis spectrum.
 6. **NTO readiness is separate from excited-state support.** A parsed state is NTO-ready only when a supported, explicitly defined transition-density/amplitude convention is available.
 7. **Derived spectra never replace source sticks.** Every UV–Vis result retains the original excitation energies and oscillator strengths.
-8. **Bound resource use.** Spectrum grids, state counts, amplitude counts, and parser buffers have explicit limits before allocation.
-9. **No REST service in this project.** Python, CLI, local MCP, HTML report, and offline Workbench remain the supported surfaces.
+8. **Job boundaries are first-class.** Multi-Link/multi-step files never flatten unrelated excited-state jobs into one state list.
+9. **Bound resource use.** Spectrum grids, state counts, amplitude counts, and parser buffers have explicit limits before allocation.
+10. **No REST service in this project.** Python, CLI, local MCP, HTML report, and offline Workbench remain the supported surfaces.
 
 ## Scope
 
@@ -58,9 +59,21 @@ This list defines representational scope, not a claim that every program/version
 
 ## Typed data model
 
-### `ExcitedStateRecord`
+### `ExcitedStateCollection`
 
-Stored additively in `CalculationData.records["excited_states"]` without changing `MODEL_SCHEMA_VERSION` unless a later implementation proves that unavoidable.
+Stored additively in `CalculationData.records["excited_states"]` without changing `MODEL_SCHEMA_VERSION` unless implementation proves that unavoidable.
+
+Fields:
+
+- `blocks: tuple[ExcitedStateBlock, ...]`
+- deterministic `default_block` index
+- parser/source provenance common to the file
+
+A block is one logically coherent excited-state job/calculation section. Multi-Link or multi-step outputs can therefore preserve multiple excited-state calculations without mixing their metadata.
+
+Default selection is the **last complete parseable excited-state block** unless a source-specific reason requires a different documented rule. Analyses accept an optional one-based `job` selector when more than one block exists.
+
+### `ExcitedStateBlock`
 
 Fields:
 
@@ -69,21 +82,26 @@ Fields:
 - `method_family`
 - `method_detail`
 - `reference_state`
+- associated charge/multiplicity/geometry identity when available
+- source job/link identifier or ordinal
 - `states: tuple[ExcitedState, ...]`
-- `parser_provenance`
+- block-specific parser provenance
 - optional source/job metadata relevant to state interpretation
 
 ### `ExcitedState`
 
-Required:
+Universally required:
 
-- one-based openWFN `index`
-- source state identifier/number when available
-- excitation energy in eV
-- derived wavelength in nm when energy is positive
+- one-based openWFN `index` within its block
+- finite excitation energy in eV
+
+Derived only when valid:
+
+- wavelength in nm for positive excitation energy
 
 Optional source-reported fields:
 
+- source state identifier/number
 - oscillator strength
 - transition dipole vector and its source unit/convention
 - multiplicity
@@ -132,6 +150,7 @@ Unknown conventions are preserved as source data but are not eligible for NTO or
 Inferred capabilities include:
 
 - `excited_states`
+- `multiple_excited_state_jobs`
 - `optical_oscillator_strengths`
 - `transition_dipoles`
 - `excitation_contributions`
@@ -142,11 +161,11 @@ A calculation may have `excited_states` while lacking all other capabilities.
 
 ## Source adapter architecture
 
-Each program gets a focused adapter that emits the same typed record.
+Each program gets a focused adapter that emits the same typed collection/block/state hierarchy.
 
 ### Gaussian adapter
 
-Must associate each state block with the correct job/link section and molecular/reference metadata. Multi-Link outputs must not mix excited-state data from one job with charge, multiplicity, geometry, method, or energy from a later job.
+Must associate each state block with the correct Link/job section and molecular/reference metadata. Multi-Link outputs must not mix excited-state data from one job with charge, multiplicity, geometry, method, or energy from a later job.
 
 ### ORCA adapter
 
@@ -164,17 +183,23 @@ If a supported source program/method yields only state energies and labels, open
 
 ### `excited-states`
 
-Returns all source states in source order with compact state metadata, optical availability, method information, and diagnostics.
+Parameters: optional `job`.
+
+Returns all source states in source order for the selected block with compact state metadata, optical availability, method information, and diagnostics. If multiple blocks exist and `job` is omitted, the deterministic default block is used and the result reports that selection explicitly.
 
 ### `excited-state`
 
-Parameter: `state` (one-based).
+Parameters: `state` (one-based), optional `job`.
 
 Returns the full record for one state, including contributions and amplitude metadata when available.
 
 ### `uvvis-spectrum`
 
-Requires positive excitation energies and oscillator strengths for at least one state.
+Parameters include optional `job` plus broadening/domain controls.
+
+Requires at least one **optically eligible** state in the selected block: positive excitation energy and a source-reported or otherwise explicitly defined oscillator strength associated with a neutral optical excitation convention.
+
+Ionization/electron-attachment states are not treated as UV–Vis transitions merely because they have an energy. Spin-forbidden or dark states with a reported oscillator strength of zero remain valid source sticks with zero strength.
 
 Returns:
 
@@ -225,7 +250,7 @@ When a continuous energy-domain density is transformed to wavelength-domain dens
 
 where `|dE/dlambda| = hc / lambda^2` in consistent units.
 
-This prevents the common but scientifically incorrect practice of merely relabeling an evenly spaced energy curve as wavelength.
+This prevents the scientifically incorrect practice of merely relabeling an evenly spaced energy curve as wavelength.
 
 Source stick oscillator strengths themselves remain source values; the Jacobian applies to the continuous density representation, not to redefining the original `f_i`.
 
@@ -239,11 +264,13 @@ Human-facing commands:
 
 ```bash
 openwfn calculation.out excited states
+openwfn calculation.out excited states --job 2
 openwfn calculation.out excited state 3
+openwfn calculation.out excited state 3 --job 2
 openwfn calculation.out spectra uvvis
 ```
 
-Spectrum controls should include explicit energy/wavelength range, width, number of points, and domain where appropriate.
+Spectrum controls include explicit energy/wavelength range, width, number of points, domain, and job selector where appropriate.
 
 Exports:
 
@@ -258,9 +285,9 @@ Human output stays compact and deterministic. Large amplitude arrays are abbrevi
 The generic registry path remains authoritative:
 
 ```python
-calc.analyze("excited-states")
-calc.analyze("excited-state", state=3)
-calc.analyze("uvvis-spectrum", ...)
+calc.analyze("excited-states", job=1)
+calc.analyze("excited-state", state=3, job=1)
+calc.analyze("uvvis-spectrum", job=1, ...)
 ```
 
 Convenience wrappers are optional and must be thin registry calls only.
@@ -282,6 +309,7 @@ Add specialized sections that render existing ResultRecords:
 - UV–Vis plot
 - optical stick table
 - method/provenance diagnostics
+- selected/default job identity when multiple excited-state blocks exist
 
 The embedded machine-readable JSON remains authoritative. HTML rendering never recalculates excitation energies, oscillator strengths, or spectra.
 
@@ -291,6 +319,7 @@ Add an `Excited States` workspace while preserving all existing workspaces.
 
 The workspace contains:
 
+- job selector when multiple excited-state blocks exist
 - state table/list
 - selected-state metadata and diagnostics
 - UV–Vis spectrum
@@ -334,6 +363,7 @@ For redistribution-safe fixtures from Gaussian, ORCA, and Q-Chem:
 - absent-vs-zero behavior
 - malformed/incomplete output handling
 - multi-job association safety
+- deterministic default-block selection
 
 ### 2. Cross-program invariants
 
@@ -382,9 +412,10 @@ Later promotions can be narrower, for example source energy/oscillator-strength 
 Explicit failures for:
 
 - no excited-state records
+- requested job index outside range
 - requested state index outside range
 - nonpositive/nonfinite excitation energy where wavelength is required
-- no optical states for UV–Vis
+- no optically eligible states for UV–Vis
 - malformed oscillator strengths or transition vectors
 - ambiguous amplitude convention
 - excessive state/amplitude/curve sizes
@@ -396,7 +427,7 @@ Partial results are allowed when trustworthy state data exist but optional field
 
 The efficient implementation sequence is:
 
-1. universal typed model and capability inference
+1. universal collection/block/state model and capability inference
 2. source adapters normalized into that model
 3. one shared excited-state/UV–Vis numerical service
 4. registry/API/MCP parity
@@ -419,11 +450,12 @@ Program and method coverage grows by adding parser adapters and fixtures, not by
 
 The project is successful when:
 
-1. Gaussian, ORCA, and Q-Chem outputs normalize excited states into the same typed model.
+1. Gaussian, ORCA, and Q-Chem outputs normalize excited states into the same typed collection/block/state model.
 2. All parser-detectable method families can be represented without false equivalence between amplitude conventions.
-3. Optical states produce the same UV–Vis ResultRecord through Python, CLI, and MCP.
-4. CSV/JSON/PNG/SVG, HTML report, and Workbench render the same registered numerical data.
-5. Missing optical/amplitude information fails or degrades explicitly, never by invention.
-6. Multi-job outputs cannot silently mix state data with unrelated metadata.
-7. Validation status remains conservative and component-specific.
-8. The design leaves a mathematically clean path for a later NTO project.
+3. Multi-job outputs preserve block boundaries and deterministic selection.
+4. Optical states produce the same UV–Vis ResultRecord through Python, CLI, and MCP.
+5. CSV/JSON/PNG/SVG, HTML report, and Workbench render the same registered numerical data.
+6. Missing optical/amplitude information fails or degrades explicitly, never by invention.
+7. Multi-job outputs cannot silently mix state data with unrelated metadata.
+8. Validation status remains conservative and component-specific.
+9. The design leaves a mathematically clean path for a later NTO project.
