@@ -1,4 +1,5 @@
 from dataclasses import replace
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -10,7 +11,7 @@ from openwfn.parsers.gaussian.fchk import parse_fchk
 
 
 def _data(states: tuple[ExcitedState, ...]):
-    calculation = parse_fchk("examples/water/water.fchk")
+    calculation = parse_fchk(Path("examples/water/water.fchk"))
     record = ExcitedStateCollection(
         (
             ExcitedStateJob(
