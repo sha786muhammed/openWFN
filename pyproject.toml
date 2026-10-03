@@ -96,6 +96,8 @@ openwfn = [
     "example_data/everyday-qc/*.molden",
     "example_data/everyday-qc/*.json",
     "example_data/everyday-qc/*.md",
+    "reference_data/hirshfeld/v1/*.json",
+    "reference_data/hirshfeld/v1/*.npz",
 ]
 
 

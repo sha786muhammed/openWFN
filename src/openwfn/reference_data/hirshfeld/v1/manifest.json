@@ -1,0 +1,121 @@
+{
+  "elements": {
+    "C": {
+      "atomic_number": 6,
+      "file": "C.npz",
+      "integrated_electrons": 6.000000542837191,
+      "neutral_electrons": 6,
+      "nonzero_orbital_occupations": [
+        2.0,
+        2.0,
+        0.6666666666666666,
+        0.6666666666666666,
+        0.6666666666666666
+      ],
+      "normalization_error_e": 5.428371911975205e-07,
+      "occupation_model": "spherical fractional occupation",
+      "scf_energy_hartree": -37.74697928204795,
+      "sha256": "cdeb11091b11a12b8e75bd7bd7adc75f57c62477ffd652924d46e661efe556f3",
+      "tail_density_e_per_bohr3": 1.4613818923116087e-48
+    },
+    "H": {
+      "atomic_number": 1,
+      "file": "H.npz",
+      "integrated_electrons": 1.0000000526744837,
+      "neutral_electrons": 1,
+      "nonzero_orbital_occupations": [
+        1.0
+      ],
+      "normalization_error_e": 5.267448366375049e-08,
+      "occupation_model": "spherical fractional occupation",
+      "scf_energy_hartree": -0.45887563783806157,
+      "sha256": "6e0981bafa67b11592e2fe6377da0aeefef66816cb3c7f775c7c471f8e63c38a",
+      "tail_density_e_per_bohr3": 4.5667687037631476e-39
+    },
+    "N": {
+      "atomic_number": 7,
+      "file": "N.npz",
+      "integrated_electrons": 7.000000662037379,
+      "neutral_electrons": 7,
+      "nonzero_orbital_occupations": [
+        2.0,
+        2.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "normalization_error_e": 6.620373786958567e-07,
+      "occupation_model": "spherical fractional occupation",
+      "scf_energy_hartree": -54.41946146705635,
+      "sha256": "c5f71106ea18d7176f50276efdaa182f55d7ff78777d19f3c57ff201f3f6932b",
+      "tail_density_e_per_bohr3": 1.6855469834378044e-64
+    },
+    "O": {
+      "atomic_number": 8,
+      "file": "O.npz",
+      "integrated_electrons": 8.000000789824758,
+      "neutral_electrons": 8,
+      "nonzero_orbital_occupations": [
+        2.0,
+        2.0,
+        1.3333333333333333,
+        1.3333333333333333,
+        1.3333333333333333
+      ],
+      "normalization_error_e": 7.898247584847695e-07,
+      "occupation_model": "spherical fractional occupation",
+      "scf_energy_hartree": -74.94305671627198,
+      "sha256": "ed029146456610ed46a90ee9fac1b1a2e9eb49b40a1dc38dc36a512d8779d77e",
+      "tail_density_e_per_bohr3": 1.5159049407782592e-77
+    }
+  },
+  "generated_at": "2026-10-03T03:50:11.045223Z",
+  "generator": {
+    "atom_solver": "pyscf.scf.atom_ks.get_atm_nrks",
+    "atomic_grid": {
+      "angular_points": 434,
+      "radial_points": 100
+    },
+    "basis": "aug-cc-pVQZ",
+    "density_rescaling": false,
+    "fractional_occupations": true,
+    "linear_algebra_threads": 1,
+    "method": "spherical fractional-occupation RKS/PBE",
+    "numpy_version": "2.5.3",
+    "software": "PySCF",
+    "software_version": "2.12.1",
+    "spherical_average": {
+      "phi_points": 32,
+      "phi_quadrature": "uniform periodic",
+      "theta_points": 16,
+      "theta_quadrature": "Gauss-Legendre in cos(theta)"
+    }
+  },
+  "library_id": "openwfn-hirshfeld-proatoms-v1",
+  "normalization_tolerance_e": 1e-06,
+  "radial_grid": {
+    "mapping": "r = Rmax * t^3, t uniformly spaced on [0,1]",
+    "outer_radius_bohr": 40.0,
+    "points": 8193
+  },
+  "redistribution": {
+    "copied_external_dataset": false,
+    "license": "MIT with the openWFN repository; values generated from PySCF calculations",
+    "status": "repository-generated scientific data"
+  },
+  "schema_version": "1.0",
+  "supported_elements": [
+    "H",
+    "C",
+    "N",
+    "O"
+  ],
+  "tail_criterion": {
+    "density_e_per_bohr3": 1e-12,
+    "outer_radius_bohr": 40.0
+  },
+  "units": {
+    "density": "electron/bohr^3",
+    "radius": "bohr"
+  }
+}

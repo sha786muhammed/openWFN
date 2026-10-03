@@ -43,9 +43,16 @@ change. Open a feature proposal to discuss a roadmap item before implementation.
 
 ## Everyday QC staged project
 
-Units 1–5 are implemented on `feat/everyday-qc-staged` as Experimental:
-MO cubes, named MO composition, Mayer, DOS and PDOS. Native Hirshfeld is the
-next gated unit; spectroscopy, NTO, derivatives, QTAIM, ELF/LOL, NCI and basins
-follow only after the earlier scientific gates pass. See the
+The first everyday-QC units — MO cubes, named MO composition, Mayer, DOS and
+PDOS — have reached their documented scoped validation state. Native ordinary
+Hirshfeld populations and charges are implemented on the current development
+branch and independently validated for the named H/C/N/O all-electron scope,
+including charged and open-shell examples. Unsupported elements,
+ECP/pseudopotential cases and ghost-center ambiguity remain outside that
+validation boundary.
+
+The next gated scientific unit is spectroscopy. NTOs, analytic density
+derivatives, QTAIM, ELF/LOL, NCI and basin integration follow only after their
+own definitions, reference evidence and failure semantics are ready. See the
 [architecture and ordered roadmap](docs/project/everyday-qc-design.md) and
 [actual completion/validation record](docs/project/everyday-qc-validation.md).
