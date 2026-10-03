@@ -277,4 +277,5 @@ def hirshfeld_population(
         diagnostics=diagnostics,
         warnings=tuple(warnings),
         result_status="success" if passed else "partial",
+        validation_status="Validated" if passed else "Experimental",
     )
