@@ -29,5 +29,5 @@ def test_python_high_level_api_matches_registry_for_spectroscopy() -> None:
         ("normal-mode", {"mode": 2}),
     ):
         high_level = calculation.analyze(name, **parameters)
-        registry = run_analysis(calculation.data.calculation, name, **parameters)
+        registry = run_analysis(calculation.data, name, **parameters)
         _assert_scientific_parity(high_level, registry)
