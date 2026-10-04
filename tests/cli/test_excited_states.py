@@ -59,8 +59,14 @@ def test_uvvis_cli_json_and_export(tmp_path: Path, capsys) -> None:
 
 
 def test_uvvis_cli_rejects_input_without_oscillator_strengths(capsys) -> None:
-    source = Path(__file__).resolve().parents[1] / "fixtures" / "qchem" / "excited" / "eom.out"
-    status = main(["--input-format", "qchemlog", str(source), "spectra", "uvvis"])
+    source = (
+        Path(__file__).resolve().parents[1]
+        / "fixtures"
+        / "gaussian"
+        / "excited"
+        / "no_oscillator.log"
+    )
+    status = main([str(source), "spectra", "uvvis"])
     captured = capsys.readouterr()
     assert status != 0
     assert "oscillator" in captured.err.lower() or "oscillator" in captured.out.lower()
