@@ -129,6 +129,18 @@ raise `DataUnavailableError`.
 effective-charge centers. A structure-only `analyze("summary")` returns a
 partial result; missing electronic values remain `None`.
 
+Excited-state analyses use the same generic API and remain **Experimental**:
+
+```python
+calculation = load("tddft.log")
+states = calculation.analyze("excited-states")
+state2 = calculation.analyze("excited-state", state=2)
+dipoles = calculation.analyze("transition-dipoles")
+uvvis = calculation.analyze("uvvis-spectrum", fwhm_ev=0.20, points=1501)
+```
+
+State and job selectors are one-based. Gaussian, ORCA, and Q-Chem source adapters normalize source-reported states into one typed model while preserving method family/detail and source-specific conventions. UV–Vis broadening is derived post-processing; source oscillator strengths remain authoritative. See [Excited states and UV–Vis](../science/excited-states-uvvis.md).
+
 ### Model schema
 
 `MODEL_SCHEMA_VERSION` is `"2.0"`. `Molecule.boundary_conditions` defaults
@@ -173,6 +185,8 @@ The default density-grid spacing is **0.15 bohr** with 6.0 bohr padding. These d
 |---|---|
 | `beta-frontier` | Beta-spin HOMO, LUMO, and gap |
 | `dos` | Experimental Gaussian orbital-energy DOS |
+| `excited-state` | Experimental inspection of one one-based source excited state |
+| `excited-states` | Experimental source excited-state job/state table |
 | `frontier` | Alpha/default HOMO, LUMO, and gap |
 | `frontier-all` | Alpha and beta frontiers plus the true overall HOMO for unrestricted calculations |
 | `ir-spectrum` | Experimental source IR sticks plus Gaussian-broadened curve |
@@ -184,6 +198,8 @@ The default density-grid spacing is **0.15 bohr** with 6.0 bohr padding. These d
 | `pdos` | Experimental atom-resolved Lowdin PDOS by default |
 | `raman-spectrum` | Experimental source Raman activities plus Gaussian-broadened activity curve |
 | `summary` | Version 2: complete molecular summary or partial structure-only/periodic summary |
+| `transition-dipoles` | Experimental source-reported excited-state transition dipoles |
+| `uvvis-spectrum` | Experimental source oscillator-strength sticks plus Gaussian-broadened UV–Vis profile |
 | `vibrations` | Experimental source-reported vibrational mode table |
 
 Use `available_analyses()` to discover registered names. Run an analysis
