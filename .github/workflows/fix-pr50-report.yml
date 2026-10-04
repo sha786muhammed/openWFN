@@ -23,7 +23,7 @@ jobs:
           python-version: '3.12'
       - name: Install test dependencies
         run: python -m pip install -e ".[test]"
-      - name: Restore excited-state report dispatch
+      - name: Restore excited-state report rendering
         shell: bash
         run: |
           set -euo pipefail
@@ -32,16 +32,49 @@ jobs:
 
           path = Path('src/openwfn/reporting.py')
           text = path.read_text(encoding='utf-8')
+
+          if 'def _uvvis_table(' not in text:
+              anchor = '\n\ndef _available_html(section: dict[str, Any]) -> str:\n'
+              helper = '''
+
+          def _uvvis_table(section: dict[str, Any]) -> str:
+              rows = "".join(
+                  "<tr>"
+                  f"<td>{escape(str(line.get('state')))}</td>"
+                  f"<td>{escape(_display_optional(line.get('source_state')))}</td>"
+                  f"<td>{escape(str(line.get('energy_ev')))}</td>"
+                  f"<td>{escape(_display_optional(line.get('wavelength_nm')))}</td>"
+                  f"<td>{escape(_display_optional(line.get('oscillator_strength')))}</td>"
+                  f"<td>{'included' if line.get('eligible') else escape(str(line.get('exclusion_reason')))}</td>"
+                  "</tr>"
+                  for line in section["data"].get("lines", [])
+              )
+              return (
+                  '<div class="table-scroll"><table class="uvvis-stick-table"><thead><tr>'
+                  "<th>State</th><th>Source state</th><th>Energy (eV)</th><th>Wavelength (nm)</th>"
+                  "<th>Oscillator strength</th><th>Curve status</th></tr></thead><tbody>"
+                  + rows
+                  + "</tbody></table></div>"
+              )
+          '''
+              if anchor not in text:
+                  raise SystemExit('expected _available_html anchor not found')
+              text = text.replace(anchor, helper + anchor, 1)
+
           marker = '''        return prefix + details + _spectrum_svg(section) + _spectrum_table(section)\n    rows = "".join(\n'''
           replacement = '''        return prefix + details + _spectrum_svg(section) + _spectrum_table(section)\n    if section["name"] == "excited-states":\n        data = section["data"]\n        summary = (\n            '<div class="spectroscopy-summary">'\n            f"<span>Jobs: {escape(str(data.get('job_count', 0)))}</span>"\n            f"<span>States: {escape(str(sum(len(job.get('states', [])) for job in data.get('jobs', []))))}</span>"\n            "<span>Values: source-reported unless explicitly derived</span>"\n            "</div>"\n        )\n        return prefix + summary + _excited_state_table(section)\n    if section["name"] == "uvvis-spectrum":\n        broadening = section["data"].get("broadening", {})\n        details = (\n            '<p class="spectrum-details">Gaussian visualization · FWHM '\n            f"{escape(str(broadening.get('fwhm_ev', '—')))} eV · source oscillator-strength sticks preserved · "\n            "curve is not absorbance or an extinction coefficient</p>"\n        )\n        return prefix + details + _uvvis_svg(section) + _uvvis_table(section)\n    rows = "".join(\n'''
-          if marker not in text:
-              raise SystemExit('expected report dispatch marker not found')
-          text = text.replace(marker, replacement, 1)
+          if 'if section["name"] == "excited-states":' not in text:
+              if marker not in text:
+                  raise SystemExit('expected report dispatch marker not found')
+              text = text.replace(marker, replacement, 1)
+
           css_old = '.vibrational-mode-table th,.spectrum-stick-table th{{width:auto;white-space:nowrap}}'
           css_new = '.vibrational-mode-table th,.spectrum-stick-table th,.excited-state-table th,.uvvis-stick-table th{{width:auto;white-space:nowrap}}'
-          if css_old not in text:
-              raise SystemExit('expected report CSS marker not found')
-          text = text.replace(css_old, css_new, 1)
+          if '.excited-state-table th,.uvvis-stick-table th' not in text:
+              if css_old not in text:
+                  raise SystemExit('expected report CSS marker not found')
+              text = text.replace(css_old, css_new, 1)
+
           path.write_text(text, encoding='utf-8')
           PY
           python -m pytest -q tests/integration/test_excited_state_report_workbench.py tests/integration/test_vibrational_report.py tests/integration/test_hirshfeld_workflows.py
