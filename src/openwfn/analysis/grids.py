@@ -7,9 +7,7 @@ import numpy as np
 
 from ..constants import BOHR_TO_ANGSTROM
 from ..model import Molecule, VolumetricGrid
-
-# Bound the full-grid allocations shared by density, cube and ESP workflows.
-MAX_GRID_POINTS = 2_000_000
+from .limits import MAX_GRID_POINTS
 
 
 def molecular_grid_points(
