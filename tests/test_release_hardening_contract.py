@@ -21,17 +21,28 @@ def test_validation_manifest_declares_current_and_historical_evidence() -> None:
     manifest_path = ROOT / "validation/manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     assert manifest["schema_version"] == "1.0"
-    assert manifest["current_release"] == "0.10.1"
+    assert manifest["current_release"] == "0.11.0"
     assert manifest["resource_benchmark"]["establishes_scientific_validation"] is False
     assert manifest["resource_benchmark"]["molecules"] == 11
     assert manifest["resource_benchmark"]["workflows_per_molecule"] == 10
     assert manifest["resource_benchmark"]["workflow_count"] == 110
     assert manifest["historical_captures"]["everyday-qc/report.json"]["authoritative_status"] is False
     assert manifest["historical_captures"]["everyday-qc/esp-report.json"]["authoritative_status"] is False
-    for capability in ("orbital-composition", "mayer", "dos", "pdos", "point-esp", "hirshfeld"):
+    for capability in (
+        "orbital-composition",
+        "mayer",
+        "dos",
+        "pdos",
+        "point-esp",
+        "hirshfeld",
+        "vibrational-spectroscopy",
+        "excited-states-uvvis",
+    ):
         assert capability in manifest["capabilities"]
         assert manifest["capabilities"][capability]["status"] in {"Validated", "Experimental"}
     assert manifest["capabilities"]["hirshfeld"]["status"] == "Validated"
+    assert manifest["capabilities"]["vibrational-spectroscopy"]["status"] == "Experimental"
+    assert manifest["capabilities"]["excited-states-uvvis"]["status"] == "Experimental"
 
 
 def test_release_resource_claim_is_explicitly_not_scientific_validation() -> None:
