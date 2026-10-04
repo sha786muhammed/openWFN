@@ -1,0 +1,111 @@
+"""Shared real-space electronic fields built from analytic AO derivatives."""
+
+from dataclasses import dataclass
+from typing import Literal
+
+import numpy as np
+
+from ..errors import DataUnavailableError
+from ..model import CalculationData, DensityMatrix
+from .basis import evaluate_ao_fields
+from .density import density_matrix_for_kind
+
+DensityKind = Literal["total", "alpha", "beta", "spin"]
+
+
+@dataclass(frozen=True, slots=True)
+class DensityFieldBatch:
+    """Electron-density values and Cartesian derivatives in atomic units."""
+
+    rho: np.ndarray
+    gradient: np.ndarray
+    hessian: np.ndarray
+    laplacian: np.ndarray
+
+
+def _density_fields_for_matrix(
+    data: CalculationData,
+    density_matrix: DensityMatrix,
+    points_bohr: np.ndarray,
+) -> DensityFieldBatch:
+    if data.basis is None:
+        raise DataUnavailableError("Basis set is not available.")
+
+    ao = evaluate_ao_fields(data.basis, data.molecule, points_bohr, derivatives=2)
+    matrix = np.asarray(density_matrix.values, dtype=float)
+    n_functions = ao.values.shape[1]
+    if matrix.shape != (n_functions, n_functions):
+        raise ValueError("density matrix size does not match evaluated basis functions")
+
+    values = ao.values
+    gradients = ao.gradients
+    hessians = ao.hessians
+
+    rho = np.einsum("pi,ij,pj->p", values, matrix, values, optimize=True)
+    gradient = np.einsum(
+        "pia,ij,pj->pa", gradients, matrix, values, optimize=True
+    ) + np.einsum("pi,ij,pja->pa", values, matrix, gradients, optimize=True)
+    hessian = (
+        np.einsum("piab,ij,pj->pab", hessians, matrix, values, optimize=True)
+        + np.einsum("pia,ij,pjb->pab", gradients, matrix, gradients, optimize=True)
+        + np.einsum("pib,ij,pja->pab", gradients, matrix, gradients, optimize=True)
+        + np.einsum("pi,ij,pjab->pab", values, matrix, hessians, optimize=True)
+    )
+    laplacian = np.trace(hessian, axis1=1, axis2=2)
+    return DensityFieldBatch(
+        rho=rho,
+        gradient=gradient,
+        hessian=hessian,
+        laplacian=laplacian,
+    )
+
+
+def _validate_chunk_size(chunk_size: int | None, n_points: int) -> int:
+    if chunk_size is None:
+        return max(1, n_points)
+    if isinstance(chunk_size, bool) or not isinstance(chunk_size, int) or chunk_size <= 0:
+        raise ValueError("chunk_size must be a positive integer")
+    return chunk_size
+
+
+def evaluate_density_fields(
+    data: CalculationData,
+    points_bohr: np.ndarray,
+    *,
+    kind: DensityKind = "total",
+    chunk_size: int | None = None,
+) -> DensityFieldBatch:
+    """Evaluate density, gradient, Hessian, and Laplacian at Bohr points.
+
+    The Hessian uses the complete product rule and therefore remains correct
+    without assuming an exactly symmetric stored density matrix.
+    """
+
+    if data.basis is None:
+        raise DataUnavailableError("Basis set is not available.")
+    points = np.asarray(points_bohr, dtype=float)
+    if points.ndim != 2 or points.shape[1] != 3:
+        raise ValueError("points_bohr must have shape (n_points, 3)")
+    if not np.all(np.isfinite(points)):
+        raise ValueError("points_bohr coordinates must be finite")
+    size = _validate_chunk_size(chunk_size, len(points))
+    density_matrix = density_matrix_for_kind(data, kind)
+
+    if len(points) == 0:
+        return DensityFieldBatch(
+            rho=np.empty((0,), dtype=float),
+            gradient=np.empty((0, 3), dtype=float),
+            hessian=np.empty((0, 3, 3), dtype=float),
+            laplacian=np.empty((0,), dtype=float),
+        )
+
+    batches = [
+        _density_fields_for_matrix(data, density_matrix, points[start : start + size])
+        for start in range(0, len(points), size)
+    ]
+    return DensityFieldBatch(
+        rho=np.concatenate([batch.rho for batch in batches]),
+        gradient=np.concatenate([batch.gradient for batch in batches], axis=0),
+        hessian=np.concatenate([batch.hessian for batch in batches], axis=0),
+        laplacian=np.concatenate([batch.laplacian for batch in batches]),
+    )
