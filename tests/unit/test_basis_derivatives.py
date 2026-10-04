@@ -79,7 +79,7 @@ def test_pure_shell_derivatives_use_same_cartesian_to_pure_transform(momentum: i
     )
     np.testing.assert_allclose(
         pure.hessians,
-        np.einsum("pacij,qa->pqcij", cart.hessians, transform),
+        np.einsum("paij,qa->pqij", cart.hessians, transform),
         atol=1e-12,
     )
 
