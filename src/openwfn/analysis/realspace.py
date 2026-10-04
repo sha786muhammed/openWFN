@@ -7,8 +7,9 @@ import numpy as np
 
 from ..errors import DataUnavailableError
 from ..model import CalculationData, DensityMatrix
-from .basis import evaluate_ao_fields
+from .basis import bounded_ao_chunk_size, evaluate_ao_fields
 from .density import density_matrix_for_kind
+from .limits import bounded_point_chunk_size
 
 DensityKind = Literal["total", "alpha", "beta", "spin"]
 KED_CONVENTION = "positive_definite_half_gradient_square"
@@ -91,12 +92,23 @@ def _kinetic_energy_density_for_matrix(
     )
 
 
-def _validate_chunk_size(chunk_size: int | None, n_points: int) -> int:
-    if chunk_size is None:
-        return max(1, n_points)
-    if isinstance(chunk_size, bool) or not isinstance(chunk_size, int) or chunk_size <= 0:
-        raise ValueError("chunk_size must be a positive integer")
-    return chunk_size
+def _bounded_realspace_chunk_size(
+    data: CalculationData,
+    point_count: int,
+    requested_chunk_size: int | None,
+    *,
+    requested_components: int,
+) -> int:
+    if data.basis is None:
+        raise DataUnavailableError("Basis set is not available.")
+    point_bound = bounded_point_chunk_size(
+        point_count=point_count,
+        nao=data.basis.n_functions,
+        requested_components=requested_components,
+        requested_chunk_size=requested_chunk_size,
+    )
+    # Preserve the stricter contraction-aware estimator used by older AO paths.
+    return bounded_ao_chunk_size(data.basis, point_bound)
 
 
 def _validate_points(points_bohr: np.ndarray) -> np.ndarray:
@@ -124,7 +136,12 @@ def evaluate_density_fields(
     if data.basis is None:
         raise DataUnavailableError("Basis set is not available.")
     points = _validate_points(points_bohr)
-    size = _validate_chunk_size(chunk_size, len(points))
+    size = _bounded_realspace_chunk_size(
+        data,
+        len(points),
+        chunk_size,
+        requested_components=13,
+    )
     density_matrix = density_matrix_for_kind(data, kind)
 
     if len(points) == 0:
@@ -159,7 +176,12 @@ def evaluate_kinetic_energy_density(
     if data.basis is None:
         raise DataUnavailableError("Basis set is not available.")
     points = _validate_points(points_bohr)
-    size = _validate_chunk_size(chunk_size, len(points))
+    size = _bounded_realspace_chunk_size(
+        data,
+        len(points),
+        chunk_size,
+        requested_components=4,
+    )
     density_matrix = density_matrix_for_kind(data, kind)
 
     if len(points) == 0:
