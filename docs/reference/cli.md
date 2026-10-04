@@ -5,7 +5,7 @@ openwfn [GLOBAL OPTIONS] FILE COMMAND [COMMAND OPTIONS]
 openwfn examples install DESTINATION [--overwrite]
 ```
 
-Run `openwfn --help` or `openwfn FILE COMMAND --help` for the installed release's authoritative syntax. Global options such as `--format json` go before the input path.
+Run `openwfn --help` or `openwfn FILE COMMAND --help` for the installed release's authoritative syntax. Global options such as `--format json` and `--input-format FORMAT_ID` go before the input path.
 
 For interoperable inputs, install the appropriate optional extra and inspect capabilities before requesting analyses that may not be present in the source file:
 
@@ -52,8 +52,9 @@ These are the public top-level choices shown by `openwfn --help`.
 | `population` | Run Mulliken or Löwdin population analysis |
 | `bondorder` | Run Mayer AO bond-order analysis |
 | `orbitals` | Inspect frontier orbitals, compositions, cubes, DOS, and PDOS |
+| `excited` | Inspect source excited states, one state, or source transition dipoles |
 | `vibrations` | Inspect source-reported vibrational modes or one normal mode |
-| `spectra` | Generate IR or Raman-activity stick/broadened spectra from source modes |
+| `spectra` | Generate IR, Raman-activity, or UV–Vis stick/broadened spectra |
 | `density` | Integrate or export electron and spin density |
 | `esp` | Evaluate supported electrostatic-potential components |
 | `report` | Build a reproducible research report |
@@ -109,6 +110,35 @@ Post-HF calculations do not silently imply a correlated density. When the parsed
 
 The default density spacing is **0.15 bohr** with 6.0 bohr padding. These are starting values, not universal convergence settings.
 
+## Excited states and UV–Vis
+
+Excited-state analysis is **Experimental**. Gaussian, ORCA, and Q-Chem source adapters normalize source-reported state information into one typed job/state model while preserving program, method family/detail, source state identifiers, energies, oscillator strengths, transition dipoles, multiplicity, symmetry, contributions, and explicitly labelled amplitude conventions when available.
+
+```bash
+openwfn calculation.log excited states
+openwfn --format json calculation.log excited state 2
+openwfn calculation.log excited dipoles
+openwfn calculation.log spectra uvvis --fwhm 0.20 --points 1501
+openwfn calculation.log excited states --export states.csv
+openwfn calculation.log spectra uvvis --export uvvis.svg
+```
+
+`excited states` lists source states. `excited state N` selects one one-based state from a source job. When a file contains multiple excited-state jobs, pass `--job N` to analyses that require one job. `excited dipoles` exposes only source-reported transition-dipole vectors; missing vectors are never inferred.
+
+`spectra uvvis` preserves all source state/stick data and derives a deterministic Gaussian oscillator-strength profile in **energy space**. The visualization default is **0.20 eV FWHM**. Dark states with `f=0` remain valid source sticks. States with missing oscillator strength, negative oscillator strength, or nonpositive excitation energy remain visible in source data but are excluded from the simulated optical curve with explicit reasons; negative values are not silently clamped.
+
+| Option | Meaning |
+|---|---|
+| `--job N` | One-based source excited-state job |
+| `--fwhm EV` | Gaussian full width at half maximum; default 0.20 eV |
+| `--min EV`, `--max EV` | Explicit excitation-energy range |
+| `--points N` | Number of broadened-curve grid points |
+| `--no-wavelength` | Omit wavelength-domain derived arrays |
+| `--export PATH` | CSV, JSON, PNG, or SVG spectrum export |
+| `--dpi N` | Raster resolution for PNG export |
+
+The wavelength-domain curve is derived from the energy-domain profile with the energy-to-wavelength Jacobian; it is not the same numeric y-array with a relabelled x axis. The broadened profile is a visualization/post-processing quantity, not absorbance, molar extinction coefficient, or an experimental instrument model. Method-specific TDDFT, EOM, ADC, CI, multireference, spin-flip, and other source conventions remain explicitly labelled rather than being treated as interchangeable. See [Excited states and UV–Vis](../science/excited-states-uvvis.md).
+
 ## Vibrational spectroscopy
 
 Vibrational spectroscopy is **Experimental** on this feature line. The native Gaussian text-output path preserves source values and does not infer unavailable observables.
@@ -152,8 +182,8 @@ It can expose geometry, charge/multiplicity, SCF energy, selected orbital energi
 
 | Command | Syntax | Output |
 |---|---|---|
-| `report` | `report build OUTPUT [--report-format html\|markdown] [--analyses LIST]` | Self-contained research report; spectroscopy analyses render mode tables and inline spectra when requested |
-| `workbench` | `workbench [OUTPUT] [--open]` | Offline interface; vibrational inputs add a Vibrations workspace |
+| `report` | `report build OUTPUT [--report-format html\|markdown] [--analyses LIST]` | Self-contained research report; spectroscopy and excited-state analyses render tables and inline spectra when requested |
+| `workbench` | `workbench [OUTPUT] [--open]` | Offline interface; supported inputs add Vibrations and/or Excited States workspaces |
 | `view` | `view [--save HTML] [--open] [--no-labels] [--style ballstick\|stick]` | Standalone molecular viewer |
 | `xyz` | `xyz OUTPUT` | XYZ export |
 | `convert` | `convert --to xyz\|pdb\|mol\|sdf --output PATH` | Structure conversion |
@@ -161,7 +191,7 @@ It can expose geometry, charge/multiplicity, SCF energy, selected orbital energi
 | `plot` | `plot frontier OUTPUT [--dpi N]` | Frontier-orbital figure |
 | `formchk` | `formchk [OUTPUT]` | Calls Gaussian's external `formchk` utility |
 
-Vibrational CSV is row-per-mode; spectrum CSV is row-per-wavenumber point. JSON keeps the complete versioned `ResultRecord`, including units, validation status, warnings, and provenance. PNG/SVG spectrum figures are views of the same arrays rather than independent calculations.
+Vibrational CSV is row-per-mode; excited-state CSV is row-per-state; spectrum CSV is row-per-grid point. JSON keeps the complete versioned `ResultRecord`, including units, validation status, warnings, and provenance. PNG/SVG spectrum figures are views of the same arrays rather than independent calculations.
 
 ## DOS and PDOS
 
@@ -171,7 +201,7 @@ Vibrational CSV is row-per-mode; spectrum CSV is row-per-wavenumber point. JSON 
 
 `batch` accepts files/directories, comma-separated `--analyses`, worker and output controls, deterministic manifests, resume fingerprints, format hints, and fail-fast behavior. The spin selector applies to a requested frontier analysis. Machine-readable records preserve `success`, `partial`, or failed status instead of discarding usable partial results.
 
-`interactive` launches the guided terminal. With a file but no command, a terminal session enters guided mode; redirected input or `--non-interactive` defaults to `summary`. The guided interface includes **Analyze vibrations and spectra** when working with a supported vibrational source and routes to the same registered analyses as the CLI/Python/MCP surfaces.
+`interactive` launches the guided terminal. With a file but no command, a terminal session enters guided mode; redirected input or `--non-interactive` defaults to `summary`. The guided interface includes **Analyze vibrations and spectra** for supported vibrational sources and routes to the same registered analyses as the CLI/Python/MCP surfaces.
 
 With `--format json`, successful parsed commands emit one result envelope on stdout. Runtime/input failures use structured failure records where applicable and return a nonzero exit code. Help and argument-syntax errors remain ordinary text.
 
