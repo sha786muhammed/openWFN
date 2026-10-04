@@ -32,8 +32,8 @@ jobs:
           if marker not in text:
               raise SystemExit('expected report dispatch marker not found')
           text = text.replace(marker, replacement, 1)
-          css_old = '.vibrational-mode-table th,.spectrum-stick-table th{width:auto;white-space:nowrap}'
-          css_new = '.vibrational-mode-table th,.spectrum-stick-table th,.excited-state-table th,.uvvis-stick-table th{width:auto;white-space:nowrap}'
+          css_old = '.vibrational-mode-table th,.spectrum-stick-table th{{width:auto;white-space:nowrap}}'
+          css_new = '.vibrational-mode-table th,.spectrum-stick-table th,.excited-state-table th,.uvvis-stick-table th{{width:auto;white-space:nowrap}}'
           if css_old not in text:
               raise SystemExit('expected report CSS marker not found')
           text = text.replace(css_old, css_new, 1)
