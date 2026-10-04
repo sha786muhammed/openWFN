@@ -14,6 +14,8 @@ from . import (
     __version__,
     utils,  # type: ignore
 )
+from .analysis.atom_quadrature import AtomQuadratureSettings
+from .analysis.hirshfeld import HirshfeldSettings
 from .analysis.orbitals import frontier_orbitals
 from .analysis.registry import run_analysis
 from .app import CommandContext, execute
@@ -380,10 +382,25 @@ def main(argv: list[str] | None = None) -> int:
     p_geometry_dihedral.add_argument("k", type=int)
     p_geometry_dihedral.add_argument("l", type=int)
 
-    p_population = subparsers.add_parser("population", help="Mulliken and Löwdin population analysis")
+    p_population = subparsers.add_parser(
+        "population", help="Mulliken, Löwdin, and Hirshfeld population analysis"
+    )
     population_commands = p_population.add_subparsers(dest="population_method", required=True)
     population_commands.add_parser("mulliken", help="Compute Mulliken atomic populations and charges")
     population_commands.add_parser("lowdin", help="Compute symmetric Löwdin populations and charges")
+    p_hirshfeld = population_commands.add_parser(
+        "hirshfeld", help="Compute native neutral-pro-atom Hirshfeld populations and charges"
+    )
+    p_hirshfeld.add_argument("--radial-points", type=int, default=96)
+    p_hirshfeld.add_argument("--theta-points", type=int, default=18)
+    p_hirshfeld.add_argument("--phi-points", type=int, default=36)
+    p_hirshfeld.add_argument("--radial-extent", type=float, default=20.0, help="Radial extent in bohr")
+    p_hirshfeld.add_argument("--chunk-size", type=int, default=65536)
+    p_hirshfeld.add_argument("--molecular-density-screen", type=float, default=1.0e-12)
+    p_hirshfeld.add_argument("--promolecule-floor", type=float, default=1.0e-14)
+    p_hirshfeld.add_argument("--partition-tolerance", type=float, default=1.0e-8)
+    p_hirshfeld.add_argument("--electron-closure-tolerance", type=float, default=5.0e-3)
+    p_hirshfeld.add_argument("--charge-closure-tolerance", type=float, default=5.0e-3)
 
     p_bondorder = subparsers.add_parser("bondorder", help="AO bond-order analysis")
     bondorder_commands = p_bondorder.add_subparsers(dest="bondorder_method", required=True)
@@ -603,10 +620,27 @@ def main(argv: list[str] | None = None) -> int:
         return execute(geometry_operation, context)
 
     if args.command == "population":
+        if args.population_method == "hirshfeld":
+            settings = HirshfeldSettings(
+                quadrature=AtomQuadratureSettings(
+                    radial_points=args.radial_points,
+                    theta_points=args.theta_points,
+                    phi_points=args.phi_points,
+                    radial_extent_bohr=args.radial_extent,
+                    chunk_size=args.chunk_size,
+                ),
+                molecular_density_screen=args.molecular_density_screen,
+                promolecule_floor=args.promolecule_floor,
+                population_partition_tolerance=args.partition_tolerance,
+                electron_closure_tolerance=args.electron_closure_tolerance,
+                charge_closure_tolerance=args.charge_closure_tolerance,
+            )
+            return execute(
+                lambda: run_analysis(require_calculation(), "hirshfeld", settings=settings),
+                _context(args),
+            )
         return execute(
-            lambda: run_analysis(
-                require_calculation(), args.population_method
-            ),
+            lambda: run_analysis(require_calculation(), args.population_method),
             _context(args),
         )
 
