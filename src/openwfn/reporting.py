@@ -48,10 +48,129 @@ def _title(name: str) -> str:
         "mulliken": "Mulliken Population",
         "lowdin": "Lowdin Population",
         "hirshfeld": "Hirshfeld Population",
+        "vibrations": "Vibrational Modes",
+        "ir-spectrum": "IR Spectrum",
+        "raman-spectrum": "Raman Spectrum",
     }
     if name in titles:
         return titles[name]
     return name.replace("-", " ").replace("_", " ").title()
+
+
+def _display_optional(value: object) -> str:
+    return "—" if value is None else str(value)
+
+
+def _vibrational_mode_table(section: dict[str, Any]) -> str:
+    rows = []
+    for mode in section["data"].get("modes", []):
+        rows.append(
+            "<tr>"
+            f"<td>{escape(str(mode['mode']))}</td>"
+            f"<td>{escape(str(mode['frequency_cm1']))}</td>"
+            f"<td>{escape(_display_optional(mode.get('symmetry')))}</td>"
+            f"<td>{escape(_display_optional(mode.get('reduced_mass_amu')))}</td>"
+            f"<td>{escape(_display_optional(mode.get('force_constant_mdyne_per_angstrom')))}</td>"
+            f"<td>{escape(_display_optional(mode.get('ir_intensity_km_mol')))}</td>"
+            f"<td>{escape(_display_optional(mode.get('raman_activity_a4_amu')))}</td>"
+            f"<td>{'yes' if mode.get('imaginary') else 'no'}</td>"
+            "</tr>"
+        )
+    return (
+        '<div class="table-scroll"><table class="vibrational-mode-table">'
+        "<thead><tr><th>Mode</th><th>Frequency (cm^-1)</th><th>Symmetry</th>"
+        "<th>Reduced mass (amu)</th><th>Force constant (mDyne/angstrom)</th>"
+        "<th>IR intensity (km/mol)</th><th>Raman activity (angstrom^4/amu)</th>"
+        "<th>Imaginary</th></tr></thead><tbody>"
+        + "".join(rows)
+        + "</tbody></table></div>"
+    )
+
+
+def _spectrum_svg(section: dict[str, Any]) -> str:
+    data = section["data"]
+    frequencies = [float(value) for value in data.get("frequency_cm1", [])]
+    intensities = [float(value) for value in data.get("intensity", [])]
+    if len(frequencies) < 2 or len(frequencies) != len(intensities):
+        return '<p class="unavailable">Spectrum curve is unavailable.</p>'
+
+    width, height = 760.0, 300.0
+    left, right, top, bottom = 72.0, 22.0, 20.0, 54.0
+    plot_width = width - left - right
+    plot_height = height - top - bottom
+    x_min, x_max = min(frequencies), max(frequencies)
+    y_min = min(0.0, min(intensities))
+    y_max = max(intensities)
+    if x_max == x_min:
+        x_max = x_min + 1.0
+    if y_max == y_min:
+        y_max = y_min + 1.0
+
+    def point(x_value: float, y_value: float) -> str:
+        x = left + (x_value - x_min) / (x_max - x_min) * plot_width
+        y = top + (y_max - y_value) / (y_max - y_min) * plot_height
+        return f"{x:.2f},{y:.2f}"
+
+    polyline = " ".join(point(x, y) for x, y in zip(frequencies, intensities, strict=True))
+    spectrum_type = data.get("spectrum_type")
+    is_ir = spectrum_type == "ir"
+    ylabel = "IR intensity (km/mol)" if is_ir else "Raman activity (angstrom^4/amu)"
+    analysis = "ir-spectrum" if is_ir else "raman-spectrum"
+    sticks = []
+    for line in data.get("lines", []):
+        if line.get("imaginary"):
+            continue
+        strength = line.get("intensity") if is_ir else line.get("activity")
+        if strength is None:
+            continue
+        x = left + (float(line["frequency_cm1"]) - x_min) / (x_max - x_min) * plot_width
+        y = top + (y_max - float(strength)) / (y_max - y_min) * plot_height
+        baseline = top + (y_max - 0.0) / (y_max - y_min) * plot_height
+        sticks.append(
+            f'<line x1="{x:.2f}" y1="{baseline:.2f}" x2="{x:.2f}" y2="{y:.2f}" '
+            'class="spectrum-stick" />'
+        )
+    return (
+        f'<svg class="spectrum-plot" data-analysis="{analysis}" viewBox="0 0 760 300" '
+        'role="img" aria-label="Vibrational spectrum">'
+        f'<line x1="{left}" y1="{top + plot_height}" x2="{left + plot_width}" '
+        f'y2="{top + plot_height}" class="axis" />'
+        f'<line x1="{left}" y1="{top}" x2="{left}" y2="{top + plot_height}" class="axis" />'
+        f'<polyline points="{polyline}" class="spectrum-curve" />'
+        + "".join(sticks)
+        + f'<text x="{left + plot_width / 2:.1f}" y="287" text-anchor="middle">Wavenumber (cm^-1)</text>'
+        + f'<text x="18" y="{top + plot_height / 2:.1f}" text-anchor="middle" '
+        'transform="rotate(-90 18 133)">'
+        + escape(ylabel)
+        + "</text>"
+        + f'<text x="{left}" y="{top + plot_height + 19:.1f}" class="tick-label">{x_min:.1f}</text>'
+        + f'<text x="{left + plot_width}" y="{top + plot_height + 19:.1f}" text-anchor="end" '
+        f'class="tick-label">{x_max:.1f}</text>'
+        + "</svg>"
+    )
+
+
+def _spectrum_table(section: dict[str, Any]) -> str:
+    data = section["data"]
+    is_ir = data.get("spectrum_type") == "ir"
+    strength_key = "intensity" if is_ir else "activity"
+    strength_label = "IR intensity (km/mol)" if is_ir else "Raman activity (angstrom^4/amu)"
+    rows = "".join(
+        "<tr>"
+        f"<td>{escape(str(line['mode']))}</td>"
+        f"<td>{escape(str(line['frequency_cm1']))}</td>"
+        f"<td>{escape(str(line[strength_key]))}</td>"
+        f"<td>{'yes' if line.get('imaginary') else 'no'}</td>"
+        "</tr>"
+        for line in data.get("lines", [])
+    )
+    return (
+        '<div class="table-scroll"><table class="spectrum-stick-table"><thead><tr>'
+        f"<th>Mode</th><th>Frequency (cm^-1)</th><th>{escape(strength_label)}</th>"
+        "<th>Imaginary</th></tr></thead><tbody>"
+        + rows
+        + "</tbody></table></div>"
+    )
 
 
 def _hirshfeld_html(section: dict[str, Any]) -> str:
@@ -61,7 +180,6 @@ def _hirshfeld_html(section: dict[str, Any]) -> str:
     quadrature = data.get("quadrature", {})
     reference = data.get("reference_library", {})
     warnings = "".join(f"<li>{escape(w)}</li>" for w in section.get("warnings", []))
-
     atom_rows = "".join(
         "<tr>"
         f"<td>{escape(str(atom.get('atom_index', '')))}</td>"
@@ -87,7 +205,6 @@ def _hirshfeld_html(section: dict[str, Any]) -> str:
         f"<tr><th>{escape(_title(key))}</th><td>{escape(str(value))}</td><td></td></tr>"
         for key, value in reference.items()
     )
-
     return (
         f"<p>Result status: {escape(section.get('result_status', 'success'))}</p>"
         f"<ul>{warnings}</ul>"
@@ -105,17 +222,38 @@ def _hirshfeld_html(section: dict[str, Any]) -> str:
     )
 
 
-def _generic_html(section: dict[str, Any]) -> str:
+def _available_html(section: dict[str, Any]) -> str:
+    if section["name"] == "hirshfeld":
+        return _hirshfeld_html(section)
+    warnings = "".join(f"<li>{escape(w)}</li>" for w in section.get("warnings", []))
+    prefix = (
+        f"<p>Result status: {escape(section.get('result_status', 'success'))}</p>"
+        + (f'<ul class="warnings">{warnings}</ul>' if warnings else "")
+    )
+    if section["name"] == "vibrations":
+        data = section["data"]
+        summary = (
+            '<div class="spectroscopy-summary">'
+            f"<span>Modes: {escape(str(data.get('mode_count', 0)))}</span>"
+            f"<span>Imaginary: {escape(str(data.get('imaginary_mode_count', 0)))}</span>"
+            f"<span>IR: {'available' if data.get('ir_available') else 'unavailable'}</span>"
+            f"<span>Raman: {'available' if data.get('raman_available') else 'unavailable'}</span>"
+            "</div>"
+        )
+        return prefix + summary + _vibrational_mode_table(section)
+    if section["name"] in {"ir-spectrum", "raman-spectrum"}:
+        broadening = section["data"].get("broadening", {})
+        details = (
+            '<p class="spectrum-details">Gaussian visualization · FWHM '
+            f"{escape(str(broadening.get('fwhm_cm1', '—')))} cm^-1 · source sticks preserved</p>"
+        )
+        return prefix + details + _spectrum_svg(section) + _spectrum_table(section)
     rows = "".join(
         f"<tr><th>{escape(_title(key))}</th><td>{escape(str(value))}</td>"
         f"<td>{escape(section['units'].get(key, ''))}</td></tr>"
         for key, value in section["data"].items()
     )
-    warnings = "".join(f"<li>{escape(w)}</li>" for w in section.get("warnings", []))
-    return (
-        f"<p>Result status: {escape(section.get('result_status', 'success'))}</p>"
-        f"<ul>{warnings}</ul><table>{rows}</table>"
-    )
+    return prefix + f"<table>{rows}</table>"
 
 
 def _html(manifest: dict[str, Any]) -> str:
@@ -124,10 +262,8 @@ def _html(manifest: dict[str, Any]) -> str:
         heading = escape(_title(section["name"]))
         if section["status"] == "Unavailable":
             body = f'<p class="unavailable"><strong>Unavailable:</strong> {escape(section["error"])}</p>'
-        elif section["name"] == "hirshfeld":
-            body = _hirshfeld_html(section)
         else:
-            body = _generic_html(section)
+            body = _available_html(section)
         sections.append(
             f'<section><h2>{heading}</h2><p>Validation status: '
             f'<strong>{escape(section["validation_status"])}</strong></p>{body}</section>'
@@ -139,6 +275,7 @@ def _html(manifest: dict[str, Any]) -> str:
 body{{font:16px/1.55 system-ui,sans-serif;margin:0;color:#172033;background:#f4f7fb}}
 main{{max-width:960px;margin:auto;padding:2rem}}header,section{{background:white;padding:1.4rem;margin:1rem 0;border:1px solid #dce3ee;border-radius:10px}}
 h1,h2{{color:#123d6a}}table{{border-collapse:collapse;width:100%;margin:.75rem 0 1.25rem}}th,td{{text-align:left;padding:.55rem;border-bottom:1px solid #e5eaf1}}.unavailable{{color:#8b2e2e}}
+.table-scroll{{overflow-x:auto}}.vibrational-mode-table th,.spectrum-stick-table th{{width:auto;white-space:nowrap}}.spectroscopy-summary{{display:flex;flex-wrap:wrap;gap:.65rem 1.2rem;margin:.8rem 0 1rem;color:#40516b}}.spectrum-details{{color:#40516b}}.spectrum-plot{{display:block;width:100%;height:auto;margin:1rem 0 1.25rem;background:#fbfcfe;border:1px solid #e5eaf1;border-radius:8px}}.axis{{stroke:#607089;stroke-width:1}}.spectrum-curve{{fill:none;stroke:#123d6a;stroke-width:2}}.spectrum-stick{{stroke:#7890ad;stroke-width:1;opacity:.55}}.tick-label{{font-size:12px;fill:#607089}}.warnings{{color:#7b4e12}}
 </style></head><body><main><header><h1>openWFN Research Report</h1>
 <p>Generated: {escape(manifest['generated_at'])}</p><p>openWFN version: {escape(manifest['openwfn_version'])}</p>
 <p>Input SHA-256: <code>{escape(manifest['input']['sha256'])}</code></p></header>

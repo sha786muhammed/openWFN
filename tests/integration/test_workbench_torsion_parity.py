@@ -19,7 +19,7 @@ def test_signed_javascript_torsions_match_core(tmp_path):
     if node is None:
         pytest.skip('Node is optional; full interactive Chromium parity runs in CI')
     path = export_workbench(parse_fchk(ROOT/'examples/water/water.fchk'), tmp_path/'workbench.html')
-    text = path.read_text()
+    text = path.read_text(encoding="utf-8")
     start, end = text.index('function vector('), text.index('function resetMeasurement(')
     javascript = text[start:end]
     points = np.random.default_rng(731).normal(size=(100, 4, 3)).tolist()

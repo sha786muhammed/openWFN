@@ -1,8 +1,7 @@
 # Python API reference
 
-This reference describes the current public API and the 0.11 development
-Hirshfeld additions. Optional output extraction remains Experimental; ingestion
-support does not imply every analysis is available.
+This reference describes openWFN 0.9.2. Optional output extraction remains
+Experimental; ingestion support does not imply every analysis is available.
 
 The stable import surface is declared by `openwfn.__all__`. Import from `openwfn` rather than internal modules when possible.
 
@@ -117,8 +116,7 @@ fields before electronic analyses.
 | `geometry_angle(i, j, k)` | Angle in degrees; one-based atom numbers |
 | `geometry_dihedral(i, j, k, l)` | Signed torsion in degrees; one-based atom numbers |
 | `orbitals(spin)` | Frontier orbitals for `"alpha"`, `"beta"`, or spin-complete `"all"` |
-| `population(method)` | Populations for `"mulliken"`, `"lowdin"`, or native `"hirshfeld"` |
-| `hirshfeld(settings=None)` | Native ordinary Hirshfeld populations/charges with optional expert quadrature settings |
+| `population(method)` | Populations for `"mulliken"` or `"lowdin"` |
 | `density(kind, spacing_bohr=0.15, padding_bohr=6.0)` | Grid integration for `"total"`, `"alpha"`, `"beta"`, or `"spin"` |
 
 All these methods return `ResultRecord`. Specialized methods are convenience
@@ -130,14 +128,6 @@ raise `DataUnavailableError`.
 `analyze_geometry()` also reports known physical nuclei, ghosts, and unknown
 effective-charge centers. A structure-only `analyze("summary")` returns a
 partial result; missing electronic values remain `None`.
-
-Native Hirshfeld is validated only for the named H/C/N/O all-electron scope.
-Elements outside H/C/N/O, ECP/pseudopotential cases and ghost-center ambiguity
-are rejected rather than assigned guessed pro-atom densities. Ordinary
-unrestricted Hirshfeld uses the total density. The default atom-centered grid
-is a validated starting point for the named cases, not a universal convergence
-guarantee; inspect diagnostics or supply expert `HirshfeldSettings` when
-extending beyond that evidence scope.
 
 ### Model schema
 
@@ -169,7 +159,7 @@ wavefunction. Pin the exact package version when reproducing published work.
 
 For Gaussian formatted-checkpoint inputs, openWFN preserves source electronic metadata instead of reconstructing it when the file provides the authoritative record. FCHK `Nuclear charges` supplies effective nuclear charges for ECP and ghost centers. FCHK `Number of electrons` is the preferred total-electron expectation for density conservation; alpha and beta electron records are used for spin-resolved expectations. If a required source value is absent, the deterministic fallback is recorded in result warnings.
 
-Mulliken and Löwdin population results carry a conservation error. A scientifically inconsistent but still numerically usable result is retained with `status="partial"` and a warning instead of being labeled as a clean success. Density integration, native Hirshfeld, and cube export use the same principle: validation status is assigned from the actual diagnostics rather than forcing a clean result.
+Mulliken and Löwdin population results carry a conservation error. A scientifically inconsistent but still numerically usable result is retained with `status="partial"` and a warning instead of being labeled as a clean success. Density integration and cube export use the same principle: validation status is assigned from the actual generated grid and its electron-conservation check.
 
 For post-HF calculations, openWFN does not claim correlated-density support unless a supported post-SCF density is actually parsed and selected. If the available matrix is the SCF density, the result names `density_source="scf"` and emits a warning that the SCF density was used.
 
@@ -182,16 +172,20 @@ The default density-grid spacing is **0.15 bohr** with 6.0 bohr padding. These d
 | Name | Result |
 |---|---|
 | `beta-frontier` | Beta-spin HOMO, LUMO, and gap |
-| `dos` | Gaussian orbital-energy DOS within its documented validation scope |
+| `dos` | Experimental Gaussian orbital-energy DOS |
 | `frontier` | Alpha/default HOMO, LUMO, and gap |
 | `frontier-all` | Alpha and beta frontiers plus the true overall HOMO for unrestricted calculations |
-| `hirshfeld` | Validated native neutral-pro-atom Hirshfeld populations and charges for the named H/C/N/O all-electron scope |
-| `mayer` | Spin-corrected Mayer bond orders within its documented validation scope |
+| `hirshfeld` | Validated ordinary neutral-pro-atom Hirshfeld populations and charges for the documented in-scope cases |
+| `ir-spectrum` | Experimental source IR sticks plus Gaussian-broadened curve |
 | `lowdin` | Löwdin populations and charges |
+| `mayer` | Experimental spin-corrected Mayer bond orders |
 | `mulliken` | Mulliken populations and charges |
-| `orbital-composition` | Named default HOMO/alpha/Löwdin AO projections within its documented scope |
-| `pdos` | Atom-resolved Löwdin PDOS by default, within its documented scope |
+| `normal-mode` | Experimental source normal-mode metadata and displacement vectors |
+| `orbital-composition` | Experimental default HOMO/alpha/Lowdin AO projections |
+| `pdos` | Experimental atom-resolved Lowdin PDOS by default |
+| `raman-spectrum` | Experimental source Raman activities plus Gaussian-broadened activity curve |
 | `summary` | Version 2: complete molecular summary or partial structure-only/periodic summary |
+| `vibrations` | Experimental source-reported vibrational mode table |
 
 Use `available_analyses()` to discover registered names. Run an analysis
 with `calculation.analyze(name)` after `load(path)`, or use
@@ -268,14 +262,13 @@ Outputs can disclose the underlying molecular data. Apply the same access contro
 
 The public import surface is versioned, but scientific behavior can be clarified between releases. Pin an exact openWFN version for reproducible work and review the [release history](../project/release-history.md).
 
+Development branch: `orbital_cube(output, mo="homo", spin="alpha", spacing_bohr=.15, padding_bohr=6.)` exports signed amplitudes. `orbital_composition(mo="homo", spin="alpha", method="lowdin")` returns AO fractions. See [MO cubes](../science/mo-cubes.md) and [composition](../science/orbital-composition.md).
+
 Development registry calls accept keyword parameters: `calculation.analyze(name, **parameters)`.
 Unknown parameters are rejected, including structure-only summaries. The convenience
 methods `mayer(threshold=.05)`, `dos(sigma_ev=.3, spin="all", energy_min_ev=None,
 energy_max_ev=None, points=None)` and `pdos(group_by="atom", method="lowdin", ...)`
-return the same shared result envelopes. Native Hirshfeld is available as both
-`calculation.hirshfeld(settings=...)` and `calculation.population("hirshfeld")`.
-See [DOS/PDOS](../science/dos-pdos.md) and the validation-status page for each
-method's evidence boundary.
+return the same shared result envelopes. See [DOS/PDOS](../science/dos-pdos.md).
 
 Point ESP uses the same Gaussian-integral core as the CLI:
 

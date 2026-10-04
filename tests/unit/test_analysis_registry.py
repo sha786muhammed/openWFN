@@ -20,12 +20,16 @@ def test_registry_runs_summary_with_versioned_input_provenance() -> None:
         "frontier",
         "frontier-all",
         "hirshfeld",
+        "ir-spectrum",
         "lowdin",
         "mayer",
         "mulliken",
+        "normal-mode",
         "orbital-composition",
         "pdos",
+        "raman-spectrum",
         "summary",
+        "vibrations",
     )
     assert result.analysis_name == "summary"
     assert result.analysis_version == "2"

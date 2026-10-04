@@ -32,6 +32,18 @@
       "status": "Validated",
       "scope": "Ordinary neutral-pro-atom Hirshfeld populations and charges for H/C/N/O all-electron wavefunctions in the named ten-case validation set, including charged and open-shell cases. Unrestricted inputs use the total density. Unsupported elements, ECP/pseudopotential cases, and ghost-center ambiguity remain unsupported.",
       "evidence": ["hirshfeld/reference-report.json", "hirshfeld/convergence-report.json", "tests/validation/test_hirshfeld_evidence.py"]
+    },
+    "vibrational-spectroscopy": {
+      "status": "Experimental",
+      "scope": "Native source-faithful Gaussian harmonic vibrational parsing, IR intensities, Raman activities, source normal-mode vectors and deterministic Gaussian broadening. Committed fixtures and interface-parity tests establish implementation/regression behavior but are not an independent external scientific validation campaign. Raman activity is not converted to experimental Raman intensity.",
+      "evidence": [
+        "vibrational-spectroscopy/README.md",
+        "tests/parsers/test_gaussian_output.py",
+        "tests/unit/test_vibrational_analysis.py",
+        "tests/integration/test_vibrational_parity.py",
+        "tests/integration/test_vibrational_report.py",
+        "tests/integration/test_vibrational_workbench.py"
+      ]
     }
   },
   "everyday_qc_corpus": {

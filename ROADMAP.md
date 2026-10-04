@@ -26,6 +26,8 @@ documentation, provenance, and validation evidence are ready.
   momentum examples.
 - Publish tolerances, conventions, source procedures, and limitations with each
   validated result.
+- Build a provenance-complete independent vibrational spectroscopy corpus before
+  promoting the native Gaussian frequency/IR/Raman feature beyond Experimental.
 
 ## Scientific methods
 
@@ -43,16 +45,20 @@ change. Open a feature proposal to discuss a roadmap item before implementation.
 
 ## Everyday QC staged project
 
-The first everyday-QC units — MO cubes, named MO composition, Mayer, DOS and
-PDOS — have reached their documented scoped validation state. Native ordinary
-Hirshfeld populations and charges are implemented on the current development
-branch and independently validated for the named H/C/N/O all-electron scope,
-including charged and open-shell examples. Unsupported elements,
-ECP/pseudopotential cases and ghost-center ambiguity remain outside that
-validation boundary.
+Units 1–5 (MO cubes, named MO composition, Mayer, DOS and PDOS) have completed
+their documented staged implementation and validation work for the stated
+reference scope. Native Hirshfeld remains isolated on its own gated feature PR.
 
-The next gated scientific unit is spectroscopy. NTOs, analytic density
-derivatives, QTAIM, ELF/LOL, NCI and basin integration follow only after their
-own definitions, reference evidence and failure semantics are ready. See the
-[architecture and ordered roadmap](docs/project/everyday-qc-design.md) and
-[actual completion/validation record](docs/project/everyday-qc-validation.md).
+Native Gaussian harmonic **vibrational spectroscopy is now implemented on a
+separate vibrational-spectroscopy feature line** with typed mode records,
+IR/Raman-activity spectra, normal-mode vectors, CLI/Python/MCP parity,
+research-report rendering, and an offline Workbench workspace. It remains
+**Experimental** because parser/regression/interface parity is not an independent
+scientific validation corpus.
+
+The ordered later methods remain excited states/UV–Vis, NTO, density
+derivatives, QTAIM, ELF/LOL, NCI and basin analysis. Each should remain a
+separate scientific gate rather than being folded into one unchecked expansion.
+See the [architecture and ordered roadmap](docs/project/everyday-qc-design.md),
+[actual completion/validation record](docs/project/everyday-qc-validation.md),
+and [vibrational spectroscopy semantics](docs/science/vibrational-spectroscopy.md).

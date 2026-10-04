@@ -436,6 +436,26 @@ def main(argv: list[str] | None = None) -> int:
     p_orbital_cube.add_argument("--spacing", type=float, default=.15, help="Grid spacing in bohr")
     p_orbital_cube.add_argument("--padding", type=float, default=6., help="Padding in bohr")
 
+    p_vibrations = subparsers.add_parser("vibrations", help="Source vibrational modes and normal-mode vectors")
+    p_vibrations.add_argument("--export", dest="vibrations_output", type=Path, help="CSV or JSON mode table")
+    vibration_commands = p_vibrations.add_subparsers(dest="vibration_command")
+    p_normal_mode = vibration_commands.add_parser("mode", help="Inspect one one-based normal mode")
+    p_normal_mode.add_argument("mode", type=int)
+
+    p_vib_spectra = subparsers.add_parser("spectra", help="IR and Raman vibrational spectra")
+    vib_spectrum_commands = p_vib_spectra.add_subparsers(dest="vibrational_spectrum_kind", required=True)
+    for spectrum_kind in ("ir", "raman"):
+        p_vib_spectrum = vib_spectrum_commands.add_parser(spectrum_kind)
+        p_vib_spectrum.add_argument("--fwhm", type=float, default=20.0, dest="fwhm_cm1")
+        p_vib_spectrum.add_argument("--min", type=float, dest="frequency_min_cm1")
+        p_vib_spectrum.add_argument("--max", type=float, dest="frequency_max_cm1")
+        p_vib_spectrum.add_argument("--points", type=int)
+        p_vib_spectrum.add_argument(
+            "--export", dest="vibrational_spectrum_output", type=Path,
+            help="CSV, JSON, PNG or SVG",
+        )
+        p_vib_spectrum.add_argument("--dpi", type=int, default=300)
+
     p_density = subparsers.add_parser("density", help="Electron and spin-density analysis")
     density_commands = p_density.add_subparsers(dest="density_command", required=True)
     p_density_integrate = density_commands.add_parser("integrate", help="Integrate density on a molecular grid")
@@ -626,6 +646,46 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "bondorder":
         return execute(lambda: run_analysis(require_calculation(), "mayer", threshold=args.threshold), _context(args))
+
+    if args.command == "vibrations":
+        def vibrations_operation() -> ResultRecord:
+            calculation = require_calculation()
+            if args.vibration_command == "mode":
+                return run_analysis(calculation, "normal-mode", mode=args.mode)
+            record = run_analysis(calculation, "vibrations")
+            if args.vibrations_output is not None:
+                output_format = args.vibrations_output.suffix.lstrip(".").lower()
+                write_result_table(
+                    record,
+                    ExportRequest(args.vibrations_output, output_format, args.overwrite),
+                )
+            return record
+
+        return execute(vibrations_operation, _context(args))
+
+    if args.command == "spectra":
+        def vibrational_spectrum_operation() -> ResultRecord:
+            from .exporters.spectra import write_spectrum
+
+            analysis = f"{args.vibrational_spectrum_kind}-spectrum"
+            record = run_analysis(
+                require_calculation(),
+                analysis,
+                fwhm_cm1=args.fwhm_cm1,
+                frequency_min_cm1=args.frequency_min_cm1,
+                frequency_max_cm1=args.frequency_max_cm1,
+                points=args.points,
+            )
+            if args.vibrational_spectrum_output is not None:
+                write_spectrum(
+                    record,
+                    args.vibrational_spectrum_output,
+                    overwrite=args.overwrite,
+                    dpi=args.dpi,
+                )
+            return record
+
+        return execute(vibrational_spectrum_operation, _context(args))
 
     if args.command == "orbitals":
         if args.orbital_command in {"dos", "pdos"}:
