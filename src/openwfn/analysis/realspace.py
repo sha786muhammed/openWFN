@@ -13,6 +13,7 @@ from .density import density_matrix_for_kind
 from .limits import bounded_point_chunk_size
 
 DensityKind = Literal["total", "alpha", "beta", "spin"]
+KineticEnergyDensityKind = Literal["total", "alpha", "beta"]
 DENSITY_DERIVATIVE_CONVENTION = "analytic_cartesian_ao_product_rule"
 KED_CONVENTION = "positive_definite_half_gradient_square"
 
@@ -122,6 +123,14 @@ def _validate_points(points_bohr: np.ndarray) -> np.ndarray:
     return points
 
 
+def _validate_ked_kind(kind: str) -> None:
+    if kind not in {"total", "alpha", "beta"}:
+        raise ValueError(
+            "kinetic-energy-density kind must be total, alpha, or beta; "
+            "a spin-difference field is signed and is not positive-definite"
+        )
+
+
 def evaluate_density_fields(
     data: CalculationData,
     points_bohr: np.ndarray,
@@ -170,11 +179,12 @@ def evaluate_kinetic_energy_density(
     data: CalculationData,
     points_bohr: np.ndarray,
     *,
-    kind: DensityKind = "total",
+    kind: KineticEnergyDensityKind = "total",
     chunk_size: int | None = None,
 ) -> KineticEnergyDensityBatch:
-    """Evaluate the positive-definite half-gradient-square KED at Bohr points."""
+    """Evaluate positive-definite KED for total, alpha, or beta at Bohr points."""
 
+    _validate_ked_kind(kind)
     if data.basis is None:
         raise DataUnavailableError("Basis set is not available.")
     points = _validate_points(points_bohr)
@@ -244,11 +254,12 @@ def kinetic_energy_density(
     data: CalculationData,
     *,
     points_bohr: np.ndarray,
-    kind: DensityKind = "total",
+    kind: KineticEnergyDensityKind = "total",
     chunk_size: int | None = None,
 ) -> ResultRecord:
-    """Return positive-definite kinetic-energy density at supplied Bohr points."""
+    """Return positive-definite total/alpha/beta KED at supplied Bohr points."""
 
+    _validate_ked_kind(kind)
     points = _validate_points(points_bohr)
     result = evaluate_kinetic_energy_density(data, points, kind=kind, chunk_size=chunk_size)
     return ResultRecord(
