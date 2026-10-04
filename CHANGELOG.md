@@ -2,6 +2,18 @@
 
 All notable changes to openWFN are documented in this file.
 
+## [0.11.0] - 2026-10-04
+
+Stable feature release integrating native Hirshfeld analysis, vibrational spectroscopy, and method-general excited-state/UV–Vis post-processing through the shared openWFN model and interfaces.
+
+- Add ordinary neutral-pro-atom Hirshfeld populations and charges with permanent PySCF-generated H/C/N/O reference data, explicit unsupported ECP/ghost/element handling, closure diagnostics, and independent HORTON-PART validation for the named ten-case all-electron scope.
+- Add native Gaussian harmonic vibrational records, IR intensities, Raman activities, normal-mode vectors, deterministic Gaussian broadening, CLI/Python/MCP parity, reports, exports, and an offline Workbench Vibrations workspace. Scientific status remains Experimental pending independent external spectroscopy validation.
+- Add typed excited-state/job-block records and source-faithful Gaussian, ORCA, and Q-Chem adapters with multi-job isolation, method/amplitude-convention classification, transition dipoles, and conservative missing-data handling.
+- Add UV–Vis stick/broadened profiles in energy space with the documented 0.20 eV default FWHM, dark-state preservation, invalid/missing oscillator-strength exclusions, and correct energy-to-wavelength Jacobian handling. Excited-state/UV–Vis scientific status remains Experimental pending named independent cross-program validation.
+- Extend CSV/JSON/PNG/SVG export, HTML reports, Python analysis registry, local MCP routing, CLI commands, and offline Workbench integration without duplicating scientific engines across interfaces.
+- Expand the bounded release resource benchmark to 110 prescribed workflows across eleven installed molecular examples and retain exact-commit CI, installed-wheel verification, PyPI trusted publishing, and post-publication public-PyPI reinstall verification.
+- Preserve capability-specific validation labels: stable package status does not promote Experimental analyses to Validated.
+
 ## [0.10.1] - 2026-10-02
 
 Release-evidence and published-package reproducibility hardening for the 0.10 stable line.
