@@ -313,6 +313,27 @@ def _hirshfeld_html(section: dict[str, Any]) -> str:
     )
 
 
+def _uvvis_table(section: dict[str, Any]) -> str:
+    rows = "".join(
+        "<tr>"
+        f"<td>{escape(str(line.get('state')))}</td>"
+        f"<td>{escape(_display_optional(line.get('source_state')))}</td>"
+        f"<td>{escape(str(line.get('energy_ev')))}</td>"
+        f"<td>{escape(_display_optional(line.get('wavelength_nm')))}</td>"
+        f"<td>{escape(_display_optional(line.get('oscillator_strength')))}</td>"
+        f"<td>{'included' if line.get('eligible') else escape(str(line.get('exclusion_reason')))}</td>"
+        "</tr>"
+        for line in section["data"].get("lines", [])
+    )
+    return (
+        '<div class="table-scroll"><table class="uvvis-stick-table"><thead><tr>'
+        "<th>State</th><th>Source state</th><th>Energy (eV)</th><th>Wavelength (nm)</th>"
+        "<th>Oscillator strength</th><th>Curve status</th></tr></thead><tbody>"
+        + rows
+        + "</tbody></table></div>"
+    )
+
+
 def _available_html(section: dict[str, Any]) -> str:
     if section["name"] == "hirshfeld":
         return _hirshfeld_html(section)
@@ -339,6 +360,24 @@ def _available_html(section: dict[str, Any]) -> str:
             f"{escape(str(broadening.get('fwhm_cm1', '—')))} cm^-1 · source sticks preserved</p>"
         )
         return prefix + details + _spectrum_svg(section) + _spectrum_table(section)
+    if section["name"] == "excited-states":
+        data = section["data"]
+        summary = (
+            '<div class="spectroscopy-summary">'
+            f"<span>Jobs: {escape(str(data.get('job_count', 0)))}</span>"
+            f"<span>States: {escape(str(sum(len(job.get('states', [])) for job in data.get('jobs', []))))}</span>"
+            "<span>Values: source-reported unless explicitly derived</span>"
+            "</div>"
+        )
+        return prefix + summary + _excited_state_table(section)
+    if section["name"] == "uvvis-spectrum":
+        broadening = section["data"].get("broadening", {})
+        details = (
+            '<p class="spectrum-details">Gaussian visualization · FWHM '
+            f"{escape(str(broadening.get('fwhm_ev', '—')))} eV · source oscillator-strength sticks preserved · "
+            "curve is not absorbance or an extinction coefficient</p>"
+        )
+        return prefix + details + _uvvis_svg(section) + _uvvis_table(section)
     rows = "".join(
         f"<tr><th>{escape(_title(key))}</th><td>{escape(str(value))}</td>"
         f"<td>{escape(section['units'].get(key, ''))}</td></tr>"
@@ -366,7 +405,7 @@ def _html(manifest: dict[str, Any]) -> str:
 body{{font:16px/1.55 system-ui,sans-serif;margin:0;color:#172033;background:#f4f7fb}}
 main{{max-width:960px;margin:auto;padding:2rem}}header,section{{background:white;padding:1.4rem;margin:1rem 0;border:1px solid #dce3ee;border-radius:10px}}
 h1,h2{{color:#123d6a}}table{{border-collapse:collapse;width:100%;margin:.75rem 0 1.25rem}}th,td{{text-align:left;padding:.55rem;border-bottom:1px solid #e5eaf1}}.unavailable{{color:#8b2e2e}}
-.table-scroll{{overflow-x:auto}}.vibrational-mode-table th,.spectrum-stick-table th{{width:auto;white-space:nowrap}}.spectroscopy-summary{{display:flex;flex-wrap:wrap;gap:.65rem 1.2rem;margin:.8rem 0 1rem;color:#40516b}}.spectrum-details{{color:#40516b}}.spectrum-plot{{display:block;width:100%;height:auto;margin:1rem 0 1.25rem;background:#fbfcfe;border:1px solid #e5eaf1;border-radius:8px}}.axis{{stroke:#607089;stroke-width:1}}.spectrum-curve{{fill:none;stroke:#123d6a;stroke-width:2}}.spectrum-stick{{stroke:#7890ad;stroke-width:1;opacity:.55}}.tick-label{{font-size:12px;fill:#607089}}.warnings{{color:#7b4e12}}
+.table-scroll{{overflow-x:auto}}.vibrational-mode-table th,.spectrum-stick-table th,.excited-state-table th,.uvvis-stick-table th{{width:auto;white-space:nowrap}}.spectroscopy-summary{{display:flex;flex-wrap:wrap;gap:.65rem 1.2rem;margin:.8rem 0 1rem;color:#40516b}}.spectrum-details{{color:#40516b}}.spectrum-plot{{display:block;width:100%;height:auto;margin:1rem 0 1.25rem;background:#fbfcfe;border:1px solid #e5eaf1;border-radius:8px}}.axis{{stroke:#607089;stroke-width:1}}.spectrum-curve{{fill:none;stroke:#123d6a;stroke-width:2}}.spectrum-stick{{stroke:#7890ad;stroke-width:1;opacity:.55}}.tick-label{{font-size:12px;fill:#607089}}.warnings{{color:#7b4e12}}
 </style></head><body><main><header><h1>openWFN Research Report</h1>
 <p>Generated: {escape(manifest['generated_at'])}</p><p>openWFN version: {escape(manifest['openwfn_version'])}</p>
 <p>Input SHA-256: <code>{escape(manifest['input']['sha256'])}</code></p></header>
