@@ -4,15 +4,15 @@ openWFN requires Python 3.10–3.13.
 
 !!! note "Current release"
 
-    The stable release is 0.10.1. See the
-    [0.10.1 release notes](releases/0.10.1.md) for support boundaries.
+    The stable release is 0.11.0. See the
+    [0.11.0 release notes](releases/0.11.0.md) for support boundaries.
 
 ## Optional features
 
 In your environment, install only the optional features you need:
 
 ```bash
-python -m pip install "openwfn[interop,outputs,mcp]==0.10.1"
+python -m pip install "openwfn[interop,outputs,mcp]==0.11.0"
 openwfn --version
 ```
 
@@ -37,10 +37,16 @@ On Windows, activate with `.venv\Scripts\activate`.
 Pin the exact release when reproducing research:
 
 ```bash
-python -m pip install openwfn==0.10.1
+python -m pip install openwfn==0.11.0
 ```
 
 For reproducing work created with the immediately previous stable release, use:
+
+```bash
+python -m pip install openwfn==0.10.1
+```
+
+For older work created with openWFN 0.10.0, use:
 
 ```bash
 python -m pip install openwfn==0.10.0
@@ -82,9 +88,10 @@ The full corpus is written to `installed-examples/everyday-qc/`; the historical 
 
 ## Resource monitoring
 
-Install `openwfn[interop,resources]==0.10.1` for everyday QC and optional
+Install `openwfn[interop,resources]==0.11.0` for everyday QC and optional
 trusted-process monitoring. The `resources` extra does not change scientific
 labels and does not provide OS hard quotas.
 
-The [0.10.0rc1 candidate notes](releases/0.10.0rc1.md) and
-[0.10.0 stable notes](releases/0.10.0.md) are retained for historical reproduction; 0.10.1 supersedes the 0.10.0 package release.
+The [0.10.0rc1 candidate notes](releases/0.10.0rc1.md),
+[0.10.0 stable notes](releases/0.10.0.md), and
+[0.10.1 release notes](releases/0.10.1.md) are retained for historical reproduction; 0.11.0 supersedes the 0.10 stable line.
