@@ -11,6 +11,7 @@ from .basis import evaluate_ao_fields
 from .density import density_matrix_for_kind
 
 DensityKind = Literal["total", "alpha", "beta", "spin"]
+KED_CONVENTION = "positive_definite_half_gradient_square"
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,6 +22,14 @@ class DensityFieldBatch:
     gradient: np.ndarray
     hessian: np.ndarray
     laplacian: np.ndarray
+
+
+@dataclass(frozen=True, slots=True)
+class KineticEnergyDensityBatch:
+    """Positive-definite kinetic-energy density in atomic units."""
+
+    tau: np.ndarray
+    convention: str = KED_CONVENTION
 
 
 def _density_fields_for_matrix(
@@ -60,12 +69,43 @@ def _density_fields_for_matrix(
     )
 
 
+def _kinetic_energy_density_for_matrix(
+    data: CalculationData,
+    density_matrix: DensityMatrix,
+    points_bohr: np.ndarray,
+) -> np.ndarray:
+    if data.basis is None:
+        raise DataUnavailableError("Basis set is not available.")
+
+    ao = evaluate_ao_fields(data.basis, data.molecule, points_bohr, derivatives=1)
+    matrix = np.asarray(density_matrix.values, dtype=float)
+    n_functions = ao.values.shape[1]
+    if matrix.shape != (n_functions, n_functions):
+        raise ValueError("density matrix size does not match evaluated basis functions")
+    return 0.5 * np.einsum(
+        "pia,ij,pja->p",
+        ao.gradients,
+        matrix,
+        ao.gradients,
+        optimize=True,
+    )
+
+
 def _validate_chunk_size(chunk_size: int | None, n_points: int) -> int:
     if chunk_size is None:
         return max(1, n_points)
     if isinstance(chunk_size, bool) or not isinstance(chunk_size, int) or chunk_size <= 0:
         raise ValueError("chunk_size must be a positive integer")
     return chunk_size
+
+
+def _validate_points(points_bohr: np.ndarray) -> np.ndarray:
+    points = np.asarray(points_bohr, dtype=float)
+    if points.ndim != 2 or points.shape[1] != 3:
+        raise ValueError("points_bohr must have shape (n_points, 3)")
+    if not np.all(np.isfinite(points)):
+        raise ValueError("points_bohr coordinates must be finite")
+    return points
 
 
 def evaluate_density_fields(
@@ -83,11 +123,7 @@ def evaluate_density_fields(
 
     if data.basis is None:
         raise DataUnavailableError("Basis set is not available.")
-    points = np.asarray(points_bohr, dtype=float)
-    if points.ndim != 2 or points.shape[1] != 3:
-        raise ValueError("points_bohr must have shape (n_points, 3)")
-    if not np.all(np.isfinite(points)):
-        raise ValueError("points_bohr coordinates must be finite")
+    points = _validate_points(points_bohr)
     size = _validate_chunk_size(chunk_size, len(points))
     density_matrix = density_matrix_for_kind(data, kind)
 
@@ -109,3 +145,32 @@ def evaluate_density_fields(
         hessian=np.concatenate([batch.hessian for batch in batches], axis=0),
         laplacian=np.concatenate([batch.laplacian for batch in batches]),
     )
+
+
+def evaluate_kinetic_energy_density(
+    data: CalculationData,
+    points_bohr: np.ndarray,
+    *,
+    kind: DensityKind = "total",
+    chunk_size: int | None = None,
+) -> KineticEnergyDensityBatch:
+    """Evaluate the positive-definite half-gradient-square KED at Bohr points."""
+
+    if data.basis is None:
+        raise DataUnavailableError("Basis set is not available.")
+    points = _validate_points(points_bohr)
+    size = _validate_chunk_size(chunk_size, len(points))
+    density_matrix = density_matrix_for_kind(data, kind)
+
+    if len(points) == 0:
+        return KineticEnergyDensityBatch(tau=np.empty((0,), dtype=float))
+
+    batches = [
+        _kinetic_energy_density_for_matrix(
+            data,
+            density_matrix,
+            points[start : start + size],
+        )
+        for start in range(0, len(points), size)
+    ]
+    return KineticEnergyDensityBatch(tau=np.concatenate(batches))
