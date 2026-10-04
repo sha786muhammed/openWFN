@@ -14,11 +14,17 @@ For a Gaussian frequency output containing typed vibrational records:
 openwfn water_freq.log workbench water-vibrations.html --open
 ```
 
+For a supported Gaussian, ORCA, or Q-Chem excited-state output:
+
+```bash
+openwfn tddft.log workbench tddft-workbench.html --open
+```
+
 Without `--open`, open the resulting file in a modern browser. It works through `file://`; no localhost server or openWFN process must remain running.
 
 ## What the file contains
 
-The export can include molecular coordinates, bonds, calculation provenance, analysis properties, volumetric fields, vibrational mode records, CSS, JavaScript, and the molecular renderer. This portability has a privacy consequence: anyone who receives the file can inspect its embedded molecular data. Do not publish a workbench generated from a confidential calculation.
+The export can include molecular coordinates, bonds, calculation provenance, analysis properties, volumetric fields, vibrational mode records, excited-state records, UV–Vis arrays, CSS, JavaScript, and the molecular renderer. This portability has a privacy consequence: anyone who receives the file can inspect its embedded molecular data. Do not publish a workbench generated from a confidential calculation.
 
 Molecular rendering is provided by [3Dmol.js](https://github.com/3dmol/3Dmol.js) under the BSD-3-Clause license. The renderer and its attribution are embedded in the output, so opening a workbench does not fetch the library from a CDN.
 
@@ -49,6 +55,21 @@ The amplitude control does not alter or renormalize source displacement vectors,
 
 The spectroscopy calculations remain **Experimental** even though the Workbench interface itself is Stable. Gaussian Raman values are displayed as Raman **activities**, not converted experimental intensities. See [Vibrational spectroscopy](science/vibrational-spectroscopy.md).
 
+### Excited States
+
+When the input contains typed excited-state records, the Workbench adds an **Excited States** workspace. Its payload comes from the same registered `excited-states`, `transition-dipoles`, and `uvvis-spectrum` analyses used by Python, CLI, report, and MCP surfaces.
+
+The workspace provides:
+
+- job/state selection using one-based indices;
+- source excitation energy and derived wavelength;
+- source oscillator strength, multiplicity, symmetry, method family, and transition dipole when available;
+- an embedded UV–Vis oscillator-strength profile using the same broadened arrays as the registered analysis;
+- clickable source spectral sticks that select the corresponding state;
+- an explicit source-value note distinguishing parsed quantities from visualization-only broadening.
+
+The Workbench does not invent missing oscillator strengths or dipoles, does not clamp negative source oscillator strengths, and does not reinterpret method-specific amplitudes. The UV–Vis curve remains **Experimental** and is a deterministic visualization profile, not absorbance/extinction or an instrument model. See [Excited states and UV–Vis](science/excited-states-uvvis.md).
+
 ### Density and ESP
 
 Review available density/ESP fields together with isovalue and grid provenance. Embedded coarse grids are visualization data unless separately converged and validated. Grid-derived electronic/total ESP remain Experimental; do not remove that qualification in screenshots or reports.
@@ -60,18 +81,18 @@ Select two atoms for a distance, three for an angle, or four for a signed dihedr
 ## A careful review workflow
 
 1. Run `doctor` and `summary` in the terminal.
-2. For spectroscopy, run `vibrations` and the desired `spectra` command and preserve JSON/CSV output.
+2. For spectroscopy, run the relevant source-table command and desired `spectra` command and preserve JSON/CSV output.
 3. Generate the Workbench under a new, descriptive filename.
-4. Confirm molecular charge, multiplicity, formula, atom ordering, and selected mode number.
+4. Confirm molecular charge, multiplicity, formula, atom ordering, and selected mode/state number.
 5. Compare at least one displayed value with machine-readable CLI/Python output.
 6. Check the capability and validation label for every displayed scientific result or field.
 7. Preserve the exact openWFN version and input checksum with the artifact.
 
 ## Workbench versus report
 
-Use a **workbench** for interactive spatial exploration. Use a **report** for a fixed research record with selected analyses and command provenance. Archive machine-readable tables as well; neither the workbench nor a screenshot should be the sole numerical record.
+Use a **workbench** for interactive spatial/source-data exploration. Use a **report** for a fixed research record with selected analyses and command provenance. Archive machine-readable tables as well; neither the workbench nor a screenshot should be the sole numerical record.
 
-For vibrational work, the Workbench is particularly useful for connecting a selected source spectral line with a 3D normal-mode direction, while the report is better for fixed mode tables and plots.
+For vibrational work, the Workbench is particularly useful for connecting a selected source spectral line with a 3D normal-mode direction. For excited states, it connects source state metadata with the corresponding UV–Vis stick/profile. The report is better for fixed mode/state tables and plots.
 
 ## Troubleshooting
 
@@ -79,6 +100,8 @@ For vibrational work, the Workbench is particularly useful for connecting a sele
 - If a panel has no data, run `doctor`; the source file may lack required records.
 - If the Vibrations workspace is absent, the parsed input contains no typed vibrational record.
 - If spectra exist but arrows do not, source displacement vectors are missing; this is a supported unavailable state.
+- If the Excited States workspace is absent, the parsed input contains no typed excited-state collection.
+- If excited states are present but no UV–Vis curve appears, the selected job may have no eligible source oscillator strengths; source states remain inspectable.
 - If generation refuses to replace a file, choose a new filename or deliberately add the global `--overwrite` option before the input file.
 - If a volumetric surface is slow, use coarser exploratory data first, then converge settings separately.
 
@@ -88,6 +111,6 @@ See [Formats and exports](reference/formats-and-exports.md), [Security](project/
 
 The stable Workbench line validates the established everyday-QC workspaces in offline desktop Chromium with workspace/surface interaction and geometry readouts matching the Python API. The canvas is contained in the viewer so it cannot intercept sidebar clicks. Evidence with input/CI provenance is captured in `validation/everyday-qc/browser-report.json`; CI reruns the browser validator.
 
-The vibrational feature additionally has payload/HTML contract tests that require the Workbench to reuse registered spectroscopy numerical data and to represent missing displacement vectors explicitly. Browser CI remains the gate for preserving existing workspaces as the Vibrations workspace is added. This scope does not certify every GPU, browser, or mobile device.
+The vibrational and excited-state features additionally have payload/HTML contract tests that require the Workbench to reuse registered numerical data and represent unavailable source properties explicitly. Browser CI remains the gate for preserving existing workspaces as new workspaces are added. This scope does not certify every GPU, browser, or mobile device.
 
-Each preview field retains its scientific validation and conservation status independently of the interface. Coarse density fields are partial when their integration diagnostic fails. The Vibrations workspace likewise preserves Experimental spectroscopy status; interface rendering is not independent scientific validation.
+Each preview field retains its scientific validation and conservation status independently of the interface. Coarse density fields are partial when their integration diagnostic fails. Vibrational and excited-state workspaces likewise preserve Experimental scientific status; interface rendering is not independent scientific validation.
