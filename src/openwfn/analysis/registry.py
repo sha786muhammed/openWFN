@@ -20,6 +20,7 @@ from ..services import (
 )
 from ..spectral_services import orbital_dos, orbital_pdos
 from .excited_states import excited_state, excited_states, transition_dipoles, uvvis_spectrum
+from .realspace import density_derivatives, kinetic_energy_density
 from .structure_summary import structure_summary
 from .vibrations import ir_spectrum, normal_mode, raman_spectrum, vibrations
 
@@ -58,6 +59,20 @@ _TRANSITION_DIPOLES = CapabilityRequirement("transition dipoles", ("transition_d
 _ANALYSES = {
     "pdos": AnalysisDefinition("pdos", "1", "orbital_pdos", orbital_pdos, (_ISOLATED, _BASIS, _ORBITALS, _AO_OVERLAP)),
     "dos": AnalysisDefinition("dos", "1", "orbital_dos", orbital_dos, (_ISOLATED, _ORBITALS)),
+    "density-derivatives": AnalysisDefinition(
+        "density-derivatives",
+        "1",
+        "density_derivatives",
+        density_derivatives,
+        (_ISOLATED, _BASIS, _TOTAL_DENSITY),
+    ),
+    "kinetic-energy-density": AnalysisDefinition(
+        "kinetic-energy-density",
+        "1",
+        "kinetic_energy_density",
+        kinetic_energy_density,
+        (_ISOLATED, _BASIS, _TOTAL_DENSITY),
+    ),
     "mayer": AnalysisDefinition("mayer", "1", "mayer_bond_order", mayer_bond_orders, (_ISOLATED, _BASIS, _TOTAL_DENSITY, _AO_OVERLAP)),
     "orbital-composition": AnalysisDefinition("orbital-composition", "1", "orbital_composition", orbital_composition, (_ISOLATED, _BASIS, _ORBITALS, _AO_OVERLAP)),
     "beta-frontier": AnalysisDefinition(
