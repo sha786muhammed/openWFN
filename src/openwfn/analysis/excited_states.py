@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from math import isfinite
 
-import numpy as np
-
 from ..constants import HC_EV_NM
 from ..errors import DataUnavailableError
 from ..excited_states import (
