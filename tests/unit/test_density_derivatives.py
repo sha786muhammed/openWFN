@@ -2,9 +2,9 @@ import math
 
 import numpy as np
 import pytest
+from openwfn.analysis.realspace import evaluate_density_fields
 
 from openwfn.analysis.density import evaluate_density
-from openwfn.analysis.realspace import evaluate_density_fields
 from openwfn.model import (
     Atom,
     BasisSet,
