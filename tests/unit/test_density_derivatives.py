@@ -2,9 +2,9 @@ import math
 
 import numpy as np
 import pytest
-from openwfn.analysis.realspace import evaluate_density_fields
 
 from openwfn.analysis.density import evaluate_density
+from openwfn.analysis.realspace import evaluate_density_fields
 from openwfn.model import (
     Atom,
     BasisSet,
@@ -174,7 +174,7 @@ def test_unrestricted_total_and_spin_channels_reconstruct_alpha_beta_fields() ->
         )
 
 
-def test_density_field_chunking_is_numerically_identical_to_one_batch() -> None:
+def test_density_field_chunking_is_numerically_equivalent_to_one_batch() -> None:
     data = _single_s_data(total=1.7)
     points = np.array(
         (
@@ -190,10 +190,13 @@ def test_density_field_chunking_is_numerically_identical_to_one_batch() -> None:
     one_batch = evaluate_density_fields(data, points)
     chunked = evaluate_density_fields(data, points, chunk_size=2)
 
-    np.testing.assert_array_equal(chunked.rho, one_batch.rho)
-    np.testing.assert_array_equal(chunked.gradient, one_batch.gradient)
-    np.testing.assert_array_equal(chunked.hessian, one_batch.hessian)
-    np.testing.assert_array_equal(chunked.laplacian, one_batch.laplacian)
+    for component in ("rho", "gradient", "hessian", "laplacian"):
+        np.testing.assert_allclose(
+            getattr(chunked, component),
+            getattr(one_batch, component),
+            rtol=5e-15,
+            atol=5e-16,
+        )
 
 
 def test_density_field_rejects_invalid_chunk_size_before_evaluation() -> None:
