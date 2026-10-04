@@ -11,7 +11,13 @@ from ..errors import DataUnavailableError
 from ..model import MODEL_SCHEMA_VERSION, CalculationData
 from ..orbital_services import orbital_composition
 from ..results import ResultRecord
-from ..services import mayer_bond_orders, molecular_summary, orbital_frontier, population_analysis
+from ..services import (
+    hirshfeld_population_analysis,
+    mayer_bond_orders,
+    molecular_summary,
+    orbital_frontier,
+    population_analysis,
+)
 from ..spectral_services import orbital_dos, orbital_pdos
 from .structure_summary import structure_summary
 
@@ -63,6 +69,13 @@ _ANALYSES = {
         "frontier_orbitals",
         lambda data: orbital_frontier(data, "all"),
         (_ORBITALS,),
+    ),
+    "hirshfeld": AnalysisDefinition(
+        "hirshfeld",
+        "1",
+        "hirshfeld_population",
+        hirshfeld_population_analysis,
+        (_ISOLATED, _BASIS, _TOTAL_DENSITY),
     ),
     "lowdin": AnalysisDefinition(
         "lowdin",

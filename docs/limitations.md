@@ -20,6 +20,8 @@
 - Binary CHK files require Gaussian `formchk` and are not decoded internally.
 - Gaussian real spherical 5D, 7F, 9G, and 11H shells are supported; pure spherical shells above H (`l > 5`) are rejected explicitly.
 - ECP and ghost centers are handled with effective nuclear charges from the FCHK `Nuclear charges` record when present, and regression tests cover those semantics. This is source-faithful handling, not broad independent validation of every ECP family, basis set, or ghost-center workflow.
+- Native Hirshfeld in the 0.11 development branch is validated only for ordinary neutral-pro-atom populations/charges on H/C/N/O all-electron wavefunctions in the named ten-case set. Elements outside H/C/N/O, ECP/pseudopotential cases, and ghost-center ambiguity are rejected rather than assigned guessed reference densities. Ordinary unrestricted Hirshfeld uses the total density; no spin-Hirshfeld definition is implied.
+- Hirshfeld charges depend on numerical integration. The committed standard grid passed a fixed standard-to-fine gate on the ten validation cases, but users should still inspect returned diagnostics and converge the grid when extending beyond that evidence scope. Final charges are not rescaled to force charge closure.
 - For post-HF calculations, openWFN currently warns when an analysis is using the available SCF density. A warning naming the SCF density does not mean a correlated/post-SCF density was parsed or selected; post-SCF density support should not be assumed.
 - Density integration and cube validation depend on the numerical grid. The default **0.15 bohr** spacing is an accuracy/performance tradeoff and may be insufficient for tightly localized core density, heavy atoms, diffuse tails, or unusually demanding quantitative targets. Converge spacing and padding for the system being reported.
 - Density-grid AO evaluation is chunked to limit peak memory, but the Cartesian point grid and final scalar values still occupy memory. Extremely large boxes or very fine grids can therefore remain expensive.
@@ -42,19 +44,23 @@
   if other files succeed. Format hints help with ambiguous filenames; they
   cannot make a damaged or unrecognized scientific record valid.
 
-Always record the openWFN version, source-file checksum, grid spacing, padding, units, warnings, execution status, and validation status in research outputs.
+Always record the openWFN version, source-file checksum, grid settings, units,
+warnings, execution status, and validation status in research outputs.
 
 ## Everyday-QC validation scope
 
-MO cube, orbital composition, Mayer, DOS and PDOS are **Validated** for the
-documented eleven-molecule reference scope; that scope is not universal
-validation across all elements, high angular momentum, ECPs, correlated
-densities or programs. Löwdin partitions depend on AO representation;
-Mulliken fractions/PDOS may be signed. Mayer row sums are bonded-valence
-diagnostics, and correlated improved Mayer definitions are absent. DOS is
-finite-molecule orbital-energy broadening with one count per supplied spatial
-orbital/channel, without occupancy weighting or periodic bands. Failed source,
-conditioning, normalization or convergence diagnostics remain failed or
-partial/Experimental. Hirshfeld, typed spectroscopy/NTO and real-space
-topology/basins are not implemented.
-See the [completion and gate record](project/everyday-qc-validation.md).
+MO cube fields, orbital composition, Mayer, DOS and PDOS have the documented
+0.10-series validation boundaries. Native ordinary Hirshfeld on the 0.11
+development branch is **Validated** for the named ten-case H/C/N/O all-electron
+scope using committed independent HORTON-PART comparison and openWFN grid-
+refinement evidence. None of these scoped claims is universal validation across
+all elements, high angular momentum, ECPs, correlated densities or programs.
+Löwdin partitions depend on AO representation; Mulliken fractions/PDOS may be
+signed. Mayer row sums are bonded-valence diagnostics, and correlated improved
+Mayer definitions are absent. DOS is finite-molecule orbital-energy broadening
+with one count per supplied spatial orbital/channel, without occupancy weighting
+or periodic bands. Failed source, conditioning, normalization or convergence
+diagnostics remain failed or partial/Experimental.
+
+Typed spectroscopy/NTO and real-space topology/basin methods are not yet
+implemented. See the [completion and gate record](project/everyday-qc-validation.md).

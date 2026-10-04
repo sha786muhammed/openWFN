@@ -82,7 +82,7 @@ jobs:
           import json
           from pathlib import Path
           report = json.loads(Path("installed-resource-report.json").read_text())
-          assert len(report["records"]) == 99
+          assert len(report["records"]) == 110
           assert all(record["status"] == "success" for record in report["records"])
           PY
 
@@ -170,6 +170,6 @@ jobs:
           import json
           from pathlib import Path
           report = json.loads(Path("published-resource-report.json").read_text())
-          assert len(report["records"]) == 99
+          assert len(report["records"]) == 110
           assert all(record["status"] == "success" for record in report["records"])
           PY

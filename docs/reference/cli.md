@@ -7,7 +7,7 @@ openwfn examples install DESTINATION [--overwrite]
 
 Run `openwfn --help` or `openwfn FILE COMMAND --help` for the installed release's authoritative syntax.
 
-For interoperable inputs in openWFN 0.10.1, install `openwfn[interop]`, then inspect capabilities before an analysis:
+For interoperable inputs in openWFN 0.10.1 and the 0.11 development branch, install `openwfn[interop]`, then inspect capabilities before an analysis:
 
 ```bash
 openwfn molecule.molden capabilities
@@ -18,7 +18,8 @@ openwfn batch ./calculations --analyses summary,frontier --output-dir ./results
 
 Some output files contain geometry and energy but no complete wavefunction.
 `capabilities` shows which analyses have their required fields; a Stable
-format-ingestion status alone does not guarantee a `frontier` result.
+format-ingestion status alone does not guarantee a `frontier` or population
+result.
 
 ## Global options
 
@@ -62,7 +63,7 @@ These are the public top-level choices shown by `openwfn --help`.
 | `graph` | Show molecular fragments |
 | `geometry` | Run distance, angle, and dihedral operations |
 | `bondorder` | Run Mayer AO bond-order analysis when required electronic data are available |
-| `population` | Run Mulliken or Löwdin population analysis |
+| `population` | Run Mulliken, Löwdin, or native Hirshfeld population analysis |
 | `orbitals` | Inspect frontier orbitals, compositions, cubes, DOS, and PDOS |
 | `density` | Integrate or export electron and spin density |
 | `esp` | Evaluate supported electrostatic-potential components |
@@ -119,13 +120,36 @@ CLI atom indices are one-based. The legacy `dist`, `angle`, and `dihedral` forms
 | Command | Syntax and options | Status note |
 |---|---|---|
 | `orbitals` | `orbitals frontier [--spin alpha\|beta\|all]` | Requires MO energies; `all` reports both unrestricted channels and the true overall HOMO |
-| `bondorder` | `bondorder mayer [--threshold VALUE]` | Mayer result status follows the input diagnostics; Validated for the documented everyday-QC reference scope |
+| `bondorder` | `bondorder mayer [--threshold VALUE]` | Mayer result status follows input diagnostics; Validated for the documented everyday-QC reference scope |
 | `population` | `population mulliken` or `population lowdin` | Requires AO density and overlap data; conservation failures return `partial` with warnings |
+| `population` | `population hirshfeld [--radial-points N] [--theta-points N] [--phi-points N] [--radial-extent BOHR] [--chunk-size N]` | Native ordinary neutral-pro-atom Hirshfeld; Validated on the 0.11 development branch only for the named H/C/N/O all-electron scope |
 | `density` | `density integrate [--kind total\|alpha\|beta\|spin] [--spacing BOHR] [--padding BOHR]` | Grid integration; validation status comes from the generated grid's conservation check |
 | `density` | `density cube OUTPUT [grid options]` | Cube is written when requested; failed conservation returns `partial`/Experimental rather than a false Validated result |
 | `cube` | `cube OUTPUT [grid options]` | Convenience density-cube command with the same validation behavior |
 | `esp` | `esp point X Y Z [--component COMPONENT] [--method integrals\|grid]` | Nuclear/charge-model Stable; default Gaussian-integral electronic/total Validated for documented scope; explicit grid Experimental |
 | `validate` | `openwfn FILE validate` | Runs default total-density conservation check |
+
+### Native Hirshfeld
+
+Basic use:
+
+```bash
+openwfn FILE population hirshfeld
+```
+
+The validated default quadrature uses 96 radial points, 18 polar points, 36
+azimuthal points, a 20-bohr radial extent and bounded chunking. Expert numerical
+controls are exposed so convergence can be tested rather than hidden. The
+committed validation compares the standard grid with a 144 × 24 × 48 grid at
+24 bohr and requires a maximum per-atom shift of `5.0e-4 e`; all ten named
+validation cases pass.
+
+The method is scoped to H/C/N/O all-electron wavefunctions. Unsupported
+elements, ECP/pseudopotential cases and ghost-center ambiguity fail explicitly.
+Ordinary unrestricted cases use the total density. openWFN does not rescale the
+final charges to force exact closure; returned residuals and warnings remain
+visible. See [validation status](../science/validation-status.md) and
+[limitations](../limitations.md) for the full evidence boundary.
 
 The accepted frontier selector is `--spin alpha|beta|all`. For an unrestricted calculation, use:
 
@@ -167,20 +191,24 @@ establish optimization convergence. JSON field names remain unchanged.
 | `plot` | `plot frontier OUTPUT [--dpi N]` | Frontier-orbital figure |
 | `formchk` | `formchk [OUTPUT]` | Calls Gaussian's external `formchk` utility |
 
+Hirshfeld table export uses one atom per row through the shared exporter, and
+reports render the same atom/population/charge data without recalculating the
+method.
+
 ## Batch and guided mode
 
 `batch` accepts the primary file plus additional inputs, comma-separated
 `--analyses`, `--workers`, required `--output-dir`, and optional `--fail-fast`,
-`--resume`, `--format-map MAP.json`, and `--spin alpha|beta|all` controls. The spin selector applies to a requested `frontier` analysis; for example:
+`--resume`, `--format-map MAP.json`, and `--spin alpha|beta|all` controls. Native
+Hirshfeld can be requested by registry name alongside other analyses:
 
 ```bash
 openwfn batch ./calculations \
-  --analyses frontier \
-  --spin all \
+  --analyses summary,hirshfeld \
   --output-dir ./results
 ```
 
-This maps the requested frontier analysis to the spin-complete `frontier-all` result. Resume fingerprints include the frontier spin choice, so changing spin selection does not reuse incompatible cached results.
+The frontier spin selector applies only to a requested `frontier` analysis. Resume fingerprints include analysis/backend/software versions and effective format hints so incompatible cached results are not silently reused.
 
 Batch records preserve scientifically usable `partial` analyses. A record is `error` only when every requested analysis fails; otherwise partial values, warnings, and result data are retained in the manifest.
 
@@ -193,9 +221,13 @@ and `stopped_early` describe fail-fast runs. A JSON format map resolves keys
 relative to the map file, and unknown or conflicting format hints fail before
 analysis records are written.
 
-Resume requires matching input checksums and configuration fingerprints, including software, backend, analysis versions, and effective format hints; failed inputs are retried. Inputs may be files or directories. `--recursive` scans subdirectories and `--dry-run` previews supported and unsupported files without requiring `--output-dir`. Completed runs write `batch-manifest.json`, per-input JSON records, and `batch-summary.csv`. Progress uses stderr and global `--quiet` suppresses it, but `--quiet --format json` still emits the final result.
-It writes result schema `1.0` envelopes inside batch manifest schema `1.0`.
-The older `--operation summary` form remains supported.
+Resume requires matching input checksums and configuration fingerprints,
+including software, backend, analysis versions, and effective format hints;
+failed inputs are retried. Inputs may be files or directories. `--recursive`
+scans subdirectories and `--dry-run` previews supported and unsupported files.
+Completed runs write `batch-manifest.json`, per-input JSON records, and
+`batch-summary.csv`. Progress uses stderr and global `--quiet` suppresses it,
+but `--quiet --format json` still emits the final result.
 
 With `--format json`, parsed commands emit one result envelope on stdout.
 Runtime/input failures have `status="failed"`, structured error details, and
@@ -208,7 +240,8 @@ and CSV index remain in deterministic input order.
 
 `interactive` launches the guided terminal menu. With a file but no command, a
 terminal session enters guided mode; redirected input or `--non-interactive`
-defaults to `summary`.
+defaults to `summary`. Guided Hirshfeld uses the same registry/service path as
+the CLI, Python API, batch, reports and MCP interface.
 
 The hidden `mo` developer preview is intentionally not part of the public command contract.
 
@@ -218,7 +251,6 @@ Validated for the documented everyday-QC reference scope. MO field values have
 independent reference evidence, while each written cube keeps the success or
 partial status of its requested grid. See [MO cubes](../science/mo-cubes.md),
 [composition](../science/orbital-composition.md), and [Mayer](../science/mayer.md).
-Global options such as `--format json` go before the input path.
 
 Supported spectrum commands are `orbitals dos` and `orbitals pdos`; `--sigma`
 is in eV, `--energy-min`/`--energy-max` set both endpoints, `--points` controls
@@ -227,8 +259,3 @@ resolution, and `--export` writes CSV/JSON/PNG/SVG. PDOS adds `--group-by`
 Validated for the documented same-wavefunction everyday-QC scope; they remain
 finite-molecule orbital-energy analyses, not excited-state or periodic spectra.
 See [DOS/PDOS](../science/dos-pdos.md).
-
-Guided mode loads normalized molecular inputs and exposes frontier/composition/
-cube/DOS/PDOS orbital submenus with spin selection, Mayer bond analysis, density
-components and point ESP. Its results use the same services and formatter as
-the public API; expected input errors return failed records and keep navigation.

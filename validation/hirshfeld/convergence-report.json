@@ -1,0 +1,122 @@
+{
+  "acceptance": {
+    "max_per_atom_grid_shift_e": 0.0005
+  },
+  "cases": [
+    {
+      "convergence_gate_passed": true,
+      "fine_charges_e": [-0.33174235657091344, 0.16587116529683066, 0.16587116529683021],
+      "fine_status": "success",
+      "id": "water",
+      "input_path": "examples/everyday-qc/water.molden",
+      "input_sha256": "bc88492d8f32faef01c0aa2a5dbc61840c92f72935dde9bfe64cee1b6531b84f",
+      "max_abs_charge_shift_e": 2.2403654380553917e-06,
+      "standard_charges_e": [-0.3317401162054754, 0.16587116137347158, 0.16587116137347124],
+      "standard_status": "success"
+    },
+    {
+      "convergence_gate_passed": true,
+      "fine_charges_e": [-0.13666055714909664, 0.034165141378156405, 0.034165141378159514, 0.03416514137814586, 0.03416514137815396],
+      "fine_status": "success",
+      "id": "methane",
+      "input_path": "examples/everyday-qc/methane.molden",
+      "input_sha256": "7b960c754200f4f12bb0dc65a2a54e1f25d5f467bee03b4c2d5f76fc95bda0b7",
+      "max_abs_charge_shift_e": 6.862319903433445e-07,
+      "standard_charges_e": [-0.1366598709171063, 0.03416512763120971, 0.03416512763121249, 0.034165127631199166, 0.034165127631207604],
+      "standard_status": "success"
+    },
+    {
+      "convergence_gate_passed": true,
+      "fine_charges_e": [-0.3219084799310714, 0.10730754523439268, 0.10729913083379594, 0.10729913083380405],
+      "fine_status": "success",
+      "id": "ammonia",
+      "input_path": "examples/everyday-qc/ammonia.molden",
+      "input_sha256": "8e0a3961761c381b9f4b8893700d8789e496b199eda41e740d2dd7aa8e65fe94",
+      "max_abs_charge_shift_e": 2.4001363871484216e-05,
+      "standard_charges_e": [-0.3219324812949429, 0.10730756360643467, 0.10729914928356388, 0.10729914928357176],
+      "standard_status": "success"
+    },
+    {
+      "convergence_gate_passed": true,
+      "fine_charges_e": [-0.22142781173321957, 0.44286142363501746, -0.22142781173320536],
+      "fine_status": "success",
+      "id": "carbon_dioxide",
+      "input_path": "examples/everyday-qc/carbon_dioxide.molden",
+      "input_sha256": "8c848e941aa1176d1e76caf61802c0370e1d02438a41ad8044997f564bb67115",
+      "max_abs_charge_shift_e": 8.489770846153988e-05,
+      "standard_charges_e": [-0.22151270944166868, 0.44286405606074375, -0.2215127094416669],
+      "standard_status": "success"
+    },
+    {
+      "convergence_gate_passed": true,
+      "fine_charges_e": [-0.04060502407347677, -0.040605716490704324, -0.040605716490698995, -0.04060502407349453, -0.04060571649075584, -0.0406057164907061, 0.04060312649193243, 0.04060326405650916, 0.04060326405651771, 0.040603126491928876, 0.040603264056524035, 0.04060326405650849],
+      "fine_status": "success",
+      "id": "benzene",
+      "input_path": "examples/everyday-qc/benzene.molden",
+      "input_sha256": "8710bac39cd13fd1538bba70fbb95261ded2b7ad538506d63c3c7b4ab43c5be9",
+      "max_abs_charge_shift_e": 1.9916317461898814e-05,
+      "standard_charges_e": [-0.04062494039093867, -0.04062563268590136, -0.04062563268589248, -0.040624940390955544, -0.04062563268594932, -0.04062563268590047, 0.04060289152774632, 0.04060302903051727, 0.040603029030525484, 0.040602891527742435, 0.04060302903053137, 0.0406030290305166],
+      "standard_status": "success"
+    },
+    {
+      "convergence_gate_passed": true,
+      "fine_charges_e": [-0.08587466306299074, 0.05754433297535666, -0.29791779102512805, 0.03729398252604099, 0.037293982526052316, 0.03633825750322728, 0.022398242099565646, 0.022398242099566645, 0.17052552316969694],
+      "fine_status": "success",
+      "id": "ethanol",
+      "input_path": "examples/everyday-qc/ethanol.molden",
+      "input_sha256": "5dea76d46b2fd6a0cf6c264b5ffb65e67dfb2354d6dd4844780d252dcdab6276",
+      "max_abs_charge_shift_e": 2.1492675950085527e-06,
+      "standard_charges_e": [-0.08587251379539573, 0.05754417543577972, -0.29791691145972266, 0.03729426471759645, 0.03729426471760788, 0.036338514395918176, 0.022398329501617797, 0.022398329501618797, 0.17052580648780513],
+      "standard_status": "success"
+    },
+    {
+      "convergence_gate_passed": true,
+      "fine_charges_e": [0.054972938183698083, 0.2362560829352176, 0.23625608293521339, 0.2362560829352096, 0.2362560829352065],
+      "fine_status": "success",
+      "id": "ammonium_cation",
+      "input_path": "examples/everyday-qc/ammonium_cation.molden",
+      "input_sha256": "5b4d7133d785ec5d978102fbd8f0ea37038b6acc330e4470e6240296759e142e",
+      "max_abs_charge_shift_e": 2.3612332819666904e-05,
+      "standard_charges_e": [0.05494932585087842, 0.23625607815785532, 0.236256078157851, 0.23625607815784744, 0.23625607815784422],
+      "standard_status": "success"
+    },
+    {
+      "convergence_gate_passed": true,
+      "fine_charges_e": [3.3719440244439625e-06, 3.3719440519774935e-06],
+      "fine_status": "success",
+      "id": "oxygen_triplet",
+      "input_path": "examples/everyday-qc/oxygen_triplet.molden",
+      "input_sha256": "de3772f8c8b1ccea8f4c9fc219eec623955a6aa55eaec4986619490c34cec584",
+      "max_abs_charge_shift_e": 8.489957778934354e-05,
+      "standard_charges_e": [-8.15276337640114e-05, -8.152763373736605e-05],
+      "standard_status": "success"
+    },
+    {
+      "convergence_gate_passed": true,
+      "fine_charges_e": [-0.17855117914790775, 0.1785546305161817],
+      "fine_status": "success",
+      "id": "oh_diffuse_uhf",
+      "input_path": "examples/everyday-qc/oh_diffuse_uhf.molden",
+      "input_sha256": "ec222502397e513f400aa33ed79eb7c99b0d3b7208bcac1cebfcb7473acff65b",
+      "max_abs_charge_shift_e": 8.547706943673461e-05,
+      "standard_charges_e": [-0.17863665621734448, 0.17855463027392182],
+      "standard_status": "success"
+    },
+    {
+      "convergence_gate_passed": true,
+      "fine_charges_e": [-0.35971333341765543, 0.14802178470395355, 0.14802178470395022, -0.2948299822019642, 0.17925328032859322, 0.17925328032859578],
+      "fine_status": "success",
+      "id": "water_dimer",
+      "input_path": "examples/everyday-qc/water_dimer.molden",
+      "input_sha256": "e4eb9896ef0dd0d4c01a3647e1834e8986a4aed5db41304ee13d40edda326275",
+      "max_abs_charge_shift_e": 8.5008982232182e-05,
+      "standard_charges_e": [-0.35979824193001697, 0.14802181624180222, 0.14802181624179833, -0.2949149911841964, 0.17925328776269223, 0.1792532877626949],
+      "standard_status": "success"
+    }
+  ],
+  "fine_settings": {"chunk_size": 65536, "phi_points": 48, "radial_extent_bohr": 24.0, "radial_points": 144, "theta_points": 24},
+  "method": "Hirshfeld",
+  "schema_version": "1.0",
+  "standard_settings": {"chunk_size": 65536, "phi_points": 36, "radial_extent_bohr": 20.0, "radial_points": 96, "theta_points": 18},
+  "validated_case_ids": ["ammonia", "ammonium_cation", "benzene", "carbon_dioxide", "ethanol", "methane", "oh_diffuse_uhf", "oxygen_triplet", "water", "water_dimer"]
+}
