@@ -70,11 +70,19 @@ reference program's printed precision.
 The evidence records include binary, settings, input, procedure, and transcript hashes,
 plus Linux validation-platform metadata. See the [Multiwfn procedure](https://github.com/sha786muhammed/openWFN/blob/main/validation/external/procedures/multiwfn.md). These comparisons validate only the named metrics and fixtures; they do not establish accuracy for every chemical system.
 
+## Experimental spectroscopy and excited states
+
+Vibrational spectroscopy and excited-state/UV–Vis workflows have dedicated regression evidence but remain **Experimental**. They are intentionally not promoted by the existence of parser/unit/UI tests alone.
+
+Vibrational evidence is documented in `validation/vibrational-spectroscopy/README.md`. Excited-state evidence is documented in `validation/excited-states-uvvis/README.md` and currently covers project-owned Gaussian/ORCA/Q-Chem source-like fixtures, method/convention safety, analytic Gaussian broadening, energy-to-wavelength Jacobian behavior, resource limits, interface parity, report parity, and Workbench payload parity.
+
+For excited states, representation support is broader than validation support. A method family being representable does not mean every implementation/version or method-specific amplitude transformation has independent reference evidence. Transition-density/NTO work therefore remains gated behind explicit convention support and separate validation.
+
 ## Coverage still needed
 
 Broader cases such as carbon dioxide, triplet oxygen with confirmed spin metadata,
 ethanol, water dimers, diffuse/polarized basis behavior, ECP families, ghost-center workflows,
-correlated/post-SCF densities, and transition-metal chemistry require legally shareable,
+correlated/post-SCF densities, transition-metal chemistry, and independently generated excited-state reference suites require legally shareable,
 provenance-documented fixtures and explicit acceptance criteria. Until added, extrapolation is the researcher's responsibility.
 
 ## Reproduce the software checks
