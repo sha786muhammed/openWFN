@@ -7,10 +7,10 @@ hide:
 
 !!! note "Current release"
 
-    This site documents openWFN 0.10.1. Install it with
+    This site documents openWFN 0.11.0. Install it with
     `python -m pip install --upgrade openwfn`, or pin the release with
-    `python -m pip install openwfn==0.10.1` for reproducible work.
-    See the [0.10.1 release notes](releases/0.10.1.md) for changes and support boundaries.
+    `python -m pip install openwfn==0.11.0` for reproducible work.
+    See the [0.11.0 release notes](releases/0.11.0.md) for changes and support boundaries.
 
 <div class="ow-home" markdown="1">
 
@@ -57,7 +57,7 @@ openwfn ./openwfn-examples/water.fchk orbitals frontier</code></pre>
 <div class="ow-capability" markdown="1">
 <span class="ow-capability__number">01</span>
 ### Analyze
-Inspect molecular structure, orbitals, electron density, atomic populations, electrostatic potential, and derived properties.
+Inspect molecular structure, orbitals, electron density, atomic populations, electrostatic potential, vibrational spectra, excited states, and derived properties.
 </div>
 
 <div class="ow-capability" markdown="1">
@@ -132,7 +132,7 @@ Gaussian formatted-checkpoint data remain the preferred native full-wavefunction
 
 <div class="ow-paths">
   <div class="ow-path"><strong>For researchers</strong><p>Examine methods, evidence, provenance, reproducible reports, limitations, and Citation guidance.</p><a href="start/learning-paths/#researcher-path">Research workflow →</a></div>
-  <div class="ow-path"><strong>For students</strong><p>Build concepts from coordinates and orbitals through density, charges, and electrostatic potential.</p><a href="start/learning-paths/#student-path">Learning path →</a></div>
+  <div class="ow-path"><strong>For students</strong><p>Build concepts from coordinates and orbitals through density, charges, spectroscopy, and electrostatic potential.</p><a href="start/learning-paths/#student-path">Learning path →</a></div>
   <div class="ow-path"><strong>For developers</strong><p>Integrate the Python model or extend parsers, analyses, exporters, and validation fixtures.</p><a href="start/learning-paths/#developer-path">Developer path →</a></div>
 </div>
 

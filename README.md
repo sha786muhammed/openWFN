@@ -29,47 +29,46 @@ openWFN connects scientific analysis, automation, validation evidence, and resea
 
 ## Analyze · Automate · Validate · Publish
 
-- **Analyze** molecular structure, orbitals, electron density, atomic populations, electrostatic potential, vibrational modes/spectra, and derived properties.
+- **Analyze** molecular structure, orbitals, electron density, atomic populations, electrostatic potential, vibrational modes/spectra, excited states, and derived properties.
 - **Automate** with stable CLI commands, a typed Python API, structured results, resumable batches, and JSON/CSV exports.
 - **Validate** using explicit capability status, parser provenance, transformations, numerical controls, and fixture-backed evidence.
 - **Publish** durable reports, figures, cube files, structures, and batch manifests.
 
-## Stable release 0.10.1
+## Stable release 0.11.0
 
-**openWFN 0.10.1** hardens the 0.10 everyday-QC release around reproducible
-validation evidence and published-package verification without changing the
-scientific numerical kernels. Install the exact release with
-`python -m pip install "openwfn[interop,resources]==0.10.1"`.
-See the [release notes](docs/releases/0.10.1.md).
+**openWFN 0.11.0** integrates native Hirshfeld analysis, vibrational spectroscopy,
+and method-general excited-state/UV–Vis post-processing into the public stable
+package. Install the exact release with
+`python -m pip install "openwfn[interop,resources]==0.11.0"`.
+See the [release notes](docs/releases/0.11.0.md).
 
-The release includes [11 real molecular examples](examples/everyday-qc/README.md),
-packages the same corpus with the wheel, and retains the
-[Experimental coverage audit](docs/project/experimental-coverage.md).
-The audit retains convergence failures and unsupported legacy entry points.
-Validated methods remain scoped to their documented reference evidence;
-package stability does not change individual scientific validation labels.
+Stable package status does not make every scientific analysis Validated. The
+machine-readable [validation manifest](validation/manifest.json) remains the
+authoritative capability-status registry:
 
-| Capability | Scientific controls |
-|---|---|
-| Signed MO cubes, arbitrary MO/HOMO/LUMO, alpha/beta | AO/grid norm diagnostics, bounded chunks, input-hash cube comments |
-| Mulliken/Löwdin MO composition | Named convention, atom/shell/angular partitions, raw norm and overlap conditioning |
-| Spin-corrected Mayer bond orders | Total/spin conservation, density provenance, full matrix and filtered pairs |
-| Orbital-energy DOS/PDOS | Gaussian sigma/range controls, spin channels, projection sum rules, CSV/JSON/PNG/SVG |
+- ordinary Hirshfeld populations/charges are **Validated** only for the named
+  H/C/N/O all-electron ten-case scope and fixed tolerances;
+- vibrational spectroscopy remains **Experimental** pending independent external
+  spectroscopy validation;
+- excited-state and UV–Vis analyses remain **Experimental** pending named
+  independent cross-program/method validation.
 
-See the [design and roadmap](docs/project/everyday-qc-design.md),
-[validation and limitations](docs/project/everyday-qc-validation.md), and
-[method documentation](docs/science/dos-pdos.md). Native Hirshfeld remains on a
-separate gated feature line. The source tree also contains native Gaussian
-vibrational/IR/Raman-activity work on its own feature line; that spectroscopy
-remains **Experimental** and is not a claim about the published stable 0.10.1
-package. Existing CLI/API/result schemas are retained.
+The release retains the versioned 11-molecule everyday-QC corpus and runs a
+110-command bounded workflow/resource matrix against both the built wheel and
+the package downloaded back from public PyPI.
 
-## Experimental vibrational spectroscopy
+## Hirshfeld population analysis
 
-The spectroscopy feature adds typed Gaussian harmonic modes, source IR
-intensities, source Raman activities, normal-mode vectors, deterministic
-Gaussian broadening, CLI/Python/MCP parity, research-report plots, and a
-Vibrations workspace in the offline Workbench.
+```bash
+openwfn calculation.fchk population hirshfeld
+```
+
+Ordinary neutral-pro-atom Hirshfeld analysis reports closure diagnostics and does
+not renormalize final charges to hide numerical residuals. Unsupported elements,
+ECP/pseudopotential ambiguity, and ghost-center ambiguity fail explicitly rather
+than using guessed pro-atoms.
+
+## Vibrational spectroscopy
 
 ```bash
 openwfn frequency.log vibrations
@@ -77,12 +76,28 @@ openwfn frequency.log spectra ir --fwhm 20 --points 2001 --export ir.csv
 openwfn frequency.log spectra raman --export raman.svg
 ```
 
-Gaussian Raman activities are not silently converted to experimental Raman
-intensities. Imaginary modes remain signed in source data and are excluded from
-the broadened physical curve with a warning. Current parser/regression/interface
-parity is not independent scientific validation, so all spectroscopy analyses
-remain Experimental. See the
+Gaussian Raman activities are preserved as source activities and are not
+silently converted to experimental Raman intensities. Imaginary frequencies
+remain signed in source data and are excluded from broadened physical curves
+with explicit warnings. See the
 [vibrational spectroscopy method page](docs/science/vibrational-spectroscopy.md).
+
+## Excited states and UV–Vis
+
+```bash
+openwfn excited.log excited states
+openwfn excited.log excited state 1
+openwfn excited.log excited dipoles
+openwfn excited.log spectra uvvis --fwhm-ev 0.20 --export uvvis.svg
+```
+
+The typed excited-state layer supports the implemented Gaussian, ORCA, and
+Q-Chem source adapters while preserving source method detail and explicit
+amplitude conventions. UV–Vis broadening is performed in energy space and the
+wavelength-domain curve uses the energy-to-wavelength Jacobian rather than
+relabeling the same y-array. Missing oscillator strengths are not treated as
+zero; dark `f=0` states remain valid source states. See
+[Excited states and UV–Vis](docs/science/excited-states-uvvis.md).
 
 ## Install
 
@@ -98,7 +113,7 @@ openwfn --version
 Install the exact release when reproducing research:
 
 ```bash
-python -m pip install openwfn==0.10.1
+python -m pip install openwfn==0.11.0
 ```
 
 ## First analysis
@@ -149,14 +164,16 @@ The default density spacing of **0.15 bohr** is an accuracy/performance tradeoff
 | Parsing and structure | FCHK records, molecular state, geometry, topology | Stable |
 | Orbitals | Alpha/beta and spin-complete frontier energies and HOMO–LUMO information | Stable interface; fixture-backed regressions |
 | Population | Mulliken and symmetric Löwdin populations and charges | Stable interface; conservation checked and fixture-scoped |
-| Density | Total, alpha, beta, and spin integration and cube export | Validated only for the named active validation fixtures and tolerances |
+| Hirshfeld population | Ordinary neutral-pro-atom H/C/N/O populations/charges | Validated only for the named ten-case all-electron scope |
+| Density | Total, alpha, beta, and spin integration and cube export | Validated only for named active validation fixtures and tolerances |
 | Electrostatic potential | Nuclear and charge-model point ESP | Stable interface; special-case regressions included |
 | Gaussian-integral electronic/total ESP | AO-density Coulomb integrals with independent references | Validated for the eleven-case set |
 | Grid electronic/total ESP | Numerical Coulomb evaluation | Experimental |
-| Vibrational spectroscopy | Native Gaussian modes, IR intensity, Raman activity, broadened curves, source vectors | Experimental; implementation/interface parity only, independent validation pending |
+| Vibrational spectroscopy | Native Gaussian modes, IR intensity, Raman activity, broadened curves, source vectors | Experimental; independent validation pending |
+| Excited states / UV–Vis | Gaussian/ORCA/Q-Chem source states, dipoles, oscillator-strength sticks and broadened profiles | Experimental; independent cross-program validation pending |
 | Automation | Versioned results, batch manifests, discovery, resume, JSON and CSV | Stable |
-| Research reports | HTML/Markdown reports, tables, figures, structures, vibrational tables/plots | Stable interface; individual analysis status retained |
-| Interactive workbench | Offline workspaces, surfaces, signed geometry readouts, optional Vibrations workspace | Stable interface; displayed scientific status retained |
+| Research reports | HTML/Markdown reports, tables, figures, structures, vibrational/excited-state sections | Stable interface; individual analysis status retained |
+| Interactive workbench | Offline workspaces, surfaces, signed geometry readouts, Vibrations and Excited States workspaces | Stable interface; displayed scientific status retained |
 | Additional input formats | Optional IOData ingestion and file-specific capabilities | Stable fixture contract; requires the interop extra |
 | QC output properties | Source-reported extraction with optional cclib | Experimental; not a complete wavefunction |
 | Local MCP | Read-only stdio tools for registered analyses with validated scalar parameters | Stable local interface; no remote service |
@@ -165,15 +182,17 @@ The default density spacing of **0.15 bohr** is an accuracy/performance tradeoff
 
 ## Input support
 
-Version 0.10.1 includes optional interoperability support and resource/export safety fixes.
-See the [0.10.1 release notes](docs/releases/0.10.1.md).
-Install `python -m pip install "openwfn[interop]==0.10.1"` for additional formats. The optional reader
-is pinned to IOData 1.0.1 and has a [25-format ingestion matrix](docs/reference/formats-and-exports.md)
-with [capability discovery](docs/reference/capabilities.md). Format ingestion
-does not imply that every file has orbitals, density, or an applicable
-analysis. The [cross-format validation](validation/interop/report.md) compares
-five water representations from one originating calculation; it is not broad
-independent scientific validation.
+Version 0.11.0 includes optional interoperability support and the release safety
+contracts established on the 0.10 line. See the
+[0.11.0 release notes](docs/releases/0.11.0.md).
+Install `python -m pip install "openwfn[interop]==0.11.0"` for additional formats.
+The optional reader is pinned to IOData 1.0.1 and has a
+[25-format ingestion matrix](docs/reference/formats-and-exports.md) with
+[capability discovery](docs/reference/capabilities.md). Format ingestion does
+not imply that every file has orbitals, density, or an applicable analysis.
+The [cross-format validation](validation/interop/report.md) compares five water
+representations from one originating calculation; it is not broad independent
+scientific validation.
 
 Gaussian formatted-checkpoint (`.fchk`) remains the preferred full-wavefunction
 path. Gaussian `.chk` is a proprietary binary format; openWFN calls Gaussian's
@@ -183,13 +202,13 @@ XYZ, MOL/SDF, and PDB inputs provide structure-only records. The optional
 backend also reads structure, periodic, grid, and integral-only formats; use
 `openwfn FILE capabilities` to check the actual data before analysis.
 
-In openWFN 0.10.1, use `--input-format FORMAT_ID` when a
-filename is ambiguous (for example, a GAMESS `.dat`). A structure without a
-complete wavefunction gets a partial `summary`; it does not get inferred
-orbitals, density, or electron counts. Mixed batches can use `--format-map`
-and record unsupported files with reasons in the manifest. A batch exits
-nonzero if any input fails or is unsupported. See the
-[batch guide](docs/guides/batch-and-reports.md) for the exact contract.
+In openWFN 0.11.0, use `--input-format FORMAT_ID` when a filename is ambiguous
+(for example, a GAMESS `.dat`). A structure without a complete wavefunction gets
+a partial `summary`; it does not get inferred orbitals, density, or electron
+counts. Mixed batches can use `--format-map` and record unsupported files with
+reasons in the manifest. A batch exits nonzero if any input fails or is
+unsupported. See the [batch guide](docs/guides/batch-and-reports.md) for the
+exact contract.
 
 ```bash
 openwfn calculation.chk formchk calculation.fchk
@@ -201,11 +220,11 @@ openwfn calculation.fchk density cube density.cube
 
 ### Output properties preview
 
-Version 0.10.1 can extract source-reported properties from QC text
-output through the optional cclib reader:
+Version 0.11.0 can extract source-reported properties from QC text output through
+the optional cclib reader:
 
 ```bash
-python -m pip install "openwfn[outputs]==0.10.1"
+python -m pip install "openwfn[outputs]==0.11.0"
 python -m openwfn.cli --format json calculation.out properties
 ```
 
@@ -219,6 +238,7 @@ missing-data behavior and the current Experimental validation boundary.
 - [Python API](https://sha786muhammed.github.io/openWFN/reference/python-api/)
 - [Scientific methods](https://sha786muhammed.github.io/openWFN/science/geometry-topology/)
 - [Vibrational spectroscopy](docs/science/vibrational-spectroscopy.md)
+- [Excited states and UV–Vis](docs/science/excited-states-uvvis.md)
 - [Validation status](https://sha786muhammed.github.io/openWFN/science/validation-status/)
 - [Optional workbench](https://sha786muhammed.github.io/openWFN/workbench/)
 - [Troubleshooting](https://sha786muhammed.github.io/openWFN/guides/troubleshooting/)
@@ -237,18 +257,3 @@ python scripts/run_validation.py
 python scripts/check_docs.py --root .
 python -m mkdocs build --strict
 ```
-
-Contributions should include tests, documented units and assumptions, and validation evidence appropriate to the claim. See [Contributing](https://sha786muhammed.github.io/openWFN/project/contributing/).
-
-Project policies: [Code of Conduct](CODE_OF_CONDUCT.md) ·
-[Security](SECURITY.md) · [Maintainers](MAINTAINERS.md) ·
-[Contributors](CONTRIBUTORS.md) · [Roadmap](ROADMAP.md)
-
-## Citation and license
-
-Cite the exact version used and the project repository; see the [citation guide](https://sha786muhammed.github.io/openWFN/citation/). openWFN is released under the [MIT License](LICENSE).
-
-**Author:** Muhammed Shah Shaji
-
-Development resource checks and their measured scope are documented in
-[Runtime and resource validation](docs/project/resource-validation.md).

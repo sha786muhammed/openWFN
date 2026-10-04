@@ -1,5 +1,16 @@
 # Release history
 
+## 0.11.0 — Hirshfeld, spectroscopy, and excited states
+
+Stable feature release integrating ordinary Hirshfeld populations/charges,
+Gaussian vibrational spectroscopy, and method-general excited-state/UV–Vis
+post-processing through the shared analysis, export, report, MCP, and Workbench
+infrastructure. Hirshfeld is Validated only for its documented H/C/N/O
+all-electron scope; vibrational spectroscopy and excited-state/UV–Vis analyses
+remain Experimental pending independent external validation.
+
+[Read the 0.11.0 release notes](../releases/0.11.0.md)
+
 ## 0.10.1 — release evidence and reproducibility hardening
 
 Corrective release-quality patch for the 0.10 stable line. It removes stale

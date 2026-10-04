@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "description": "Permanent openWFN scientific validation registry",
-  "current_release": "0.10.1",
+  "current_release": "0.11.0",
   "capabilities": {
     "orbital-composition": {
       "status": "Validated",
@@ -43,6 +43,20 @@
         "tests/integration/test_vibrational_parity.py",
         "tests/integration/test_vibrational_report.py",
         "tests/integration/test_vibrational_workbench.py"
+      ]
+    },
+    "excited-states-uvvis": {
+      "status": "Experimental",
+      "scope": "Source-faithful excited-state records for the implemented Gaussian, ORCA and Q-Chem adapters, conservative method/amplitude conventions, transition dipoles when reported, and deterministic UV–Vis post-processing with explicit oscillator-strength eligibility and energy-to-wavelength Jacobian handling. Current evidence establishes parser, mathematical and interface behavior but is not an independent cross-program scientific validation campaign.",
+      "evidence": [
+        "excited-states-uvvis/README.md",
+        "tests/parsers/test_gaussian_excited_states.py",
+        "tests/parsers/test_orca_excited_states.py",
+        "tests/parsers/test_qchem_excited_states.py",
+        "tests/unit/test_excited_state_analysis.py",
+        "tests/unit/test_uvvis.py",
+        "tests/integration/test_excited_state_parity.py",
+        "tests/integration/test_excited_state_report_workbench.py"
       ]
     }
   },

@@ -73,8 +73,8 @@ and citation metadata must agree before publication.
      --output "$release_smoke/resource-report.json"
    ```
 
-   The benchmark must contain exactly 99 records for eleven molecular inputs
-   and nine prescribed workflows per input, with no nonzero-exit, timeout, or
+   The benchmark must contain exactly 110 records for eleven molecular inputs
+   and ten prescribed workflows per input, with no nonzero-exit, timeout, or
    resource-limit failures. This still does not promote partial/Experimental
    scientific results.
 
@@ -107,7 +107,7 @@ Before any publication it:
 3. builds both distributions and runs `python -m twine check dist/*`;
 4. installs the built wheel with `interop,resources` extras;
 5. installs the packaged examples;
-6. reruns all 99 real workflows against the installed eleven-molecule corpus.
+6. reruns all 110 real workflows against the installed eleven-molecule corpus.
 
 Only after those gates pass does the workflow create the annotated tag, publish
 to PyPI through OIDC trusted publishing, and create the GitHub Release for the
@@ -127,7 +127,7 @@ is deliberately performing a documented recovery operation.
 Publication is not considered complete merely because upload succeeded. The
 same workflow creates a second clean environment, downloads the exact release
 from public PyPI with the interoperability and resource extras, installs its
-packaged corpus, and reruns the same 99-workflow matrix:
+packaged corpus, and reruns the same 110-workflow matrix:
 
 ```bash
 python -m pip install --no-cache-dir --index-url https://pypi.org/simple \
