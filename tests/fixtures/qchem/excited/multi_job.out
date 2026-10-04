@@ -1,0 +1,21 @@
+Q-Chem 6.3
+$rem
+METHOD B3LYP
+CIS_N_ROOTS 1
+$end
+Charge = 0 Multiplicity = 1
+TDDFT Excitation Energies
+Excited state   1: excitation energy (eV) = 4.100000
+Multiplicity: Singlet
+Strength   : 0.100000
+@@@
+Q-Chem 6.3
+$rem
+METHOD EOM-CCSD
+EE_STATES 1
+$end
+Charge = 1 Multiplicity = 2
+EOM-CCSD Excitation Energies
+Excited state   1: excitation energy (eV) = 5.600000
+Multiplicity: Doublet
+Thank you very much for using Q-Chem.

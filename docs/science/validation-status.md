@@ -128,6 +128,14 @@ The complete coverage audit retains real examples, convergence failures,
 output-reader evidence and visualization boundaries. Software execution alone
 does not promote a scientific method.
 
+## Experimental spectroscopy and excited states
+
+Vibrational spectroscopy and excited-state/UV–Vis workflows have dedicated regression evidence but remain **Experimental**. They are intentionally not promoted by the existence of parser/unit/UI tests alone.
+
+Vibrational evidence is documented in `validation/vibrational-spectroscopy/README.md`. Excited-state evidence is documented in `validation/excited-states-uvvis/README.md` and currently covers project-owned Gaussian/ORCA/Q-Chem source-like fixtures, method/convention safety, analytic Gaussian broadening, energy-to-wavelength Jacobian behavior, resource limits, interface parity, report parity, and Workbench payload parity.
+
+For excited states, representation support is broader than validation support. A method family being representable does not mean every implementation/version or method-specific amplitude transformation has independent reference evidence. Transition-density/NTO work therefore remains gated behind explicit convention support and separate validation.
+
 ## Coverage still needed
 
 For native Hirshfeld, future validation is required before supporting elements

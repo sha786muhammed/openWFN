@@ -120,3 +120,6 @@ ignore = ["E501"]
 "scripts/run_external_benchmarks.py" = ["E402"]
 "src/openwfn/commands.py" = ["E741"]
 "src/openwfn/geometry.py" = ["E741"]
+# The historical ResultRecord import remains in the self-contained Workbench
+# implementation while the public compatibility wrapper lives in workbench/__init__.py.
+"src/openwfn/workbench/export.py" = ["F401"]

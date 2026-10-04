@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from .data import OpenWFNData
+from .excited_states import ExcitedStateCollection
 from .vibrational import VibrationalRecord
 
 CapabilityState = Literal["available", "derived", "missing", "unsupported"]
@@ -81,6 +82,25 @@ def infer_capabilities(data: OpenWFNData) -> dict[str, Capability]:
     raman_present = vibrations_present and vibrational_record.raman_available
     vectors_present = vibrations_present and vibrational_record.displacements_available
 
+    excited_record = (
+        calculation.records.get("excited_states") if calculation is not None else None
+    )
+    excited_states_present = isinstance(excited_record, ExcitedStateCollection)
+    states = (
+        tuple(state for job in excited_record.jobs for state in job.states)
+        if excited_states_present
+        else ()
+    )
+    oscillator_strengths_present = any(
+        state.oscillator_strength is not None for state in states
+    )
+    transition_dipoles_present = any(state.transition_dipole is not None for state in states)
+    contributions_present = any(state.contributions for state in states)
+    amplitudes_present = any(state.amplitudes for state in states)
+    nto_ready_present = any(
+        block.nto_ready for state in states for block in state.amplitudes
+    )
+
     return {
         "structure": _capability(
             "structure", "available" if structure_present else "missing"
@@ -137,6 +157,25 @@ def infer_capabilities(data: OpenWFNData) -> dict[str, Capability]:
         ),
         "normal_mode_vectors": _capability(
             "normal_mode_vectors", "available" if vectors_present else "missing"
+        ),
+        "excited_states": _capability(
+            "excited_states", "available" if excited_states_present else "missing"
+        ),
+        "optical_oscillator_strengths": _capability(
+            "optical_oscillator_strengths",
+            "available" if oscillator_strengths_present else "missing",
+        ),
+        "transition_dipoles": _capability(
+            "transition_dipoles", "available" if transition_dipoles_present else "missing"
+        ),
+        "excitation_contributions": _capability(
+            "excitation_contributions", "available" if contributions_present else "missing"
+        ),
+        "excitation_amplitudes": _capability(
+            "excitation_amplitudes", "available" if amplitudes_present else "missing"
+        ),
+        "nto_ready_amplitudes": _capability(
+            "nto_ready_amplitudes", "available" if nto_ready_present else "missing"
         ),
     }
 

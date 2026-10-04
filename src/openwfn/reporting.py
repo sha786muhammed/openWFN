@@ -51,6 +51,10 @@ def _title(name: str) -> str:
         "vibrations": "Vibrational Modes",
         "ir-spectrum": "IR Spectrum",
         "raman-spectrum": "Raman Spectrum",
+        "excited-states": "Excited States",
+        "excited-state": "Excited State",
+        "transition-dipoles": "Transition Dipoles",
+        "uvvis-spectrum": "UV–Vis Spectrum",
     }
     if name in titles:
         return titles[name]
@@ -82,6 +86,38 @@ def _vibrational_mode_table(section: dict[str, Any]) -> str:
         "<th>Reduced mass (amu)</th><th>Force constant (mDyne/angstrom)</th>"
         "<th>IR intensity (km/mol)</th><th>Raman activity (angstrom^4/amu)</th>"
         "<th>Imaginary</th></tr></thead><tbody>"
+        + "".join(rows)
+        + "</tbody></table></div>"
+    )
+
+
+def _excited_state_table(section: dict[str, Any]) -> str:
+    rows: list[str] = []
+    for job in section["data"].get("jobs", []):
+        for state in job.get("states", []):
+            dipole = state.get("transition_dipole")
+            dipole_text = "—" if dipole is None else ", ".join(str(value) for value in dipole)
+            rows.append(
+                "<tr>"
+                f"<td>{escape(str(job.get('job')))}</td>"
+                f"<td>{escape(str(job.get('source_program')))}</td>"
+                f"<td>{escape(str(job.get('method_family')))}</td>"
+                f"<td>{escape(str(state.get('state')))}</td>"
+                f"<td>{escape(_display_optional(state.get('source_state')))}</td>"
+                f"<td>{escape(str(state.get('energy_ev')))}</td>"
+                f"<td>{escape(_display_optional(state.get('wavelength_nm')))}</td>"
+                f"<td>{escape(_display_optional(state.get('oscillator_strength')))}</td>"
+                f"<td>{escape(_display_optional(state.get('multiplicity')))}</td>"
+                f"<td>{escape(_display_optional(state.get('symmetry')))}</td>"
+                f"<td>{escape(dipole_text)}</td>"
+                "</tr>"
+            )
+    return (
+        '<div class="table-scroll"><table class="excited-state-table">'
+        "<thead><tr><th>Job</th><th>Program</th><th>Method family</th><th>State</th>"
+        "<th>Source state</th><th>Energy (eV)</th><th>Wavelength (nm)</th>"
+        "<th>Oscillator strength</th><th>Multiplicity</th><th>Symmetry</th>"
+        "<th>Transition dipole</th></tr></thead><tbody>"
         + "".join(rows)
         + "</tbody></table></div>"
     )
@@ -146,6 +182,61 @@ def _spectrum_svg(section: dict[str, Any]) -> str:
         + f'<text x="{left}" y="{top + plot_height + 19:.1f}" class="tick-label">{x_min:.1f}</text>'
         + f'<text x="{left + plot_width}" y="{top + plot_height + 19:.1f}" text-anchor="end" '
         f'class="tick-label">{x_max:.1f}</text>'
+        + "</svg>"
+    )
+
+
+def _uvvis_svg(section: dict[str, Any]) -> str:
+    data = section["data"]
+    energy = [float(value) for value in data.get("energy_ev", [])]
+    intensities = [float(value) for value in data.get("intensity", [])]
+    if len(energy) < 2 or len(energy) != len(intensities):
+        return '<p class="unavailable">UV–Vis curve is unavailable.</p>'
+
+    width, height = 760.0, 300.0
+    left, right, top, bottom = 72.0, 22.0, 20.0, 54.0
+    plot_width = width - left - right
+    plot_height = height - top - bottom
+    x_min, x_max = min(energy), max(energy)
+    y_min = min(0.0, min(intensities))
+    y_max = max(intensities)
+    if x_max == x_min:
+        x_max = x_min + 1.0
+    if y_max == y_min:
+        y_max = y_min + 1.0
+
+    def point(x_value: float, y_value: float) -> str:
+        x = left + (x_value - x_min) / (x_max - x_min) * plot_width
+        y = top + (y_max - y_value) / (y_max - y_min) * plot_height
+        return f"{x:.2f},{y:.2f}"
+
+    polyline = " ".join(point(x, y) for x, y in zip(energy, intensities, strict=True))
+    sticks: list[str] = []
+    for line in data.get("lines", []):
+        strength = line.get("oscillator_strength")
+        if not line.get("eligible") or strength is None:
+            continue
+        x = left + (float(line["energy_ev"]) - x_min) / (x_max - x_min) * plot_width
+        y = top + (y_max - float(strength)) / (y_max - y_min) * plot_height
+        baseline = top + (y_max - 0.0) / (y_max - y_min) * plot_height
+        sticks.append(
+            f'<line x1="{x:.2f}" y1="{baseline:.2f}" x2="{x:.2f}" y2="{y:.2f}" '
+            'class="spectrum-stick" />'
+        )
+    return (
+        '<svg class="spectrum-plot" data-analysis="uvvis-spectrum" viewBox="0 0 760 300" '
+        'role="img" aria-label="UV-Vis oscillator-strength spectrum">'
+        f'<line x1="{left}" y1="{top + plot_height}" x2="{left + plot_width}" '
+        f'y2="{top + plot_height}" class="axis" />'
+        f'<line x1="{left}" y1="{top}" x2="{left}" y2="{top + plot_height}" class="axis" />'
+        f'<polyline points="{polyline}" class="spectrum-curve" />'
+        + "".join(sticks)
+        + f'<text x="{left + plot_width / 2:.1f}" y="287" text-anchor="middle">Excitation energy (eV)</text>'
+        + f'<text x="18" y="{top + plot_height / 2:.1f}" text-anchor="middle" '
+        'transform="rotate(-90 18 133)">Relative oscillator-strength profile</text>'
+        + f'<text x="{left}" y="{top + plot_height + 19:.1f}" class="tick-label">{x_min:.2f}</text>'
+        + f'<text x="{left + plot_width}" y="{top + plot_height + 19:.1f}" text-anchor="end" '
+        f'class="tick-label">{x_max:.2f}</text>'
         + "</svg>"
     )
 
@@ -222,6 +313,27 @@ def _hirshfeld_html(section: dict[str, Any]) -> str:
     )
 
 
+def _uvvis_table(section: dict[str, Any]) -> str:
+    rows = "".join(
+        "<tr>"
+        f"<td>{escape(str(line.get('state')))}</td>"
+        f"<td>{escape(_display_optional(line.get('source_state')))}</td>"
+        f"<td>{escape(str(line.get('energy_ev')))}</td>"
+        f"<td>{escape(_display_optional(line.get('wavelength_nm')))}</td>"
+        f"<td>{escape(_display_optional(line.get('oscillator_strength')))}</td>"
+        f"<td>{'included' if line.get('eligible') else escape(str(line.get('exclusion_reason')))}</td>"
+        "</tr>"
+        for line in section["data"].get("lines", [])
+    )
+    return (
+        '<div class="table-scroll"><table class="uvvis-stick-table"><thead><tr>'
+        "<th>State</th><th>Source state</th><th>Energy (eV)</th><th>Wavelength (nm)</th>"
+        "<th>Oscillator strength</th><th>Curve status</th></tr></thead><tbody>"
+        + rows
+        + "</tbody></table></div>"
+    )
+
+
 def _available_html(section: dict[str, Any]) -> str:
     if section["name"] == "hirshfeld":
         return _hirshfeld_html(section)
@@ -248,6 +360,24 @@ def _available_html(section: dict[str, Any]) -> str:
             f"{escape(str(broadening.get('fwhm_cm1', '—')))} cm^-1 · source sticks preserved</p>"
         )
         return prefix + details + _spectrum_svg(section) + _spectrum_table(section)
+    if section["name"] == "excited-states":
+        data = section["data"]
+        summary = (
+            '<div class="spectroscopy-summary">'
+            f"<span>Jobs: {escape(str(data.get('job_count', 0)))}</span>"
+            f"<span>States: {escape(str(sum(len(job.get('states', [])) for job in data.get('jobs', []))))}</span>"
+            "<span>Values: source-reported unless explicitly derived</span>"
+            "</div>"
+        )
+        return prefix + summary + _excited_state_table(section)
+    if section["name"] == "uvvis-spectrum":
+        broadening = section["data"].get("broadening", {})
+        details = (
+            '<p class="spectrum-details">Gaussian visualization · FWHM '
+            f"{escape(str(broadening.get('fwhm_ev', '—')))} eV · source oscillator-strength sticks preserved · "
+            "curve is not absorbance or an extinction coefficient</p>"
+        )
+        return prefix + details + _uvvis_svg(section) + _uvvis_table(section)
     rows = "".join(
         f"<tr><th>{escape(_title(key))}</th><td>{escape(str(value))}</td>"
         f"<td>{escape(section['units'].get(key, ''))}</td></tr>"
@@ -275,7 +405,7 @@ def _html(manifest: dict[str, Any]) -> str:
 body{{font:16px/1.55 system-ui,sans-serif;margin:0;color:#172033;background:#f4f7fb}}
 main{{max-width:960px;margin:auto;padding:2rem}}header,section{{background:white;padding:1.4rem;margin:1rem 0;border:1px solid #dce3ee;border-radius:10px}}
 h1,h2{{color:#123d6a}}table{{border-collapse:collapse;width:100%;margin:.75rem 0 1.25rem}}th,td{{text-align:left;padding:.55rem;border-bottom:1px solid #e5eaf1}}.unavailable{{color:#8b2e2e}}
-.table-scroll{{overflow-x:auto}}.vibrational-mode-table th,.spectrum-stick-table th{{width:auto;white-space:nowrap}}.spectroscopy-summary{{display:flex;flex-wrap:wrap;gap:.65rem 1.2rem;margin:.8rem 0 1rem;color:#40516b}}.spectrum-details{{color:#40516b}}.spectrum-plot{{display:block;width:100%;height:auto;margin:1rem 0 1.25rem;background:#fbfcfe;border:1px solid #e5eaf1;border-radius:8px}}.axis{{stroke:#607089;stroke-width:1}}.spectrum-curve{{fill:none;stroke:#123d6a;stroke-width:2}}.spectrum-stick{{stroke:#7890ad;stroke-width:1;opacity:.55}}.tick-label{{font-size:12px;fill:#607089}}.warnings{{color:#7b4e12}}
+.table-scroll{{overflow-x:auto}}.vibrational-mode-table th,.spectrum-stick-table th,.excited-state-table th,.uvvis-stick-table th{{width:auto;white-space:nowrap}}.spectroscopy-summary{{display:flex;flex-wrap:wrap;gap:.65rem 1.2rem;margin:.8rem 0 1rem;color:#40516b}}.spectrum-details{{color:#40516b}}.spectrum-plot{{display:block;width:100%;height:auto;margin:1rem 0 1.25rem;background:#fbfcfe;border:1px solid #e5eaf1;border-radius:8px}}.axis{{stroke:#607089;stroke-width:1}}.spectrum-curve{{fill:none;stroke:#123d6a;stroke-width:2}}.spectrum-stick{{stroke:#7890ad;stroke-width:1;opacity:.55}}.tick-label{{font-size:12px;fill:#607089}}.warnings{{color:#7b4e12}}
 </style></head><body><main><header><h1>openWFN Research Report</h1>
 <p>Generated: {escape(manifest['generated_at'])}</p><p>openWFN version: {escape(manifest['openwfn_version'])}</p>
 <p>Input SHA-256: <code>{escape(manifest['input']['sha256'])}</code></p></header>

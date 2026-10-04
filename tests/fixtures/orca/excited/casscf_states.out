@@ -1,0 +1,13 @@
+O   R   C   A
+! CASSCF(6,6) def2-SVP
+Total Charge : 0
+Multiplicity : 1
+
+SA-CASSCF TRANSITION ENERGIES
+------------------------------------------------------------
+STATE  ROOT  MULT  IRREP      DE/a.u.       DE/eV      DE/cm**-1
+------------------------------------------------------------
+1:     0     3     B3u        0.163741      4.456      35937.1
+2:     1     1     Ag         0.201234      5.476      44165.0
+
+ORCA TERMINATED NORMALLY

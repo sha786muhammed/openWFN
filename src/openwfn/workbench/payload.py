@@ -112,6 +112,17 @@ class WorkbenchPayload:
                     "message": "Normal-mode displacement vectors are unavailable for this source file.",
                 }
 
+        if "excited_states" in data.records:
+            properties["excited-states"] = _result_property(
+                run_analysis_safe(data, "excited-states")
+            )
+            properties["uvvis-spectrum"] = _result_property(
+                run_analysis_safe(data, "uvvis-spectrum")
+            )
+            properties["transition-dipoles"] = _result_property(
+                run_analysis_safe(data, "transition-dipoles")
+            )
+
         provenance = data.molecule.provenance
         fields: list[dict[str, Any]] = []
         if include_fields and data.basis is not None:

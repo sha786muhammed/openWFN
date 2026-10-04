@@ -46,6 +46,12 @@
 - Imaginary frequencies remain signed source data and are omitted from the broadened physical IR/Raman curve with a warning. Their physical interpretation is calculation-dependent.
 - Normal-mode animation arrows require source Cartesian displacement vectors. Missing vectors are reported unavailable and are never synthesized. Workbench amplitude changes only visualization scale.
 - The current spectroscopy fixtures, analytic broadening tests, and CLI/Python/MCP/report/Workbench parity tests establish implementation consistency but not independent scientific validation across methods, molecules, or program versions. Spectroscopy remains **Experimental**.
+- Excited-state parsing currently targets documented source patterns from Gaussian, ORCA, and Q-Chem. The typed model is intentionally method-general, but recognizing and preserving a source state does not independently validate the underlying TDDFT/TDA, CIS, ADC, EOM, STEOM, spin-flip, multireference, core-excited, ΔSCF/MOM, local-correlation, or other quantum-chemical method.
+- Excited-state source jobs remain distinct. Repeated root numbers in separate Link1/jobs/blocks are not globally flattened. Analyses that require one job need an explicit one-based `job` selector when more than one excited-state job is present.
+- Missing oscillator strength or transition dipole remains unavailable; openWFN does not infer it. A negative source oscillator strength is preserved and excluded from the simulated optical curve rather than clamped. Dark `f=0` states remain valid source data.
+- The UV–Vis profile is a deterministic Gaussian oscillator-strength visualization in energy space, with a default 0.20 eV FWHM. It is not absorbance, molar extinction coefficient, solvent/instrument broadening, or an experimental line-shape model. The wavelength-domain array uses the energy-to-wavelength Jacobian rather than simply relabelling the x axis.
+- Method-specific amplitudes remain convention-labelled. TDDFT X/Y vectors, EOM left/right vectors, ADC/CI quantities, printed percentages, and multireference coefficients are not treated as interchangeable. General NTO construction is not implemented; only future convention-approved transition objects may become NTO-ready.
+- The current excited-state fixtures, analytic UV–Vis/Jacobian tests, and CLI/Python/MCP/report/Workbench parity tests establish implementation consistency but not independent scientific validation across all programs, methods, molecules, or versions. Excited states and UV–Vis remain **Experimental**.
 
 Always record the openWFN version, source-file checksum, grid spacing, padding, units, warnings, execution status, and validation status in research outputs.
 
@@ -61,8 +67,9 @@ finite-molecule orbital-energy broadening with one count per supplied spatial
 orbital/channel, without occupancy weighting or periodic bands. Failed source,
 conditioning, normalization or convergence diagnostics remain failed or
 partial/Experimental. Native Hirshfeld remains gated separately. Native typed
-Gaussian vibrational/IR/Raman workflows are implemented but remain
-**Experimental** pending an independent validation corpus. NTO and real-space
+Gaussian vibrational/IR/Raman workflows and Gaussian/ORCA/Q-Chem excited-state/UV–Vis workflows are implemented but remain
+**Experimental** pending independent validation corpora. NTO and real-space
 topology/basins are not implemented.
-See the [completion and gate record](project/everyday-qc-validation.md) and
-[vibrational spectroscopy semantics](science/vibrational-spectroscopy.md).
+See the [completion and gate record](project/everyday-qc-validation.md),
+[vibrational spectroscopy semantics](science/vibrational-spectroscopy.md), and
+[excited-state/UV–Vis semantics](science/excited-states-uvvis.md).

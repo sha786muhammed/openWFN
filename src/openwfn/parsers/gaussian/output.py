@@ -1,12 +1,14 @@
-"""Conservative native parser for Gaussian output and vibrational records."""
+"""Conservative native parser for Gaussian output and typed spectroscopy records."""
 
 import re
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
+from ...excited_states import ExcitedStateCollection
 from ...model import Atom, CalculationData, CalculationMetadata, Molecule, Provenance
 from ...vibrational import VibrationalMode, VibrationalRecord
+from ..excited.gaussian import parse_gaussian_excited_states
 
 _SCF_ENERGY = re.compile(r"SCF Done:\s+E\([^)]+\)\s*=\s*([-+0-9.DEde]+)")
 _CHARGE_MULTIPLICITY = re.compile(
@@ -35,15 +37,19 @@ def _frequency_job_lines(lines: list[str]) -> list[str]:
     return lines[start:end]
 
 
+def _method_basis(route: str | None) -> tuple[str | None, str | None]:
+    if not route:
+        return None, None
+    method_basis = next((token for token in route.split() if "/" in token), None)
+    if method_basis is None:
+        return None, None
+    return tuple(method_basis.split("/", maxsplit=1))  # type: ignore[return-value]
+
+
 def _metadata(lines: list[str]) -> CalculationMetadata:
     route_lines = [line.strip() for line in lines if line.lstrip().startswith("#")]
     route = " ".join(route_lines) if route_lines else None
-    method: str | None = None
-    basis: str | None = None
-    if route:
-        method_basis = next((token for token in route.split() if "/" in token), None)
-        if method_basis:
-            method, basis = method_basis.split("/", maxsplit=1)
+    method, basis = _method_basis(route)
 
     energy: float | None = None
     for line in lines:
@@ -277,51 +283,109 @@ def _modes(
     return tuple(modes)
 
 
-def parse_gaussian_output(path: Path) -> CalculationData | CalculationMetadata:
-    """Parse Gaussian metadata and typed harmonic vibrational data when available.
+def _provenance(source: Path, content: bytes) -> Provenance:
+    return Provenance(
+        source_path=str(source),
+        sha256=sha256(content).hexdigest(),
+        parser="gaussian-output",
+        source_format="gaussianlog",
+        parser_version="3",
+    )
 
-    Minimal Gaussian outputs retain the historical metadata-only return. A frequency
-    output becomes a structure-bearing ``CalculationData`` only when a complete
-    orientation and charge/multiplicity record can be associated with its modes.
-    """
+
+def _excited_calculation(
+    collection: ExcitedStateCollection,
+    provenance: Provenance,
+) -> CalculationData | None:
+    job = collection.jobs[-1]
+    if (
+        job.charge is None
+        or job.multiplicity is None
+        or not job.atomic_numbers
+        or len(job.atomic_numbers) != len(job.coordinates_angstrom)
+    ):
+        return None
+    route = job.method_detail if job.method_detail.lstrip().startswith("#") else None
+    method, basis = _method_basis(route)
+    metadata = CalculationMetadata(
+        source_program="Gaussian",
+        route=route,
+        method=method,
+        basis=basis,
+        energy_hartree=job.reference_energy_hartree,
+        terminated_normally=job.terminated_normally,
+        source_program_version=job.source_program_version,
+    )
+    atoms = tuple(
+        Atom(
+            atomic_number=atomic_number,
+            coordinates=coordinates,
+            nuclear_charge=float(atomic_number),
+        )
+        for atomic_number, coordinates in zip(
+            job.atomic_numbers, job.coordinates_angstrom, strict=True
+        )
+    )
+    molecule = Molecule(
+        atoms=atoms,
+        charge=job.charge,
+        multiplicity=job.multiplicity,
+        metadata=metadata,
+        provenance=provenance,
+    )
+    return CalculationData(molecule=molecule, records={"excited_states": collection})
+
+
+def parse_gaussian_output(path: Path) -> CalculationData | CalculationMetadata:
+    """Parse Gaussian metadata plus typed vibration/excited-state data when available."""
 
     source = Path(path)
     content = source.read_bytes()
-    lines = content.decode("utf-8", errors="replace").splitlines()
+    text = content.decode("utf-8", errors="replace")
+    lines = text.splitlines()
+    excited_states = parse_gaussian_excited_states(text)
+
     analysis_lines = _frequency_job_lines(lines)
     metadata = _metadata(analysis_lines)
     blocks = _frequency_blocks(analysis_lines)
     selected = _selected_frequency_job(_orientations(analysis_lines), blocks)
     charge_multiplicity = _charge_and_multiplicity(analysis_lines)
-    if selected is None or charge_multiplicity is None:
-        return metadata
+    provenance = _provenance(source, content)
 
-    geometry, selected_blocks = selected
-    charge, multiplicity = charge_multiplicity
-    provenance = Provenance(
-        source_path=str(source),
-        sha256=sha256(content).hexdigest(),
-        parser="gaussian-output",
-        source_format="gaussianlog",
-        parser_version="2",
-    )
-    atoms = tuple(
-        Atom(atomic_number=atomic_number, coordinates=coordinates, nuclear_charge=float(atomic_number))
-        for atomic_number, coordinates in geometry
-    )
-    molecule = Molecule(
-        atoms=atoms,
-        charge=charge,
-        multiplicity=multiplicity,
-        metadata=metadata,
-        provenance=provenance,
-    )
-    modes = _modes(selected_blocks, len(atoms))
-    record = VibrationalRecord(
-        modes=modes,
-        source_program="Gaussian",
-        source_program_version=metadata.source_program_version,
-        source_method=metadata.method,
-        provenance=provenance,
-    )
-    return CalculationData(molecule=molecule, records={"vibrations": record})
+    if selected is not None and charge_multiplicity is not None:
+        geometry, selected_blocks = selected
+        charge, multiplicity = charge_multiplicity
+        atoms = tuple(
+            Atom(
+                atomic_number=atomic_number,
+                coordinates=coordinates,
+                nuclear_charge=float(atomic_number),
+            )
+            for atomic_number, coordinates in geometry
+        )
+        molecule = Molecule(
+            atoms=atoms,
+            charge=charge,
+            multiplicity=multiplicity,
+            metadata=metadata,
+            provenance=provenance,
+        )
+        modes = _modes(selected_blocks, len(atoms))
+        vibrational_record = VibrationalRecord(
+            modes=modes,
+            source_program="Gaussian",
+            source_program_version=metadata.source_program_version,
+            source_method=metadata.method,
+            provenance=provenance,
+        )
+        records: dict[str, object] = {"vibrations": vibrational_record}
+        if excited_states is not None:
+            records["excited_states"] = excited_states
+        return CalculationData(molecule=molecule, records=records)
+
+    if excited_states is not None:
+        calculation = _excited_calculation(excited_states, provenance)
+        if calculation is not None:
+            return calculation
+
+    return metadata

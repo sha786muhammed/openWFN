@@ -2,6 +2,8 @@
 
 # Conversion factors
 BOHR_TO_ANGSTROM = 0.52917721092
+# CODATA-derived hc in eV nm, pinned for reproducible spectroscopy conversions.
+HC_EV_NM = 1239.8419843320026
 
 # Periodic Table: Atomic Number (Z) -> Symbol
 Z_TO_SYMBOL = {

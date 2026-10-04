@@ -1,0 +1,17 @@
+ Entering Gaussian System
+ #P TD(NStates=1) B3LYP/6-31G(d)
+ ------------------------------------------------------------
+ Charge = 0 Multiplicity = 1
+ Standard orientation:
+ ---------------------------------------------------------------------
+ Center     Atomic      Atomic             Coordinates (Angstroms)
+ Number     Number       Type             X           Y           Z
+ ---------------------------------------------------------------------
+      1          8           0        0.000000    0.000000    0.100000
+      2          1           0        0.000000    0.750000   -0.450000
+      3          1           0        0.000000   -0.750000   -0.450000
+ ---------------------------------------------------------------------
+ SCF Done:  E(RB3LYP) =  -76.1000000000 A.U. after 8 cycles
+ Excited State   1:      Singlet-A1     4.5000 eV  275.5200 nm  <S**2>=0.000
+      5 -> 6         0.68000
+ Normal termination of Gaussian 16

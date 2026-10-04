@@ -113,6 +113,37 @@ def _has_multiple_xyz_records(path: Path) -> bool:
     return second_count > 0 and len(lines) >= next_record + second_count + 2
 
 
+def _augment_excited_states(
+    data: OpenWFNData,
+    path: Path,
+    *,
+    format_id: str,
+) -> OpenWFNData:
+    if format_id not in {"orcalog", "qchemlog"}:
+        return data
+    text = path.read_text(encoding="utf-8", errors="replace")
+    parser_module = {
+        "orcalog": "openwfn.parsers.excited.orca",
+        "qchemlog": "openwfn.parsers.excited.qchem",
+    }[format_id]
+    parser_name = {
+        "orcalog": "parse_orca_excited_states",
+        "qchemlog": "parse_qchem_excited_states",
+    }[format_id]
+    try:
+        parser = getattr(import_module(parser_module), parser_name)
+    except ModuleNotFoundError:
+        return data
+    collection = parser(text)
+    if collection is None:
+        return data
+    attach = import_module("openwfn.parsers.excited.attach").attach_excited_states
+    augmented = attach(data, collection)
+    if not isinstance(augmented, OpenWFNData):
+        raise ParseError("Excited-state augmentation returned an unexpected data type.")
+    return augmented
+
+
 def _load_iodata(path: Path, *, format_id: str) -> OpenWFNData:
     try:
         import_module("iodata")
@@ -126,7 +157,8 @@ def _load_iodata(path: Path, *, format_id: str) -> OpenWFNData:
         adapter = import_module("openwfn.adapters.iodata")
     except ModuleNotFoundError as exc:
         raise ParseError("The openWFN IOData adapter is unavailable in this build.") from exc
-    return adapter.load_iodata(path, format_id=format_id)
+    data = adapter.load_iodata(path, format_id=format_id)
+    return _augment_excited_states(data, path, format_id=format_id)
 
 
 def _load_native(path: Path, *, source_format: str) -> OpenWFNData:

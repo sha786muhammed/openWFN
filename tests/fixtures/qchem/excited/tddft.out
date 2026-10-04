@@ -1,0 +1,24 @@
+Q-Chem 6.3
+$rem
+METHOD B3LYP
+CIS_N_ROOTS 2
+$end
+Charge = 0 Multiplicity = 1
+Standard Nuclear Orientation (Angstroms)
+ I     Atom           X                Y                Z
+ ------------------------------------------------------------
+ 1      O        0.000000        0.000000        0.117790
+ 2      H        0.000000        0.755453       -0.471161
+ 3      H        0.000000       -0.755453       -0.471161
+ ------------------------------------------------------------
+Total energy in the final basis set = -76.3100000000
+TDDFT Excitation Energies
+Excited state   1: excitation energy (eV) = 4.120000
+Multiplicity: Singlet
+Trans. Mom.: 0.100000 X 0.200000 Y 0.300000 Z
+Strength   : 0.120000
+Excited state   2: excitation energy (eV) = 5.000000
+Multiplicity: Triplet
+Trans. Mom.: 0.000000 X 0.000000 Y 0.000000 Z
+Strength   : 0.000000
+Thank you very much for using Q-Chem.
