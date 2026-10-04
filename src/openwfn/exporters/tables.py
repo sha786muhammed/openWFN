@@ -34,6 +34,46 @@ class ExportRequest:
         self.path.parent.mkdir(parents=True, exist_ok=True)
 
 
+def _write_hirshfeld_csv(result: ResultRecord, path: Path) -> None:
+    atoms = result.data.get("atoms")
+    diagnostics = result.data.get("diagnostics")
+    if not isinstance(atoms, list) or not isinstance(diagnostics, dict):
+        raise ValueError("Hirshfeld CSV export requires atomic rows and diagnostics")
+
+    fieldnames = [
+        "atom_index",
+        "element",
+        "effective_nuclear_charge [e]",
+        "electron_population [electron]",
+        "charge [e]",
+        "electron_count_residual [electron]",
+        "charge_closure_residual [e]",
+        "result_status",
+        "validation_status",
+    ]
+    with path.open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=fieldnames, lineterminator="\n")
+        writer.writeheader()
+        for atom in atoms:
+            if not isinstance(atom, dict):
+                raise ValueError("Hirshfeld CSV export found a malformed atomic record")
+            writer.writerow(
+                {
+                    "atom_index": atom.get("atom_index"),
+                    "element": atom.get("element"),
+                    "effective_nuclear_charge [e]": atom.get("effective_nuclear_charge"),
+                    "electron_population [electron]": atom.get("electron_population"),
+                    "charge [e]": atom.get("charge"),
+                    "electron_count_residual [electron]": diagnostics.get(
+                        "electron_count_residual"
+                    ),
+                    "charge_closure_residual [e]": diagnostics.get("charge_closure_residual"),
+                    "result_status": result.status,
+                    "validation_status": result.validation_status,
+                }
+            )
+
+
 def _write_vibrational_modes_csv(result: ResultRecord, request: ExportRequest) -> Path:
     columns = (
         "mode",
@@ -68,6 +108,9 @@ def write_result_table(result: ResultRecord, request: ExportRequest) -> Path:
         request.path.write_text(
             json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
+        return request.path
+    if result.kind == "hirshfeld_population":
+        _write_hirshfeld_csv(result, request.path)
         return request.path
     if result.kind == "vibrational_modes":
         return _write_vibrational_modes_csv(result, request)
