@@ -9,30 +9,43 @@ openWFN separates implementation availability from scientific confidence.
 
 ## Internal regression and invariants
 
-The provenance-backed numerical validation fixtures currently cover water, methane, and ammonia. The validation suite evaluates nine metrics across these cases, including geometry and electron-density conservation. Run it from a source checkout:
+The provenance-backed numerical validation fixtures currently cover water,
+methane, and ammonia for the legacy core validation runner. That suite evaluates
+geometry and electron-density conservation among its regression metrics:
 
 ```bash
 python scripts/run_validation.py
 ```
 
-Passing these cases establishes regression evidence for those fixtures and tolerances; it does not prove accuracy for every molecule, basis, charge state, or spin state.
+Passing those cases establishes regression evidence for those fixtures and
+tolerances; it does not prove accuracy for every molecule, basis, charge state,
+or spin state.
 
-The 0.8.1 hardening branch also includes focused regression fixtures for source-faithful ECP nuclear charges, ghost centers, unrestricted and restricted-open-shell frontier behavior, post-HF files using an SCF density, zero-spin density validation, population conservation, and chunked density-grid equivalence. These special-case fixtures are designed to prevent known silent-failure modes from returning. They are **regression evidence**, not independent third-party validation of every ECP, post-HF, open-shell, or ghost-center workflow.
+Focused regression fixtures also cover source-faithful ECP nuclear charges,
+ghost centers, unrestricted and restricted-open-shell frontier behavior,
+post-HF files using an SCF density, zero-spin density validation, population
+conservation, and chunked density-grid equivalence. These are regression
+safeguards, not independent third-party validation of every special case.
 
-Population and density consistency checks are part of the result contract: when a calculation produces usable values but fails the configured conservation tolerance, openWFN returns a warning and `status="partial"` rather than a clean success. Cube validation is based on the exact generated grid. Grid spacing and padding remain convergence parameters; 0.15 bohr is the default starting point, not a universal accuracy guarantee.
+Population and density consistency checks are part of the result contract: when
+a calculation produces usable values but fails a configured conservation or
+convergence tolerance, openWFN returns a warning and `status="partial"` rather
+than presenting inconsistent numbers as clean successes.
 
 ## Independent parser comparisons
 
-The external registry compares openWFN with `qc-iodata==1.0.1` using identical FCHK
-inputs, immutable source commits, SHA-256 checksums, and explicit tolerances.
+The external registry compares openWFN with `qc-iodata==1.0.1` using identical
+FCHK inputs, immutable source commits, SHA-256 checksums, and explicit
+tolerances.
 
 | Evidence | Active cases | Metrics | Status |
 |---|---|---|---|
 | Independent FCHK parsing | water, benzene, LiH, oxygen (pure and Cartesian), helium high-l | total energy and alpha frontier orbitals | 24 comparisons passing |
 | Independent producer parser | acetylene from Psi4 | parser fields | qc-iodata 1.0.1 limitation: cannot parse one adjacent fixed-width exponent pair |
 
-The parser comparison verifies extraction of the listed values. It does not independently
-validate population or density algorithms. Reproduce the complete external matrix with:
+The parser comparison verifies extraction of the listed values. It does not
+independently validate population or density algorithms. Reproduce the complete
+external matrix with:
 
 ```bash
 python scripts/run_external_benchmarks.py \
@@ -40,26 +53,21 @@ python scripts/run_external_benchmarks.py \
   --output-dir /tmp/openwfn-external
 ```
 
-See the [registry procedure](https://github.com/sha786muhammed/openWFN/blob/main/validation/external/procedures/qc-iodata.md) for
-source commits, selection conventions, and tolerances.
+See the [registry procedure](https://github.com/sha786muhammed/openWFN/blob/main/validation/external/procedures/qc-iodata.md)
+for source commits, selection conventions, and tolerances.
 
-The 0.9 interoperability branch also has three pinned, externally supplied
-unrestricted wavefunctions: H₂ WFX, O₂ WFN, and LiH-cation WFX. For each, the
-external runner checks alpha, beta, and spin density at five points against an
-independent GBasis evaluator, and checks electron counts on one explicitly
-specified grid per channel. The 18 checks passed on Ubuntu 22.04 with
-`qc-iodata==1.0.1` and `qc-gbasis==0.1.0`. The pointwise comparisons share the
-IOData parser and source orbitals; the fixed-grid counts are regression checks,
-not convergence evidence. The procedure at
-`validation/external/procedures/open-shell-density.md` records the inputs,
-settings, tolerances, and limitations.
+The 0.9 interoperability work also has three pinned externally supplied
+unrestricted wavefunctions: H2 WFX, O2 WFN, and LiH-cation WFX. The external
+runner checks alpha, beta, and spin density at five points against an
+independent GBasis evaluator and checks electron counts on one specified grid
+per channel. Those fixed-grid counts are regression checks, not convergence
+evidence.
 
 ## Independent analysis comparisons
 
-Multiwfn `3.8(dev)` (2024-10-24) independently agrees with openWFN for restricted water,
-unrestricted LiH, and Psi4-produced acetylene. Eleven comparisons pass: total energy, alpha frontier orbital energies,
-Mulliken atomic charges, and Löwdin atomic charges, with tolerances based only on the
-reference program's printed precision.
+Multiwfn `3.8(dev)` (2024-10-24) independently agrees with openWFN for
+restricted water, unrestricted LiH, and Psi4-produced acetylene on the named
+frontier and population metrics.
 
 | Case | Wavefunction | Compared metrics | Status |
 |---|---|---|---|
@@ -67,8 +75,58 @@ reference program's printed precision.
 | LiH | Unrestricted doublet | Alpha HOMO, alpha LUMO, Mulliken charges, Löwdin charges | 4 passing |
 | Acetylene | Restricted, Psi4 producer | Total energy, HOMO, LUMO | 3 passing |
 
-The evidence records include binary, settings, input, procedure, and transcript hashes,
-plus Linux validation-platform metadata. See the [Multiwfn procedure](https://github.com/sha786muhammed/openWFN/blob/main/validation/external/procedures/multiwfn.md). These comparisons validate only the named metrics and fixtures; they do not establish accuracy for every chemical system.
+Those comparisons validate only the named metrics and fixtures.
+
+## Native Hirshfeld validation — 0.11 development
+
+Native ordinary Hirshfeld populations and charges are independently validated
+for the named **H/C/N/O all-electron** scope on the 0.11 development branch.
+The method uses a versioned neutral spherical pro-atom library,
+`openwfn-hirshfeld-proatoms-v1`. Ordinary unrestricted cases use the total
+molecular density; this is not a spin-Hirshfeld definition.
+
+HORTON-PART 1.1.8 is used only in validation CI and is not an openWFN runtime
+dependency. The exact openWFN pro-atom radial profiles are supplied to the
+external implementation so the pro-atom convention is fixed, while the
+molecular density evaluator, molecular grid and stockholder partition are
+independently implemented. The recorded HORTON-PART comparison uses common
+molecular-grid integration (`grid_type=3`).
+
+The promotion gates were fixed before the final evidence run:
+
+- maximum per-atom openWFN/HORTON-PART charge difference: **1.0e-3 e**;
+- maximum per-atom standard-to-fine openWFN charge shift: **5.0e-4 e**.
+
+All ten cases pass both gates: water, methane, ammonia, carbon dioxide, benzene,
+ethanol, ammonium, triplet oxygen, diffuse UHF OH, and the water dimer. The
+largest independent difference is about **1.27e-4 e** for ammonium. The largest
+standard-to-fine shift is about **8.55e-5 e** for diffuse UHF OH. Open-shell O2
+and OH and charged NH4+ are therefore represented in the documented scope.
+
+Authoritative machine-readable evidence:
+
+- `validation/hirshfeld/reference-report.json`
+- `validation/hirshfeld/convergence-report.json`
+- `tests/validation/test_hirshfeld_evidence.py`
+
+The claim remains deliberately narrow. Elements outside H/C/N/O,
+ECP/pseudopotential cases, ghost-center ambiguity, alternative pro-atom
+conventions, spin-Hirshfeld variants and correlated/post-SCF density definitions
+are not validated by this evidence.
+
+## Everyday-QC scoped validation
+
+Successful MO cubes, orbital composition, Mayer, DOS and PDOS have the scoped
+0.10-series validation evidence documented in the
+[everyday-QC validation record](../project/everyday-qc-validation.md).
+Gaussian-integral point ESP is also validated for its independent PySCF and
+analytic radial checks. Warnings and failed conditioning, conservation or
+convergence diagnostics retain their own partial/Experimental status rather
+than inheriting a method-level label.
+
+The complete coverage audit retains real examples, convergence failures,
+output-reader evidence and visualization boundaries. Software execution alone
+does not promote a scientific method.
 
 ## Experimental spectroscopy and excited states
 
@@ -80,10 +138,14 @@ For excited states, representation support is broader than validation support. A
 
 ## Coverage still needed
 
-Broader cases such as carbon dioxide, triplet oxygen with confirmed spin metadata,
-ethanol, water dimers, diffuse/polarized basis behavior, ECP families, ghost-center workflows,
-correlated/post-SCF densities, transition-metal chemistry, and independently generated excited-state reference suites require legally shareable,
-provenance-documented fixtures and explicit acceptance criteria. Until added, extrapolation is the researcher's responsibility.
+For native Hirshfeld, future validation is required before supporting elements
+outside H/C/N/O, ECP/pseudopotential systems, ghost-center conventions,
+transition metals or correlated/post-SCF density definitions. Other analysis
+families still need their own evidence for broader high-angular-momentum,
+program/version and chemical-space coverage.
+
+Typed spectroscopy, NTOs, analytic density derivatives, QTAIM, ELF/LOL, NCI
+and basin integration remain separate future scientific gates.
 
 ## Reproduce the software checks
 
@@ -94,19 +156,12 @@ python scripts/check_docs.py --root .
 python -m mkdocs build --strict
 ```
 
-Read [limitations](../limitations.md) before publication and cite the exact version used.
+The independent Hirshfeld evidence is reproduced by the pinned validation-only
+stack in `.github/workflows/hirshfeld-validation.yml` running:
 
-## Staged everyday QC branch
+```bash
+python scripts/validate_hirshfeld.py --external --output-dir hirshfeld-validation
+```
 
-Successful MO cubes, composition, Mayer, DOS and PDOS are now Validated for
-the named eleven-case reference set; warnings and failed diagnostics retain
-partial/Experimental status. Gaussian-integral ESP is also Validated for its
-independent PySCF and analytic radial checks. Their independent comparisons, numerical tolerances, interface
-parity and remaining scientific gates are listed in the
-[staged validation record](../project/everyday-qc-validation.md). They are not
-included in the published 0.9.2 validation claims above.
-
-The [complete Experimental coverage audit](../project/experimental-coverage.md)
-includes 11 actual molecular examples, three analytic ESP comparisons with
-retained convergence failures, real output-reader evidence and visualization
-boundaries. It does not promote all methods merely because software tests pass.
+Read [limitations](../limitations.md) before publication and cite the exact
+version used.

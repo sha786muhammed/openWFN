@@ -2,14 +2,14 @@
 
 This is a coverage audit, not a blanket promotion to Validated. Eleven actual
 converged PySCF single-point wavefunctions are committed in
-[`examples/everyday-qc`](https://github.com/sha786muhammed/openWFN/tree/feat/everyday-qc-staged/examples/everyday-qc).
+[`examples/everyday-qc`](../../examples/everyday-qc/).
 The corpus includes restricted, doublet/triplet unrestricted, charged, pure
 spherical, Cartesian, diffuse, aromatic and intermolecular examples.
 Generated geometries are demonstrations, not optimized reference structures.
 Methods, coordinates, energies, source hashes, dependencies and acceptance
 tolerances are retained with each case in the captured reference report.
 
-## Every Experimental pathway
+## Every Experimental or conditional pathway
 
 | Pathway | Evidence in this repository | Remaining boundary/status |
 |---|---|---|
@@ -17,20 +17,36 @@ tolerances are retained with each case in the captured reference report.
 | Orbital composition | PySCF Mulliken population routine and SciPy symmetric square root on the same wavefunctions; atom partition/metric diagnostics | Validated for the named set; Cartesian Löwdin intentionally excluded across differing AO normalizations |
 | Mayer orders | cclib independently builds occupied densities and contracts its MBO matrices from PySCF wavefunctions | Validated for the named set; conventional HF index, not a validated correlated improved-Mayer implementation |
 | DOS/PDOS | Independent Gaussian expansion from PySCF energies and projections; both population conventions for pure bases, Mulliken for Cartesian | Validated for the named set; all-element/high-l/ECP coverage absent; broadened orbital energies only |
+| Native Hirshfeld | Ten-case H/C/N/O all-electron set; independent HORTON-PART 1.1.8 comparison plus standard-to-fine openWFN grid refinement | Validated for that named scope; unsupported elements, ECP/pseudopotential and ghost-center cases remain outside scope |
 | Electronic/total grid ESP | Analytic PySCF `int1e_rinv` contraction for water, diffuse UHF OH and ammonium, with spacing histories and electron counts | Experimental; **ammonium fails the declared tested-grid tolerance**, retained as partial evidence |
 | Density integration/cube when conservation fails | Existing density/conservation regressions plus ESP histories and real workbench coarse density grids | Remains partial/Experimental whenever its actual grid fails; passing other inputs must not override this |
 | Mulliken/Löwdin population when incomplete/unreliable | Existing malformed/source-density/charge and overlap-condition regression tests | Remains partial/Experimental for inconsistent or ill-conditioned input; there is no valid golden population for deliberately invalid data |
 | Frontier orbitals when data are incomplete | Existing restricted/unrestricted/missing-virtual occupation tests; genuine CASSCF log absence case for the output reader | Incomplete frontier results remain partial; unavailable orbital energies cannot be fabricated |
 | HTML workbench | Real water and UHF OH payload tests check embedded HOMO cube against shared core, layout and retained partial density warnings; existing offline/HTML/measurement tests | Stable interface for the eleven-case offline Chromium set; field-level partial warnings retained; no universal GPU/device claim |
 | Source-reported output properties | Pinned actual ORCA 4.2 MP2 water log: printed SCF energy, Mulliken charges and dipole magnitude; Gaussian09 CASSCF-only water log correctly leaves SCF energy absent | Experimental reader; two source jobs only, not all supported programs/properties |
-| Hidden legacy `mo` preview | Audit confirms CLI explicitly unavailable; regression ensures exported legacy `evaluate_mo` no longer returns an invented zero field | **Unsupported**, use the new normalized-core `orbitals cube` service |
+| Hidden legacy `mo` preview | Audit confirms CLI explicitly unavailable; regression ensures exported legacy `evaluate_mo` no longer returns an invented zero field | **Unsupported**, use the normalized-core `orbitals cube` service |
 
-Source `Experimental` occurrences were reviewed in services, spectral/orbital
-services, output_properties, workbench, CLI and result types. The label's type
-declaration is not itself a scientific feature. Conditional partial-result
-labels describe insufficient input/numerics, not a method awaiting promotion.
-Hirshfeld, spectroscopy, NTO, QTAIM and basin analyses are unimplemented;
-they are not Experimental implementations that can be validated here.
+Source `Experimental` occurrences are reviewed as capability-specific states, not
+as a blanket project label. Conditional partial-result labels describe
+insufficient input/numerics, not a method awaiting promotion. Native Hirshfeld
+is no longer in the unimplemented category: its scoped validation evidence is
+committed under `validation/hirshfeld/`. Spectroscopy, NTO, QTAIM and basin
+analyses remain unimplemented and require separate gates.
+
+## Hirshfeld promotion evidence
+
+The ordinary neutral-pro-atom Hirshfeld implementation uses the versioned
+`openwfn-hirshfeld-proatoms-v1` H/C/N/O reference library. Its fixed independent
+comparison gate is `1.0e-3 e` maximum per-atom charge difference against
+HORTON-PART 1.1.8, and its fixed numerical-convergence gate is `5.0e-4 e`
+maximum standard-to-fine openWFN charge shift. All ten named cases pass both.
+The worst external difference is approximately `1.27e-4 e`; the worst grid
+shift is approximately `8.55e-5 e`.
+
+This is not universal Hirshfeld validation. It does not support or validate
+other elements, ECP/pseudopotential cases, ghost-center ambiguity,
+spin-Hirshfeld definitions, alternative pro-atom conventions or correlated
+post-SCF densities.
 
 ## ESP findings and the actual acceptance criterion
 
@@ -44,11 +60,10 @@ points. Ammonium at 0.1 bohr fails: its result is deliberately recorded partial,
 not hidden by widening tolerances. Near nuclei, different geometries, tighter
 cores and diffuse tails still need convergence studies.
 
-The shared public ESP service now reports grid electron counts, expected count,
+The shared public ESP service reports grid electron counts, expected count,
 spacing/padding and conservation error. It returns partial with a warning if
 that grid fails conservation. Passing charge conservation does **not** prove
-local Coulomb-quadrature convergence. The new regression was observed failing
-before the safeguard change and passing afterwards.
+local Coulomb-quadrature convergence.
 
 ## Reproduce and inspect
 
@@ -60,37 +75,30 @@ python -m pytest tests/validation/test_real_example_corpus.py tests/validation/t
 python scripts/validate_output_references.py --download --input-dir /tmp/openwfn-real-logs --output /tmp/openwfn-output.json
 ```
 
+For the independent Hirshfeld comparison, use the pinned validation-only
+packages from `.github/workflows/hirshfeld-validation.yml` and run:
+
+```bash
+python scripts/validate_hirshfeld.py --external --output-dir /tmp/openwfn-hirshfeld
+```
+
 Output references are from immutable cclib-data commit
 `127b2229d584d54fb84a74e383edb18a271fc283`, and both file checksums are enforced.
 Captured numeric comparisons are in `validation/everyday-qc/output-report.json`.
 The logs' redistribution license was not established, so the logs themselves
 are not copied into openWFN; the opt-in runner downloads the exact public inputs.
 Existing synthetic parser excerpts are **not** counted as real calculations.
-Other parsed output fields in the report are observations, not independent
-validation targets.
 
 These checks cover numerical post-processing of specified wavefunctions, not
 the chemical accuracy of their chosen electronic-structure models. Labels
-remain conservative, and all failures and exclusions stay visible.
+remain conservative, and failures and exclusions stay visible.
 
-## Verification of this audit
+## Stabilization record
 
-Full suite: **704 passed, 1 skipped** (88.30 seconds). Ruff, repository and
-documentation checks, strict MkDocs, internal validation and all 25 interop
-formats pass. The molecular/ESP/corpus subset passed, including expected partial
-ESP behavior. A bounded independent read-only review found no Critical/Important
-issues. This review is not scientific certification. The single skip is the
-core-only missing-IOData contract in an environment where IOData is installed.
-
-## Stabilization update
-
-Successful MO cube, composition, Mayer, DOS and PDOS results now report
-Validated for the named set, retaining partial/Experimental for unmet diagnostics.
-The new default integral ESP fixes the charged-grid failure without changing or
-erasing the old grid evidence. Its eleven PySCF comparisons and all-component
-analytic s–h tests are documented in [ESP methods](../science/population-esp.md).
-The local browser download failed, but the GitHub Actions browser runner succeeded
-for all eleven molecules after correcting canvas containment and torsion sign.
-The workbench interface is Stable for that scope; coarse density fields retain
-partial/Experimental warnings. Captured evidence is in
-`validation/everyday-qc/browser-report.json`.
+Successful MO cube, composition, Mayer, DOS and PDOS results report Validated
+for their named set, retaining partial/Experimental for unmet diagnostics. The
+default integral ESP resolves the charged-grid limitation without erasing the
+historical grid evidence. The workbench interface is Stable for its browser-
+validated scope; coarse density fields retain partial/Experimental warnings.
+Native Hirshfeld adds an independent ten-case H/C/N/O validation record rather
+than inheriting status from software tests alone.

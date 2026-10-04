@@ -21,6 +21,7 @@ def test_registry_runs_summary_with_versioned_input_provenance() -> None:
         "excited-states",
         "frontier",
         "frontier-all",
+        "hirshfeld",
         "ir-spectrum",
         "lowdin",
         "mayer",

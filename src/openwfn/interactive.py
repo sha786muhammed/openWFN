@@ -318,7 +318,10 @@ def run_interactive(lines, filename):
             utils.print_error("Unknown vibrational workflow.")
 
     def show_density() -> None:
-        operation = ask("Density workflow [integrate/esp; default integrate]: ", "integrate").casefold()
+        operation = ask(
+            "Density/population workflow [integrate/esp/hirshfeld; default integrate]: ",
+            "integrate",
+        ).casefold()
         if operation == "integrate":
             kind = ask("Density component [total/alpha/beta/spin; default total]: ", "total").casefold()
             show_result(client.density(kind))
@@ -326,8 +329,10 @@ def run_interactive(lines, filename):
             point = tuple(float(value) for value in ask("ESP coordinates x y z in angstrom [5 0 0]: ", "5 0 0").split())
             component = ask("ESP component [total/electronic/nuclear/mulliken/lowdin; default total]: ", "total")
             show_result(client.esp(point, component=component))
+        elif operation == "hirshfeld":
+            show_result(client.hirshfeld())
         else:
-            utils.print_error("Unknown density workflow.")
+            utils.print_error("Unknown density/population workflow.")
 
     def create_report() -> None:
         output = Path(f"{Path(filename).stem}-report.html")

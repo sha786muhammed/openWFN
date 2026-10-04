@@ -23,11 +23,15 @@ def test_validation_manifest_declares_current_and_historical_evidence() -> None:
     assert manifest["schema_version"] == "1.0"
     assert manifest["current_release"] == "0.10.1"
     assert manifest["resource_benchmark"]["establishes_scientific_validation"] is False
+    assert manifest["resource_benchmark"]["molecules"] == 11
+    assert manifest["resource_benchmark"]["workflows_per_molecule"] == 10
+    assert manifest["resource_benchmark"]["workflow_count"] == 110
     assert manifest["historical_captures"]["everyday-qc/report.json"]["authoritative_status"] is False
     assert manifest["historical_captures"]["everyday-qc/esp-report.json"]["authoritative_status"] is False
-    for capability in ("orbital-composition", "mayer", "dos", "pdos", "point-esp"):
+    for capability in ("orbital-composition", "mayer", "dos", "pdos", "point-esp", "hirshfeld"):
         assert capability in manifest["capabilities"]
         assert manifest["capabilities"][capability]["status"] in {"Validated", "Experimental"}
+    assert manifest["capabilities"]["hirshfeld"]["status"] == "Validated"
 
 
 def test_release_resource_claim_is_explicitly_not_scientific_validation() -> None:
@@ -46,6 +50,7 @@ def test_publish_workflow_is_version_driven_and_retests_public_package() -> None
     assert "benchmark_resources.py" in text
     assert "--examples-dir" in text
     assert "published-examples/everyday-qc" in text
+    assert 'len(report["records"]) == 110' in text
 
 
 def test_package_data_includes_everyday_qc_corpus() -> None:
@@ -59,6 +64,8 @@ def test_benchmark_can_be_pointed_at_installed_corpus() -> None:
     text = (ROOT / "scripts/benchmark_resources.py").read_text(encoding="utf-8")
     assert "--examples-dir" in text
     assert "args.examples_dir" in text
+    assert "EXPECTED_WORKFLOWS_PER_MOLECULE = 10" in text
+    assert "'hirshfeld': ['population', 'hirshfeld']" in text
 
 
 def test_current_method_docs_do_not_retain_pre_release_labels() -> None:

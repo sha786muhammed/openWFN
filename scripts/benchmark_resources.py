@@ -12,6 +12,7 @@ import openwfn
 from openwfn.resource_budget import run_resource_command
 
 EXPECTED_MOLECULES = 11
+EXPECTED_WORKFLOWS_PER_MOLECULE = 10
 
 
 def resolve_examples_dir(examples_dir: Path | None, root: Path) -> Path:
@@ -55,6 +56,7 @@ def main():
             workflows = {
                 'geometry': ['summary'],
                 'mayer': ['bondorder', 'mayer'],
+                'hirshfeld': ['population', 'hirshfeld'],
                 'dos': ['orbitals', 'dos', '--spin', 'all', '--export', 'dos.csv'],
                 'pdos': ['orbitals', 'pdos', '--spin', 'all', '--export', 'pdos.csv'],
                 'density_cube': ['density', 'cube', 'density.cube', '--spacing', '.5', '--padding', '3'],
@@ -92,7 +94,7 @@ def main():
         'max_elapsed_seconds': max((r['elapsed_seconds'] for r in records), default=0),
         'max_observed_rss_bytes': max((r['peak_observed_rss_bytes'] for r in records), default=0),
         'max_output_bytes': max((r['output_bytes'] for r in records), default=0)}))
-    return 0 if len(records) == EXPECTED_MOLECULES * 9 and all(
+    return 0 if len(records) == EXPECTED_MOLECULES * EXPECTED_WORKFLOWS_PER_MOLECULE and all(
         r['status'] == 'success' for r in records
     ) else 1
 
