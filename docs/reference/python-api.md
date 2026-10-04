@@ -175,6 +175,7 @@ The default density-grid spacing is **0.15 bohr** with 6.0 bohr padding. These d
 | `dos` | Experimental Gaussian orbital-energy DOS |
 | `frontier` | Alpha/default HOMO, LUMO, and gap |
 | `frontier-all` | Alpha and beta frontiers plus the true overall HOMO for unrestricted calculations |
+| `hirshfeld` | Validated ordinary neutral-pro-atom Hirshfeld populations and charges for the documented in-scope cases |
 | `ir-spectrum` | Experimental source IR sticks plus Gaussian-broadened curve |
 | `lowdin` | Löwdin populations and charges |
 | `mayer` | Experimental spin-corrected Mayer bond orders |
