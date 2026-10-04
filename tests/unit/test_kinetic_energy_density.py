@@ -5,7 +5,6 @@ import pytest
 
 from openwfn.analysis.basis import evaluate_ao_fields
 from openwfn.analysis.realspace import evaluate_kinetic_energy_density
-from openwfn.errors import DataUnavailableError
 from openwfn.model import (
     Atom,
     BasisSet,
@@ -115,12 +114,10 @@ def test_unrestricted_ked_channels_match_explicit_alpha_beta_orbital_gradients()
     alpha = evaluate_kinetic_energy_density(data, points, kind="alpha")
     beta = evaluate_kinetic_energy_density(data, points, kind="beta")
     total = evaluate_kinetic_energy_density(data, points, kind="total")
-    spin = evaluate_kinetic_energy_density(data, points, kind="spin")
 
     np.testing.assert_allclose(alpha.tau, expected_alpha, atol=1e-12)
     np.testing.assert_allclose(beta.tau, expected_beta, atol=1e-12)
     np.testing.assert_allclose(total.tau, expected_alpha + expected_beta, atol=1e-12)
-    np.testing.assert_allclose(spin.tau, expected_alpha - expected_beta, atol=1e-12)
 
 
 def test_restricted_closed_shell_alpha_beta_ked_are_half_total() -> None:
@@ -141,16 +138,17 @@ def test_restricted_closed_shell_alpha_beta_ked_are_half_total() -> None:
     np.testing.assert_allclose(beta.tau, 0.5 * total.tau, atol=1e-12)
 
 
-def test_spin_ked_rejects_unavailable_spin_density_instead_of_inference() -> None:
+def test_positive_definite_ked_rejects_spin_difference_channel() -> None:
     basis = BasisSet((BasisShell(0, 0, (1.0,), (1.0,)),))
     data = CalculationData(
         molecule=_molecule(),
         basis=basis,
-        total_density=DensityMatrix(((1.0,),), "total"),
+        total_density=DensityMatrix(((1.4,),), "total"),
+        spin_density=DensityMatrix(((0.4,),), "spin"),
     )
 
-    with pytest.raises(DataUnavailableError, match="Spin density matrix is not available"):
-        evaluate_kinetic_energy_density(data, np.zeros((1, 3)), kind="spin")
+    with pytest.raises(ValueError, match="total, alpha, or beta"):
+        evaluate_kinetic_energy_density(data, np.zeros((1, 3)), kind="spin")  # type: ignore[arg-type]
 
 
 def test_ked_chunking_is_numerically_equivalent_to_one_batch() -> None:
