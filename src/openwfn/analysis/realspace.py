@@ -7,11 +7,13 @@ import numpy as np
 
 from ..errors import DataUnavailableError
 from ..model import CalculationData, DensityMatrix
+from ..results import ResultRecord
 from .basis import bounded_ao_chunk_size, evaluate_ao_fields
 from .density import density_matrix_for_kind
 from .limits import bounded_point_chunk_size
 
 DensityKind = Literal["total", "alpha", "beta", "spin"]
+DENSITY_DERIVATIVE_CONVENTION = "analytic_cartesian_ao_product_rule"
 KED_CONVENTION = "positive_definite_half_gradient_square"
 
 
@@ -196,3 +198,71 @@ def evaluate_kinetic_energy_density(
         for start in range(0, len(points), size)
     ]
     return KineticEnergyDensityBatch(tau=np.concatenate(batches))
+
+
+def density_derivatives(
+    data: CalculationData,
+    *,
+    points_bohr: np.ndarray,
+    kind: DensityKind = "total",
+    chunk_size: int | None = None,
+) -> ResultRecord:
+    """Return analytic density derivatives at explicitly supplied Bohr points."""
+
+    points = _validate_points(points_bohr)
+    fields = evaluate_density_fields(data, points, kind=kind, chunk_size=chunk_size)
+    finite_mask = (
+        np.isfinite(fields.rho)
+        & np.all(np.isfinite(fields.gradient), axis=1)
+        & np.all(np.isfinite(fields.hessian), axis=(1, 2))
+        & np.isfinite(fields.laplacian)
+    )
+    return ResultRecord(
+        kind="density_derivatives",
+        data={
+            "points_bohr": points.tolist(),
+            "channel": kind,
+            "rho": fields.rho.tolist(),
+            "gradient": fields.gradient.tolist(),
+            "hessian": fields.hessian.tolist(),
+            "laplacian": fields.laplacian.tolist(),
+            "derivative_convention": DENSITY_DERIVATIVE_CONVENTION,
+            "finite_mask": finite_mask.tolist(),
+        },
+        units={
+            "points_bohr": "bohr",
+            "rho": "electron/bohr^3",
+            "gradient": "electron/bohr^4",
+            "hessian": "electron/bohr^5",
+            "laplacian": "electron/bohr^5",
+        },
+        validation_status="Experimental",
+    )
+
+
+def kinetic_energy_density(
+    data: CalculationData,
+    *,
+    points_bohr: np.ndarray,
+    kind: DensityKind = "total",
+    chunk_size: int | None = None,
+) -> ResultRecord:
+    """Return positive-definite kinetic-energy density at supplied Bohr points."""
+
+    points = _validate_points(points_bohr)
+    result = evaluate_kinetic_energy_density(data, points, kind=kind, chunk_size=chunk_size)
+    return ResultRecord(
+        kind="kinetic_energy_density",
+        data={
+            "points_bohr": points.tolist(),
+            "channel": kind,
+            "tau": result.tau.tolist(),
+            "convention": result.convention,
+            "finite_mask": np.isfinite(result.tau).tolist(),
+        },
+        units={
+            "points_bohr": "bohr",
+            "tau": "hartree/bohr^3",
+        },
+        validation_status="Experimental",
+    )
