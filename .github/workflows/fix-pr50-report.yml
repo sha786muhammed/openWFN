@@ -18,6 +18,11 @@ jobs:
           ref: feat/excited-states-uvvis
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with:
+          python-version: '3.12'
+      - name: Install test dependencies
+        run: python -m pip install -e ".[test]"
       - name: Restore excited-state report dispatch
         shell: bash
         run: |
