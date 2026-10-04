@@ -76,6 +76,18 @@ def test_ked_registry_payload_names_positive_definite_convention() -> None:
     }
 
 
+def test_ked_registry_rejects_spin_difference_channel() -> None:
+    data = parse_fchk(WATER)
+
+    with pytest.raises(ValueError, match="total, alpha, or beta"):
+        run_analysis(
+            data,
+            "kinetic-energy-density",
+            points_bohr=POINTS,
+            kind="spin",
+        )
+
+
 def test_registry_signature_rejects_unapproved_realspace_keywords() -> None:
     data = parse_fchk(WATER)
 
