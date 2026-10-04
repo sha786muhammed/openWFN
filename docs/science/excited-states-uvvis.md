@@ -55,13 +55,13 @@ The UV–Vis profile is broadened in **energy space**. The default is a Gaussian
 
 For a line centered at energy \(E_i\) with source oscillator strength \(f_i\), openWFN uses the same peak-height-preserving Gaussian convention as its other spectrum renderers:
 
-\[
+$$
 \sigma = \frac{\mathrm{FWHM}}{2\sqrt{2\ln 2}}
-\]
+$$
 
-\[
+$$
 I(E) = \sum_i f_i \exp\left[-\frac{(E-E_i)^2}{2\sigma^2}\right]
-\]
+$$
 
 This is a deterministic visualization/post-processing profile. It is **not** absorbance, molar extinction coefficient, experimental line shape, or an instrument response model.
 
@@ -71,16 +71,16 @@ The grid is resource bounded and rejects non-finite ranges, nonpositive width, i
 
 The wavelength coordinate is
 
-\[
+$$
 \lambda = \frac{hc}{E}
-\]
+$$
 
 with excitation energy in eV and wavelength in nm. A wavelength-domain density cannot be obtained by simply relabelling the energy-domain x axis. openWFN applies the Jacobian:
 
-\[
+$$
 I_\lambda(\lambda)=I_E(E)\left|\frac{dE}{d\lambda}\right|
 =I_E(E)\frac{hc}{\lambda^2}
-\]
+$$
 
 The wavelength arrays are therefore derived from the energy-domain curve and have their own y values.
 
