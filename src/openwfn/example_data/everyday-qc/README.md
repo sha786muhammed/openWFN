@@ -31,13 +31,13 @@ openwfn examples/everyday-qc/ethanol.molden orbitals cube --mo homo --spacing .1
 openwfn examples/everyday-qc/water_dimer.molden orbitals pdos --group-by element --export water-dimer-pdos.svg
 ```
 
-## Use from the installed 0.10.1 package
+## Use from the installed 0.11.0 package
 
 The same versioned corpus is bundled with the wheel. Install it without cloning
 the repository:
 
 ```bash
-python -m pip install "openwfn[interop,resources]==0.10.1"
+python -m pip install "openwfn[interop,resources]==0.11.0"
 openwfn examples install installed-examples
 openwfn installed-examples/everyday-qc/oxygen_triplet.molden orbitals frontier --spin all
 ```
@@ -48,11 +48,12 @@ wheel and again after downloading the exact release from public PyPI.
 
 Orbital-composition, Mayer, DOS and PDOS results are **Validated** for the
 documented eleven-molecule same-wavefunction reference scope. Native integral
-point ESP also has independent reference evidence. MO field values are checked
-against independent evaluators, while an individual cube remains partial when
-its requested grid fails the normalization diagnostic. Read status and warnings
-before interpreting numbers; failed or partial diagnostics retain their actual
-status.
+point ESP also has independent reference evidence. Ordinary Hirshfeld is
+**Validated** only for its documented H/C/N/O all-electron ten-case scope.
+MO field values are checked against independent evaluators, while an individual
+cube remains partial when its requested grid fails the normalization diagnostic.
+Read status and warnings before interpreting numbers; failed or partial
+diagnostics retain their actual status.
 
 Mulliken populations can be negative; Löwdin populations depend on AO
 representation. DOS is an orbital-energy spectrum, not periodic band structure
