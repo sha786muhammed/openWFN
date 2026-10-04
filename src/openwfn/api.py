@@ -4,6 +4,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Literal
 
+from .analysis.hirshfeld import HirshfeldSettings
 from .analysis.registry import run_analysis, run_analysis_safe
 from .analysis.structure_summary import center_counts
 from .capabilities import Capability, infer_capabilities
@@ -211,14 +212,23 @@ class OpenWFNCalculation:
         except DataUnavailableError as exc:
             return self._unavailable("orbital_cube", "orbital_cube", str(exc))
 
+    def hirshfeld(
+        self,
+        *,
+        settings: HirshfeldSettings | None = None,
+    ) -> ResultRecord:
+        """Return native Hirshfeld populations with optional expert numerical settings."""
+
+        return run_analysis_safe(self.data, "hirshfeld", settings=settings)
+
     def population(
         self,
-        method: Literal["mulliken", "lowdin"] = "mulliken",
+        method: Literal["mulliken", "lowdin", "hirshfeld"] = "mulliken",
     ) -> ResultRecord:
-        """Return Mulliken or symmetric Löwdin atomic populations."""
+        """Return Mulliken, symmetric Löwdin, or native Hirshfeld populations."""
 
-        if method not in {"mulliken", "lowdin"}:
-            raise ValueError("population method must be 'mulliken' or 'lowdin'")
+        if method not in {"mulliken", "lowdin", "hirshfeld"}:
+            raise ValueError("population method must be 'mulliken', 'lowdin', or 'hirshfeld'")
         return run_analysis_safe(self.data, method)
 
 

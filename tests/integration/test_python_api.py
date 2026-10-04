@@ -75,7 +75,10 @@ def test_python_api_exposes_population_analysis() -> None:
 def test_python_api_rejects_unknown_population_method() -> None:
     calculation = openwfn.load(ROOT / "examples" / "water" / "water.fchk")
 
-    with pytest.raises(ValueError, match="population method must be 'mulliken' or 'lowdin'"):
+    with pytest.raises(
+        ValueError,
+        match="population method must be 'mulliken', 'lowdin', or 'hirshfeld'",
+    ):
         calculation.population("anything")
 
 
