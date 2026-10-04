@@ -1,0 +1,48 @@
+name: Fix PR 50 excited-state report merge hunk
+
+on:
+  push:
+    branches:
+      - feat/excited-states-uvvis
+
+permissions:
+  contents: write
+
+jobs:
+  fix-report:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: feat/excited-states-uvvis
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Restore excited-state report dispatch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/openwfn/reporting.py')
+          text = path.read_text(encoding='utf-8')
+          marker = '''        return prefix + details + _spectrum_svg(section) + _spectrum_table(section)\n    rows = "".join(\n'''
+          replacement = '''        return prefix + details + _spectrum_svg(section) + _spectrum_table(section)\n    if section["name"] == "excited-states":\n        data = section["data"]\n        summary = (\n            '<div class="spectroscopy-summary">'\n            f"<span>Jobs: {escape(str(data.get('job_count', 0)))}</span>"\n            f"<span>States: {escape(str(sum(len(job.get('states', [])) for job in data.get('jobs', []))))}</span>"\n            "<span>Values: source-reported unless explicitly derived</span>"\n            "</div>"\n        )\n        return prefix + summary + _excited_state_table(section)\n    if section["name"] == "uvvis-spectrum":\n        broadening = section["data"].get("broadening", {})\n        details = (\n            '<p class="spectrum-details">Gaussian visualization · FWHM '\n            f"{escape(str(broadening.get('fwhm_ev', '—')))} eV · source oscillator-strength sticks preserved · "\n            "curve is not absorbance or an extinction coefficient</p>"\n        )\n        return prefix + details + _uvvis_svg(section) + _uvvis_table(section)\n    rows = "".join(\n'''
+          if marker not in text:
+              raise SystemExit('expected report dispatch marker not found')
+          text = text.replace(marker, replacement, 1)
+          css_old = '.vibrational-mode-table th,.spectrum-stick-table th{width:auto;white-space:nowrap}'
+          css_new = '.vibrational-mode-table th,.spectrum-stick-table th,.excited-state-table th,.uvvis-stick-table th{width:auto;white-space:nowrap}'
+          if css_old not in text:
+              raise SystemExit('expected report CSS marker not found')
+          text = text.replace(css_old, css_new, 1)
+          path.write_text(text, encoding='utf-8')
+          PY
+          python -m pytest -q tests/integration/test_excited_state_report_workbench.py tests/integration/test_vibrational_report.py tests/integration/test_hirshfeld_workflows.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm -f .github/workflows/fix-pr50-report.yml
+          git add src/openwfn/reporting.py
+          git commit -m "fix: restore excited-state report rendering after merge"
+          git push origin HEAD:feat/excited-states-uvvis
