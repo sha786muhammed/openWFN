@@ -40,7 +40,7 @@ def citation_release_date() -> str:
 
 
 def test_source_version_targets_current_stable() -> None:
-    assert project_version() == "0.10.1"
+    assert project_version() == "0.11.0"
 
 
 def test_runtime_version_matches_project() -> None:
@@ -121,13 +121,13 @@ def test_citation_contains_verified_software_fields() -> None:
     for required in (
         "type: software",
         'title: "openWFN: Wavefunction post-processing analysis toolkit"',
-        'version: "0.10.1"',
-        "date-released: 2026-10-02",
+        'version: "0.11.0"',
+        "date-released: 2026-10-04",
         "family-names: Shaji",
         "given-names: Muhammed Shah",
         "license: MIT",
         'repository-code: "https://github.com/sha786muhammed/openWFN"',
-        'url: "https://github.com/sha786muhammed/openWFN/releases/tag/v0.10.1"',
+        'url: "https://github.com/sha786muhammed/openWFN/releases/tag/v0.11.0"',
     ):
         assert required in citation
 
@@ -157,9 +157,9 @@ def test_citation_guide_matches_cff() -> None:
     for field in (
         "Muhammed Shah Shaji",
         "openWFN: Wavefunction post-processing analysis toolkit",
-        "0.10.1",
+        "0.11.0",
         "2026",
-        "https://github.com/sha786muhammed/openWFN/releases/tag/v0.10.1",
+        "https://github.com/sha786muhammed/openWFN/releases/tag/v0.11.0",
         "@software{shaji_openwfn_2026",
     ):
         assert field in guide
@@ -208,7 +208,7 @@ def test_readme_documents_binary_checkpoint_requirement() -> None:
 
 def test_changelog_contains_current_release() -> None:
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    assert f"## [{project_version()}] - 2026-10-02" in changelog
+    assert f"## [{project_version()}] - 2026-10-04" in changelog
 
 
 def test_release_notes_document_capability_boundaries() -> None:
@@ -267,9 +267,11 @@ def test_stable_publication_keeps_exact_commit_and_public_install_gates() -> Non
         "--examples-dir published-examples/everyday-qc",
     ):
         assert required in workflow
-    notes = (ROOT / "docs/releases/0.10.1.md").read_text(encoding="utf-8")
-    assert "scientific result status is evaluated separately" in notes
+    notes = (ROOT / "docs/releases/0.11.0.md").read_text(encoding="utf-8")
+    assert "stable software release" in notes
     assert "Experimental" in notes
-    assert "remain outside this release" in notes
+    assert "Scientific status" in notes
+    assert "110-command" in notes
+    assert (ROOT / "docs/releases/0.10.1.md").is_file()
     assert (ROOT / "docs/releases/0.10.0.md").is_file()
     assert (ROOT / "docs/releases/0.10.0rc1.md").is_file()
