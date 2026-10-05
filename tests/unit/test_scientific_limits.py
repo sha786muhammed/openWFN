@@ -35,6 +35,7 @@ def test_existing_grid_and_quadrature_ceilings_are_centralized_without_value_cha
     assert limits.MAX_GRID_POINTS == 2_000_000
     assert limits.MAX_ATOM_QUADRATURE_POINTS == 20_000_000
     assert limits.MAX_POINT_ANALYSIS_POINTS == 2_000_000
+    assert limits.MAX_QTAIM_BASIN_ACTIVE_POINTS == limits.MAX_POINT_ANALYSIS_POINTS
     assert limits.DEFAULT_AO_WORKING_BYTES == 128 * 1024**2
 
 
