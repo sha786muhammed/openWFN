@@ -1,9 +1,9 @@
 """Noncovalent-interaction fields from density derivatives.
 
-The pointwise numerical kernel in this module is deliberately independent of
-file formats, cube export, and presentation.  It follows the total-density NCI
-reduced-density-gradient convention and keeps RDG validity separate from
-Hessian-dependent lambda2 validity.
+The numerical kernel in this module is independent of file formats, cube export,
+and presentation. It follows the total-density NCI reduced-density-gradient
+convention and keeps RDG validity separate from Hessian-dependent lambda2
+validity.
 """
 
 from __future__ import annotations
@@ -11,6 +11,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
+
+from ..model import CalculationData
+from ..results import ResultRecord
+from .realspace import evaluate_density_fields
 
 DEFAULT_NCI_DENSITY_FLOOR = 1.0e-12
 DEFAULT_HESSIAN_ANTISYMMETRY_TOLERANCE = 1.0e-10
@@ -106,8 +110,8 @@ def compute_nci_components(
 ) -> NCIFieldBatch:
     """Compute total-density RDG and Hessian-sign NCI fields.
 
-    RDG depends only on ``rho`` and ``gradient``.  Hessian quality therefore
-    cannot erase an otherwise valid RDG value.  ``field_valid_mask`` represents
+    RDG depends only on ``rho`` and ``gradient``. Hessian quality therefore
+    cannot erase an otherwise valid RDG value. ``field_valid_mask`` represents
     points where the complete NCI field set (RDG plus Hessian-derived fields) is
     valid.
     """
@@ -203,4 +207,173 @@ def compute_nci_components(
         invalid_nonfinite_count=int(np.count_nonzero(nonfinite_input)),
         invalid_hessian_count=int(np.count_nonzero(invalid_hessian)),
         ambiguous_lambda2_count=int(np.count_nonzero(ambiguity_mask)),
+    )
+
+
+def evaluate_nci(
+    data: CalculationData,
+    points_bohr: np.ndarray,
+    *,
+    chunk_size: int | None = None,
+    settings: NCISettings | None = None,
+) -> NCIFieldBatch:
+    """Evaluate total-density NCI/RDG fields at explicit Cartesian Bohr points."""
+
+    active_settings = settings or NCISettings()
+    fields = evaluate_density_fields(
+        data,
+        points_bohr,
+        kind="total",
+        chunk_size=chunk_size,
+    )
+    return compute_nci_components(
+        fields.rho,
+        fields.gradient,
+        fields.hessian,
+        settings=active_settings,
+    )
+
+
+def _nullable_1d(values: np.ndarray) -> list[float | None]:
+    array = np.asarray(values, dtype=float)
+    return [float(value) if np.isfinite(value) else None for value in array]
+
+
+def _nullable_2d(values: np.ndarray) -> list[list[float | None]]:
+    array = np.asarray(values, dtype=float)
+    return [
+        [float(value) if np.isfinite(value) else None for value in row]
+        for row in array
+    ]
+
+
+def _is_post_hf_method(method: str | None) -> bool:
+    if not method:
+        return False
+    normalized = method.upper().replace("-", "").replace("_", "").replace(" ", "")
+    candidates = [normalized]
+    for prefix in ("RO", "R", "U"):
+        if normalized.startswith(prefix):
+            candidates.append(normalized[len(prefix) :])
+    families = ("MP2", "MP3", "MP4", "CC", "CI", "QCI")
+    return any(candidate.startswith(families) for candidate in candidates)
+
+
+def _nci_warnings(data: CalculationData, batch: NCIFieldBatch) -> tuple[str, ...]:
+    warnings: list[str] = []
+    if batch.invalid_density_count:
+        warnings.append(
+            f"{batch.invalid_density_count} NCI point(s) were at or below the declared "
+            "density floor; RDG is reported as null at those points."
+        )
+    if batch.invalid_nonfinite_count:
+        warnings.append(
+            f"{batch.invalid_nonfinite_count} NCI point(s) had nonfinite density or "
+            "derivative input fields; affected outputs are reported as null."
+        )
+    if batch.invalid_hessian_count:
+        warnings.append(
+            f"{batch.invalid_hessian_count} NCI point(s) exceeded the declared Hessian "
+            "antisymmetry tolerance; Hessian-derived outputs are reported as null."
+        )
+    if batch.ambiguous_lambda2_count:
+        warnings.append(
+            f"{batch.ambiguous_lambda2_count} NCI point(s) have numerically ambiguous "
+            "lambda2 sign; raw eigenvalues are retained and the sign should not be "
+            "interpreted as reliably attractive or repulsive."
+        )
+    matrix = data.total_density
+    if (
+        matrix is not None
+        and str(matrix.source).lower() == "scf"
+        and _is_post_hf_method(data.molecule.metadata.method)
+    ):
+        method = data.molecule.metadata.method or "post-HF"
+        warnings.append(
+            f"{method} calculation is using the SCF density for NCI because no supported "
+            "post-SCF density was selected."
+        )
+    return tuple(warnings)
+
+
+def nci(
+    data: CalculationData,
+    *,
+    points_bohr: np.ndarray,
+    chunk_size: int | None = None,
+    settings: NCISettings | None = None,
+) -> ResultRecord:
+    """Return an Experimental total-density NCI/RDG result envelope."""
+
+    active_settings = settings or NCISettings()
+    batch = evaluate_nci(
+        data,
+        points_bohr,
+        chunk_size=chunk_size,
+        settings=active_settings,
+    )
+    points = np.asarray(points_bohr, dtype=float)
+    density_source = data.total_density.source if data.total_density is not None else None
+    warnings = _nci_warnings(data, batch)
+    return ResultRecord(
+        kind="nci_rdg",
+        data={
+            "points_bohr": points.tolist(),
+            "rho": _nullable_1d(batch.rho),
+            "gradient_norm": _nullable_1d(batch.gradient_norm),
+            "rdg": _nullable_1d(batch.rdg),
+            "hessian_eigenvalues": _nullable_2d(batch.hessian_eigenvalues),
+            "lambda2": _nullable_1d(batch.lambda2),
+            "signed_density": _nullable_1d(batch.signed_density),
+            "rdg_valid_mask": batch.rdg_valid_mask.astype(bool).tolist(),
+            "field_valid_mask": batch.field_valid_mask.astype(bool).tolist(),
+            "lambda2_sign_ambiguous_mask": (
+                batch.lambda2_sign_ambiguous_mask.astype(bool).tolist()
+            ),
+            "hessian_antisymmetry_residual": _nullable_1d(
+                batch.hessian_antisymmetry_residual
+            ),
+            "density_source": density_source,
+            "chunk_size": chunk_size,
+            "thresholds": {
+                "density_floor": active_settings.density_floor,
+                "hessian_antisymmetry_tolerance": (
+                    active_settings.hessian_antisymmetry_tolerance
+                ),
+                "lambda2_ambiguity_absolute_tolerance": (
+                    active_settings.lambda2_ambiguity_absolute_tolerance
+                ),
+                "lambda2_ambiguity_relative_tolerance": (
+                    active_settings.lambda2_ambiguity_relative_tolerance
+                ),
+            },
+            "diagnostics": {
+                "invalid_density_count": batch.invalid_density_count,
+                "invalid_nonfinite_count": batch.invalid_nonfinite_count,
+                "invalid_hessian_count": batch.invalid_hessian_count,
+                "ambiguous_lambda2_count": batch.ambiguous_lambda2_count,
+            },
+            "conventions": {
+                "coordinates": "Cartesian bohr",
+                "density_channel": "total",
+                "rdg_formula": "|grad(rho)|/[2(3*pi^2)^(1/3)rho^(4/3)]",
+                "hessian_eigenvalue_order": "ascending algebraic",
+                "hessian_symmetrization": "0.5*(H+H.T) after antisymmetry check",
+                "signed_density_formula": "sign(lambda2)*rho",
+                "invalid_values": "null",
+            },
+        },
+        units={
+            "points_bohr": "bohr",
+            "rho": "electron/bohr^3",
+            "gradient_norm": "electron/bohr^4",
+            "rdg": "dimensionless",
+            "hessian_eigenvalues": "electron/bohr^5",
+            "lambda2": "electron/bohr^5",
+            "signed_density": "electron/bohr^3",
+            "hessian_antisymmetry_residual": "electron/bohr^5",
+        },
+        validation_status="Experimental",
+        status="success" if bool(np.all(batch.field_valid_mask)) else "partial",
+        warnings=warnings,
     )
