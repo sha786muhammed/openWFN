@@ -3,15 +3,25 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import isqrt
 
 import numpy as np
 
 from ..errors import DataUnavailableError
-from ..excited_states import AmplitudeBlock, ExcitedState
+from ..excited_states import (
+    AmplitudeBlock,
+    ExcitedState,
+    ExcitedStateCollection,
+    ExcitedStateJob,
+    get_excited_state_collection,
+)
 from ..model import CalculationData, MolecularOrbitals
+from ..results import ResultRecord
 from .basis import overlap_matrix
 from .limits import MAX_NTO_MATRIX_ELEMENTS
 from .orbitals import OCCUPATION_THRESHOLD
+
+MAX_NTO_RETURNED_PAIRS = isqrt(MAX_NTO_MATRIX_ELEMENTS)
 
 
 @dataclass(frozen=True, slots=True)
@@ -215,7 +225,7 @@ def _metric_norms(coefficients: np.ndarray, overlap: np.ndarray) -> np.ndarray:
 def map_nto_to_ao(data: CalculationData, block: AmplitudeBlock) -> NTOMappedResult:
     """Rotate one complete occupied-by-virtual transition matrix into AO coefficients.
 
-    Source MO coefficients are used exactly as stored.  AO-overlap norms and their
+    Source MO coefficients are used exactly as stored. AO-overlap norms and their
     residuals from unity are reported diagnostically; coefficients are never
     silently renormalized.
     """
@@ -266,12 +276,145 @@ def map_nto_to_ao(data: CalculationData, block: AmplitudeBlock) -> NTOMappedResu
     )
 
 
+def _one_based_index(label: str, value: int, size: int) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or not 1 <= value <= size:
+        raise ValueError(
+            f"{label} must be a valid one-based index between 1 and {size}; got {value!r}."
+        )
+    return value - 1
+
+
+def _select_job(
+    collection: ExcitedStateCollection,
+    job: int | None,
+) -> ExcitedStateJob:
+    if job is None:
+        if len(collection.jobs) != 1:
+            raise ValueError(
+                "job must be supplied as a one-based index when multiple excited-state jobs exist."
+            )
+        return collection.jobs[0]
+    return collection.jobs[_one_based_index("job", job, len(collection.jobs))]
+
+
+def _validate_analysis_parameters(max_pairs: int, min_weight: float) -> float:
+    if (
+        isinstance(max_pairs, bool)
+        or not isinstance(max_pairs, int)
+        or not 1 <= max_pairs <= MAX_NTO_RETURNED_PAIRS
+    ):
+        raise ValueError(
+            f"max_pairs must be an integer from 1 to {MAX_NTO_RETURNED_PAIRS}."
+        )
+    if isinstance(min_weight, bool):
+        raise ValueError("min_weight must be a finite number from 0 to 1.")
+    try:
+        normalized_weight = float(min_weight)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("min_weight must be a finite number from 0 to 1.") from exc
+    if not np.isfinite(normalized_weight) or not 0.0 <= normalized_weight <= 1.0:
+        raise ValueError("min_weight must be a finite number from 0 to 1.")
+    return normalized_weight
+
+
+def nto(
+    data: CalculationData,
+    *,
+    state: int,
+    job: int | None = None,
+    spin: str | None = None,
+    max_pairs: int = 20,
+    min_weight: float = 0.0,
+) -> ResultRecord:
+    """Return conservative NTO pairs for one explicitly selected excited state."""
+
+    normalized_weight = _validate_analysis_parameters(max_pairs, min_weight)
+    collection = get_excited_state_collection(data)
+    selected_job = _select_job(collection, job)
+    state_offset = _one_based_index("state", state, len(selected_job.states))
+    selected_state = selected_job.states[state_offset]
+    block = select_nto_amplitude_block(selected_state, spin=spin)
+    mapped = map_nto_to_ao(data, block)
+
+    kept_by_weight = [
+        pair
+        for pair, weight in enumerate(mapped.svd.weights)
+        if float(weight) >= normalized_weight
+    ]
+    returned_pairs = kept_by_weight[:max_pairs]
+    omitted_by_weight = len(mapped.svd.weights) - len(kept_by_weight)
+    omitted_by_limit = len(kept_by_weight) - len(returned_pairs)
+
+    pairs = [
+        {
+            "pair": pair + 1,
+            "singular_value": float(mapped.svd.singular_values[pair]),
+            "pair_strength": float(mapped.svd.pair_strengths[pair]),
+            "weight": float(mapped.svd.weights[pair]),
+            "cumulative_weight": float(mapped.svd.cumulative_weights[pair]),
+            "hole_norm": float(mapped.hole_norms[pair]),
+            "electron_norm": float(mapped.electron_norms[pair]),
+            "hole_norm_residual": float(mapped.hole_norm_residuals[pair]),
+            "electron_norm_residual": float(mapped.electron_norm_residuals[pair]),
+        }
+        for pair in returned_pairs
+    ]
+
+    omitted = omitted_by_weight + omitted_by_limit
+    warnings = (
+        (
+            f"{omitted} NTO pair(s) omitted by the requested min_weight/max_pairs filters."
+        ),
+    ) if omitted else ()
+    return ResultRecord(
+        kind="natural_transition_orbitals",
+        data={
+            "job": selected_job.index,
+            "state": selected_state.index,
+            "source_state": selected_state.source_state,
+            "source_program": selected_job.source_program,
+            "method_family": selected_job.method_family,
+            "method_detail": selected_job.method_detail,
+            "reference_state": selected_job.reference_state,
+            "spin_block": mapped.spin_block,
+            "amplitude_convention": block.convention,
+            "matrix_dimensions": list(block.dimensions),
+            "transition_norm": mapped.svd.transition_norm,
+            "occupied_mo_indices": list(mapped.occupied_mo_indices),
+            "virtual_mo_indices": list(mapped.virtual_mo_indices),
+            "pair_count_total": len(mapped.svd.weights),
+            "pair_count_returned": len(pairs),
+            "max_pairs": max_pairs,
+            "min_weight": normalized_weight,
+            "omitted_by_weight": omitted_by_weight,
+            "omitted_by_limit": omitted_by_limit,
+            "omitted_pair_count": omitted,
+            "phase_convention": "paired_sign_first_largest_hole_component_positive",
+            "coefficient_mapping": "source_mo_occupied_virtual_to_ao",
+            "weight_normalization": "squared_singular_value_over_transition_frobenius_norm_squared",
+            "pairs": pairs,
+        },
+        units={
+            "transition_norm": "dimensionless",
+            "singular_value": "dimensionless",
+            "pair_strength": "dimensionless",
+            "weight": "dimensionless",
+            "cumulative_weight": "dimensionless",
+            "ao_overlap_norm": "dimensionless",
+        },
+        validation_status="Experimental",
+        warnings=warnings,
+    )
+
+
 __all__ = [
     "MAX_NTO_MATRIX_ELEMENTS",
+    "MAX_NTO_RETURNED_PAIRS",
     "NTOMappedResult",
     "NTOSVDResult",
     "compute_nto_svd",
     "map_nto_to_ao",
+    "nto",
     "select_nto_amplitude_block",
     "transition_matrix_from_block",
 ]
