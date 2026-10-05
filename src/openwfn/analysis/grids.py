@@ -9,6 +9,24 @@ from ..constants import BOHR_TO_ANGSTROM
 from ..model import Molecule, VolumetricGrid
 from .limits import MAX_GRID_POINTS
 
+_CLI_MAX_GRID_POINTS: int | None = None
+
+
+def set_cli_max_grid_points(limit: int | None) -> None:
+    """Set the process-scoped CLI grid ceiling, resetting with ``None``.
+
+    Scientific Python callers should prefer the explicit ``max_grid_points``
+    argument on :func:`molecular_grid_points`; this hook only exists so a
+    top-level CLI option can apply consistently to every grid-based command.
+    """
+
+    global _CLI_MAX_GRID_POINTS
+    if limit is not None and (
+        isinstance(limit, bool) or not isinstance(limit, int) or limit <= 0
+    ):
+        raise ValueError("max_grid_points must be a positive integer when specified")
+    _CLI_MAX_GRID_POINTS = limit
+
 
 def molecular_grid_points(
     molecule: Molecule,
@@ -36,7 +54,12 @@ def molecular_grid_points(
         raise ValueError("grid dimensions exceed the finite resource limit")
     shape = tuple(int(extent) + 1 for extent in extents)
     count = prod(shape)
-    limit = MAX_GRID_POINTS if max_grid_points is None else max_grid_points
+    if max_grid_points is not None:
+        limit = max_grid_points
+    elif _CLI_MAX_GRID_POINTS is not None:
+        limit = _CLI_MAX_GRID_POINTS
+    else:
+        limit = MAX_GRID_POINTS
     if count > limit:
         raise ValueError(
             f"Grid requests {count:,} points, exceeding the configured safety limit of "
