@@ -5,7 +5,12 @@ import pytest
 
 from openwfn.analysis.basis import evaluate_ao, overlap_matrix
 from openwfn.analysis.grids import molecular_grid_points
-from openwfn.excited_states import AmplitudeBlock, ExcitedState, ExcitedStateCollection, ExcitedStateJob
+from openwfn.excited_states import (
+    AmplitudeBlock,
+    ExcitedState,
+    ExcitedStateCollection,
+    ExcitedStateJob,
+)
 from openwfn.model import (
     Atom,
     BasisSet,
