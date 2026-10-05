@@ -200,6 +200,7 @@ The default density-grid spacing is **0.15 bohr** with 6.0 bohr padding. These d
 | `nto` | Experimental Natural Transition Orbitals from complete explicitly supported occupied-to-virtual transition matrices |
 | `orbital-composition` | Experimental default HOMO/alpha/Lowdin AO projections |
 | `pdos` | Experimental atom-resolved Lowdin PDOS by default |
+| `qtaim` | Experimental bounded QTAIM critical-point topology and optional bond-path diagnostics; search completeness is never implied |
 | `raman-spectrum` | Experimental source Raman activities plus Gaussian-broadened activity curve |
 | `summary` | Version 2: complete molecular summary or partial structure-only/periodic summary |
 | `transition-dipoles` | Experimental source-reported excited-state transition dipoles |
@@ -237,7 +238,6 @@ effective format hints; cached error records are retried.
 - `parse_fchk_density(lines)` — parse density matrices when present.
 - `parse_fchk_basis(lines)` — parse basis data.
 - `parse_fchk_mos(lines)` — parse molecular-orbital data.
-
 These low-level functions are public for specialized workflows, but `load` is the recommended entry point.
 
 ## Geometry and topology
