@@ -101,5 +101,7 @@ def test_nto_svd_rejects_matrix_over_resource_ceiling_before_svd(monkeypatch) ->
         raise AssertionError("SVD must not run for an oversized transition matrix")
 
     monkeypatch.setattr(np.linalg, "svd", forbidden_svd)
-    with pytest.raises(ValueError, match=rf"{matrix.size}.*{max_elements}"):
+    requested = f"{matrix.size:,}"
+    ceiling = f"{max_elements:,}"
+    with pytest.raises(ValueError, match=rf"{requested}.*{ceiling}"):
         compute_nto_svd(matrix)
