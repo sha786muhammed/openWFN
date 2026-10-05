@@ -96,9 +96,6 @@ def _negative_tolerance(
     reference: np.ndarray,
     settings: LocalizationSettings,
 ) -> np.ndarray:
-    # Match the documented scale exactly: max(tau, D0, 1). A negative tau cannot
-    # enlarge its own tolerance and therefore cannot make a material failure easier
-    # to hide.
     scale = np.maximum(np.maximum(tau, reference), 1.0)
     return np.maximum(
         settings.negative_absolute_tolerance,
@@ -125,11 +122,7 @@ def compute_elf_components(
     spin_resolved: bool,
     settings: LocalizationSettings,
 ) -> LocalizationFieldBatch:
-    """Compute ELF from density, density gradient, and positive-definite KED arrays.
-
-    Materially negative Pauli excess is preserved as a diagnostic and invalidates the
-    corresponding ELF value; it is never squared into an apparently valid result.
-    """
+    """Compute ELF from density, density gradient, and positive-definite KED arrays."""
 
     density, kinetic = _validate_rho_tau(rho, tau)
     density_gradient = np.asarray(gradient, dtype=float)
@@ -324,7 +317,9 @@ def _spin_reference(channel: LocalizationChannel) -> str:
     return f"spin_resolved_{channel}"
 
 
-def _localization_warnings(batch: LocalizationFieldBatch, *, descriptor: str) -> tuple[str, ...]:
+def _localization_warnings(
+    batch: LocalizationFieldBatch, *, descriptor: str
+) -> tuple[str, ...]:
     warnings: list[str] = []
     if batch.invalid_density_count:
         warnings.append(
@@ -367,6 +362,7 @@ def _common_result_data(
     chunk_size: int | None,
     density_floor: float,
     descriptor: str,
+    formula: str,
 ) -> dict[str, object]:
     return {
         "points_bohr": np.asarray(points_bohr, dtype=float).tolist(),
@@ -377,6 +373,11 @@ def _common_result_data(
         "tau": _nullable(batch.tau),
         "reference_ked": _nullable(batch.reference),
         "density_floor": float(density_floor),
+        "thresholds": {
+            "density_floor": float(density_floor),
+            "negative_absolute_tolerance": DEFAULT_NEGATIVE_ABSOLUTE_TOLERANCE,
+            "negative_relative_tolerance": DEFAULT_NEGATIVE_RELATIVE_TOLERANCE,
+        },
         "chunk_size": chunk_size,
         "diagnostics": {
             "invalid_density_count": batch.invalid_density_count,
@@ -391,6 +392,7 @@ def _common_result_data(
             "kinetic_energy_density": "positive_definite_half_gradient_square",
             "spin_reference": _spin_reference(channel),
             "descriptor": descriptor,
+            "formula": formula,
             "homogeneous_electron_gas_reference": 0.5,
             "invalid_values": "null",
         },
@@ -422,6 +424,7 @@ def elf(
         chunk_size=chunk_size,
         density_floor=density_floor,
         descriptor="Becke-Edgecombe ELF",
+        formula="D0^2/(D0^2+D^2)",
     )
     result_data["von_weizsaecker"] = _nullable(batch.von_weizsaecker)
     result_data["pauli_excess"] = _nullable(batch.pauli_excess)
@@ -469,6 +472,7 @@ def lol(
         chunk_size=chunk_size,
         density_floor=density_floor,
         descriptor="Schmider-Becke LOL",
+        formula="tau_HEG/(tau_HEG+tau)",
     )
     warnings = _localization_warnings(batch, descriptor="LOL")
     return ResultRecord(
