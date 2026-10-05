@@ -184,16 +184,38 @@ def vibrational_record_from_cclib(
     )
 
 
+def _fchk_mode_count(data: CalculationData) -> int | None:
+    """Return the FCHK normal-mode count without inventing missing data."""
+
+    raw_mode_count = data.records.get("Number of Normal Modes")
+    if isinstance(raw_mode_count, (int, float)) and not isinstance(raw_mode_count, bool):
+        mode_count = int(raw_mode_count)
+        if mode_count <= 0 or float(raw_mode_count) != mode_count:
+            raise ValueError("FCHK Number of Normal Modes must be a positive integer")
+        return mode_count
+
+    raw_displacements = data.records.get("Vib-Modes")
+    if not isinstance(raw_displacements, tuple):
+        return None
+    atom_count = len(data.molecule.atoms)
+    values_per_mode = atom_count * 3
+    if values_per_mode <= 0 or len(raw_displacements) % values_per_mode != 0:
+        raise ValueError("FCHK Vib-Modes length is inconsistent with Number of atoms")
+    mode_count = len(raw_displacements) // values_per_mode
+    if mode_count <= 0:
+        raise ValueError("FCHK Vib-Modes does not contain any normal modes")
+    return mode_count
+
+
 def vibrational_record_from_fchk(data: CalculationData) -> VibrationalRecord | None:
     """Normalize Gaussian FCHK ``Vib-*`` arrays into the shared typed record."""
 
-    raw_mode_count = data.records.get("Number of Normal Modes")
     raw_e2 = data.records.get("Vib-E2")
-    if not isinstance(raw_mode_count, (int, float)) or not isinstance(raw_e2, tuple):
+    if not isinstance(raw_e2, tuple):
         return None
-    mode_count = int(raw_mode_count)
-    if mode_count <= 0 or float(raw_mode_count) != mode_count:
-        raise ValueError("FCHK Number of Normal Modes must be a positive integer")
+    mode_count = _fchk_mode_count(data)
+    if mode_count is None:
+        return None
     e2 = np.asarray(raw_e2, dtype=float)
     if e2.ndim != 1 or len(e2) < mode_count:
         raise ValueError("FCHK Vib-E2 does not contain all vibrational frequencies")
