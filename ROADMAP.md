@@ -57,13 +57,14 @@ research-report rendering, and an offline Workbench workspace. It remains
 scientific validation corpus.
 
 The staged sequence through excited states/UV–Vis, NTO, density derivatives,
-QTAIM and ELF/LOL now has first-party implementations, each retaining its own
-scientific confidence boundary. ELF/LOL adds a required independent PySCF
-same-wavefunction reference gate but remains Experimental rather than inheriting
-a broader validation claim. The next ordered methods are NCI and basin analysis;
-those remain separate future scientific gates rather than being folded into one
-unchecked expansion.
+QTAIM, ELF/LOL and NCI/RDG now has first-party implementations, each retaining
+its own scientific confidence boundary. ELF/LOL and NCI/RDG each add required
+independent PySCF same-wavefunction reference gates but remain Experimental
+rather than inheriting broader validation claims. The next ordered real-space
+method is basin analysis, which remains a separate future scientific gate rather
+than being folded into an unchecked expansion.
 See the [architecture and ordered roadmap](docs/project/everyday-qc-design.md),
 [actual completion/validation record](docs/project/everyday-qc-validation.md),
-[ELF/LOL semantics](docs/science/elf-lol.md), and
+[ELF/LOL semantics](docs/science/elf-lol.md),
+[NCI/RDG semantics](docs/science/nci-rdg.md), and
 [vibrational spectroscopy semantics](docs/science/vibrational-spectroscopy.md).

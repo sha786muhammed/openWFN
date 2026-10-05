@@ -22,6 +22,7 @@ tolerances are retained with each case in the captured reference report.
 | Natural Transition Orbitals | Unit/integration tests for complete occupied-to-virtual transition matrices, convention/mapping safeguards and pinned reference-validation hooks | Experimental; incomplete or unsupported transition-amplitude conventions remain unavailable rather than guessed |
 | QTAIM topology | Exact Hessian-signature classification, bounded synthetic stationary-point searches, duplicate/resource-limit tests, synthetic two-attractor bond paths, registry contract tests and a real-wavefunction smoke case | Experimental and explicitly non-exhaustive; independent established-QTAIM molecular comparison is still required; basin properties are out of scope |
 | ELF/LOL localization | Kernel/spin/resource regressions plus required independent PySCF AO-derivative reconstruction for restricted water, Cartesian water, charged ammonium, diffuse UHF OH and triplet UHF oxygen | Experimental; evidence is same-wavefunction HF scope only; correlated density conventions, ECP/pseudopotential, complex-orbital, periodic and broad high-l/program coverage remain outside scope |
+| NCI/RDG | Kernel/resource/cube regressions plus required independent PySCF density/gradient/full-Hessian reconstruction for restricted water, Cartesian water, charged ammonium, hydrogen-bonded water dimer and triplet UHF oxygen | Experimental; total-density same-wavefunction HF scope only; automatic labels/thresholds, correlated-density, ECP, complex-orbital, periodic and basin claims remain outside scope |
 | Electronic/total grid ESP | Analytic PySCF `int1e_rinv` contraction for water, diffuse UHF OH and ammonium, with spacing histories and electron counts | Experimental; **ammonium fails the declared tested-grid tolerance**, retained as partial evidence |
 | Density integration/cube when conservation fails | Existing density/conservation regressions plus ESP histories and real workbench coarse density grids | Remains partial/Experimental whenever its actual grid fails; passing other inputs must not override this |
 | Mulliken/Löwdin population when incomplete/unreliable | Existing malformed/source-density/charge and overlap-condition regression tests | Remains partial/Experimental for inconsistent or ill-conditioned input; there is no valid golden population for deliberately invalid data |
@@ -35,9 +36,9 @@ as a blanket project label. Conditional partial-result labels describe
 insufficient input/numerics, not a method awaiting promotion. Native Hirshfeld
 is no longer in the unimplemented category: its scoped validation evidence is
 committed under `validation/hirshfeld/`. Spectroscopy, NTOs, analytic density
-derivatives, QTAIM and ELF/LOL are implemented but retain their own Experimental
-validation gates. NCI and basin integration remain unimplemented and require
-separate scientific gates.
+derivatives, QTAIM, ELF/LOL and NCI/RDG are implemented but retain their own
+Experimental validation gates. Basin integration remains a separate future
+scientific gate.
 
 ## ELF/LOL independent evidence
 
@@ -55,6 +56,23 @@ channels separately. Fixed tolerances are applied to density, KED, the
 homogeneous-electron-gas reference, ELF and LOL. Passing this gate is evidence
 for those same-wavefunction HF cases; it is not a universal validation or a
 reason to promote the public method beyond Experimental.
+
+## NCI/RDG independent evidence
+
+`tests/validation/test_nci_pyscf_reference.py` is also a required CI gate and is
+not a self-comparison. Fresh PySCF 2.12.1 wavefunctions are exported and loaded
+through openWFN for the implementation side. The reference side independently
+contracts PySCF AO values, first derivatives and second derivatives with the
+density matrices to obtain `rho`, `grad(rho)` and the full Cartesian density
+Hessian, then independently derives ordered eigenvalues, `lambda2`, RDG and
+`sign(lambda2)*rho`.
+
+The named set covers restricted water/STO-3G, Cartesian water/6-31G*, charged
+ammonium/6-31G*, a hydrogen-bonded water dimer/6-31G* and triplet UHF O2/6-31G*
+using total alpha+beta density. Separate finite-difference checks at water and
+intermolecular water-dimer points guard the AO derivative/Hessian component
+mapping. Passing this gate is evidence for the named same-wavefunction HF cases,
+not a universal method validation.
 
 ## Hirshfeld promotion evidence
 
@@ -94,7 +112,7 @@ local Coulomb-quadrature convergence.
 python -m pip install -e '.[test,interop,outputs,mcp,docs]' pyscf==2.12.1 qc-gbasis==0.1.0
 python scripts/validate_everyday_pyscf.py --output-dir /tmp/openwfn-molecular-references
 python scripts/validate_experimental_esp.py --output /tmp/openwfn-esp.json
-python -m pytest tests/validation/test_real_example_corpus.py tests/validation/test_everyday_pyscf.py tests/validation/test_localization_pyscf_reference.py tests/validation/test_experimental_esp.py -q
+python -m pytest tests/validation/test_real_example_corpus.py tests/validation/test_everyday_pyscf.py tests/validation/test_localization_pyscf_reference.py tests/validation/test_nci_pyscf_reference.py tests/validation/test_experimental_esp.py -q
 python scripts/validate_output_references.py --download --input-dir /tmp/openwfn-real-logs --output /tmp/openwfn-output.json
 ```
 
@@ -125,5 +143,5 @@ historical grid evidence. The workbench interface is Stable for its browser-
 validated scope; coarse density fields retain partial/Experimental warnings.
 Native Hirshfeld adds an independent ten-case H/C/N/O validation record rather
 than inheriting status from software tests alone. NTOs, analytic density
-derivatives, QTAIM and ELF/LOL remain Experimental until their own broader
-independent evidence gates justify any narrower promotion.
+derivatives, QTAIM, ELF/LOL and NCI/RDG remain Experimental until their own
+broader independent evidence gates justify any narrower promotion.
