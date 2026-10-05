@@ -18,6 +18,9 @@ tolerances are retained with each case in the captured reference report.
 | Mayer orders | cclib independently builds occupied densities and contracts its MBO matrices from PySCF wavefunctions | Validated for the named set; conventional HF index, not a validated correlated improved-Mayer implementation |
 | DOS/PDOS | Independent Gaussian expansion from PySCF energies and projections; both population conventions for pure bases, Mulliken for Cartesian | Validated for the named set; all-element/high-l/ECP coverage absent; broadened orbital energies only |
 | Native Hirshfeld | Ten-case H/C/N/O all-electron set; independent HORTON-PART 1.1.8 comparison plus standard-to-fine openWFN grid refinement | Validated for that named scope; unsupported elements, ECP/pseudopotential and ghost-center cases remain outside scope |
+| Analytic density derivatives | Analytic AO-gradient/Hessian regressions, finite-difference consistency checks, resource-bounded real-space evaluation and real-wavefunction smoke coverage | Experimental; broader independent molecular/reference evidence remains required |
+| Natural Transition Orbitals | Unit/integration tests for complete occupied-to-virtual transition matrices, convention/mapping safeguards and pinned reference-validation hooks | Experimental; incomplete or unsupported transition-amplitude conventions remain unavailable rather than guessed |
+| QTAIM topology | Exact Hessian-signature classification, bounded synthetic stationary-point searches, duplicate/resource-limit tests, synthetic two-attractor bond paths, registry contract tests and a real-wavefunction smoke case | Experimental and explicitly non-exhaustive; independent established-QTAIM molecular comparison is still required; basin properties are out of scope |
 | Electronic/total grid ESP | Analytic PySCF `int1e_rinv` contraction for water, diffuse UHF OH and ammonium, with spacing histories and electron counts | Experimental; **ammonium fails the declared tested-grid tolerance**, retained as partial evidence |
 | Density integration/cube when conservation fails | Existing density/conservation regressions plus ESP histories and real workbench coarse density grids | Remains partial/Experimental whenever its actual grid fails; passing other inputs must not override this |
 | Mulliken/Löwdin population when incomplete/unreliable | Existing malformed/source-density/charge and overlap-condition regression tests | Remains partial/Experimental for inconsistent or ill-conditioned input; there is no valid golden population for deliberately invalid data |
@@ -30,8 +33,10 @@ Source `Experimental` occurrences are reviewed as capability-specific states, no
 as a blanket project label. Conditional partial-result labels describe
 insufficient input/numerics, not a method awaiting promotion. Native Hirshfeld
 is no longer in the unimplemented category: its scoped validation evidence is
-committed under `validation/hirshfeld/`. Spectroscopy, NTO, QTAIM and basin
-analyses remain unimplemented and require separate gates.
+committed under `validation/hirshfeld/`. Spectroscopy, NTOs, analytic density
+derivatives and QTAIM are implemented but retain their own Experimental
+validation gates. Basin integration remains unimplemented and requires a
+separate scientific gate.
 
 ## Hirshfeld promotion evidence
 
@@ -101,4 +106,6 @@ default integral ESP resolves the charged-grid limitation without erasing the
 historical grid evidence. The workbench interface is Stable for its browser-
 validated scope; coarse density fields retain partial/Experimental warnings.
 Native Hirshfeld adds an independent ten-case H/C/N/O validation record rather
-than inheriting status from software tests alone.
+than inheriting status from software tests alone. NTOs, analytic density
+derivatives and QTAIM remain Experimental until their own independent evidence
+gates are satisfied.

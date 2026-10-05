@@ -21,6 +21,7 @@ from ..services import (
 from ..spectral_services import orbital_dos, orbital_pdos
 from .excited_states import excited_state, excited_states, transition_dipoles, uvvis_spectrum
 from .nto import nto
+from .qtaim import qtaim
 from .realspace import density_derivatives, kinetic_energy_density
 from .structure_summary import structure_summary
 from .vibrations import ir_spectrum, normal_mode, raman_spectrum, vibrations
@@ -58,6 +59,35 @@ _OSCILLATOR_STRENGTHS = CapabilityRequirement(
     "optical oscillator strengths", ("optical_oscillator_strengths",)
 )
 _TRANSITION_DIPOLES = CapabilityRequirement("transition dipoles", ("transition_dipoles",))
+
+
+def _qtaim_analysis(
+    data: CalculationData,
+    *,
+    seeds_bohr=None,
+    settings=None,
+    include_bond_paths: bool = True,
+) -> ResultRecord:
+    """Attach public index/label conventions to the QTAIM result envelope."""
+
+    result = qtaim(
+        data,
+        seeds_bohr=seeds_bohr,
+        settings=settings,
+        include_bond_paths=include_bond_paths,
+    )
+    return replace(
+        result,
+        data={
+            **result.data,
+            "conventions": {
+                "coordinates": "Cartesian bohr",
+                "atom_indices": "zero-based",
+                "critical_point_labels": "QTAIM rank/signature (3,signature)",
+                "topology_relation": "N_NCP - N_BCP + N_RCP - N_CCP",
+            },
+        },
+    )
 
 
 _ANALYSES = {
@@ -155,6 +185,13 @@ _ANALYSES = {
         "natural_transition_orbitals",
         nto,
         (_ISOLATED, _BASIS, _ORBITALS, _AO_OVERLAP, _EXCITED_STATES, _NTO_READY),
+    ),
+    "qtaim": AnalysisDefinition(
+        "qtaim",
+        "1",
+        "qtaim_topology",
+        _qtaim_analysis,
+        (_ISOLATED, _BASIS, _TOTAL_DENSITY),
     ),
     "raman-spectrum": AnalysisDefinition(
         "raman-spectrum",
