@@ -8,7 +8,10 @@ import numpy as np
 
 from ..errors import DataUnavailableError
 from ..excited_states import AmplitudeBlock, ExcitedState
+from ..model import CalculationData, MolecularOrbitals
+from .basis import overlap_matrix
 from .limits import MAX_NTO_MATRIX_ELEMENTS
+from .orbitals import OCCUPATION_THRESHOLD
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,6 +25,22 @@ class NTOSVDResult:
     weights: np.ndarray
     cumulative_weights: np.ndarray
     transition_norm: float
+
+
+@dataclass(frozen=True, slots=True)
+class NTOMappedResult:
+    """One NTO decomposition rotated into the source AO coefficient basis."""
+
+    svd: NTOSVDResult
+    hole_coefficients: np.ndarray
+    electron_coefficients: np.ndarray
+    hole_norms: np.ndarray
+    electron_norms: np.ndarray
+    hole_norm_residuals: np.ndarray
+    electron_norm_residuals: np.ndarray
+    occupied_mo_indices: tuple[int, ...]
+    virtual_mo_indices: tuple[int, ...]
+    spin_block: str
 
 
 def _paired_deterministic_phase(hole_vectors: np.ndarray, vt: np.ndarray) -> None:
@@ -138,10 +157,121 @@ def select_nto_amplitude_block(
     return eligible[0]
 
 
+def _source_orbitals_for_block(
+    data: CalculationData,
+    block: AmplitudeBlock,
+) -> tuple[MolecularOrbitals, str]:
+    """Resolve the source orbital channel without guessing open-shell spin."""
+
+    requested = block.spin_block.casefold() if block.spin_block is not None else None
+    if requested == "alpha":
+        if data.alpha_orbitals is None:
+            raise DataUnavailableError("Alpha orbitals are unavailable for NTO mapping.")
+        return data.alpha_orbitals, "alpha"
+    if requested == "beta":
+        if data.beta_orbitals is None:
+            raise DataUnavailableError("Beta orbitals are unavailable for NTO mapping.")
+        return data.beta_orbitals, "beta"
+    if requested not in {None, "restricted"}:
+        raise DataUnavailableError(
+            f"NTO spin block '{block.spin_block}' cannot be mapped to source orbitals."
+        )
+
+    orbitals = data.alpha_orbitals
+    if orbitals is None:
+        raise DataUnavailableError("Molecular orbitals are unavailable for NTO mapping.")
+    if orbitals.spin != "restricted":
+        raise DataUnavailableError(
+            "Unrestricted NTO mapping requires an explicit alpha or beta spin block."
+        )
+    return orbitals, "restricted"
+
+
+def _orbital_domains(orbitals: MolecularOrbitals) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    occupied = tuple(
+        index
+        for index, occupation in enumerate(orbitals.occupations)
+        if occupation > OCCUPATION_THRESHOLD
+    )
+    virtual = tuple(
+        index
+        for index, occupation in enumerate(orbitals.occupations)
+        if occupation <= OCCUPATION_THRESHOLD
+    )
+    if not occupied or not virtual:
+        raise DataUnavailableError(
+            "NTO mapping requires both occupied and virtual source orbitals."
+        )
+    return occupied, virtual
+
+
+def _metric_norms(coefficients: np.ndarray, overlap: np.ndarray) -> np.ndarray:
+    norms = np.einsum("ai,ab,bi->i", coefficients, overlap, coefficients, optimize=True)
+    if not np.all(np.isfinite(norms)):
+        raise ValueError("NTO AO overlap norms must be finite")
+    return norms
+
+
+def map_nto_to_ao(data: CalculationData, block: AmplitudeBlock) -> NTOMappedResult:
+    """Rotate one complete occupied-by-virtual transition matrix into AO coefficients.
+
+    Source MO coefficients are used exactly as stored.  AO-overlap norms and their
+    residuals from unity are reported diagnostically; coefficients are never
+    silently renormalized.
+    """
+
+    if data.basis is None:
+        raise DataUnavailableError("A molecular basis is required for NTO AO mapping.")
+
+    orbitals, spin_block = _source_orbitals_for_block(data, block)
+    occupied, virtual = _orbital_domains(orbitals)
+    expected_dimensions = (len(occupied), len(virtual))
+    if block.dimensions != expected_dimensions:
+        raise DataUnavailableError(
+            "NTO transition matrix dimensions do not match the source occupied and virtual "
+            f"orbital sets: got {block.dimensions}, expected {expected_dimensions}."
+        )
+
+    matrix = transition_matrix_from_block(block)
+    svd = compute_nto_svd(matrix)
+    source_coefficients = np.asarray(orbitals.coefficients, dtype=float)
+    if source_coefficients.ndim != 2:
+        raise ValueError("Source MO coefficient matrix must be two-dimensional")
+    if source_coefficients.shape[1] != len(orbitals.energies):
+        raise ValueError("Source MO coefficient columns must match the orbital count")
+    if source_coefficients.shape[0] != data.basis.n_functions:
+        raise DataUnavailableError(
+            "Source MO coefficient rows do not match the available AO basis functions."
+        )
+    if not np.all(np.isfinite(source_coefficients)):
+        raise ValueError("Source MO coefficients must be finite for NTO mapping")
+
+    hole_coefficients = source_coefficients[:, occupied] @ svd.hole_vectors
+    electron_coefficients = source_coefficients[:, virtual] @ svd.electron_vectors
+    overlap = overlap_matrix(data.basis, data.molecule)
+    hole_norms = _metric_norms(hole_coefficients, overlap)
+    electron_norms = _metric_norms(electron_coefficients, overlap)
+
+    return NTOMappedResult(
+        svd=svd,
+        hole_coefficients=hole_coefficients,
+        electron_coefficients=electron_coefficients,
+        hole_norms=hole_norms,
+        electron_norms=electron_norms,
+        hole_norm_residuals=np.abs(hole_norms - 1.0),
+        electron_norm_residuals=np.abs(electron_norms - 1.0),
+        occupied_mo_indices=tuple(index + 1 for index in occupied),
+        virtual_mo_indices=tuple(index + 1 for index in virtual),
+        spin_block=spin_block,
+    )
+
+
 __all__ = [
     "MAX_NTO_MATRIX_ELEMENTS",
+    "NTOMappedResult",
     "NTOSVDResult",
     "compute_nto_svd",
+    "map_nto_to_ao",
     "select_nto_amplitude_block",
     "transition_matrix_from_block",
 ]
