@@ -157,6 +157,34 @@ results are still required before any validation-status promotion. Basin
 surfaces/integration, QTAIM atomic charges or energies, and delocalization
 indices are not part of this implementation.
 
+## Experimental ELF and LOL localization
+
+ELF and LOL are implemented as pointwise real-space descriptors and remain
+**Experimental**. Both use openWFN's positive-definite half-gradient-square
+kinetic-energy-density convention. Restricted closed-shell total fields and
+spin-resolved alpha/beta fields use their explicitly documented homogeneous-
+electron-gas references; open-shell total ELF/LOL is not silently fabricated.
+
+Software regressions cover the numerical kernels, closed-shell factor-of-two
+relations, alpha/beta handling, low-density masking, nonfinite fields,
+materially negative Pauli/KED diagnostics, JSON-safe null output, registry/API
+parity and centralized point/resource ceilings.
+
+The required PySCF validation CI independently regenerates five named
+same-wavefunction cases: restricted water, Cartesian-basis water, charged
+ammonium, diffuse UHF OH and triplet UHF oxygen. PySCF AO derivatives and
+density matrices independently reconstruct `rho`, `grad(rho)`, positive-
+definite `tau`, the homogeneous-electron-gas reference, ELF and LOL at fixed
+off-nuclear points. Those values are compared with openWFN under fixed
+numerical tolerances in `tests/validation/test_localization_pyscf_reference.py`.
+
+This is meaningful independent implementation evidence for the named HF cases,
+but not a universal method validation. Correlated/post-SCF density definitions,
+ECP/pseudopotential systems, complex orbitals, periodic systems, broad high-
+angular-momentum coverage, arbitrary producer/version combinations and other
+published ELF/LOL conventions remain outside the demonstrated scope. Therefore
+the public status stays Experimental.
+
 ## Coverage still needed
 
 For native Hirshfeld, future validation is required before supporting elements
@@ -165,9 +193,9 @@ transition metals or correlated/post-SCF density definitions. Other analysis
 families still need their own evidence for broader high-angular-momentum,
 program/version and chemical-space coverage.
 
-Typed spectroscopy, NTOs, analytic density derivatives and QTAIM are
-implemented but remain separate scientific validation gates. ELF/LOL, NCI and
-basin integration remain future implementation/validation work.
+Typed spectroscopy, NTOs, analytic density derivatives, QTAIM and ELF/LOL are
+implemented but retain separate scientific validation gates. NCI and basin
+integration remain future implementation/validation work.
 
 ## Reproduce the software checks
 
@@ -176,6 +204,14 @@ python -m pytest
 python -m ruff check .
 python scripts/check_docs.py --root .
 python -m mkdocs build --strict
+```
+
+The required ELF/LOL independent same-wavefunction comparison is included in
+the everyday reference-validation CI and can be run directly with:
+
+```bash
+python -m pip install -e '.[test,interop,outputs]' pyscf==2.12.1
+python -m pytest tests/validation/test_localization_pyscf_reference.py -q
 ```
 
 The independent Hirshfeld evidence is reproduced by the pinned validation-only
