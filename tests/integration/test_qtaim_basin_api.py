@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import openwfn
-
 from openwfn.analysis.atom_quadrature import AtomQuadratureSettings
 from openwfn.analysis.qtaim_basins import QTAIMBasinSettings
 
