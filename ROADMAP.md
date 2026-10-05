@@ -56,9 +56,14 @@ research-report rendering, and an offline Workbench workspace. It remains
 **Experimental** because parser/regression/interface parity is not an independent
 scientific validation corpus.
 
-The ordered later methods remain excited states/UV–Vis, NTO, density
-derivatives, QTAIM, ELF/LOL, NCI and basin analysis. Each should remain a
-separate scientific gate rather than being folded into one unchecked expansion.
+The staged sequence through excited states/UV–Vis, NTO, density derivatives,
+QTAIM and ELF/LOL now has first-party implementations, each retaining its own
+scientific confidence boundary. ELF/LOL adds a required independent PySCF
+same-wavefunction reference gate but remains Experimental rather than inheriting
+a broader validation claim. The next ordered methods are NCI and basin analysis;
+those remain separate future scientific gates rather than being folded into one
+unchecked expansion.
 See the [architecture and ordered roadmap](docs/project/everyday-qc-design.md),
 [actual completion/validation record](docs/project/everyday-qc-validation.md),
-and [vibrational spectroscopy semantics](docs/science/vibrational-spectroscopy.md).
+[ELF/LOL semantics](docs/science/elf-lol.md), and
+[vibrational spectroscopy semantics](docs/science/vibrational-spectroscopy.md).

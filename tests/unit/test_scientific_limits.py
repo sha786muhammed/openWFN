@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 import openwfn.analysis.limits as limits
+import openwfn.analysis.localization as localization
 import openwfn.analysis.realspace as realspace
 from openwfn.model import (
     Atom,
@@ -24,7 +25,8 @@ def _single_s_data() -> CalculationData:
     return CalculationData(
         molecule=molecule,
         basis=BasisSet((BasisShell(0, 0, (1.0,), (1.0,)),)),
-        total_density=DensityMatrix(((1.0,),), "total"),
+        total_density=DensityMatrix(((2.0,),), "total"),
+        records={"Number of alpha electrons": 1, "Number of beta electrons": 1},
     )
 
 
@@ -111,3 +113,19 @@ def test_ked_point_ceiling_is_checked_before_ao_evaluation(monkeypatch: pytest.M
 
     with pytest.raises(ValueError, match=r"3.*2"):
         realspace.evaluate_kinetic_energy_density(_single_s_data(), np.zeros((3, 3)))
+
+
+@pytest.mark.parametrize("evaluator", (localization.evaluate_elf, localization.evaluate_lol))
+def test_localization_point_ceiling_is_checked_before_ao_evaluation(
+    monkeypatch: pytest.MonkeyPatch,
+    evaluator,
+) -> None:
+    monkeypatch.setattr(limits, "MAX_POINT_ANALYSIS_POINTS", 2)
+
+    def fail_if_called(*args: object, **kwargs: object) -> None:
+        raise AssertionError("AO evaluator must not run for an over-limit localization request")
+
+    monkeypatch.setattr(realspace, "evaluate_ao_fields", fail_if_called)
+
+    with pytest.raises(ValueError, match=r"3.*2"):
+        evaluator(_single_s_data(), np.zeros((3, 3)), channel="total")

@@ -20,6 +20,7 @@ from ..services import (
 )
 from ..spectral_services import orbital_dos, orbital_pdos
 from .excited_states import excited_state, excited_states, transition_dipoles, uvvis_spectrum
+from .localization import elf, lol
 from .nto import nto
 from .qtaim import qtaim
 from .realspace import density_derivatives, kinetic_energy_density
@@ -105,6 +106,20 @@ _ANALYSES = {
         "1",
         "kinetic_energy_density",
         kinetic_energy_density,
+        (_ISOLATED, _BASIS, _TOTAL_DENSITY),
+    ),
+    "elf": AnalysisDefinition(
+        "elf",
+        "1",
+        "electron_localization_function",
+        elf,
+        (_ISOLATED, _BASIS, _TOTAL_DENSITY),
+    ),
+    "lol": AnalysisDefinition(
+        "lol",
+        "1",
+        "localized_orbital_locator",
+        lol,
         (_ISOLATED, _BASIS, _TOTAL_DENSITY),
     ),
     "mayer": AnalysisDefinition("mayer", "1", "mayer_bond_order", mayer_bond_orders, (_ISOLATED, _BASIS, _TOTAL_DENSITY, _AO_OVERLAP)),

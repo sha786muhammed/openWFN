@@ -179,6 +179,18 @@ For unrestricted calculations, select `spin="all"`; `calculation.orbitals(spin="
 
 The default density-grid spacing is **0.15 bohr** with 6.0 bohr padding. These defaults are an accuracy/performance starting point, not a convergence guarantee. Density grids are evaluated in bounded chunks to reduce peak AO-matrix memory, but researchers should still converge spacing and padding for the molecule and property being reported.
 
+### ELF and LOL localization descriptors
+
+`calculation.analyze("elf", ...)` and `calculation.analyze("lol", ...)` evaluate Experimental localization descriptors at explicit Cartesian points in bohr. Both use openWFN's positive-definite half-gradient-square kinetic-energy-density convention. Total-channel ELF/LOL is accepted only for demonstrably restricted closed-shell data; open-shell calculations must request `channel="alpha"` or `channel="beta"` so spin conventions are not silently mixed.
+
+ELF uses the Becke-Edgecombe Pauli-excess form and LOL uses the Schmider-Becke kinetic-energy ratio. The result records the exact formula label, homogeneous-electron-gas reference convention, density floor and negative-noise tolerances. Points at or below the density floor, materially negative Pauli excess, materially negative KED, or nonfinite input fields are returned as explicit null values with diagnostics rather than plausible-looking numbers. These methods remain Experimental pending broader independent reference validation.
+
+```python
+points = [[0.2, 0.1, 0.3], [0.5, -0.2, 0.4]]
+elf = calculation.analyze("elf", points_bohr=points, channel="total")
+lol = calculation.analyze("lol", points_bohr=points, channel="total")
+```
+
 ## Registered named analyses
 
 | Name | Result |
@@ -186,6 +198,7 @@ The default density-grid spacing is **0.15 bohr** with 6.0 bohr padding. These d
 | `beta-frontier` | Beta-spin HOMO, LUMO, and gap |
 | `density-derivatives` | Experimental analytic density value, gradient, Hessian, and Laplacian at explicit bohr points |
 | `dos` | Experimental Gaussian orbital-energy DOS |
+| `elf` | Experimental Becke-Edgecombe electron-localization function at explicit bohr points |
 | `excited-state` | Experimental inspection of one one-based source excited state |
 | `excited-states` | Experimental source excited-state job/state table |
 | `frontier` | Alpha/default HOMO, LUMO, and gap |
@@ -193,6 +206,7 @@ The default density-grid spacing is **0.15 bohr** with 6.0 bohr padding. These d
 | `hirshfeld` | Validated ordinary neutral-pro-atom Hirshfeld populations and charges for the documented in-scope cases |
 | `ir-spectrum` | Experimental source IR sticks plus Gaussian-broadened curve |
 | `kinetic-energy-density` | Experimental positive-definite half-gradient-square kinetic-energy density at explicit bohr points |
+| `lol` | Experimental Schmider-Becke localized-orbital locator at explicit bohr points |
 | `lowdin` | Löwdin populations and charges |
 | `mayer` | Experimental spin-corrected Mayer bond orders |
 | `mulliken` | Mulliken populations and charges |
