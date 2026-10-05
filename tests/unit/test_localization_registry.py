@@ -1,3 +1,4 @@
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -101,18 +102,13 @@ def test_invalid_tail_points_are_null_partial_and_never_nan() -> None:
 
 def test_open_shell_total_failure_remains_structured_through_safe_registry() -> None:
     data = parse_fchk(WATER)
-    data = data.__class__(
-        molecule=data.molecule,
-        basis=data.basis,
-        alpha_orbitals=data.alpha_orbitals,
-        beta_orbitals=data.beta_orbitals,
-        total_density=data.total_density,
-        spin_density=data.spin_density,
-        overlap_matrix=data.overlap_matrix,
-        records={**data.records, "Number of alpha electrons": 5, "Number of beta electrons": 4},
-        properties=data.properties,
-        vibrations=data.vibrations,
-        excited_states=data.excited_states,
+    data = replace(
+        data,
+        records={
+            **data.records,
+            "Number of alpha electrons": 5,
+            "Number of beta electrons": 4,
+        },
     )
 
     result = run_analysis_safe(data, "elf", points_bohr=POINTS, channel="total")
