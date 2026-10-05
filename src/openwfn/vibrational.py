@@ -2,6 +2,9 @@
 
 from dataclasses import dataclass, field
 from math import isfinite
+from typing import Any
+
+import numpy as np
 
 from .errors import DataUnavailableError
 from .model import CalculationData, Provenance
@@ -90,6 +93,96 @@ class VibrationalRecord:
     @property
     def displacements_available(self) -> bool:
         return all(mode.displacements is not None for mode in self.modes)
+
+
+def _optional_mode_array(parsed: Any, name: str, mode_count: int) -> np.ndarray | None:
+    values = getattr(parsed, name, None)
+    if values is None:
+        return None
+    array = np.asarray(values)
+    if array.ndim != 1 or len(array) != mode_count:
+        raise ValueError(f"cclib {name} length is inconsistent with vibfreqs")
+    return array
+
+
+def vibrational_record_from_cclib(
+    parsed: Any,
+    *,
+    provenance: Provenance | None = None,
+) -> VibrationalRecord | None:
+    """Promote cclib vibration attributes into the shared typed record.
+
+    cclib reports frequencies in cm^-1, IR intensities in km/mol, reduced
+    masses in amu/Da, force constants in mDyne/angstrom, Raman activities in
+    angstrom^4/amu, and Cartesian displacement vectors in source atom order.
+    Missing optional quantities remain ``None`` rather than being inferred.
+    """
+
+    frequency_values = getattr(parsed, "vibfreqs", None)
+    if frequency_values is None:
+        return None
+    frequencies = np.asarray(frequency_values, dtype=float)
+    if frequencies.ndim != 1 or len(frequencies) == 0:
+        raise ValueError("cclib vibfreqs must be a non-empty one-dimensional array")
+    mode_count = len(frequencies)
+
+    masses = _optional_mode_array(parsed, "vibrmasses", mode_count)
+    force_constants = _optional_mode_array(parsed, "vibfconsts", mode_count)
+    ir_intensities = _optional_mode_array(parsed, "vibirs", mode_count)
+    raman_activities = _optional_mode_array(parsed, "vibramans", mode_count)
+    symmetries = _optional_mode_array(parsed, "vibsyms", mode_count)
+
+    displacement_values = getattr(parsed, "vibdisps", None)
+    displacements: np.ndarray | None = None
+    if displacement_values is not None:
+        displacements = np.asarray(displacement_values, dtype=float)
+        if displacements.ndim != 3 or displacements.shape[0] != mode_count or displacements.shape[2] != 3:
+            raise ValueError("cclib vibdisps must have shape (n_modes, n_atoms, 3)")
+
+    metadata = getattr(parsed, "metadata", {}) or {}
+    source_program = str(metadata.get("package") or "cclib")
+    source_program_version = metadata.get("package_version")
+    methods = metadata.get("methods") or ()
+    source_method = str(methods[-1]) if methods else None
+
+    modes: list[VibrationalMode] = []
+    for index, frequency in enumerate(frequencies):
+        mode_displacements = None
+        if displacements is not None:
+            mode_displacements = tuple(
+                tuple(float(value) for value in vector)  # type: ignore[misc]
+                for vector in displacements[index]
+            )
+        symmetry = None
+        if symmetries is not None:
+            symmetry = str(symmetries[index])
+        modes.append(
+            VibrationalMode(
+                index=index + 1,
+                frequency_cm1=float(frequency),
+                reduced_mass_amu=float(masses[index]) if masses is not None else None,
+                force_constant_mdyne_per_angstrom=(
+                    float(force_constants[index]) if force_constants is not None else None
+                ),
+                ir_intensity_km_mol=(
+                    float(ir_intensities[index]) if ir_intensities is not None else None
+                ),
+                raman_activity_a4_amu=(
+                    float(raman_activities[index]) if raman_activities is not None else None
+                ),
+                symmetry=symmetry,
+                displacements=mode_displacements,
+            )
+        )
+    return VibrationalRecord(
+        modes=tuple(modes),
+        source_program=source_program,
+        source_program_version=(
+            str(source_program_version) if source_program_version is not None else None
+        ),
+        source_method=source_method,
+        provenance=provenance,
+    )
 
 
 def get_vibrational_record(data: CalculationData) -> VibrationalRecord:
