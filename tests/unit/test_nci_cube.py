@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 import openwfn
-from openwfn.analysis.nci import NCISettings
+from openwfn.analysis.nci import NCIFieldBatch, NCISettings
 
 
 def _water_data():
@@ -19,9 +19,7 @@ def test_nci_scalar_grids_are_finite_for_non_rdg_fields() -> None:
 
     data = _water_data()
     for field in ("rho", "lambda2", "signed_density"):
-        grid, diagnostics = nci_scalar_grid(
-            data, field, 1.0, 2.0, chunk_size=7
-        )
+        grid, diagnostics = nci_scalar_grid(data, field, 1.0, 2.0, chunk_size=7)
         values = np.asarray(grid.values, dtype=float)
         assert len(values) > 0
         assert np.all(np.isfinite(values))
@@ -71,7 +69,7 @@ def test_rdg_grid_clips_finite_values_and_substitutes_density_tail() -> None:
     assert diagnostics["density_floor"] == 0.05
 
 
-def test_nci_grid_is_chunk_invariant() -> None:
+def test_nci_grid_is_chunk_invariant_within_machine_precision() -> None:
     from openwfn.nci_services import nci_scalar_grid
 
     data = _water_data()
@@ -81,11 +79,93 @@ def test_nci_grid_is_chunk_invariant() -> None:
     grid_b, diagnostics_b = nci_scalar_grid(
         data, "rdg", 1.0, 2.0, rdg_cap=1.5, chunk_size=101
     )
-    np.testing.assert_allclose(grid_a.values, grid_b.values, rtol=0.0, atol=0.0)
+    np.testing.assert_allclose(grid_a.values, grid_b.values, rtol=1.0e-14, atol=1.0e-15)
     assert diagnostics_a["clipped_finite_count"] == diagnostics_b["clipped_finite_count"]
     assert diagnostics_a["density_tail_substitution_count"] == diagnostics_b[
         "density_tail_substitution_count"
     ]
+
+
+def _bad_hessian_batch(point_count: int) -> NCIFieldBatch:
+    rho = np.full(point_count, 0.2, dtype=float)
+    return NCIFieldBatch(
+        rho=rho,
+        gradient_norm=np.full(point_count, 0.1, dtype=float),
+        rdg=np.full(point_count, 0.25, dtype=float),
+        hessian_eigenvalues=np.full((point_count, 3), np.nan, dtype=float),
+        lambda2=np.full(point_count, np.nan, dtype=float),
+        signed_density=np.full(point_count, np.nan, dtype=float),
+        rdg_valid_mask=np.ones(point_count, dtype=bool),
+        field_valid_mask=np.zeros(point_count, dtype=bool),
+        lambda2_sign_ambiguous_mask=np.zeros(point_count, dtype=bool),
+        hessian_antisymmetry_residual=np.full(point_count, 1.0, dtype=float),
+        invalid_hessian_count=point_count,
+    )
+
+
+def test_rdg_export_ignores_bad_hessian_while_hessian_fields_reject(monkeypatch) -> None:
+    import openwfn.nci_services as nci_services
+
+    data = _water_data()
+
+    def fake_evaluate_nci(_data, points, **_kwargs):
+        return _bad_hessian_batch(len(points))
+
+    monkeypatch.setattr(nci_services, "evaluate_nci", fake_evaluate_nci)
+    rdg_grid, _ = nci_services.nci_scalar_grid(
+        data, "rdg", 1.5, 1.0, rdg_cap=1.0, chunk_size=5
+    )
+    np.testing.assert_allclose(rdg_grid.values, 0.25)
+
+    with pytest.raises(ValueError, match="lambda2"):
+        nci_services.nci_scalar_grid(data, "lambda2", 1.5, 1.0, chunk_size=5)
+    with pytest.raises(ValueError, match="signed-density"):
+        nci_services.nci_scalar_grid(data, "signed_density", 1.5, 1.0, chunk_size=5)
+
+
+def test_rho_export_does_not_use_hessian_nci_path(monkeypatch) -> None:
+    import openwfn.nci_services as nci_services
+
+    data = _water_data()
+
+    def forbidden_nci(*_args, **_kwargs):
+        raise AssertionError("rho export must not evaluate NCI Hessian fields")
+
+    monkeypatch.setattr(nci_services, "evaluate_nci", forbidden_nci)
+    grid, _ = nci_services.nci_scalar_grid(data, "rho", 1.5, 1.0, chunk_size=5)
+    assert np.all(np.isfinite(grid.values))
+
+
+def test_rdg_invalid_outside_density_tail_aborts_and_cube_is_not_published(
+    monkeypatch, tmp_path: Path
+) -> None:
+    import openwfn.nci_services as nci_services
+
+    data = _water_data()
+
+    def fake_invalid_rdg(_data, points, **_kwargs):
+        count = len(points)
+        return NCIFieldBatch(
+            rho=np.full(count, 0.2, dtype=float),
+            gradient_norm=np.full(count, 0.1, dtype=float),
+            rdg=np.full(count, np.nan, dtype=float),
+            hessian_eigenvalues=np.zeros((count, 3), dtype=float),
+            lambda2=np.zeros(count, dtype=float),
+            signed_density=np.zeros(count, dtype=float),
+            rdg_valid_mask=np.zeros(count, dtype=bool),
+            field_valid_mask=np.zeros(count, dtype=bool),
+            lambda2_sign_ambiguous_mask=np.ones(count, dtype=bool),
+            hessian_antisymmetry_residual=np.zeros(count, dtype=float),
+            invalid_nonfinite_count=count,
+        )
+
+    monkeypatch.setattr(nci_services, "evaluate_nci", fake_invalid_rdg)
+    output = tmp_path / "must-not-exist.cube"
+    with pytest.raises(ValueError, match="outside the declared low-density tail"):
+        nci_services.nci_cube_export(
+            data, "rdg", 1.5, 1.0, output, False, rdg_cap=1.0, chunk_size=5
+        )
+    assert not output.exists()
 
 
 def test_nci_grid_obeys_shared_grid_limit_before_field_evaluation(monkeypatch) -> None:
