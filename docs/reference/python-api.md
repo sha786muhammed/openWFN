@@ -109,7 +109,7 @@ fields before electronic analyses.
 
 | Method | Contract |
 |---|---|
-| `analyze(name)` | Preferred reproducible route for a registered named analysis |
+| `analyze(name, **parameters)` | Preferred reproducible route for a registered named analysis |
 | `capabilities()` | Inferred component states (`available`, `derived`, or `missing`) for this loaded file |
 | `analyze_geometry()` | Basic atom count, charge, and multiplicity |
 | `geometry_distance(i, j)` | Distance in ångströms; one-based atom numbers |
@@ -184,6 +184,7 @@ The default density-grid spacing is **0.15 bohr** with 6.0 bohr padding. These d
 | Name | Result |
 |---|---|
 | `beta-frontier` | Beta-spin HOMO, LUMO, and gap |
+| `density-derivatives` | Experimental analytic density value, gradient, Hessian, and Laplacian at explicit bohr points |
 | `dos` | Experimental Gaussian orbital-energy DOS |
 | `excited-state` | Experimental inspection of one one-based source excited state |
 | `excited-states` | Experimental source excited-state job/state table |
@@ -191,6 +192,7 @@ The default density-grid spacing is **0.15 bohr** with 6.0 bohr padding. These d
 | `frontier-all` | Alpha and beta frontiers plus the true overall HOMO for unrestricted calculations |
 | `hirshfeld` | Validated ordinary neutral-pro-atom Hirshfeld populations and charges for the documented in-scope cases |
 | `ir-spectrum` | Experimental source IR sticks plus Gaussian-broadened curve |
+| `kinetic-energy-density` | Experimental positive-definite half-gradient-square kinetic-energy density at explicit bohr points |
 | `lowdin` | Löwdin populations and charges |
 | `mayer` | Experimental spin-corrected Mayer bond orders |
 | `mulliken` | Mulliken populations and charges |

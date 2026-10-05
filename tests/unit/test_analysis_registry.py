@@ -16,6 +16,7 @@ def test_registry_runs_summary_with_versioned_input_provenance() -> None:
 
     assert available_analyses() == (
         "beta-frontier",
+        "density-derivatives",
         "dos",
         "excited-state",
         "excited-states",
@@ -23,6 +24,7 @@ def test_registry_runs_summary_with_versioned_input_provenance() -> None:
         "frontier-all",
         "hirshfeld",
         "ir-spectrum",
+        "kinetic-energy-density",
         "lowdin",
         "mayer",
         "mulliken",

@@ -1,6 +1,7 @@
 """Vectorized normalized Gaussian basis evaluation with spherical D/F/G/H support."""
 
 import math
+from dataclasses import dataclass
 from functools import cache, lru_cache
 
 import numpy as np
@@ -8,6 +9,16 @@ import numpy as np
 from ..constants import BOHR_TO_ANGSTROM
 from ..errors import DataUnavailableError
 from ..model import BasisSet, Molecule
+
+
+@dataclass(frozen=True, slots=True)
+class AOFieldBatch:
+    """Atomic-orbital values and requested analytic derivatives at points."""
+
+    values: np.ndarray
+    gradients: np.ndarray
+    hessians: np.ndarray
+
 
 # Gaussian FCHK uses special Cartesian ordering through F, then the reverse of
 # the usual alphabetical Cartesian order for G and higher shells.
@@ -73,24 +84,100 @@ def _primitive_overlap(alpha: float, beta: float, powers: tuple[int, int, int]) 
     return _primitive_normalization(alpha, powers) * _primitive_normalization(beta, powers) * integral
 
 
+def _power(values: np.ndarray, exponent: int) -> np.ndarray:
+    if exponent < 0:
+        return np.zeros_like(values)
+    if exponent == 0:
+        return np.ones_like(values)
+    return values**exponent
+
+
+def _evaluate_contraction_fields(
+    displacements: np.ndarray,
+    exponents: tuple[float, ...],
+    coefficients: tuple[float, ...],
+    powers: tuple[int, int, int],
+    *,
+    derivatives: int,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    n_points = len(displacements)
+    value = np.zeros(n_points, dtype=float)
+    gradient = np.zeros((n_points, 3), dtype=float) if derivatives >= 1 else np.empty((n_points, 0), dtype=float)
+    hessian = (
+        np.zeros((n_points, 3, 3), dtype=float)
+        if derivatives >= 2
+        else np.empty((n_points, 0, 0), dtype=float)
+    )
+    contraction_scale = _contraction_scale(exponents, coefficients, powers)
+    radial_squared = np.sum(displacements * displacements, axis=1)
+
+    for alpha, coefficient in zip(exponents, coefficients, strict=True):
+        primitive_scale = coefficient * _primitive_normalization(alpha, powers) * contraction_scale
+        radial = np.exp(-alpha * radial_squared)
+        base = [_power(displacements[:, axis], powers[axis]) for axis in range(3)]
+        primitive_value = primitive_scale * radial * base[0] * base[1] * base[2]
+        value += primitive_value
+
+        if derivatives >= 1:
+            first = [
+                powers[axis] * _power(displacements[:, axis], powers[axis] - 1)
+                - 2.0 * alpha * _power(displacements[:, axis], powers[axis] + 1)
+                for axis in range(3)
+            ]
+            for axis in range(3):
+                others = [item for item in range(3) if item != axis]
+                gradient[:, axis] += (
+                    primitive_scale
+                    * radial
+                    * first[axis]
+                    * base[others[0]]
+                    * base[others[1]]
+                )
+
+        if derivatives >= 2:
+            second = [
+                powers[axis]
+                * (powers[axis] - 1)
+                * _power(displacements[:, axis], powers[axis] - 2)
+                - 2.0
+                * alpha
+                * (2 * powers[axis] + 1)
+                * _power(displacements[:, axis], powers[axis])
+                + 4.0 * alpha**2 * _power(displacements[:, axis], powers[axis] + 2)
+                for axis in range(3)
+            ]
+            for axis in range(3):
+                others = [item for item in range(3) if item != axis]
+                hessian[:, axis, axis] += (
+                    primitive_scale
+                    * radial
+                    * second[axis]
+                    * base[others[0]]
+                    * base[others[1]]
+                )
+            for left in range(3):
+                for right in range(left):
+                    other = 3 - left - right
+                    cross = primitive_scale * radial * first[left] * first[right] * base[other]
+                    hessian[:, left, right] += cross
+                    hessian[:, right, left] += cross
+
+    return value, gradient, hessian
+
+
 def _evaluate_contraction(
     displacements: np.ndarray,
     exponents: tuple[float, ...],
     coefficients: tuple[float, ...],
     powers: tuple[int, int, int],
 ) -> np.ndarray:
-    coefficient_array = np.asarray(coefficients, dtype=float)
-    exponent_array = np.asarray(exponents, dtype=float)
-    contraction_scale = _contraction_scale(exponents, coefficients, powers)
-    radial_squared = np.sum(displacements * displacements, axis=1)
-    radial = np.exp(-np.outer(radial_squared, exponent_array))
-    primitive_norms = np.asarray([_primitive_normalization(alpha, powers) for alpha in exponent_array])
-    polynomial = (
-        displacements[:, 0] ** powers[0]
-        * displacements[:, 1] ** powers[1]
-        * displacements[:, 2] ** powers[2]
-    )
-    return polynomial * (radial @ (coefficient_array * primitive_norms)) * contraction_scale
+    return _evaluate_contraction_fields(
+        displacements,
+        exponents,
+        coefficients,
+        powers,
+        derivatives=0,
+    )[0]
 
 
 Polynomial = dict[tuple[int, int, int], float]
@@ -236,13 +323,36 @@ def _pure_transform(angular_momentum: int) -> np.ndarray:
     return transform
 
 
-def evaluate_ao(basis: BasisSet, molecule: Molecule, points_bohr: np.ndarray) -> np.ndarray:
-    """Evaluate ordered atomic-orbital basis functions at Bohr-coordinate points."""
-
+def _validate_field_request(points_bohr: np.ndarray, derivatives: int) -> np.ndarray:
     points = np.asarray(points_bohr, dtype=float)
     if points.ndim != 2 or points.shape[1] != 3:
         raise ValueError("points_bohr must have shape (n_points, 3)")
-    columns: list[np.ndarray] = []
+    if not np.all(np.isfinite(points)):
+        raise ValueError("points_bohr coordinates must be finite")
+    if isinstance(derivatives, bool) or not isinstance(derivatives, int) or derivatives not in (0, 1, 2):
+        raise ValueError("derivatives must be one of 0, 1, or 2")
+    return points
+
+
+def evaluate_ao_fields(
+    basis: BasisSet,
+    molecule: Molecule,
+    points_bohr: np.ndarray,
+    *,
+    derivatives: int = 2,
+) -> AOFieldBatch:
+    """Evaluate ordered AOs and analytic Cartesian derivatives at Bohr points."""
+
+    points = _validate_field_request(points_bohr, derivatives)
+    value_columns: list[np.ndarray] = []
+    gradient_columns: list[np.ndarray] = []
+    hessian_columns: list[np.ndarray] = []
+
+    def append_fields(fields: tuple[np.ndarray, np.ndarray, np.ndarray]) -> None:
+        value_columns.append(fields[0])
+        gradient_columns.append(fields[1])
+        hessian_columns.append(fields[2])
+
     for shell in basis.shells:
         if shell.atom_index >= len(molecule.atoms):
             raise ValueError("basis shell atom index exceeds molecule atom count")
@@ -251,27 +361,80 @@ def evaluate_ao(basis: BasisSet, molecule: Molecule, points_bohr: np.ndarray) ->
         if shell.angular_momentum == -1:
             if shell.p_coefficients is None:
                 raise ValueError("combined sp shell requires p coefficients")
-            columns.append(_evaluate_contraction(displacement, shell.exponents, shell.coefficients, (0, 0, 0)))
+            append_fields(
+                _evaluate_contraction_fields(
+                    displacement,
+                    shell.exponents,
+                    shell.coefficients,
+                    (0, 0, 0),
+                    derivatives=derivatives,
+                )
+            )
             for powers in _cartesian_powers(1):
-                columns.append(_evaluate_contraction(displacement, shell.exponents, shell.p_coefficients, powers))
+                append_fields(
+                    _evaluate_contraction_fields(
+                        displacement,
+                        shell.exponents,
+                        shell.p_coefficients,
+                        powers,
+                        derivatives=derivatives,
+                    )
+                )
             continue
 
-        if shell.pure and shell.angular_momentum >= 2:
-            transform = _pure_transform(shell.angular_momentum)
-        else:
-            transform = None
         powers_order = _cartesian_powers(shell.angular_momentum)
-        shell_columns = [
-            _evaluate_contraction(displacement, shell.exponents, shell.coefficients, powers)
+        shell_fields = [
+            _evaluate_contraction_fields(
+                displacement,
+                shell.exponents,
+                shell.coefficients,
+                powers,
+                derivatives=derivatives,
+            )
             for powers in powers_order
         ]
-        if transform is not None:
-            cartesian_values = np.column_stack(shell_columns)
+        if shell.pure and shell.angular_momentum >= 2:
+            transform = _pure_transform(shell.angular_momentum)
+            cartesian_values = np.column_stack([item[0] for item in shell_fields])
             pure_values = cartesian_values @ transform.T
-            columns.extend(pure_values[:, index] for index in range(pure_values.shape[1]))
+            if derivatives >= 1:
+                cartesian_gradients = np.stack([item[1] for item in shell_fields], axis=1)
+                pure_gradients = np.einsum("pac,qa->pqc", cartesian_gradients, transform)
+            else:
+                pure_gradients = np.empty((len(points), transform.shape[0], 0), dtype=float)
+            if derivatives >= 2:
+                cartesian_hessians = np.stack([item[2] for item in shell_fields], axis=1)
+                pure_hessians = np.einsum("paij,qa->pqij", cartesian_hessians, transform)
+            else:
+                pure_hessians = np.empty((len(points), transform.shape[0], 0, 0), dtype=float)
+            for index in range(transform.shape[0]):
+                append_fields(
+                    (
+                        pure_values[:, index],
+                        pure_gradients[:, index, :],
+                        pure_hessians[:, index, :, :],
+                    )
+                )
         else:
-            columns.extend(shell_columns)
-    return np.column_stack(columns) if columns else np.empty((len(points), 0), dtype=float)
+            for fields in shell_fields:
+                append_fields(fields)
+
+    values = np.column_stack(value_columns) if value_columns else np.empty((len(points), 0), dtype=float)
+    if derivatives >= 1:
+        gradients = np.stack(gradient_columns, axis=1) if gradient_columns else np.empty((len(points), 0, 3), dtype=float)
+    else:
+        gradients = np.empty((len(points), values.shape[1], 0), dtype=float)
+    if derivatives >= 2:
+        hessians = np.stack(hessian_columns, axis=1) if hessian_columns else np.empty((len(points), 0, 3, 3), dtype=float)
+    else:
+        hessians = np.empty((len(points), values.shape[1], 0, 0), dtype=float)
+    return AOFieldBatch(values=values, gradients=gradients, hessians=hessians)
+
+
+def evaluate_ao(basis: BasisSet, molecule: Molecule, points_bohr: np.ndarray) -> np.ndarray:
+    """Evaluate ordered atomic-orbital basis functions at Bohr-coordinate points."""
+
+    return evaluate_ao_fields(basis, molecule, points_bohr, derivatives=0).values
 
 
 def _function_specs(

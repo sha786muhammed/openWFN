@@ -34,6 +34,12 @@ def _normalize_output(parsed: Any) -> tuple[dict[str, Any], tuple[str, ...]]:
         "dipole_origin_angstrom": None,
         "frontier_orbitals": [],
         "reported_atomic_charges": {},
+        "vibfreqs": None,
+        "vibirs": None,
+        "enthalpy": None,
+        "entropy": None,
+        "freeenergy": None,
+        "zpve": None,
     }
     # cclib stores energies in eV using this conversion constant.
     energies = getattr(parsed, "scfenergies", None)
@@ -84,6 +90,29 @@ def _normalize_output(parsed: Any) -> tuple[dict[str, Any], tuple[str, ...]]:
             })
             if not has_lumo:
                 warnings.append(f"Orbital channel {channel} has no reported unoccupied orbital.")
+
+    frequencies = getattr(parsed, "vibfreqs", None)
+    if frequencies is not None:
+        frequency_array = np.asarray(frequencies, dtype=float)
+        if frequency_array.ndim != 1:
+            raise ValueError("Output vibrational frequencies must be one-dimensional")
+        data["vibfreqs"] = frequency_array.tolist()
+    ir_intensities = getattr(parsed, "vibirs", None)
+    if ir_intensities is not None:
+        ir_array = np.asarray(ir_intensities, dtype=float)
+        if ir_array.ndim != 1:
+            raise ValueError("Output IR intensities must be one-dimensional")
+        if data["vibfreqs"] is not None and len(ir_array) != len(data["vibfreqs"]):
+            raise ValueError("Output IR intensities are inconsistent with vibrational frequencies")
+        data["vibirs"] = ir_array.tolist()
+    for field_name in ("enthalpy", "entropy", "freeenergy", "zpve"):
+        value = getattr(parsed, field_name, None)
+        if value is not None:
+            scalar = np.asarray(value, dtype=float)
+            if scalar.ndim != 0:
+                raise ValueError(f"Output {field_name} must be a scalar")
+            data[field_name] = float(scalar)
+
     for method, values in (getattr(parsed, "atomcharges", {}) or {}).items():
         charges = np.asarray(values, dtype=float)
         if charges.shape != (data["atom_count"],):
@@ -144,6 +173,12 @@ def read_output(path: str | Path) -> ResultRecord:
             "dipole_debye": "Debye",
             "frontier_orbitals": "energies: eV; indices: 1-based",
             "reported_atomic_charges": "e",
+            "vibfreqs": "cm^-1",
+            "vibirs": "km/mol",
+            "enthalpy": "hartree/particle",
+            "entropy": "hartree/(particle*K)",
+            "freeenergy": "hartree/particle",
+            "zpve": "hartree/particle",
         },
         warnings=warnings,
         provenance={

@@ -124,5 +124,5 @@ def test_combined_sp_shell_maps_all_four_functions_to_its_atom() -> None:
 def test_unsupported_higher_angular_momentum_is_explicit() -> None:
     basis = BasisSet((BasisShell(0, 6, (1.0,), (1.0,), pure=True),))
 
-    with pytest.raises(DataUnavailableError, match="[Pp]ure angular momentum 6"):
+    with pytest.raises(DataUnavailableError, match="angular momentum 6"):
         evaluate_ao(basis, _atom(), np.zeros((1, 3)))

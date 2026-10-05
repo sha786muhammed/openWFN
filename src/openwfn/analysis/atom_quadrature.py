@@ -9,7 +9,8 @@ import numpy as np
 from openwfn.constants import BOHR_TO_ANGSTROM
 from openwfn.model import Molecule
 
-_MAX_TOTAL_POINTS = 20_000_000
+from .limits import MAX_ATOM_QUADRATURE_POINTS
+
 _COINCIDENT_CENTER_TOLERANCE_BOHR = 1.0e-12
 _LOG_FLOOR = np.finfo(float).tiny
 
@@ -118,9 +119,10 @@ def iter_atom_centered_chunks(
     atom_count = len(molecule.atoms)
     points_per_atom = settings.radial_points * settings.theta_points * settings.phi_points
     total_points = atom_count * points_per_atom
-    if total_points > _MAX_TOTAL_POINTS:
+    if total_points > MAX_ATOM_QUADRATURE_POINTS:
         raise ValueError(
-            f"quadrature point count {total_points} exceeds safety limit {_MAX_TOTAL_POINTS}"
+            f"quadrature point count {total_points} exceeds safety limit "
+            f"{MAX_ATOM_QUADRATURE_POINTS}"
         )
 
     centers = _centers_bohr(molecule)

@@ -1,0 +1,36 @@
+{
+  "provenance": {
+    "generator": "SymPy 1.14.0",
+    "generated_utc": "2026-10-04",
+    "precision_digits": 30,
+    "method": "Independent symbolic differentiation of a normalized primitive Cartesian d_xy Gaussian",
+    "expression": "N*x*y*exp(-alpha*(x**2+y**2+z**2))",
+    "normalization": "N=(2*alpha/pi)**(3/4)*(4*alpha)**1",
+    "alpha": 0.7,
+    "point_bohr": [0.31, -0.27, 0.42],
+    "gaussian_cartesian_power": [1, 1, 0]
+  },
+  "value": -0.1003721880827978,
+  "gradient": [
+    -0.28021972225205866,
+    0.33380815765580535,
+    0.0590188465926851
+  ],
+  "hessian": [
+    [
+      0.40265748608922725,
+      0.9319277681444945,
+      0.16476919668421047
+    ],
+    [
+      0.9319277681444945,
+      0.4072216102257282,
+      -0.19627919670161356
+    ],
+    [
+      0.16476919668421047,
+      -0.19627919670161356,
+      0.10581798151941807
+    ]
+  ]
+}
