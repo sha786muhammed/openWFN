@@ -265,3 +265,61 @@ def test_quadrature_point_limit_fails_before_density_or_flow_work(
         basins.qtaim_basins(_data(), settings=settings)
 
     assert called is False
+
+
+def test_requested_boundary_diagnostics_are_attached_and_gate_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import openwfn.analysis.qtaim_basins as basins
+    import openwfn.analysis.qtaim_boundary as boundary
+
+    _install_synthetic(monkeypatch)
+    diagnostics = boundary.ZeroFluxDiagnostics(
+        requested=True,
+        status="success",
+        crossing_sample_count=4,
+        crossing_points_bohr=np.zeros((4, 3)),
+        resolved_sample_count=4,
+        unresolved_sample_count=0,
+        median_residual=0.01,
+        p95_residual=0.02,
+        max_residual=0.03,
+        unresolved_plane_fit_count=0,
+        unresolved_gradient_count=0,
+    )
+    monkeypatch.setattr(boundary, "qtaim_zero_flux_diagnostics", lambda *args, **kwargs: diagnostics)
+
+    result = basins.qtaim_basins(_data(), include_boundary_diagnostics=True)
+
+    assert result.data["boundary_diagnostics"]["status"] == "success"
+    assert result.data["boundary_diagnostics"]["p95_residual"] == pytest.approx(0.02)
+    assert result.status == "success"
+
+
+def test_partial_requested_boundary_diagnostics_make_result_partial(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import openwfn.analysis.qtaim_basins as basins
+    import openwfn.analysis.qtaim_boundary as boundary
+
+    _install_synthetic(monkeypatch)
+    diagnostics = boundary.ZeroFluxDiagnostics(
+        requested=True,
+        status="partial",
+        crossing_sample_count=4,
+        crossing_points_bohr=np.zeros((4, 3)),
+        resolved_sample_count=4,
+        unresolved_sample_count=0,
+        median_residual=0.10,
+        p95_residual=0.25,
+        max_residual=0.30,
+        unresolved_plane_fit_count=0,
+        unresolved_gradient_count=0,
+    )
+    monkeypatch.setattr(boundary, "qtaim_zero_flux_diagnostics", lambda *args, **kwargs: diagnostics)
+
+    result = basins.qtaim_basins(_data(), include_boundary_diagnostics=True)
+
+    assert result.data["boundary_diagnostics"]["status"] == "partial"
+    assert result.status == "partial"
+    assert any("zero-flux" in warning.lower() for warning in result.warnings)
