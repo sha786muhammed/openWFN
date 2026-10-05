@@ -10,21 +10,21 @@ critical-point or basin analysis.
 
 Both descriptors use the positive-definite kinetic-energy density
 
-\[
+$$
 \tau(\mathbf r)=\frac{1}{2}\sum_i n_i\lvert\nabla\psi_i(\mathbf r)\rvert^2.
-\]
+$$
 
 The homogeneous-electron-gas reference is
 
-\[
+$$
 \tau_0(\rho)=\frac{3}{10}(3\pi^2)^{2/3}\rho^{5/3}
-\]
+$$
 
 for a restricted closed-shell total density, and
 
-\[
+$$
 \tau_{0,\sigma}(\rho_\sigma)=\frac{3}{10}(6\pi^2)^{2/3}\rho_\sigma^{5/3}
-\]
+$$
 
 for an individual alpha or beta spin density.
 
@@ -33,22 +33,22 @@ for an individual alpha or beta spin density.
 For the supported real-wavefunction convention, openWFN evaluates the
 von Weizsaecker kinetic-energy density
 
-\[
+$$
 \tau_W=\frac{\lvert\nabla\rho\rvert^2}{8\rho}
-\]
+$$
 
 and Pauli excess
 
-\[
+$$
 D=\tau-\tau_W.
-\]
+$$
 
 The Becke-Edgecombe ELF is then
 
-\[
+$$
 \mathrm{ELF}=\frac{1}{1+(D/\tau_0)^2}
              =\frac{\tau_0^2}{\tau_0^2+D^2}.
-\]
+$$
 
 A materially negative Pauli excess is not squared into an apparently valid ELF.
 The point is retained as invalid and serialized as `null` with diagnostics. Tiny
@@ -58,9 +58,9 @@ negative values within the recorded numerical tolerance may be clamped to zero.
 
 The Schmider-Becke LOL used here is
 
-\[
+$$
 \mathrm{LOL}=\frac{\tau_0}{\tau_0+\tau}.
-\]
+$$
 
 Materially negative positive-definite KED is treated as invalid. Tiny negative
 roundoff within the recorded numerical tolerance may be clamped to zero.
