@@ -487,6 +487,22 @@ def main(argv: list[str] | None = None) -> int:
         density_parser.add_argument("--spacing", type=float, default=0.15, help="Grid spacing in bohr")
         density_parser.add_argument("--padding", type=float, default=6.0, help="Padding around molecule in bohr")
 
+    p_nci = subparsers.add_parser("nci", help="Experimental noncovalent-interaction analysis")
+    nci_commands = p_nci.add_subparsers(dest="nci_command", required=True)
+    p_nci_cube = nci_commands.add_parser("cube", help="Export an Experimental NCI field as a Gaussian cube")
+    p_nci_cube.add_argument("nci_cube_output", type=Path)
+    p_nci_cube.add_argument(
+        "--field",
+        choices=["rho", "lambda2", "signed-density", "rdg"],
+        default="signed-density",
+        help="NCI scalar field to export",
+    )
+    p_nci_cube.add_argument("--spacing", type=float, default=0.15, help="Grid spacing in bohr")
+    p_nci_cube.add_argument("--padding", type=float, default=6.0, help="Padding around molecule in bohr")
+    p_nci_cube.add_argument("--density-floor", type=float, default=1.0e-12)
+    p_nci_cube.add_argument("--rdg-cap", type=float)
+    p_nci_cube.add_argument("--chunk-size", type=int)
+
     p_esp = subparsers.add_parser("esp", help="Electrostatic-potential analysis")
     esp_commands = p_esp.add_subparsers(dest="esp_command", required=True)
     p_esp_point = esp_commands.add_parser("point", help="Evaluate ESP at one Cartesian point")
@@ -790,6 +806,24 @@ def main(argv: list[str] | None = None) -> int:
             )
 
         return execute(density_operation, context)
+
+    if args.command == "nci":
+        from .api import load
+
+        field = args.field.replace("-", "_")
+        return execute(
+            lambda: load(Path(args.file), format_hint=args.input_format).nci_cube(
+                args.nci_cube_output,
+                field=field,
+                spacing_bohr=args.spacing,
+                padding_bohr=args.padding,
+                density_floor=args.density_floor,
+                rdg_cap=args.rdg_cap,
+                chunk_size=args.chunk_size,
+                overwrite=args.overwrite,
+            ),
+            _context(args),
+        )
 
     if args.command == "esp":
         from .api import load
