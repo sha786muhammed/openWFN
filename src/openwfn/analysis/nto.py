@@ -6,6 +6,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from ..errors import DataUnavailableError
+from ..excited_states import AmplitudeBlock, ExcitedState
 from .limits import MAX_NTO_MATRIX_ELEMENTS
 
 
@@ -38,7 +40,7 @@ def compute_nto_svd(matrix: np.ndarray) -> NTOSVDResult:
     """Return a bounded deterministic real SVD for an NTO transition matrix.
 
     The input convention/orientation is deliberately outside this pure numerical
-    kernel.  ``transition_norm`` is the squared Frobenius norm, equal to the sum
+    kernel. ``transition_norm`` is the squared Frobenius norm, equal to the sum
     of all pair strengths and used as the weight-normalization denominator.
     """
 
@@ -80,4 +82,66 @@ def compute_nto_svd(matrix: np.ndarray) -> NTOSVDResult:
     )
 
 
-__all__ = ["MAX_NTO_MATRIX_ELEMENTS", "NTOSVDResult", "compute_nto_svd"]
+def transition_matrix_from_block(block: AmplitudeBlock) -> np.ndarray:
+    """Materialize one complete occupied-by-virtual block after ``nto_ready`` gating."""
+
+    if not block.nto_ready:
+        raise DataUnavailableError(
+            "Amplitude block is not a complete explicitly oriented NTO transition matrix."
+        )
+    rows, columns = block.dimensions
+    if rows * columns > MAX_NTO_MATRIX_ELEMENTS:
+        raise ValueError(
+            f"NTO transition matrix requests {rows * columns:,} elements, exceeding the "
+            f"safety ceiling of {MAX_NTO_MATRIX_ELEMENTS:,}; matrix was not materialized."
+        )
+    if not block.indices:
+        return np.asarray(block.values, dtype=float).reshape(rows, columns)
+
+    matrix = np.empty((rows, columns), dtype=float)
+    for index_tuple, value in zip(block.indices, block.values, strict=True):
+        row, column = index_tuple
+        matrix[row, column] = value
+    return matrix
+
+
+def select_nto_amplitude_block(
+    state: ExcitedState,
+    *,
+    spin: str | None = None,
+) -> AmplitudeBlock:
+    """Select one eligible source block without guessing across spin channels."""
+
+    eligible = tuple(block for block in state.amplitudes if block.nto_ready)
+    if spin is not None:
+        requested = spin.strip().casefold()
+        if not requested:
+            raise ValueError("spin selector must not be blank")
+        eligible = tuple(
+            block
+            for block in eligible
+            if block.spin_block is not None and block.spin_block.casefold() == requested
+        )
+        if not eligible:
+            raise DataUnavailableError(
+                f"No complete NTO transition matrix is available for spin block '{spin}'."
+            )
+    if not eligible:
+        raise DataUnavailableError(
+            "Excited state does not contain a complete explicitly supported transition matrix."
+        )
+    if len(eligible) != 1:
+        raise DataUnavailableError(
+            "NTO transition matrix selection is ambiguous across multiple eligible blocks; "
+            "provide an explicit spin selector."
+        )
+    return eligible[0]
+
+
+__all__ = [
+    "MAX_NTO_MATRIX_ELEMENTS",
+    "NTOSVDResult",
+    "compute_nto_svd",
+    "select_nto_amplitude_block",
+    "transition_matrix_from_block",
+]
