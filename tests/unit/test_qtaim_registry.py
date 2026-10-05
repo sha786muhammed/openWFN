@@ -39,6 +39,12 @@ def test_qtaim_registry_payload_is_explicit_bounded_and_experimental() -> None:
     assert isinstance(result.data["topology_relation_satisfied"], bool)
     assert result.data["bond_paths"] == []
     assert result.data["settings"]["max_iterations"] == 12
+    assert result.data["conventions"] == {
+        "coordinates": "Cartesian bohr",
+        "atom_indices": "zero-based",
+        "critical_point_labels": "QTAIM rank/signature (3,signature)",
+        "topology_relation": "N_NCP - N_BCP + N_RCP - N_CCP",
+    }
     assert any("not exhaustive" in warning.lower() for warning in result.warnings)
     assert result.units["position_bohr"] == "bohr"
     assert result.units["rho"] == "electron/bohr^3"
