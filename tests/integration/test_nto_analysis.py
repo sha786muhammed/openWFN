@@ -157,7 +157,7 @@ def test_nto_refuses_truncated_or_unsupported_amplitudes() -> None:
         values=(0.8, 0.1, -0.2),
         dimensions=(2, 2),
     )
-    with pytest.raises(DataUnavailableError, match="complete.*transition matrix"):
+    with pytest.raises(DataUnavailableError, match="NTO-ready transition amplitudes"):
         run_analysis(_calculation(amplitudes=(truncated,)), "nto", state=1)
 
 
