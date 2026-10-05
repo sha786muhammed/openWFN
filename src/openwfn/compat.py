@@ -1,5 +1,6 @@
 """Argument compatibility for reproducible v0.6.1 command lines."""
 
+from .analysis.grids import set_cli_max_grid_points
 
 _GLOBAL_OPTIONS_WITH_VALUES = {"--output", "--format"}
 _GLOBAL_FLAGS = {
@@ -14,6 +15,47 @@ _GLOBAL_FLAGS = {
 }
 _BATCH_OPTIONS_WITH_VALUES = {"--analyses", "--operation", "--workers", "--output-dir"}
 _BATCH_FLAGS = {"--dry-run", "--fail-fast", "--recursive", "--resume"}
+
+
+def _extract_grid_point_override(arguments: list[str]) -> list[str]:
+    """Consume ``--max-grid-points`` anywhere in one CLI invocation.
+
+    The option is intentionally cross-cutting: density, ESP, orbital-cube and
+    validation commands all create regular molecular grids.  Reset the
+    process-scoped value first so repeated ``main()`` calls in one interpreter
+    cannot leak a previous override.
+    """
+
+    set_cli_max_grid_points(None)
+    translated: list[str] = []
+    index = 0
+    seen = False
+    while index < len(arguments):
+        argument = arguments[index]
+        value_text: str | None = None
+        if argument == "--max-grid-points":
+            if seen:
+                raise ValueError("--max-grid-points may be specified only once")
+            if index + 1 >= len(arguments):
+                raise ValueError("--max-grid-points requires a positive integer")
+            value_text = arguments[index + 1]
+            index += 2
+        elif argument.startswith("--max-grid-points="):
+            if seen:
+                raise ValueError("--max-grid-points may be specified only once")
+            value_text = argument.split("=", 1)[1]
+            index += 1
+        else:
+            translated.append(argument)
+            index += 1
+            continue
+        seen = True
+        try:
+            limit = int(value_text)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("--max-grid-points requires a positive integer") from exc
+        set_cli_max_grid_points(limit)
+    return translated
 
 
 def _translate_file_help(arguments: list[str]) -> list[str]:
@@ -129,7 +171,8 @@ def translate_legacy_args(arguments: list[str]) -> list[str]:
     ``geometry geometry angle`` and made valid v0.7 command lines fail in argparse.
     """
 
-    translated = _translate_file_help(arguments)
+    translated = _extract_grid_point_override(arguments)
+    translated = _translate_file_help(translated)
     translated = _translate_command_first_batch(translated)
     mapping = {"dist": "distance", "angle": "angle", "dihedral": "dihedral"}
     for index, argument in enumerate(translated):
