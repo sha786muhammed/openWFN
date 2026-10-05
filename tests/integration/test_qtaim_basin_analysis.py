@@ -1,5 +1,5 @@
 from openwfn.analysis.registry import available_analyses, run_analysis_safe
-from openwfn.ingest import load_input
+from openwfn.model import Atom, CalculationData, CalculationMetadata, Molecule
 
 
 def test_registry_exposes_qtaim_basins_with_existing_capability_requirements() -> None:
@@ -7,7 +7,14 @@ def test_registry_exposes_qtaim_basins_with_existing_capability_requirements() -
 
 
 def test_qtaim_basins_registry_safe_failure_keeps_expected_result_kind() -> None:
-    data = load_input("examples/water/water.fchk")
+    data = CalculationData(
+        molecule=Molecule(
+            (Atom(1, (0.0, 0.0, 0.0)),),
+            0,
+            1,
+            CalculationMetadata("fixture"),
+        )
+    )
     result = run_analysis_safe(data, "qtaim-basins")
 
     assert result.kind == "qtaim_basins"
