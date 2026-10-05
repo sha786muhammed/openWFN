@@ -1,9 +1,8 @@
 """Bounded QTAIM atomic-basin classification and integration primitives.
 
-This module starts with a pure density-gradient-flow classifier. Later layers in
-this feature build attractor preparation, population integration, and zero-flux
-diagnostics on the same deterministic trajectory contract. Basin identity is
-never inferred from nearest-nucleus or atom-centered quadrature ownership.
+Basin identity is determined by density-gradient ascent.  The module keeps
+trajectory classification, attractor preparation, population integration, and
+boundary diagnostics as separate numerical layers so failures remain explicit.
 """
 
 from __future__ import annotations
@@ -14,10 +13,23 @@ from math import isfinite
 
 import numpy as np
 
+from ..constants import BOHR_TO_ANGSTROM
+from ..errors import DataUnavailableError, ValidationError
+from ..model import CalculationData
+from ..scientific import effective_nuclear_charge, is_ghost_atom
 from . import limits
 from .atom_quadrature import AtomQuadratureSettings
+from .qtaim import CriticalPoint, QTAIMSettings, SearchDiagnostics, search_critical_points
+from .realspace import evaluate_density_fields
 
 FieldEvaluator = Callable[[np.ndarray], tuple[np.ndarray, np.ndarray]]
+
+_BOUNDED_ATTRACTOR_WARNING = (
+    "QTAIM basin attractor discovery is bounded and not exhaustive; absence of "
+    "an undiscovered non-nuclear attractor is not proven."
+)
+_ALL_ELECTRON_CHARGE_TOLERANCE = 1.0e-10
+_ATTRACTOR_PERTURBATION_BOHR = 0.05
 
 
 @dataclass(frozen=True, slots=True)
@@ -111,6 +123,22 @@ class BasinTrajectoryBatch:
     final_points_bohr: np.ndarray
     final_distances_bohr: np.ndarray
     path_lengths_bohr: np.ndarray
+
+
+@dataclass(frozen=True, slots=True)
+class PreparedBasinAttractors:
+    """Validated nuclear attractors ordered one-to-one with physical nuclei."""
+
+    physical_nucleus_indices: tuple[int, ...]
+    nucleus_positions_bohr: np.ndarray
+    nuclear_charges: np.ndarray
+    attractor_positions_bohr: np.ndarray
+    attractor_to_nucleus_distances_bohr: np.ndarray
+    bounds: tuple[np.ndarray, np.ndarray]
+    critical_points: tuple[CriticalPoint, ...]
+    search_diagnostics: SearchDiagnostics
+    search_complete: bool
+    warnings: tuple[str, ...]
 
 
 def _validate_points(
@@ -403,4 +431,171 @@ def classify_basin_points(
         path_lengths_bohr=np.concatenate(
             [batch.path_lengths_bohr for batch in batches]
         ),
+    )
+
+
+def evaluate_basin_density_gradient(
+    data: CalculationData,
+    points_bohr: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Evaluate the total density and gradient used by basin flow."""
+
+    fields = evaluate_density_fields(data, np.asarray(points_bohr, dtype=float), kind="total")
+    return fields.rho, fields.gradient
+
+
+def _validate_all_electron_basin_input(data: CalculationData) -> tuple[np.ndarray, np.ndarray]:
+    if data.basis is None:
+        raise DataUnavailableError("QTAIM basin analysis requires a molecular basis set.")
+    if data.total_density is None:
+        raise DataUnavailableError("QTAIM basin analysis requires a total density matrix.")
+    if data.total_density.kind != "total":
+        raise ValidationError("QTAIM basin analysis requires the total molecular density channel.")
+    if data.basis.ecp_metadata:
+        raise ValidationError(
+            "QTAIM basin analysis supports all-electron inputs only; ECP/pseudopotential metadata were found."
+        )
+
+    positions: list[tuple[float, float, float]] = []
+    charges: list[float] = []
+    for atom_index, atom in enumerate(data.molecule.atoms):
+        if is_ghost_atom(atom):
+            raise ValidationError(
+                f"QTAIM basin analysis does not support ghost center at atom index {atom_index}."
+            )
+        charge = effective_nuclear_charge(atom)
+        if abs(charge - float(atom.atomic_number)) > _ALL_ELECTRON_CHARGE_TOLERANCE:
+            raise ValidationError(
+                "QTAIM basin analysis supports all-electron inputs only; effective nuclear "
+                f"charge differs from the atomic number at atom index {atom_index}, indicating ECP/pseudopotential treatment."
+            )
+        positions.append(tuple(float(value) / BOHR_TO_ANGSTROM for value in atom.coordinates))
+        charges.append(charge)
+    return np.asarray(positions, dtype=float), np.asarray(charges, dtype=float)
+
+
+def _basin_bounds(
+    atom_positions_bohr: np.ndarray,
+    settings: QTAIMBasinSettings,
+) -> tuple[np.ndarray, np.ndarray]:
+    return (
+        np.min(atom_positions_bohr, axis=0) - settings.bounds_padding_bohr,
+        np.max(atom_positions_bohr, axis=0) + settings.bounds_padding_bohr,
+    )
+
+
+def _basin_attractor_seeds(atom_positions_bohr: np.ndarray) -> np.ndarray:
+    shifts = np.asarray(
+        (
+            (0.0, 0.0, 0.0),
+            (_ATTRACTOR_PERTURBATION_BOHR, 0.0, 0.0),
+            (-_ATTRACTOR_PERTURBATION_BOHR, 0.0, 0.0),
+            (0.0, _ATTRACTOR_PERTURBATION_BOHR, 0.0),
+            (0.0, -_ATTRACTOR_PERTURBATION_BOHR, 0.0),
+            (0.0, 0.0, _ATTRACTOR_PERTURBATION_BOHR),
+            (0.0, 0.0, -_ATTRACTOR_PERTURBATION_BOHR),
+        ),
+        dtype=float,
+    )
+    seeds = (atom_positions_bohr[:, None, :] + shifts[None, :, :]).reshape(-1, 3)
+    if len(seeds) > QTAIMSettings().max_seeds:
+        raise ValueError(
+            f"basin attractor seed count {len(seeds)} exceeds QTAIMSettings.max_seeds={QTAIMSettings().max_seeds}"
+        )
+    return seeds
+
+
+def _discover_basin_critical_points(
+    data: CalculationData,
+    atom_positions_bohr: np.ndarray,
+    settings: QTAIMBasinSettings,
+) -> tuple[tuple[CriticalPoint, ...], SearchDiagnostics]:
+    bounds = _basin_bounds(atom_positions_bohr, settings)
+    qtaim_settings = QTAIMSettings(
+        bounds_padding_bohr=settings.bounds_padding_bohr,
+        max_seeds=QTAIMSettings().max_seeds,
+    )
+
+    def evaluator(points: np.ndarray):
+        return evaluate_density_fields(data, points, kind="total")
+
+    return search_critical_points(
+        evaluator,
+        _basin_attractor_seeds(atom_positions_bohr),
+        bounds=bounds,
+        settings=qtaim_settings,
+    )
+
+
+def _match_nuclear_attractors(
+    atom_positions_bohr: np.ndarray,
+    critical_points: tuple[CriticalPoint, ...],
+    *,
+    tolerance_bohr: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    nuclear = tuple(point for point in critical_points if point.label == "(3,-3)")
+    if not nuclear:
+        raise ValidationError("QTAIM basin analysis found no nuclear attractors; required attractors are missing.")
+
+    attractor_positions = np.asarray([point.position_bohr for point in nuclear], dtype=float)
+    distances = np.linalg.norm(
+        atom_positions_bohr[:, None, :] - attractor_positions[None, :, :],
+        axis=2,
+    )
+    within = distances <= tolerance_bohr
+    nucleus_counts = np.sum(within, axis=1)
+    attractor_counts = np.sum(within, axis=0)
+
+    if np.any(attractor_counts == 0):
+        indices = np.flatnonzero(attractor_counts == 0).tolist()
+        raise ValidationError(
+            "QTAIM basin analysis detected non-nuclear attractor(s) outside the nuclear matching tolerance: "
+            f"{indices}. Atomic-only basin populations are not defined for this case."
+        )
+    if np.any(nucleus_counts == 0):
+        indices = np.flatnonzero(nucleus_counts == 0).tolist()
+        raise ValidationError(
+            f"QTAIM basin analysis has missing attractor/no unique nuclear attractor for nucleus indices {indices}."
+        )
+    if np.any(nucleus_counts > 1) or np.any(attractor_counts > 1):
+        raise ValidationError(
+            "QTAIM basin analysis found ambiguous/multiple nucleus-attractor matches within the matching tolerance."
+        )
+
+    ordered_indices = np.argmax(within, axis=1)
+    ordered = attractor_positions[ordered_indices]
+    matched_distances = distances[np.arange(len(atom_positions_bohr)), ordered_indices]
+    return ordered, matched_distances
+
+
+def prepare_qtaim_basin_attractors(
+    data: CalculationData,
+    *,
+    settings: QTAIMBasinSettings | None = None,
+) -> PreparedBasinAttractors:
+    """Validate all-electron scope and prepare one nuclear attractor per nucleus."""
+
+    controls = settings or QTAIMBasinSettings()
+    atom_positions, nuclear_charges = _validate_all_electron_basin_input(data)
+    critical_points, diagnostics = _discover_basin_critical_points(
+        data,
+        atom_positions,
+        controls,
+    )
+    attractors, distances = _match_nuclear_attractors(
+        atom_positions,
+        critical_points,
+        tolerance_bohr=controls.attractor_match_tolerance_bohr,
+    )
+    return PreparedBasinAttractors(
+        physical_nucleus_indices=tuple(range(len(atom_positions))),
+        nucleus_positions_bohr=atom_positions,
+        nuclear_charges=nuclear_charges,
+        attractor_positions_bohr=attractors,
+        attractor_to_nucleus_distances_bohr=distances,
+        bounds=_basin_bounds(atom_positions, controls),
+        critical_points=critical_points,
+        search_diagnostics=diagnostics,
+        search_complete=False,
+        warnings=(_BOUNDED_ATTRACTOR_WARNING,),
     )
