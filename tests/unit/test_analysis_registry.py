@@ -36,6 +36,7 @@ def test_registry_runs_summary_with_versioned_input_provenance() -> None:
         "orbital-composition",
         "pdos",
         "qtaim",
+        "qtaim-basins",
         "raman-spectrum",
         "summary",
         "transition-dipoles",
