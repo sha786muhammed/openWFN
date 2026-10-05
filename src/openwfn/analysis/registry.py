@@ -61,6 +61,35 @@ _OSCILLATOR_STRENGTHS = CapabilityRequirement(
 _TRANSITION_DIPOLES = CapabilityRequirement("transition dipoles", ("transition_dipoles",))
 
 
+def _qtaim_analysis(
+    data: CalculationData,
+    *,
+    seeds_bohr=None,
+    settings=None,
+    include_bond_paths: bool = True,
+) -> ResultRecord:
+    """Attach public index/label conventions to the QTAIM result envelope."""
+
+    result = qtaim(
+        data,
+        seeds_bohr=seeds_bohr,
+        settings=settings,
+        include_bond_paths=include_bond_paths,
+    )
+    return replace(
+        result,
+        data={
+            **result.data,
+            "conventions": {
+                "coordinates": "Cartesian bohr",
+                "atom_indices": "zero-based",
+                "critical_point_labels": "QTAIM rank/signature (3,signature)",
+                "topology_relation": "N_NCP - N_BCP + N_RCP - N_CCP",
+            },
+        },
+    )
+
+
 _ANALYSES = {
     "pdos": AnalysisDefinition("pdos", "1", "orbital_pdos", orbital_pdos, (_ISOLATED, _BASIS, _ORBITALS, _AO_OVERLAP)),
     "dos": AnalysisDefinition("dos", "1", "orbital_dos", orbital_dos, (_ISOLATED, _ORBITALS)),
@@ -161,7 +190,7 @@ _ANALYSES = {
         "qtaim",
         "1",
         "qtaim_topology",
-        qtaim,
+        _qtaim_analysis,
         (_ISOLATED, _BASIS, _TOTAL_DENSITY),
     ),
     "raman-spectrum": AnalysisDefinition(
