@@ -16,8 +16,8 @@ from . import (
 )
 from .analysis.atom_quadrature import AtomQuadratureSettings
 from .analysis.hirshfeld import HirshfeldSettings
-from .analysis.qtaim_basins import QTAIMBasinSettings
 from .analysis.orbitals import frontier_orbitals
+from .analysis.qtaim_basins import QTAIMBasinSettings
 from .analysis.registry import run_analysis
 from .app import CommandContext, execute
 from .batch import discover_inputs, run_batch
