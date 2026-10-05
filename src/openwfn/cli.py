@@ -16,6 +16,7 @@ from . import (
 )
 from .analysis.atom_quadrature import AtomQuadratureSettings
 from .analysis.hirshfeld import HirshfeldSettings
+from .analysis.qtaim_basins import QTAIMBasinSettings
 from .analysis.orbitals import frontier_orbitals
 from .analysis.registry import run_analysis
 from .app import CommandContext, execute
@@ -383,7 +384,7 @@ def main(argv: list[str] | None = None) -> int:
     p_geometry_dihedral.add_argument("l", type=int)
 
     p_population = subparsers.add_parser(
-        "population", help="Mulliken, Löwdin, and Hirshfeld population analysis"
+        "population", help="Mulliken, Löwdin, Hirshfeld, and QTAIM population analysis"
     )
     population_commands = p_population.add_subparsers(dest="population_method", required=True)
     population_commands.add_parser("mulliken", help="Compute Mulliken atomic populations and charges")
@@ -401,6 +402,109 @@ def main(argv: list[str] | None = None) -> int:
     p_hirshfeld.add_argument("--partition-tolerance", type=float, default=1.0e-8)
     p_hirshfeld.add_argument("--electron-closure-tolerance", type=float, default=5.0e-3)
     p_hirshfeld.add_argument("--charge-closure-tolerance", type=float, default=5.0e-3)
+
+    qtaim_defaults = QTAIMBasinSettings()
+    p_qtaim = population_commands.add_parser(
+        "qtaim", help="Compute Experimental QTAIM atomic-basin populations and charges"
+    )
+    p_qtaim.add_argument("--radial-points", type=int, default=qtaim_defaults.quadrature.radial_points)
+    p_qtaim.add_argument("--theta-points", type=int, default=qtaim_defaults.quadrature.theta_points)
+    p_qtaim.add_argument("--phi-points", type=int, default=qtaim_defaults.quadrature.phi_points)
+    p_qtaim.add_argument(
+        "--radial-extent",
+        type=float,
+        default=qtaim_defaults.quadrature.radial_extent_bohr,
+        help="Radial quadrature extent in bohr",
+    )
+    p_qtaim.add_argument("--chunk-size", type=int, default=qtaim_defaults.quadrature.chunk_size)
+    p_qtaim.add_argument("--flow-step", dest="flow_step_bohr", type=float, default=qtaim_defaults.flow_step_bohr)
+    p_qtaim.add_argument(
+        "--attractor-capture-radius",
+        dest="attractor_capture_radius_bohr",
+        type=float,
+        default=qtaim_defaults.attractor_capture_radius_bohr,
+    )
+    p_qtaim.add_argument("--gradient-floor", type=float, default=qtaim_defaults.gradient_floor)
+    p_qtaim.add_argument("--max-flow-steps", type=int, default=qtaim_defaults.max_flow_steps)
+    p_qtaim.add_argument("--max-backtracks", type=int, default=qtaim_defaults.max_backtracks)
+    p_qtaim.add_argument(
+        "--bounds-padding",
+        dest="bounds_padding_bohr",
+        type=float,
+        default=qtaim_defaults.bounds_padding_bohr,
+    )
+    p_qtaim.add_argument(
+        "--attractor-match-tolerance",
+        dest="attractor_match_tolerance_bohr",
+        type=float,
+        default=qtaim_defaults.attractor_match_tolerance_bohr,
+    )
+    p_qtaim.add_argument(
+        "--density-ascent-abs-tolerance",
+        type=float,
+        default=qtaim_defaults.density_ascent_abs_tolerance,
+    )
+    p_qtaim.add_argument(
+        "--density-ascent-rel-tolerance",
+        type=float,
+        default=qtaim_defaults.density_ascent_rel_tolerance,
+    )
+    p_qtaim.add_argument(
+        "--max-unresolved-electrons",
+        type=float,
+        default=qtaim_defaults.max_unresolved_electrons,
+    )
+    p_qtaim.add_argument(
+        "--max-electron-count-residual",
+        type=float,
+        default=qtaim_defaults.max_electron_count_residual,
+    )
+    p_qtaim.add_argument(
+        "--max-charge-closure-residual",
+        type=float,
+        default=qtaim_defaults.max_charge_closure_residual,
+    )
+    p_qtaim.add_argument("--boundary-diagnostics", action="store_true")
+    p_qtaim.add_argument(
+        "--boundary-spacing",
+        dest="boundary_spacing_bohr",
+        type=float,
+        default=qtaim_defaults.boundary_spacing_bohr,
+    )
+    p_qtaim.add_argument(
+        "--boundary-padding",
+        dest="boundary_padding_bohr",
+        type=float,
+        default=qtaim_defaults.boundary_padding_bohr,
+    )
+    p_qtaim.add_argument(
+        "--boundary-bisection-tolerance",
+        dest="boundary_bisection_tolerance_bohr",
+        type=float,
+        default=qtaim_defaults.boundary_bisection_tolerance_bohr,
+    )
+    p_qtaim.add_argument(
+        "--max-boundary-bisections",
+        type=int,
+        default=qtaim_defaults.max_boundary_bisections,
+    )
+    p_qtaim.add_argument(
+        "--boundary-local-radius",
+        dest="boundary_local_radius_bohr",
+        type=float,
+        default=qtaim_defaults.boundary_local_radius_bohr,
+    )
+    p_qtaim.add_argument(
+        "--boundary-min-neighbors",
+        type=int,
+        default=qtaim_defaults.boundary_min_neighbors,
+    )
+    p_qtaim.add_argument(
+        "--boundary-plane-condition-ratio",
+        type=float,
+        default=qtaim_defaults.boundary_plane_condition_ratio,
+    )
+    p_qtaim.add_argument("--max-zero-flux-p95", type=float, default=qtaim_defaults.max_zero_flux_p95)
 
     p_bondorder = subparsers.add_parser("bondorder", help="AO bond-order analysis")
     bondorder_commands = p_bondorder.add_subparsers(dest="bondorder_method", required=True)
@@ -657,6 +761,45 @@ def main(argv: list[str] | None = None) -> int:
         return execute(geometry_operation, context)
 
     if args.command == "population":
+        if args.population_method == "qtaim":
+            def qtaim_population_operation() -> ResultRecord:
+                settings = QTAIMBasinSettings(
+                    quadrature=AtomQuadratureSettings(
+                        radial_points=args.radial_points,
+                        theta_points=args.theta_points,
+                        phi_points=args.phi_points,
+                        radial_extent_bohr=args.radial_extent,
+                        chunk_size=args.chunk_size,
+                    ),
+                    flow_step_bohr=args.flow_step_bohr,
+                    attractor_capture_radius_bohr=args.attractor_capture_radius_bohr,
+                    gradient_floor=args.gradient_floor,
+                    max_flow_steps=args.max_flow_steps,
+                    max_backtracks=args.max_backtracks,
+                    bounds_padding_bohr=args.bounds_padding_bohr,
+                    attractor_match_tolerance_bohr=args.attractor_match_tolerance_bohr,
+                    density_ascent_abs_tolerance=args.density_ascent_abs_tolerance,
+                    density_ascent_rel_tolerance=args.density_ascent_rel_tolerance,
+                    max_unresolved_electrons=args.max_unresolved_electrons,
+                    max_electron_count_residual=args.max_electron_count_residual,
+                    max_charge_closure_residual=args.max_charge_closure_residual,
+                    boundary_spacing_bohr=args.boundary_spacing_bohr,
+                    boundary_padding_bohr=args.boundary_padding_bohr,
+                    boundary_bisection_tolerance_bohr=args.boundary_bisection_tolerance_bohr,
+                    max_boundary_bisections=args.max_boundary_bisections,
+                    boundary_local_radius_bohr=args.boundary_local_radius_bohr,
+                    boundary_min_neighbors=args.boundary_min_neighbors,
+                    boundary_plane_condition_ratio=args.boundary_plane_condition_ratio,
+                    max_zero_flux_p95=args.max_zero_flux_p95,
+                )
+                return run_analysis(
+                    require_calculation(),
+                    "qtaim-basins",
+                    settings=settings,
+                    include_boundary_diagnostics=args.boundary_diagnostics,
+                )
+
+            return execute(qtaim_population_operation, _context(args))
         if args.population_method == "hirshfeld":
             settings = HirshfeldSettings(
                 quadrature=AtomQuadratureSettings(
