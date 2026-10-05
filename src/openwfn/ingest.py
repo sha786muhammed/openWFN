@@ -5,13 +5,23 @@ from dataclasses import replace
 from fnmatch import fnmatchcase
 from hashlib import sha256
 from importlib import import_module
+from math import isfinite
 from pathlib import Path
 from typing import Any
+
+import numpy as np
 
 from .data import OpenWFNData, SourceMetadata, wrap_calculation
 from .errors import MissingOptionalDependencyError, ParseError
 from .formats import IODATA_READABLE_FORMATS, FormatDefinition
-from .model import CalculationData, CalculationMetadata, Provenance, VolumetricGrid
+from .model import (
+    Atom,
+    CalculationData,
+    CalculationMetadata,
+    Molecule,
+    Provenance,
+    VolumetricGrid,
+)
 from .parsers.registry import DEFAULT_REGISTRY, looks_like_gaussian_output
 from .vibrational import VibrationalRecord, vibrational_record_from_cclib
 
@@ -147,11 +157,129 @@ def _augment_excited_states(
     return augmented
 
 
+def _integer_like(value: Any) -> int | None:
+    if value is None:
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not isfinite(number):
+        return None
+    rounded = round(number)
+    return int(rounded) if abs(number - rounded) <= 1e-8 else None
+
+
+def _minimal_cclib_vibrational_calculation(
+    data: OpenWFNData,
+    parsed: Any,
+    record: VibrationalRecord,
+) -> CalculationData | None:
+    """Build only the molecule needed to retain source-reported vibrations.
+
+    No basis, orbitals, density, or other wavefunction quantity is synthesized.
+    """
+
+    if data.periodic is not None:
+        return None
+
+    structure = data.structure
+    numbers: tuple[int, ...]
+    coordinates: tuple[tuple[float, float, float], ...]
+    effective_charges: tuple[float | None, ...]
+    bonds = ()
+    charge: int | None = None
+    multiplicity: int | None = None
+
+    if structure is not None and all(number is not None for number in structure.atomic_numbers):
+        numbers = tuple(int(number) for number in structure.atomic_numbers if number is not None)
+        coordinates = structure.coordinates
+        effective_charges = (
+            structure.effective_nuclear_charges
+            if structure.effective_nuclear_charges
+            else tuple(None for _ in numbers)
+        )
+        bonds = structure.bonds
+        charge = structure.charge
+        multiplicity = structure.multiplicity
+    else:
+        raw_numbers = getattr(parsed, "atomnos", None)
+        raw_coordinates = getattr(parsed, "atomcoords", None)
+        if raw_numbers is None or raw_coordinates is None:
+            return None
+        try:
+            number_array = np.asarray(raw_numbers)
+            coordinate_array = np.asarray(raw_coordinates, dtype=float)
+        except (TypeError, ValueError):
+            return None
+        if number_array.ndim != 1 or len(number_array) == 0:
+            return None
+        if coordinate_array.ndim == 3 and coordinate_array.shape[0] > 0:
+            coordinate_array = coordinate_array[-1]
+        if coordinate_array.shape != (len(number_array), 3):
+            return None
+        if not np.all(np.isfinite(coordinate_array)):
+            return None
+        parsed_numbers = tuple(_integer_like(value) for value in number_array)
+        if any(number is None or number < 1 for number in parsed_numbers):
+            return None
+        numbers = tuple(int(number) for number in parsed_numbers if number is not None)
+        coordinates = tuple(
+            tuple(float(value) for value in row) for row in coordinate_array
+        )
+        effective_charges = tuple(None for _ in numbers)
+
+    if charge is None:
+        charge = _integer_like(getattr(parsed, "charge", None))
+    if multiplicity is None:
+        multiplicity = _integer_like(getattr(parsed, "mult", None))
+    if charge is None or multiplicity is None or multiplicity < 1:
+        return None
+
+    parsed_metadata = getattr(parsed, "metadata", {}) or {}
+    source_program = (
+        data.metadata.source_program
+        or parsed_metadata.get("package")
+        or record.source_program
+    )
+    source_version = (
+        data.metadata.source_program_version
+        or parsed_metadata.get("package_version")
+        or record.source_program_version
+    )
+    molecule = Molecule(
+        atoms=tuple(
+            Atom(
+                atomic_number=number,
+                coordinates=coordinate,
+                nuclear_charge=effective_charge,
+            )
+            for number, coordinate, effective_charge in zip(
+                numbers, coordinates, effective_charges, strict=True
+            )
+        ),
+        charge=charge,
+        multiplicity=multiplicity,
+        metadata=CalculationMetadata(
+            source_program=str(source_program),
+            source_program_version=(
+                str(source_version) if source_version is not None else None
+            ),
+            energy_hartree=data.metadata.energy_hartree,
+        ),
+        provenance=data.provenance,
+        bonds=bonds,
+    )
+    return CalculationData(molecule=molecule, records={"vibrations": record})
+
+
 def _augment_cclib_vibrations(data: OpenWFNData, path: Path) -> OpenWFNData:
     """Best-effort optional promotion of cclib vibration fields into the model."""
 
     calculation = data.calculation
-    if calculation is None or isinstance(calculation.records.get("vibrations"), VibrationalRecord):
+    if calculation is not None and isinstance(
+        calculation.records.get("vibrations"), VibrationalRecord
+    ):
         return data
     try:
         cclib_io = import_module("cclib.io")
@@ -166,6 +294,18 @@ def _augment_cclib_vibrations(data: OpenWFNData, path: Path) -> OpenWFNData:
     record = vibrational_record_from_cclib(parsed, provenance=data.provenance)
     if record is None:
         return data
+
+    if calculation is None:
+        calculation = _minimal_cclib_vibrational_calculation(data, parsed, record)
+        if calculation is None:
+            return data
+        wrapped = wrap_calculation(calculation)
+        return replace(
+            data,
+            calculation=calculation,
+            structure=data.structure or wrapped.structure,
+        )
+
     records = dict(calculation.records)
     records["vibrations"] = record
     return replace(data, calculation=replace(calculation, records=records))
