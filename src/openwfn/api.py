@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Literal
 
 from .analysis.hirshfeld import HirshfeldSettings
+from .analysis.qtaim_basins import QTAIMBasinSettings
 from .analysis.registry import run_analysis, run_analysis_safe
 from .analysis.structure_summary import center_counts
 from .capabilities import Capability, infer_capabilities
@@ -258,6 +259,21 @@ class OpenWFNCalculation:
         """Return native Hirshfeld populations with optional expert numerical settings."""
 
         return run_analysis_safe(self.data, "hirshfeld", settings=settings)
+
+    def qtaim_basins(
+        self,
+        *,
+        settings: QTAIMBasinSettings | None = None,
+        include_boundary_diagnostics: bool = False,
+    ) -> ResultRecord:
+        """Return Experimental QTAIM atomic-basin populations and charges."""
+
+        return run_analysis_safe(
+            self.data,
+            "qtaim-basins",
+            settings=settings,
+            include_boundary_diagnostics=include_boundary_diagnostics,
+        )
 
     def population(
         self,
