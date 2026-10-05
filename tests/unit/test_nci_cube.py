@@ -15,7 +15,7 @@ def _water_data():
 
 
 def test_nci_scalar_grids_are_finite_for_non_rdg_fields() -> None:
-    from openwfn.services import nci_scalar_grid
+    from openwfn.nci_services import nci_scalar_grid
 
     data = _water_data()
     for field in ("rho", "lambda2", "signed_density"):
@@ -32,7 +32,7 @@ def test_nci_scalar_grids_are_finite_for_non_rdg_fields() -> None:
 
 
 def test_rdg_grid_requires_explicit_positive_finite_cap() -> None:
-    from openwfn.services import nci_scalar_grid
+    from openwfn.nci_services import nci_scalar_grid
 
     data = _water_data()
     for cap in (None, 0.0, -1.0, float("nan"), float("inf")):
@@ -41,7 +41,7 @@ def test_rdg_grid_requires_explicit_positive_finite_cap() -> None:
 
 
 def test_rdg_cap_is_rejected_for_non_rdg_fields() -> None:
-    from openwfn.services import nci_scalar_grid
+    from openwfn.nci_services import nci_scalar_grid
 
     data = _water_data()
     with pytest.raises(ValueError, match="rdg_cap"):
@@ -49,7 +49,7 @@ def test_rdg_cap_is_rejected_for_non_rdg_fields() -> None:
 
 
 def test_rdg_grid_clips_finite_values_and_substitutes_density_tail() -> None:
-    from openwfn.services import nci_scalar_grid
+    from openwfn.nci_services import nci_scalar_grid
 
     data = _water_data()
     settings = NCISettings(density_floor=0.05)
@@ -72,7 +72,7 @@ def test_rdg_grid_clips_finite_values_and_substitutes_density_tail() -> None:
 
 
 def test_nci_grid_is_chunk_invariant() -> None:
-    from openwfn.services import nci_scalar_grid
+    from openwfn.nci_services import nci_scalar_grid
 
     data = _water_data()
     grid_a, diagnostics_a = nci_scalar_grid(
@@ -90,7 +90,7 @@ def test_nci_grid_is_chunk_invariant() -> None:
 
 def test_nci_grid_obeys_shared_grid_limit_before_field_evaluation(monkeypatch) -> None:
     from openwfn.analysis import grids
-    from openwfn.services import nci_scalar_grid
+    from openwfn.nci_services import nci_scalar_grid
 
     data = _water_data()
     monkeypatch.setattr(grids, "MAX_GRID_POINTS", 2)
@@ -99,7 +99,7 @@ def test_nci_grid_obeys_shared_grid_limit_before_field_evaluation(monkeypatch) -
 
 
 def test_nci_cube_export_writes_atomic_finite_cube_and_metadata(tmp_path: Path) -> None:
-    from openwfn.services import nci_cube_export
+    from openwfn.nci_services import nci_cube_export
 
     data = _water_data()
     output = tmp_path / "water-nci.cube"
