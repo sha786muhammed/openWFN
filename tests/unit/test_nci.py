@@ -19,6 +19,7 @@ def test_uniform_positive_density_has_zero_rdg() -> None:
 
     assert result.rdg[0] == pytest.approx(0.0, abs=0.0)
     assert result.rdg_valid_mask.tolist() == [True]
+    assert result.hessian_valid_mask.tolist() == [True]
 
 
 def test_rdg_matches_hand_computed_scalar() -> None:
@@ -49,6 +50,7 @@ def test_hessian_eigenvalues_are_sorted_and_lambda2_is_middle_value() -> None:
 
     np.testing.assert_allclose(result.hessian_eigenvalues[0], [-2.0, 1.0, 4.0])
     assert result.lambda2[0] == pytest.approx(1.0)
+    assert result.hessian_valid_mask.tolist() == [True]
 
 
 def test_lambda2_sign_and_signed_density_follow_raw_middle_eigenvalue() -> None:
@@ -88,6 +90,7 @@ def test_near_zero_lambda2_is_ambiguous_without_invalidating_field() -> None:
     )
 
     assert result.lambda2_sign_ambiguous_mask.tolist() == [True, True]
+    assert result.hessian_valid_mask.tolist() == [True, True]
     assert result.field_valid_mask.tolist() == [True, True]
     assert result.signed_density[0] == pytest.approx(0.5)
     assert result.signed_density[1] == pytest.approx(0.0)
@@ -107,6 +110,7 @@ def test_density_floor_and_nonpositive_density_invalidate_rdg_without_fractional
     )
 
     assert result.rdg_valid_mask.tolist() == [False, False, False, True]
+    assert result.hessian_valid_mask.tolist() == [True, True, True, True]
     assert np.isnan(result.rdg[:3]).all()
     assert np.isfinite(result.rdg[3])
     assert result.invalid_density_count == 3
@@ -135,6 +139,7 @@ def test_nonfinite_inputs_are_invalid_and_arrays_remain_real() -> None:
     )
 
     assert result.rdg_valid_mask.tolist() == [True, False, False, True]
+    assert result.hessian_valid_mask.tolist() == [True, True, True, False]
     assert result.field_valid_mask.tolist() == [True, False, False, False]
     assert np.isrealobj(result.hessian_eigenvalues)
     assert result.invalid_nonfinite_count == 3
@@ -156,6 +161,7 @@ def test_small_hessian_antisymmetry_is_symmetrized_but_material_antisymmetry_is_
     )
 
     assert result.rdg_valid_mask.tolist() == [True, True]
+    assert result.hessian_valid_mask.tolist() == [True, False]
     assert result.field_valid_mask.tolist() == [True, False]
     assert result.hessian_antisymmetry_residual[0] == pytest.approx(5.0e-12)
     assert result.hessian_antisymmetry_residual[1] == pytest.approx(2.0e-8)
@@ -180,6 +186,7 @@ def test_empty_arrays_return_empty_valid_shapes() -> None:
     assert result.lambda2.shape == (0,)
     assert result.signed_density.shape == (0,)
     assert result.rdg_valid_mask.shape == (0,)
+    assert result.hessian_valid_mask.shape == (0,)
     assert result.field_valid_mask.shape == (0,)
 
 
