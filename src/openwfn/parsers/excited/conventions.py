@@ -23,6 +23,9 @@ class AmplitudeSemantics:
     nto_ready: bool
     requires_left_state: bool = False
     spin_structure: str | None = None
+    row_domain: str | None = None
+    column_domain: str | None = None
+    requires_domain_metadata: bool = False
     note: str = ""
 
 
@@ -103,14 +106,23 @@ def amplitude_semantics(convention: str) -> AmplitudeSemantics:
             defined=True,
             nto_ready=True,
             spin_structure="source-defined",
-            note="Explicit transition-density matrix; suitable for NTO decomposition when dimensions are complete.",
+            requires_domain_metadata=True,
+            note=(
+                "Explicit transition-density matrix; NTO use additionally requires source "
+                "metadata proving occupied-row/virtual-column orbital domains."
+            ),
         )
     if key in {"cis-transition-amplitude-matrix", "cis-transition-matrix"}:
         return AmplitudeSemantics(
             defined=True,
             nto_ready=True,
             spin_structure="source-defined",
-            note="Explicit CIS transition-amplitude matrix; suitable for NTO decomposition when complete.",
+            row_domain="occupied",
+            column_domain="virtual",
+            note=(
+                "Explicit complete CIS transition-amplitude matrix with occupied rows and "
+                "virtual columns."
+            ),
         )
     if "percentage" in key or "weight" in key:
         return AmplitudeSemantics(
