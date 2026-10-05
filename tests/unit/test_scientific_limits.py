@@ -3,6 +3,7 @@ import pytest
 
 import openwfn.analysis.limits as limits
 import openwfn.analysis.localization as localization
+import openwfn.analysis.nci as nci
 import openwfn.analysis.realspace as realspace
 from openwfn.model import (
     Atom,
@@ -129,3 +130,17 @@ def test_localization_point_ceiling_is_checked_before_ao_evaluation(
 
     with pytest.raises(ValueError, match=r"3.*2"):
         evaluator(_single_s_data(), np.zeros((3, 3)), channel="total")
+
+
+def test_nci_point_ceiling_is_checked_before_ao_evaluation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(limits, "MAX_POINT_ANALYSIS_POINTS", 2)
+
+    def fail_if_called(*args: object, **kwargs: object) -> None:
+        raise AssertionError("AO evaluator must not run for an over-limit NCI request")
+
+    monkeypatch.setattr(realspace, "evaluate_ao_fields", fail_if_called)
+
+    with pytest.raises(ValueError, match=r"3.*2"):
+        nci.evaluate_nci(_single_s_data(), np.zeros((3, 3)))
