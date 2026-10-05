@@ -1,5 +1,7 @@
 """Centralized input routing for native and optional interoperability parsers."""
 
+import logging
+from dataclasses import replace
 from fnmatch import fnmatchcase
 from hashlib import sha256
 from importlib import import_module
@@ -11,6 +13,7 @@ from .errors import MissingOptionalDependencyError, ParseError
 from .formats import IODATA_READABLE_FORMATS, FormatDefinition
 from .model import CalculationData, CalculationMetadata, Provenance, VolumetricGrid
 from .parsers.registry import DEFAULT_REGISTRY, looks_like_gaussian_output
+from .vibrational import VibrationalRecord, vibrational_record_from_cclib
 
 _NATIVE_SUFFIXES = {".chk", ".cub", ".cube", ".fch", ".fchk", ".mol", ".pdb", ".sdf", ".xyz"}
 _FORMATS_BY_ID = {definition.format_id: definition for definition in IODATA_READABLE_FORMATS}
@@ -144,6 +147,30 @@ def _augment_excited_states(
     return augmented
 
 
+def _augment_cclib_vibrations(data: OpenWFNData, path: Path) -> OpenWFNData:
+    """Best-effort optional promotion of cclib vibration fields into the model."""
+
+    calculation = data.calculation
+    if calculation is None or isinstance(calculation.records.get("vibrations"), VibrationalRecord):
+        return data
+    try:
+        cclib_io = import_module("cclib.io")
+    except ModuleNotFoundError:
+        return data
+    try:
+        parsed = cclib_io.ccread(str(path), loglevel=logging.ERROR)
+    except Exception:
+        return data
+    if parsed is None:
+        return data
+    record = vibrational_record_from_cclib(parsed, provenance=data.provenance)
+    if record is None:
+        return data
+    records = dict(calculation.records)
+    records["vibrations"] = record
+    return replace(data, calculation=replace(calculation, records=records))
+
+
 def _load_iodata(path: Path, *, format_id: str) -> OpenWFNData:
     try:
         import_module("iodata")
@@ -187,7 +214,10 @@ def load_input(path: Path, *, format_hint: str | None = None) -> OpenWFNData:
             )
         if definition.backend == "native":
             return _load_native(source, source_format=definition.format_id)
-        return _load_iodata(source, format_id=definition.format_id)
+        loaded = _load_iodata(source, format_id=definition.format_id)
+        if definition.format_id.endswith("log") or source.suffix.casefold() in {".log", ".out"}:
+            loaded = _augment_cclib_vibrations(loaded, source)
+        return loaded
 
     suffix = source.suffix.casefold()
     if suffix in _NATIVE_SUFFIXES:
@@ -207,11 +237,14 @@ def load_input(path: Path, *, format_hint: str | None = None) -> OpenWFNData:
     if suffix in {".log", ".out"}:
         detected = _detect_text_output_format(source)
         if detected == "gaussianlog":
-            return _normalize_native(
+            loaded = _normalize_native(
                 DEFAULT_REGISTRY.load(source), source, source_format="gaussianlog"
             )
+            return _augment_cclib_vibrations(loaded, source)
         if detected is not None:
-            return _load_iodata(source, format_id=detected)
+            return _augment_cclib_vibrations(
+                _load_iodata(source, format_id=detected), source
+            )
 
     definition = _definition_for_pattern(source)
     if definition is not None:
