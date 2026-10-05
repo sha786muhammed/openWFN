@@ -1,3 +1,4 @@
+import json
 from dataclasses import replace
 from pathlib import Path
 
@@ -25,6 +26,11 @@ def _assert_common_localization_contract(result, *, kind: str) -> None:
     assert len(result.data["tau"]) == 2
     assert len(result.data["reference_ked"]) == 2
     assert result.data["density_floor"] == pytest.approx(1.0e-12)
+    assert result.data["thresholds"] == {
+        "density_floor": pytest.approx(1.0e-12),
+        "negative_absolute_tolerance": pytest.approx(1.0e-12),
+        "negative_relative_tolerance": pytest.approx(1.0e-10),
+    }
     assert result.data["conventions"]["coordinates"] == "Cartesian bohr"
     assert (
         result.data["conventions"]["kinetic_energy_density"]
@@ -57,6 +63,7 @@ def test_elf_registry_payload_is_explicit_finite_and_reproducible() -> None:
         result, kind="electron_localization_function"
     )
     assert result.data["conventions"]["descriptor"] == "Becke-Edgecombe ELF"
+    assert result.data["conventions"]["formula"] == "D0^2/(D0^2+D^2)"
     assert result.data["conventions"]["spin_reference"] == "restricted_closed_shell_total"
     assert len(result.data["von_weizsaecker"]) == 2
     assert len(result.data["pauli_excess"]) == 2
@@ -73,12 +80,13 @@ def test_lol_registry_payload_is_explicit_finite_and_reproducible() -> None:
 
     _assert_common_localization_contract(result, kind="localized_orbital_locator")
     assert result.data["conventions"]["descriptor"] == "Schmider-Becke LOL"
+    assert result.data["conventions"]["formula"] == "tau_HEG/(tau_HEG+tau)"
     assert result.data["conventions"]["spin_reference"] == "restricted_closed_shell_total"
     assert result.data["diagnostics"]["invalid_ked_count"] == 0
     assert all(value is not None for value in result.data["values"])
 
 
-def test_invalid_tail_points_are_null_partial_and_never_nan() -> None:
+def test_invalid_tail_points_are_null_partial_and_strict_json_safe() -> None:
     data = parse_fchk(WATER)
     points = np.array(((5.0, 0.0, 0.0),), dtype=float)
 
@@ -97,7 +105,7 @@ def test_invalid_tail_points_are_null_partial_and_never_nan() -> None:
         assert result.data["valid_mask"] == [False]
         assert result.data["diagnostics"]["invalid_density_count"] == 1
         assert result.warnings
-        assert "nan" not in repr(payload).lower()
+        json.dumps(payload, allow_nan=False)
 
 
 def test_open_shell_total_failure_remains_structured_through_safe_registry() -> None:
