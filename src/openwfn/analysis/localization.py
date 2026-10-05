@@ -8,11 +8,12 @@ presentation. They use openWFN's positive-definite kinetic-energy-density conven
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, cast
 
 import numpy as np
 
 from ..model import CalculationData
+from ..results import ResultRecord
 from ..scientific import orbital_reference_kind
 from .realspace import evaluate_density_fields, evaluate_kinetic_energy_density
 
@@ -113,7 +114,7 @@ def _validate_channel(data: CalculationData, channel: str) -> LocalizationChanne
             "total ELF/LOL is supported only for demonstrably restricted closed-shell "
             "data; request alpha or beta for open-shell data"
         )
-    return channel  # type: ignore[return-value]
+    return cast(LocalizationChannel, channel)
 
 
 def compute_elf_components(
@@ -307,4 +308,180 @@ def evaluate_lol(
         kinetic.tau,
         spin_resolved=selected != "total",
         settings=settings,
+    )
+
+
+def _nullable(values: np.ndarray | None) -> list[float | None] | None:
+    if values is None:
+        return None
+    array = np.asarray(values, dtype=float)
+    return [float(value) if np.isfinite(value) else None for value in array]
+
+
+def _spin_reference(channel: LocalizationChannel) -> str:
+    if channel == "total":
+        return "restricted_closed_shell_total"
+    return f"spin_resolved_{channel}"
+
+
+def _localization_warnings(batch: LocalizationFieldBatch, *, descriptor: str) -> tuple[str, ...]:
+    warnings: list[str] = []
+    if batch.invalid_density_count:
+        warnings.append(
+            f"{batch.invalid_density_count} {descriptor} point(s) were below or at the "
+            "declared density floor and are reported as null."
+        )
+    if batch.invalid_nonfinite_count:
+        warnings.append(
+            f"{batch.invalid_nonfinite_count} {descriptor} point(s) had nonfinite input "
+            "fields and are reported as null."
+        )
+    if batch.invalid_pauli_count:
+        warnings.append(
+            f"{batch.invalid_pauli_count} ELF point(s) had materially negative Pauli "
+            "excess and are reported as null rather than squared into a value."
+        )
+    if batch.clamped_pauli_count:
+        warnings.append(
+            f"{batch.clamped_pauli_count} ELF point(s) had tiny negative Pauli excess "
+            "within the documented numerical tolerance and were clamped to zero."
+        )
+    if batch.invalid_ked_count:
+        warnings.append(
+            f"{batch.invalid_ked_count} LOL point(s) had materially negative positive-"
+            "definite KED and are reported as null."
+        )
+    if batch.clamped_ked_count:
+        warnings.append(
+            f"{batch.clamped_ked_count} LOL point(s) had tiny negative KED within the "
+            "documented numerical tolerance and were clamped to zero."
+        )
+    return tuple(warnings)
+
+
+def _common_result_data(
+    batch: LocalizationFieldBatch,
+    *,
+    points_bohr: np.ndarray,
+    channel: LocalizationChannel,
+    chunk_size: int | None,
+    density_floor: float,
+    descriptor: str,
+) -> dict[str, object]:
+    return {
+        "points_bohr": np.asarray(points_bohr, dtype=float).tolist(),
+        "channel": channel,
+        "values": _nullable(batch.values),
+        "valid_mask": batch.valid_mask.astype(bool).tolist(),
+        "rho": _nullable(batch.rho),
+        "tau": _nullable(batch.tau),
+        "reference_ked": _nullable(batch.reference),
+        "density_floor": float(density_floor),
+        "chunk_size": chunk_size,
+        "diagnostics": {
+            "invalid_density_count": batch.invalid_density_count,
+            "invalid_nonfinite_count": batch.invalid_nonfinite_count,
+            "invalid_pauli_count": batch.invalid_pauli_count,
+            "clamped_pauli_count": batch.clamped_pauli_count,
+            "invalid_ked_count": batch.invalid_ked_count,
+            "clamped_ked_count": batch.clamped_ked_count,
+        },
+        "conventions": {
+            "coordinates": "Cartesian bohr",
+            "kinetic_energy_density": "positive_definite_half_gradient_square",
+            "spin_reference": _spin_reference(channel),
+            "descriptor": descriptor,
+            "homogeneous_electron_gas_reference": 0.5,
+            "invalid_values": "null",
+        },
+    }
+
+
+def elf(
+    data: CalculationData,
+    *,
+    points_bohr: np.ndarray,
+    channel: LocalizationChannel = "total",
+    chunk_size: int | None = None,
+    density_floor: float = DEFAULT_LOCALIZATION_DENSITY_FLOOR,
+) -> ResultRecord:
+    """Return an Experimental ELF result envelope for explicit Bohr points."""
+
+    selected = _validate_channel(data, channel)
+    batch = evaluate_elf(
+        data,
+        points_bohr,
+        channel=selected,
+        chunk_size=chunk_size,
+        density_floor=density_floor,
+    )
+    result_data = _common_result_data(
+        batch,
+        points_bohr=points_bohr,
+        channel=selected,
+        chunk_size=chunk_size,
+        density_floor=density_floor,
+        descriptor="Becke-Edgecombe ELF",
+    )
+    result_data["von_weizsaecker"] = _nullable(batch.von_weizsaecker)
+    result_data["pauli_excess"] = _nullable(batch.pauli_excess)
+    warnings = _localization_warnings(batch, descriptor="ELF")
+    return ResultRecord(
+        kind="electron_localization_function",
+        data=result_data,
+        units={
+            "points_bohr": "bohr",
+            "values": "dimensionless",
+            "rho": "electron/bohr^3",
+            "tau": "hartree/bohr^3",
+            "reference_ked": "hartree/bohr^3",
+            "von_weizsaecker": "hartree/bohr^3",
+            "pauli_excess": "hartree/bohr^3",
+        },
+        validation_status="Experimental",
+        status="success" if bool(np.all(batch.valid_mask)) else "partial",
+        warnings=warnings,
+    )
+
+
+def lol(
+    data: CalculationData,
+    *,
+    points_bohr: np.ndarray,
+    channel: LocalizationChannel = "total",
+    chunk_size: int | None = None,
+    density_floor: float = DEFAULT_LOCALIZATION_DENSITY_FLOOR,
+) -> ResultRecord:
+    """Return an Experimental LOL result envelope for explicit Bohr points."""
+
+    selected = _validate_channel(data, channel)
+    batch = evaluate_lol(
+        data,
+        points_bohr,
+        channel=selected,
+        chunk_size=chunk_size,
+        density_floor=density_floor,
+    )
+    result_data = _common_result_data(
+        batch,
+        points_bohr=points_bohr,
+        channel=selected,
+        chunk_size=chunk_size,
+        density_floor=density_floor,
+        descriptor="Schmider-Becke LOL",
+    )
+    warnings = _localization_warnings(batch, descriptor="LOL")
+    return ResultRecord(
+        kind="localized_orbital_locator",
+        data=result_data,
+        units={
+            "points_bohr": "bohr",
+            "values": "dimensionless",
+            "rho": "electron/bohr^3",
+            "tau": "hartree/bohr^3",
+            "reference_ked": "hartree/bohr^3",
+        },
+        validation_status="Experimental",
+        status="success" if bool(np.all(batch.valid_mask)) else "partial",
+        warnings=warnings,
     )
