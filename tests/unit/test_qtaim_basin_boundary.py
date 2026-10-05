@@ -34,7 +34,7 @@ def _settings() -> QTAIMBasinSettings:
 
 
 def test_symmetry_plane_crossing_bisection_converges_to_known_boundary() -> None:
-    from openwfn.analysis.qtaim_basins import qtaim_zero_flux_diagnostics
+    from openwfn.analysis.qtaim_boundary import qtaim_zero_flux_diagnostics
 
     result = qtaim_zero_flux_diagnostics(
         _two_gaussian_field,
@@ -48,7 +48,7 @@ def test_symmetry_plane_crossing_bisection_converges_to_known_boundary() -> None
 
 
 def test_exact_synthetic_boundary_has_zero_normal_gradient_component() -> None:
-    from openwfn.analysis.qtaim_basins import qtaim_zero_flux_diagnostics
+    from openwfn.analysis.qtaim_boundary import qtaim_zero_flux_diagnostics
 
     result = qtaim_zero_flux_diagnostics(
         _two_gaussian_field,
@@ -65,7 +65,7 @@ def test_exact_synthetic_boundary_has_zero_normal_gradient_component() -> None:
 
 
 def test_plane_fit_uses_neighboring_crossings_and_returns_finite_normal() -> None:
-    from openwfn.analysis.qtaim_basins import _fit_boundary_normal
+    from openwfn.analysis.qtaim_boundary import _fit_boundary_normal
 
     points = np.asarray(
         ((0.0, -0.5, -0.5), (0.0, -0.5, 0.5), (0.0, 0.5, -0.5), (0.0, 0.5, 0.5))
@@ -78,14 +78,14 @@ def test_plane_fit_uses_neighboring_crossings_and_returns_finite_normal() -> Non
 
 
 def test_collinear_or_sparse_boundary_neighbors_are_unresolved_not_arbitrary() -> None:
-    from openwfn.analysis.qtaim_basins import _fit_boundary_normal
+    from openwfn.analysis.qtaim_boundary import _fit_boundary_normal
 
     sparse = np.asarray(((0.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 2.0, 0.0)))
     assert _fit_boundary_normal(sparse, condition_ratio=1.0e-3) is None
 
 
 def test_boundary_grid_oversize_rejected_before_allocation(monkeypatch: pytest.MonkeyPatch) -> None:
-    from openwfn.analysis.qtaim_basins import qtaim_zero_flux_diagnostics
+    from openwfn.analysis.qtaim_boundary import qtaim_zero_flux_diagnostics
 
     monkeypatch.setattr(limits, "MAX_GRID_POINTS", 10)
     called = False
@@ -106,15 +106,10 @@ def test_boundary_grid_oversize_rejected_before_allocation(monkeypatch: pytest.M
 
 
 def test_requested_zero_flux_p95_above_015_is_partial(monkeypatch: pytest.MonkeyPatch) -> None:
-    import openwfn.analysis.qtaim_basins as basins
+    import openwfn.analysis.qtaim_boundary as boundary
 
-    monkeypatch.setattr(
-        basins,
-        "_boundary_residual",
-        lambda *args, **kwargs: 0.25,
-        raising=False,
-    )
-    result = basins.qtaim_zero_flux_diagnostics(
+    monkeypatch.setattr(boundary, "_boundary_residual", lambda *args, **kwargs: 0.25)
+    result = boundary.qtaim_zero_flux_diagnostics(
         _two_gaussian_field,
         np.asarray(((-1.0, 0.0, 0.0), (1.0, 0.0, 0.0))),
         bounds=(np.asarray((-1.5, -1.0, -1.0)), np.asarray((1.5, 1.0, 1.0))),
