@@ -6,7 +6,12 @@ import pytest
 from openwfn.analysis.basis import overlap_matrix
 from openwfn.analysis.registry import available_analyses, run_analysis
 from openwfn.errors import DataUnavailableError
-from openwfn.excited_states import AmplitudeBlock, ExcitedState, ExcitedStateCollection, ExcitedStateJob
+from openwfn.excited_states import (
+    AmplitudeBlock,
+    ExcitedState,
+    ExcitedStateCollection,
+    ExcitedStateJob,
+)
 from openwfn.model import (
     Atom,
     BasisSet,
