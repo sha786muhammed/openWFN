@@ -4,6 +4,8 @@ MAX_GRID_POINTS = 2_000_000
 MAX_ATOM_QUADRATURE_POINTS = 20_000_000
 # Arbitrary point analyses may be as large as an existing volumetric grid.
 MAX_POINT_ANALYSIS_POINTS = MAX_GRID_POINTS
+# QTAIM basin trajectories use the same arbitrary-point ceiling.
+MAX_QTAIM_BASIN_ACTIVE_POINTS = MAX_POINT_ANALYSIS_POINTS
 # Keep dense NTO decomposition bounded to the existing per-state amplitude ceiling.
 MAX_NTO_MATRIX_ELEMENTS = 1_000_000
 DEFAULT_AO_WORKING_BYTES = 128 * 1024**2
