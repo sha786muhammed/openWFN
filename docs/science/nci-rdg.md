@@ -82,7 +82,7 @@ The result kind is `nci_rdg`. It reports:
 - dimensionless RDG;
 - ordered Hessian eigenvalues and `lambda2` in `electron/bohr^5`;
 - `sign(lambda2)*rho` in `electron/bohr^3`;
-- separate RDG and complete-field validity information;
+- separate RDG, Hessian, and complete-field validity masks;
 - lambda2-sign ambiguity information;
 - Hessian antisymmetry residuals;
 - density source, thresholds, formulas, conventions, and diagnostics.
