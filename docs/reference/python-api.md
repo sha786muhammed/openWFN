@@ -197,6 +197,7 @@ The default density-grid spacing is **0.15 bohr** with 6.0 bohr padding. These d
 | `mayer` | Experimental spin-corrected Mayer bond orders |
 | `mulliken` | Mulliken populations and charges |
 | `normal-mode` | Experimental source normal-mode metadata and displacement vectors |
+| `nto` | Experimental Natural Transition Orbitals from complete explicitly supported occupied-to-virtual transition matrices |
 | `orbital-composition` | Experimental default HOMO/alpha/Lowdin AO projections |
 | `pdos` | Experimental atom-resolved Lowdin PDOS by default |
 | `raman-spectrum` | Experimental source Raman activities plus Gaussian-broadened activity curve |
