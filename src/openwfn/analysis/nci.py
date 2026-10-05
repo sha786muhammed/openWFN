@@ -75,6 +75,7 @@ class NCIFieldBatch:
     lambda2: np.ndarray
     signed_density: np.ndarray
     rdg_valid_mask: np.ndarray
+    hessian_valid_mask: np.ndarray
     field_valid_mask: np.ndarray
     lambda2_sign_ambiguous_mask: np.ndarray
     hessian_antisymmetry_residual: np.ndarray
@@ -111,9 +112,9 @@ def compute_nci_components(
     """Compute total-density RDG and Hessian-sign NCI fields.
 
     RDG depends only on ``rho`` and ``gradient``. Hessian quality therefore
-    cannot erase an otherwise valid RDG value. ``field_valid_mask`` represents
-    points where the complete NCI field set (RDG plus Hessian-derived fields) is
-    valid.
+    cannot erase an otherwise valid RDG value. ``hessian_valid_mask`` describes
+    the Hessian numerical contract independently, while ``field_valid_mask``
+    represents points where the complete NCI field set is valid.
     """
 
     density, density_gradient, density_hessian = _validate_arrays(
@@ -200,6 +201,7 @@ def compute_nci_components(
         lambda2=lambda2,
         signed_density=signed_density,
         rdg_valid_mask=rdg_valid,
+        hessian_valid_mask=hessian_quality_valid,
         field_valid_mask=complete_finite,
         lambda2_sign_ambiguous_mask=ambiguity_mask,
         hessian_antisymmetry_residual=antisymmetry_residual,
@@ -326,6 +328,7 @@ def nci(
             "lambda2": _nullable_1d(batch.lambda2),
             "signed_density": _nullable_1d(batch.signed_density),
             "rdg_valid_mask": batch.rdg_valid_mask.astype(bool).tolist(),
+            "hessian_valid_mask": batch.hessian_valid_mask.astype(bool).tolist(),
             "field_valid_mask": batch.field_valid_mask.astype(bool).tolist(),
             "lambda2_sign_ambiguous_mask": (
                 batch.lambda2_sign_ambiguous_mask.astype(bool).tolist()
