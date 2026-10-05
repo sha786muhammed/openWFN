@@ -136,6 +136,27 @@ Vibrational evidence is documented in `validation/vibrational-spectroscopy/READM
 
 For excited states, representation support is broader than validation support. A method family being representable does not mean every implementation/version or method-specific amplitude transformation has independent reference evidence. Transition-density/NTO work therefore remains gated behind explicit convention support and separate validation.
 
+## Experimental real-space topology
+
+Analytic density derivatives are implemented and provide the field values used
+by the first-party QTAIM topology analysis. QTAIM remains **Experimental**.
+Critical-point discovery uses a deterministic, bounded seed set and bounded
+Newton/trust-region search; optional bond paths use bounded density-gradient
+ascent. Every QTAIM result reports that the search is not exhaustive.
+
+The finite-system relation `N_NCP - N_BCP + N_RCP - N_CCP = 1` is retained as
+a diagnostic. Failure is strong evidence of an incomplete or unresolved
+critical-point set, while satisfying the relation is necessary but not proof
+of completeness. Near-degenerate Hessians remain unclassified instead of being
+forced into a QTAIM type.
+
+Software regression tests cover critical-point classification, bounded search,
+duplicate merging, topology diagnostics, resource limits and synthetic bond
+paths. Independent molecular comparisons against established QTAIM reference
+results are still required before any validation-status promotion. Basin
+surfaces/integration, QTAIM atomic charges or energies, and delocalization
+indices are not part of this implementation.
+
 ## Coverage still needed
 
 For native Hirshfeld, future validation is required before supporting elements
@@ -144,8 +165,9 @@ transition metals or correlated/post-SCF density definitions. Other analysis
 families still need their own evidence for broader high-angular-momentum,
 program/version and chemical-space coverage.
 
-Typed spectroscopy, NTOs, analytic density derivatives, QTAIM, ELF/LOL, NCI
-and basin integration remain separate future scientific gates.
+Typed spectroscopy, NTOs, analytic density derivatives and QTAIM are
+implemented but remain separate scientific validation gates. ELF/LOL, NCI and
+basin integration remain future implementation/validation work.
 
 ## Reproduce the software checks
 
