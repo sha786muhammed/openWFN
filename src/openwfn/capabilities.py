@@ -4,8 +4,9 @@ from dataclasses import dataclass
 from typing import Literal
 
 from .data import OpenWFNData
+from .errors import DataUnavailableError
 from .excited_states import ExcitedStateCollection
-from .vibrational import VibrationalRecord
+from .vibrational import VibrationalRecord, get_vibrational_record
 
 CapabilityState = Literal["available", "derived", "missing", "unsupported"]
 
@@ -74,9 +75,12 @@ def infer_capabilities(data: OpenWFNData) -> dict[str, Capability]:
     energy_present = data.metadata.energy_hartree is not None or (
         calculation is not None and calculation.molecule.metadata.energy_hartree is not None
     )
-    vibrational_record = (
-        calculation.records.get("vibrations") if calculation is not None else None
-    )
+    vibrational_record: VibrationalRecord | None = None
+    if calculation is not None:
+        try:
+            vibrational_record = get_vibrational_record(calculation)
+        except DataUnavailableError:
+            pass
     vibrations_present = isinstance(vibrational_record, VibrationalRecord)
     ir_present = vibrations_present and vibrational_record.ir_available
     raman_present = vibrations_present and vibrational_record.raman_available
