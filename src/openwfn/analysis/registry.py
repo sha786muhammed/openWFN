@@ -24,6 +24,7 @@ from .localization import elf, lol
 from .nci import nci
 from .nto import nto
 from .qtaim import qtaim
+from .qtaim_basins import qtaim_basins
 from .realspace import density_derivatives, kinetic_energy_density
 from .structure_summary import structure_summary
 from .vibrations import ir_spectrum, normal_mode, raman_spectrum, vibrations
@@ -214,6 +215,13 @@ _ANALYSES = {
         "1",
         "qtaim_topology",
         _qtaim_analysis,
+        (_ISOLATED, _BASIS, _TOTAL_DENSITY),
+    ),
+    "qtaim-basins": AnalysisDefinition(
+        "qtaim-basins",
+        "1",
+        "qtaim_basins",
+        qtaim_basins,
         (_ISOLATED, _BASIS, _TOTAL_DENSITY),
     ),
     "raman-spectrum": AnalysisDefinition(
