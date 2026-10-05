@@ -35,6 +35,7 @@ def test_nci_registry_payload_is_explicit_finite_and_reproducible() -> None:
     assert len(result.data["lambda2"]) == 2
     assert len(result.data["signed_density"]) == 2
     assert result.data["rdg_valid_mask"] == [True, True]
+    assert result.data["hessian_valid_mask"] == [True, True]
     assert result.data["field_valid_mask"] == [True, True]
     assert result.data["thresholds"] == {
         "density_floor": pytest.approx(1.0e-12),
@@ -76,6 +77,7 @@ def test_low_density_point_is_partial_null_and_strict_json_safe() -> None:
     assert result.status == "partial"
     assert result.data["rdg"] == [None]
     assert result.data["rdg_valid_mask"] == [False]
+    assert result.data["hessian_valid_mask"] == [True]
     assert result.data["field_valid_mask"] == [False]
     assert result.data["diagnostics"]["invalid_density_count"] == 1
     assert result.warnings
@@ -95,6 +97,7 @@ def test_lambda2_ambiguity_is_nonfatal_interpretive_warning(monkeypatch: pytest.
     result = nci_module.nci(data, points_bohr=np.zeros((1, 3)))
 
     assert result.status == "success"
+    assert result.data["hessian_valid_mask"] == [True]
     assert result.data["lambda2_sign_ambiguous_mask"] == [True]
     assert result.data["signed_density"] == [0.0]
     assert any("ambiguous" in warning.lower() for warning in result.warnings)
