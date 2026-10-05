@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from math import isqrt
+from pathlib import Path
 
 import numpy as np
 
@@ -15,9 +16,11 @@ from ..excited_states import (
     ExcitedStateJob,
     get_excited_state_collection,
 )
-from ..model import CalculationData, MolecularOrbitals
+from ..exporters.cube import write_cube
+from ..model import CalculationData, MolecularOrbitals, VolumetricGrid
 from ..results import ResultRecord
-from .basis import overlap_matrix
+from .basis import bounded_ao_chunk_size, evaluate_ao, overlap_matrix
+from .grids import iter_point_chunks, molecular_grid_points, scalar_grid
 from .limits import MAX_NTO_MATRIX_ELEMENTS
 from .orbitals import OCCUPATION_THRESHOLD
 
@@ -51,6 +54,23 @@ class NTOMappedResult:
     occupied_mo_indices: tuple[int, ...]
     virtual_mo_indices: tuple[int, ...]
     spin_block: str
+
+
+@dataclass(frozen=True, slots=True)
+class NTOFieldResult:
+    """One selected signed NTO component evaluated on a regular molecular grid."""
+
+    grid: VolumetricGrid
+    ao_coefficients: np.ndarray
+    component: str
+    job: int
+    state: int
+    source_state: str
+    pair: int
+    spin_block: str
+    amplitude_convention: str
+    weight: float
+    ao_metric_norm: float
 
 
 def _paired_deterministic_phase(hole_vectors: np.ndarray, vt: np.ndarray) -> None:
@@ -297,6 +317,181 @@ def _select_job(
     return collection.jobs[_one_based_index("job", job, len(collection.jobs))]
 
 
+def _select_nto_source(
+    data: CalculationData,
+    *,
+    state: int,
+    job: int | None,
+    spin: str | None,
+) -> tuple[ExcitedStateJob, ExcitedState, AmplitudeBlock, NTOMappedResult]:
+    collection = get_excited_state_collection(data)
+    selected_job = _select_job(collection, job)
+    state_offset = _one_based_index("state", state, len(selected_job.states))
+    selected_state = selected_job.states[state_offset]
+    block = select_nto_amplitude_block(selected_state, spin=spin)
+    return selected_job, selected_state, block, map_nto_to_ao(data, block)
+
+
+def nto_pair_field(
+    data: CalculationData,
+    *,
+    state: int,
+    pair: int,
+    component: str,
+    job: int | None = None,
+    spin: str | None = None,
+    spacing_bohr: float = 0.15,
+    padding_bohr: float = 6.0,
+    chunk_size: int = 65_536,
+) -> NTOFieldResult:
+    """Evaluate one signed hole/electron NTO amplitude on a bounded regular grid."""
+
+    if data.basis is None:
+        raise DataUnavailableError("A molecular basis is required for NTO field evaluation.")
+    normalized_component = component.strip().casefold() if isinstance(component, str) else ""
+    if normalized_component not in {"hole", "electron"}:
+        raise ValueError("component must be 'hole' or 'electron'")
+    if isinstance(chunk_size, bool) or not isinstance(chunk_size, int) or chunk_size <= 0:
+        raise ValueError("chunk_size must be a positive integer")
+
+    selected_job, selected_state, block, mapped = _select_nto_source(
+        data,
+        state=state,
+        job=job,
+        spin=spin,
+    )
+    pair_offset = _one_based_index("pair", pair, len(mapped.svd.weights))
+    if normalized_component == "hole":
+        coefficients = mapped.hole_coefficients[:, pair_offset]
+        metric_norm = float(mapped.hole_norms[pair_offset])
+    else:
+        coefficients = mapped.electron_coefficients[:, pair_offset]
+        metric_norm = float(mapped.electron_norms[pair_offset])
+
+    points, origin, shape = molecular_grid_points(
+        data.molecule,
+        spacing_bohr=spacing_bohr,
+        padding_bohr=padding_bohr,
+    )
+    values = np.empty(len(points), dtype=float)
+    bounded_chunk = bounded_ao_chunk_size(data.basis, chunk_size)
+    offset = 0
+    for point_chunk in iter_point_chunks(points, bounded_chunk):
+        stop = offset + len(point_chunk)
+        ao_values = evaluate_ao(data.basis, data.molecule, point_chunk)
+        values[offset:stop] = ao_values @ coefficients
+        offset = stop
+
+    grid = scalar_grid(
+        data.molecule,
+        values,
+        origin,
+        shape,
+        spacing_bohr,
+        "bohr^-3/2",
+    )
+    return NTOFieldResult(
+        grid=grid,
+        ao_coefficients=np.asarray(coefficients, dtype=float).copy(),
+        component=normalized_component,
+        job=selected_job.index,
+        state=selected_state.index,
+        source_state=selected_state.source_state,
+        pair=pair,
+        spin_block=mapped.spin_block,
+        amplitude_convention=block.convention,
+        weight=float(mapped.svd.weights[pair_offset]),
+        ao_metric_norm=metric_norm,
+    )
+
+
+def nto_cube_export(
+    data: CalculationData,
+    *,
+    state: int,
+    pair: int,
+    component: str,
+    output_path: str | Path,
+    job: int | None = None,
+    spin: str | None = None,
+    spacing_bohr: float = 0.15,
+    padding_bohr: float = 6.0,
+    chunk_size: int = 65_536,
+    overwrite: bool = False,
+) -> ResultRecord:
+    """Export one signed NTO amplitude as a Gaussian cube with explicit provenance."""
+
+    output = Path(output_path)
+    if output.exists() and not overwrite:
+        raise FileExistsError(f"Output exists: {output}. Pass overwrite=True to replace it.")
+    field = nto_pair_field(
+        data,
+        state=state,
+        pair=pair,
+        component=component,
+        job=job,
+        spin=spin,
+        spacing_bohr=spacing_bohr,
+        padding_bohr=padding_bohr,
+        chunk_size=chunk_size,
+    )
+    integral = float(np.sum(np.square(field.grid.values)) * spacing_bohr**3)
+    grid_norm_error = abs(integral - field.ao_metric_norm)
+    warnings: list[str] = []
+    if abs(field.ao_metric_norm - 1.0) > 1e-6:
+        warnings.append(
+            "NTO AO-metric norm differs from one by more than 1e-6; coefficients were not renormalized."
+        )
+    if grid_norm_error > 0.005 * max(abs(field.ao_metric_norm), 1e-12):
+        warnings.append(
+            "Squared-amplitude grid integral failed 0.5% tolerance against AO-metric norm; refine spacing/padding."
+        )
+
+    provenance = data.molecule.provenance
+    metadata = (
+        "units: bohr^-3/2; "
+        f"component={field.component}; job={field.job}; state={field.state}; pair={field.pair}; "
+        f"spin={field.spin_block}; convention={field.amplitude_convention}; "
+        f"spacing_bohr={spacing_bohr}; padding_bohr={padding_bohr}; "
+        f"sha256={provenance.sha256 if provenance else 'unavailable'}"
+    )
+    output.parent.mkdir(parents=True, exist_ok=True)
+    write_cube(field.grid, data.molecule, output, overwrite=overwrite, comment=metadata)
+    return ResultRecord(
+        kind="nto_cube",
+        data={
+            "job": field.job,
+            "state": field.state,
+            "source_state": field.source_state,
+            "pair": field.pair,
+            "component": field.component,
+            "spin_block": field.spin_block,
+            "amplitude_convention": field.amplitude_convention,
+            "weight": field.weight,
+            "ao_metric_norm": field.ao_metric_norm,
+            "squared_amplitude_integral": integral,
+            "grid_norm_error": grid_norm_error,
+            "output": str(output),
+            "grid_points": len(field.grid.values),
+            "grid_shape": list(field.grid.shape),
+            "spacing": spacing_bohr,
+            "padding": padding_bohr,
+        },
+        units={
+            "amplitude": "bohr^-3/2",
+            "weight": "dimensionless",
+            "ao_metric_norm": "dimensionless",
+            "squared_amplitude_integral": "dimensionless",
+            "grid_norm_error": "dimensionless",
+            "spacing": "bohr",
+            "padding": "bohr",
+        },
+        validation_status="Experimental",
+        status="partial" if warnings else "success",
+        warnings=tuple(warnings),
+    )
+
+
 def _validate_analysis_parameters(max_pairs: int, min_weight: float) -> float:
     if (
         isinstance(max_pairs, bool)
@@ -329,12 +524,12 @@ def nto(
     """Return conservative NTO pairs for one explicitly selected excited state."""
 
     normalized_weight = _validate_analysis_parameters(max_pairs, min_weight)
-    collection = get_excited_state_collection(data)
-    selected_job = _select_job(collection, job)
-    state_offset = _one_based_index("state", state, len(selected_job.states))
-    selected_state = selected_job.states[state_offset]
-    block = select_nto_amplitude_block(selected_state, spin=spin)
-    mapped = map_nto_to_ao(data, block)
+    selected_job, selected_state, block, mapped = _select_nto_source(
+        data,
+        state=state,
+        job=job,
+        spin=spin,
+    )
 
     kept_by_weight = [
         pair
@@ -410,11 +605,14 @@ def nto(
 __all__ = [
     "MAX_NTO_MATRIX_ELEMENTS",
     "MAX_NTO_RETURNED_PAIRS",
+    "NTOFieldResult",
     "NTOMappedResult",
     "NTOSVDResult",
     "compute_nto_svd",
     "map_nto_to_ao",
     "nto",
+    "nto_cube_export",
+    "nto_pair_field",
     "select_nto_amplitude_block",
     "transition_matrix_from_block",
 ]
