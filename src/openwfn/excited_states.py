@@ -55,6 +55,8 @@ class AmplitudeBlock:
     spin_block: str | None = None
     side: Literal["left", "right"] | None = None
     dimensions: tuple[int, ...] = ()
+    row_domain: str | None = None
+    column_domain: str | None = None
 
     def __post_init__(self) -> None:
         _require_nonblank("amplitude convention", self.convention)
@@ -74,21 +76,45 @@ class AmplitudeBlock:
             _require_nonblank("spin_block", self.spin_block)
         if any(size < 1 for size in self.dimensions):
             raise ValueError("amplitude dimensions must be positive")
+        if self.row_domain is not None:
+            _require_nonblank("row_domain", self.row_domain)
+        if self.column_domain is not None:
+            _require_nonblank("column_domain", self.column_domain)
+        if (self.row_domain is None) != (self.column_domain is None):
+            raise ValueError("row_domain and column_domain must be supplied together")
 
     @property
     def nto_ready(self) -> bool:
-        """Return whether this convention is approved for NTO construction."""
+        """Return whether this block is a complete explicitly oriented NTO input."""
 
         from .parsers.excited.conventions import amplitude_semantics
 
         semantics = amplitude_semantics(self.convention)
         if not semantics.nto_ready:
             return False
-        if self.dimensions and len(self.dimensions) != 2:
+        if len(self.dimensions) != 2:
             return False
-        if self.dimensions:
-            expected = self.dimensions[0] * self.dimensions[1]
-            if len(self.values) != expected:
+        rows, columns = self.dimensions
+        expected = rows * columns
+        if len(self.values) != expected or expected == 0:
+            return False
+
+        row_domain = self.row_domain or semantics.row_domain
+        column_domain = self.column_domain or semantics.column_domain
+        if semantics.requires_domain_metadata and (
+            self.row_domain is None or self.column_domain is None
+        ):
+            return False
+        if row_domain != "occupied" or column_domain != "virtual":
+            return False
+
+        if self.indices:
+            if any(len(index_tuple) != 2 for index_tuple in self.indices):
+                return False
+            coordinates = tuple((index_tuple[0], index_tuple[1]) for index_tuple in self.indices)
+            if len(set(coordinates)) != expected:
+                return False
+            if any(row >= rows or column >= columns for row, column in coordinates):
                 return False
         return bool(self.values)
 

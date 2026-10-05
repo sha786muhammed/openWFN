@@ -68,8 +68,14 @@ def test_amplitude_semantics_do_not_promote_percentages_or_unknown_coefficients(
 def test_only_explicit_transition_objects_are_nto_ready() -> None:
     from openwfn.parsers.excited.conventions import amplitude_semantics
 
-    assert amplitude_semantics("transition-density-matrix").nto_ready
-    assert amplitude_semantics("cis-transition-amplitude-matrix").nto_ready
+    transition_density = amplitude_semantics("transition-density-matrix")
+    cis = amplitude_semantics("cis-transition-amplitude-matrix")
+
+    assert transition_density.nto_ready
+    assert transition_density.requires_domain_metadata
+    assert cis.nto_ready
+    assert cis.row_domain == "occupied"
+    assert cis.column_domain == "virtual"
     assert not amplitude_semantics("tddft-x-amplitudes").nto_ready
     assert not amplitude_semantics("adc-isr-amplitudes").nto_ready
 
@@ -77,14 +83,28 @@ def test_only_explicit_transition_objects_are_nto_ready() -> None:
 def test_amplitude_block_uses_shared_semantics_registry() -> None:
     from openwfn.excited_states import AmplitudeBlock
 
-    matrix = AmplitudeBlock(
+    implicit = AmplitudeBlock(
         convention="transition-density-matrix",
+        values=(0.8, 0.1, -0.2, 0.3),
+        dimensions=(2, 2),
+    )
+    explicit = AmplitudeBlock(
+        convention="transition-density-matrix",
+        values=(0.8, 0.1, -0.2, 0.3),
+        dimensions=(2, 2),
+        row_domain="occupied",
+        column_domain="virtual",
+    )
+    cis = AmplitudeBlock(
+        convention="cis-transition-amplitude-matrix",
         values=(0.8, 0.1, -0.2, 0.3),
         dimensions=(2, 2),
     )
     generic = AmplitudeBlock(convention="mystery coefficients", values=(0.5,))
 
-    assert matrix.nto_ready
+    assert not implicit.nto_ready
+    assert explicit.nto_ready
+    assert cis.nto_ready
     assert not generic.nto_ready
 
 

@@ -20,6 +20,7 @@ from ..services import (
 )
 from ..spectral_services import orbital_dos, orbital_pdos
 from .excited_states import excited_state, excited_states, transition_dipoles, uvvis_spectrum
+from .nto import nto
 from .realspace import density_derivatives, kinetic_energy_density
 from .structure_summary import structure_summary
 from .vibrations import ir_spectrum, normal_mode, raman_spectrum, vibrations
@@ -50,6 +51,9 @@ _IR_INTENSITIES = CapabilityRequirement("IR intensities", ("ir_intensities",))
 _RAMAN_ACTIVITIES = CapabilityRequirement("Raman activities", ("raman_activities",))
 _NORMAL_MODE_VECTORS = CapabilityRequirement("normal mode vectors", ("normal_mode_vectors",))
 _EXCITED_STATES = CapabilityRequirement("excited states", ("excited_states",))
+_NTO_READY = CapabilityRequirement(
+    "NTO-ready transition amplitudes", ("nto_ready_amplitudes",)
+)
 _OSCILLATOR_STRENGTHS = CapabilityRequirement(
     "optical oscillator strengths", ("optical_oscillator_strengths",)
 )
@@ -144,6 +148,13 @@ _ANALYSES = {
         "normal_mode",
         normal_mode,
         (_VIBRATIONS, _NORMAL_MODE_VECTORS),
+    ),
+    "nto": AnalysisDefinition(
+        "nto",
+        "1",
+        "natural_transition_orbitals",
+        nto,
+        (_ISOLATED, _BASIS, _ORBITALS, _AO_OVERLAP, _EXCITED_STATES, _NTO_READY),
     ),
     "raman-spectrum": AnalysisDefinition(
         "raman-spectrum",

@@ -29,6 +29,7 @@ def test_registry_runs_summary_with_versioned_input_provenance() -> None:
         "mayer",
         "mulliken",
         "normal-mode",
+        "nto",
         "orbital-composition",
         "pdos",
         "raman-spectrum",
