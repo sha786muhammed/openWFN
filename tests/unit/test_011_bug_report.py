@@ -5,6 +5,8 @@ import numpy as np
 import pytest
 
 from openwfn.analysis import grids
+from openwfn.capabilities import infer_capabilities
+from openwfn.data import wrap_calculation
 from openwfn.ingest import load_input
 from openwfn.model import Atom, CalculationMetadata, Molecule
 from openwfn.output_properties import _normalize_output
@@ -54,7 +56,6 @@ def test_fchk_vibrational_arrays_are_promoted_to_typed_record(tmp_path: Path) ->
         " 0.00000000E+00 0.00000000E+00  7.00000000E-01\n"
         "Charge I 0\n"
         "Multiplicity I 1\n"
-        "Number of Normal Modes I 1\n"
         "Vib-E2 R N= 14\n"
         " 1.00000000E+03 1.50000000E+00 2.50000000E+00 3.50000000E+00 4.50000000E+00\n"
         " 1.00000000E-01 2.00000000E-01 0.00000000E+00 0.00000000E+00 0.00000000E+00\n"
@@ -66,7 +67,8 @@ def test_fchk_vibrational_arrays_are_promoted_to_typed_record(tmp_path: Path) ->
         encoding="utf-8",
     )
 
-    record = get_vibrational_record(parse_fchk(source))
+    data = parse_fchk(source)
+    record = get_vibrational_record(data)
     mode = record.modes[0]
 
     assert mode.frequency_cm1 == pytest.approx(1000.0)
@@ -75,6 +77,11 @@ def test_fchk_vibrational_arrays_are_promoted_to_typed_record(tmp_path: Path) ->
     assert mode.ir_intensity_km_mol == pytest.approx(3.5)
     assert mode.raman_activity_a4_amu == pytest.approx(4.5)
     assert mode.displacements == ((0.1, 0.0, 0.0), (-0.1, 0.0, 0.0))
+
+    capabilities = infer_capabilities(wrap_calculation(data))
+    assert capabilities["vibrations"].state == "available"
+    assert capabilities["ir_intensities"].state == "available"
+    assert capabilities["normal_mode_vectors"].state == "available"
 
 
 def test_cclib_vibrations_can_be_normalized_for_registered_analyses() -> None:
