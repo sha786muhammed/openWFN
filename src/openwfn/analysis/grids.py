@@ -15,11 +15,18 @@ def molecular_grid_points(
     *,
     spacing_bohr: float,
     padding_bohr: float,
+    max_grid_points: int | None = None,
 ) -> tuple[np.ndarray, tuple[float, float, float], tuple[int, int, int]]:
     if not isfinite(spacing_bohr) or spacing_bohr <= 0.0:
         raise ValueError("grid spacing must be positive and finite")
     if not isfinite(padding_bohr) or padding_bohr <= 0.0:
         raise ValueError("grid padding must be positive and finite")
+    if max_grid_points is not None and (
+        isinstance(max_grid_points, bool)
+        or not isinstance(max_grid_points, int)
+        or max_grid_points <= 0
+    ):
+        raise ValueError("max_grid_points must be a positive integer when specified")
     coordinates = np.asarray([atom.coordinates for atom in molecule.atoms], dtype=float)
     coordinates /= BOHR_TO_ANGSTROM
     lower = np.floor((np.min(coordinates, axis=0) - padding_bohr) / spacing_bohr) * spacing_bohr
@@ -29,15 +36,15 @@ def molecular_grid_points(
         raise ValueError("grid dimensions exceed the finite resource limit")
     shape = tuple(int(extent) + 1 for extent in extents)
     count = prod(shape)
-    if count > MAX_GRID_POINTS:
+    limit = MAX_GRID_POINTS if max_grid_points is None else max_grid_points
+    if count > limit:
         raise ValueError(
-            f"Grid requests {count:,} points, exceeding the safety limit of "
-            f"{MAX_GRID_POINTS:,}. Increase spacing or reduce padding; "
-            "no grid was allocated."
+            f"Grid requests {count:,} points, exceeding the configured safety limit of "
+            f"{limit:,}. Increase spacing or reduce padding, or raise max_grid_points "
+            "only after confirming sufficient memory; no grid was allocated."
         )
     axes = [
-        lower[index]
-        + np.arange(shape[index]) * spacing_bohr
+        lower[index] + np.arange(shape[index]) * spacing_bohr
         for index in range(3)
     ]
     # Broadcast into the final array: no three full-size mesh temporaries.
