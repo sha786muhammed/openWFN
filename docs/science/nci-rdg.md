@@ -10,24 +10,24 @@ interaction labels, scientific cutoffs, or basin properties.
 
 For total electron density \(\rho(\mathbf r)\), the reduced density gradient is
 
-\[
+$$
 s(\mathbf r)=\frac{|\nabla\rho(\mathbf r)|}
 {2(3\pi^2)^{1/3}\rho(\mathbf r)^{4/3}}.
-\]
+$$
 
 The Cartesian density Hessian is symmetrized only after checking the maximum
 antisymmetric residual against the declared numerical tolerance. Its eigenvalues
 are ordered algebraically,
 
-\[
+$$
 \lambda_1 \le \lambda_2 \le \lambda_3.
-\]
+$$
 
 The signed-density field is
 
-\[
+$$
 \operatorname{sign}(\lambda_2)\rho.
-\]
+$$
 
 An exactly zero \(\lambda_2\) therefore gives a signed density of zero. Near-zero
 \(\lambda_2\) values are retained but flagged as sign-ambiguous rather than
