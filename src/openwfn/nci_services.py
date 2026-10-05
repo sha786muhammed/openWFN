@@ -26,18 +26,21 @@ _NCI_FIELD_UNITS = {
     "rdg": "dimensionless",
 }
 _NCI_CONVENTION_VERSION = "nci-rdg-v1"
+_DEFAULT_CHUNK_SIZE = 65536
 
 
 def _validate_export_inputs(
     field: str,
     *,
     rdg_cap: float | None,
-    chunk_size: int,
+    chunk_size: int | None,
 ) -> None:
     if field not in _NCI_FIELDS:
         raise ValueError("NCI field must be rho, lambda2, signed_density, or rdg")
-    if isinstance(chunk_size, bool) or not isinstance(chunk_size, int) or chunk_size <= 0:
-        raise ValueError("chunk_size must be a positive integer")
+    if chunk_size is not None and (
+        isinstance(chunk_size, bool) or not isinstance(chunk_size, int) or chunk_size <= 0
+    ):
+        raise ValueError("chunk_size must be a positive integer or None")
     if field == "rdg":
         if rdg_cap is None or not isfinite(rdg_cap) or rdg_cap <= 0.0:
             raise ValueError("rdg_cap must be a positive finite value for RDG grids")
@@ -125,7 +128,7 @@ def nci_scalar_grid(
     *,
     settings: NCISettings | None = None,
     rdg_cap: float | None = None,
-    chunk_size: int = 65536,
+    chunk_size: int | None = None,
 ) -> tuple[VolumetricGrid, dict[str, object]]:
     """Evaluate one bounded NCI scalar field on the regular molecular grid.
 
@@ -147,7 +150,8 @@ def nci_scalar_grid(
         spacing_bohr=spacing_bohr,
         padding_bohr=padding_bohr,
     )
-    bounded_chunk = bounded_ao_chunk_size(data.basis, chunk_size)
+    requested_chunk = _DEFAULT_CHUNK_SIZE if chunk_size is None else chunk_size
+    bounded_chunk = bounded_ao_chunk_size(data.basis, requested_chunk)
     values = np.empty(len(points), dtype=float)
     clipped_finite_count = 0
     density_tail_substitution_count = 0
@@ -206,7 +210,7 @@ def nci_cube_export(
     *,
     settings: NCISettings | None = None,
     rdg_cap: float | None = None,
-    chunk_size: int = 65536,
+    chunk_size: int | None = None,
 ) -> ResultRecord:
     """Write a finite, bounded NCI scalar field as an atomic Gaussian cube."""
 
