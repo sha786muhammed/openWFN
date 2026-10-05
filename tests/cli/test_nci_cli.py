@@ -114,7 +114,9 @@ def test_cli_nci_cube_honors_global_overwrite(tmp_path: Path) -> None:
 
     second = run_cli(*common)
     assert second.returncode != 0
-    assert "already exists" in (second.stderr + second.stdout)
+    diagnostic = second.stderr + second.stdout
+    assert "Output exists:" in diagnostic
+    assert "--overwrite" in diagnostic
 
     third = run_cli("--overwrite", *common)
     assert third.returncode == 0, third.stderr
