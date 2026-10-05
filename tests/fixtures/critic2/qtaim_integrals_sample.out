@@ -1,0 +1,19 @@
+* Integration of basin properties by bisection
+  Basins of the scalar field: 1
+  Attractor signature: -3
+
+* List of attractors integrated
+# Id   cp   ncp   Name  Z   mult           Position (bohr)
+  1    1    1       O   8  1     0.0000000    0.0000000    0.0000000
+  2    2    2       H   1  1     1.4300000    1.1000000    0.0000000
+  3    3    3       H   1  1    -1.4300000    1.1000000    0.0000000
+
+* Integrated atomic properties
+# (See key above for interpretation of column headings.)
+# Integrable properties 1 to 3
+# Id   cp   ncp   Name  Z   mult     Volume            Pop             Lap
+  1    1    1       O   8  1    1.20000000E+01  8.40000000E+00  1.00000000E-04
+  2    2    2       H   1  1    8.00000000E+00  8.00000000E-01 -5.00000000E-05
+  3    3    3       H   1  1    8.00000000E+00  8.00000000E-01 -5.00000000E-05
+--------------------------------------------------------------------------------
+  Sum                            2.80000000E+01  1.00000000E+01  0.00000000E+00
