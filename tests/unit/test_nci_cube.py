@@ -29,6 +29,18 @@ def test_nci_scalar_grids_are_finite_for_non_rdg_fields() -> None:
         assert diagnostics["density_tail_substitution_count"] == 0
 
 
+def test_nci_grid_accepts_none_chunk_size_as_bounded_default() -> None:
+    from openwfn.nci_services import nci_scalar_grid
+
+    data = _water_data()
+    grid, diagnostics = nci_scalar_grid(
+        data, "rdg", 1.0, 2.0, rdg_cap=1.5, chunk_size=None
+    )
+    assert np.all(np.isfinite(grid.values))
+    assert isinstance(diagnostics["chunk_size"], int)
+    assert diagnostics["chunk_size"] > 0
+
+
 def test_rdg_grid_requires_explicit_positive_finite_cap() -> None:
     from openwfn.nci_services import nci_scalar_grid
 
