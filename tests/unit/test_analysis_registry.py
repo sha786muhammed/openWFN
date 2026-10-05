@@ -30,6 +30,7 @@ def test_registry_runs_summary_with_versioned_input_provenance() -> None:
         "lowdin",
         "mayer",
         "mulliken",
+        "nci",
         "normal-mode",
         "nto",
         "orbital-composition",
