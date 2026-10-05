@@ -93,7 +93,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: python -m pip install -e ".[test,interop,outputs]" pyscf==2.12.1
-      - run: python -m pytest tests/validation/test_everyday_pyscf.py tests/validation/test_experimental_esp.py tests/validation/test_real_example_corpus.py tests/validation/test_coulomb_high_l.py -q
+      - run: python -m pytest tests/validation/test_everyday_pyscf.py tests/validation/test_nto_pyscf_reference.py tests/validation/test_experimental_esp.py tests/validation/test_real_example_corpus.py tests/validation/test_coulomb_high_l.py -q
   resource-safety:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
