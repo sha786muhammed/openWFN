@@ -118,6 +118,7 @@ fields before electronic analyses.
 | `orbitals(spin)` | Frontier orbitals for `"alpha"`, `"beta"`, or spin-complete `"all"` |
 | `population(method)` | Populations for `"mulliken"` or `"lowdin"` |
 | `density(kind, spacing_bohr=0.15, padding_bohr=6.0)` | Grid integration for `"total"`, `"alpha"`, `"beta"`, or `"spin"` |
+| `nci_cube(output, field="signed_density", ...)` | Experimental total-density NCI cube for `rho`, `lambda2`, `signed_density`, or bounded `rdg` |
 
 All these methods return `ResultRecord`. Specialized methods are convenience
 interfaces; use `analyze(name)` when analysis identity, registry version, and
@@ -191,6 +192,21 @@ elf = calculation.analyze("elf", points_bohr=points, channel="total")
 lol = calculation.analyze("lol", points_bohr=points, channel="total")
 ```
 
+### NCI and reduced density gradient
+
+`calculation.analyze("nci", points_bohr=...)` evaluates Experimental total-density RDG and Hessian-sign NCI fields at explicit Cartesian points in bohr. RDG is `|grad(rho)|/[2(3*pi^2)^(1/3)rho^(4/3)]`; Hessian eigenvalues are ordered ascending algebraically and signed density is exactly `sign(lambda2)*rho`.
+
+RDG validity is intentionally independent from Hessian validity. A point with a valid density/gradient but a materially nonsymmetric Hessian retains its RDG while Hessian-derived fields are null. The density floor is a numerical safeguard, not an interaction threshold. Near-zero lambda2 signs are retained with an ambiguity mask instead of being forced into an interaction interpretation.
+
+```python
+points = [[0.0, 0.0, 1.0], [0.0, 0.0, 2.0]]
+nci = calculation.analyze("nci", points_bohr=points)
+calc.nci_cube("signed.cube", field="signed_density")
+calc.nci_cube("rdg.cube", field="rdg", rdg_cap=2.0)
+```
+
+RDG cube export requires an explicit positive finite `rdg_cap`; only the declared low-density tail may be substituted by that cap, while other invalid/nonfinite fields abort export. See [NCI and reduced density gradient](../science/nci-rdg.md).
+
 ## Registered named analyses
 
 | Name | Result |
@@ -210,6 +226,7 @@ lol = calculation.analyze("lol", points_bohr=points, channel="total")
 | `lowdin` | Löwdin populations and charges |
 | `mayer` | Experimental spin-corrected Mayer bond orders |
 | `mulliken` | Mulliken populations and charges |
+| `nci` | Experimental total-density RDG, ordered density-Hessian eigenvalues, lambda2, and sign(lambda2)*rho at explicit bohr points |
 | `normal-mode` | Experimental source normal-mode metadata and displacement vectors |
 | `nto` | Experimental Natural Transition Orbitals from complete explicitly supported occupied-to-virtual transition matrices |
 | `orbital-composition` | Experimental default HOMO/alpha/Lowdin AO projections |

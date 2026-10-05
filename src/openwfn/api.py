@@ -212,6 +212,44 @@ class OpenWFNCalculation:
         except DataUnavailableError as exc:
             return self._unavailable("orbital_cube", "orbital_cube", str(exc))
 
+    def nci_cube(
+        self,
+        output: str | Path,
+        *,
+        field: Literal["rho", "lambda2", "signed_density", "rdg"] = "signed_density",
+        spacing_bohr: float = 0.15,
+        padding_bohr: float = 6.0,
+        density_floor: float = 1.0e-12,
+        rdg_cap: float | None = None,
+        chunk_size: int | None = None,
+        overwrite: bool = False,
+    ) -> ResultRecord:
+        """Export one Experimental total-density NCI field as a Gaussian cube."""
+        from .analysis.nci import NCISettings
+        from .nci_services import nci_cube_export
+
+        if self.data.calculation is None:
+            return self._unavailable(
+                "nci_cube", "nci_cube", "NCI cube export requires a molecular wavefunction."
+            )
+        settings = NCISettings(density_floor=density_floor)
+        try:
+            return self._with_provenance(
+                nci_cube_export(
+                    self.data.calculation,
+                    field,
+                    spacing_bohr,
+                    padding_bohr,
+                    Path(output),
+                    overwrite,
+                    settings=settings,
+                    rdg_cap=rdg_cap,
+                    chunk_size=chunk_size,
+                )
+            )
+        except DataUnavailableError as exc:
+            return self._unavailable("nci_cube", "nci_cube", str(exc))
+
     def hirshfeld(
         self,
         *,

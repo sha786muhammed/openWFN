@@ -56,6 +56,7 @@ These are the public top-level choices shown by `openwfn --help`.
 | `vibrations` | Inspect source-reported vibrational modes or one normal mode |
 | `spectra` | Generate IR, Raman-activity, or UV–Vis stick/broadened spectra |
 | `density` | Integrate or export electron and spin density |
+| `nci` | Export Experimental total-density NCI/RDG scalar fields |
 | `esp` | Evaluate supported electrostatic-potential components |
 | `report` | Build a reproducible research report |
 | `workbench` | Build the offline molecular workbench |
@@ -95,6 +96,7 @@ CLI atom indices are one-based. Summary bonds and fragments use a geometry heuri
 | `population` | `population mulliken` or `population lowdin` | Requires AO density and overlap data; conservation failures return `partial` with warnings |
 | `density` | `density integrate [--kind total\|alpha\|beta\|spin]` | Grid integration with explicit conservation diagnostics |
 | `density` | `density cube OUTPUT [grid options]` | Generated grid keeps its actual success/partial and validation state |
+| `nci` | `nci cube OUTPUT --field rho\|lambda2\|signed-density\|rdg [options]` | Experimental total-density NCI field export; RDG requires explicit `--rdg-cap` |
 | `esp` | `esp point X Y Z [--component COMPONENT] [--method integrals\|grid]` | Integral electronic/total ESP and explicitly selected grid route retain separate validation boundaries |
 | `validate` | `openwfn FILE validate` | Runs the default total-density conservation check |
 
@@ -109,6 +111,19 @@ The accepted selector is `--spin alpha|beta|all`. The alpha-only default remains
 Post-HF calculations do not silently imply a correlated density. When the parsed matrix is the SCF density, population and density results identify the **SCF density** source and warn accordingly. A scientifically usable but incomplete result is retained as `partial`; it is not promoted to a clean success.
 
 The default density spacing is **0.15 bohr** with 6.0 bohr padding. These are starting values, not universal convergence settings.
+
+## NCI and RDG cube export
+
+NCI cube export is **Experimental** and uses total electron density only. Four fields are available:
+
+```bash
+openwfn FILE nci cube rho.cube --field rho
+openwfn FILE nci cube lambda2.cube --field lambda2
+openwfn FILE nci cube signed.cube --field signed-density
+openwfn FILE nci cube rdg.cube --field rdg --rdg-cap 2.0
+```
+
+`--spacing` and `--padding` define the regular molecular grid, `--density-floor` is the explicit numerical low-density safeguard, and `--chunk-size` controls bounded evaluation. Global `--overwrite` permits intentional replacement of an existing cube. `--rdg-cap` is mandatory for RDG and is an export/presentation cap rather than an interaction threshold; supplying it for another field is rejected. See [NCI and reduced density gradient](../science/nci-rdg.md) for formulas, validity masks, validation evidence, and limitations.
 
 ## Excited states and UV–Vis
 

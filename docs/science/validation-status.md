@@ -185,6 +185,35 @@ angular-momentum coverage, arbitrary producer/version combinations and other
 published ELF/LOL conventions remain outside the demonstrated scope. Therefore
 the public status stays Experimental.
 
+## Experimental NCI and RDG
+
+NCI/RDG is implemented for **total electron density only** and remains
+**Experimental**. The point analysis exposes RDG, ascending-algebraic density-
+Hessian eigenvalues, `lambda2`, and `sign(lambda2)*rho` with independent
+validity for RDG versus Hessian-derived quantities. The default density floor is
+a numerical safeguard, not an interaction cutoff, and near-zero lambda2 signs
+are retained with an explicit ambiguity mask.
+
+The required PySCF 2.12.1 CI gate independently reconstructs density, density
+gradient, the complete density Hessian, ordered eigenvalues, lambda2, RDG and
+signed density from AO derivatives and density matrices for restricted water,
+Cartesian-basis water, charged ammonium, a hydrogen-bonded water dimer and
+triplet UHF O2. Finite-difference checks at water and intermolecular water-dimer
+points independently guard derivative/Hessian component ordering.
+
+Cube regressions additionally enforce grid/resource ceilings, field-specific
+derivative requirements, finite serialized fields, explicit RDG capping,
+low-density-tail-only substitution, chunk invariance and atomic publication.
+The RDG cap is an export/presentation bound, not a scientific interaction
+threshold.
+
+These cases establish meaningful implementation evidence for the named
+same-wavefunction HF scope. They do not establish universal validation for
+correlated density definitions, ECP/pseudopotential systems, complex orbitals,
+periodic systems, broad high-angular-momentum chemistry or arbitrary producer
+and program versions. Automatic interaction labels, automatic visualization
+thresholds, NCI energies and basin integration are not implemented.
+
 ## Coverage still needed
 
 For native Hirshfeld, future validation is required before supporting elements
@@ -193,9 +222,9 @@ transition metals or correlated/post-SCF density definitions. Other analysis
 families still need their own evidence for broader high-angular-momentum,
 program/version and chemical-space coverage.
 
-Typed spectroscopy, NTOs, analytic density derivatives, QTAIM and ELF/LOL are
-implemented but retain separate scientific validation gates. NCI and basin
-integration remain future implementation/validation work.
+Typed spectroscopy, NTOs, analytic density derivatives, QTAIM, ELF/LOL and
+NCI/RDG are implemented but retain separate scientific validation gates. Basin
+integration remains future implementation/validation work.
 
 ## Reproduce the software checks
 
@@ -206,12 +235,12 @@ python scripts/check_docs.py --root .
 python -m mkdocs build --strict
 ```
 
-The required ELF/LOL independent same-wavefunction comparison is included in
-the everyday reference-validation CI and can be run directly with:
+The required ELF/LOL and NCI independent same-wavefunction comparisons are
+included in the everyday reference-validation CI and can be run directly with:
 
 ```bash
 python -m pip install -e '.[test,interop,outputs]' pyscf==2.12.1
-python -m pytest tests/validation/test_localization_pyscf_reference.py -q
+python -m pytest tests/validation/test_localization_pyscf_reference.py tests/validation/test_nci_pyscf_reference.py -q
 ```
 
 The independent Hirshfeld evidence is reproduced by the pinned validation-only
