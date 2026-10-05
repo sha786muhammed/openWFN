@@ -1,16 +1,22 @@
 """Electron-localization descriptors built from density and kinetic-energy fields.
 
 The numerical kernels in this module are deliberately independent of file formats and
-presentation.  They use openWFN's positive-definite kinetic-energy-density convention,
+presentation. They use openWFN's positive-definite kinetic-energy-density convention,
 ``tau = 1/2 sum_i n_i |grad psi_i|^2``.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Literal
 
 import numpy as np
 
+from ..model import CalculationData
+from ..scientific import orbital_reference_kind
+from .realspace import evaluate_density_fields, evaluate_kinetic_energy_density
+
+LocalizationChannel = Literal["total", "alpha", "beta"]
 DEFAULT_LOCALIZATION_DENSITY_FLOOR = 1.0e-12
 DEFAULT_NEGATIVE_ABSOLUTE_TOLERANCE = 1.0e-12
 DEFAULT_NEGATIVE_RELATIVE_TOLERANCE = 1.0e-10
@@ -89,7 +95,7 @@ def _negative_tolerance(
     reference: np.ndarray,
     settings: LocalizationSettings,
 ) -> np.ndarray:
-    # Match the documented scale exactly: max(tau, D0, 1).  A negative tau cannot
+    # Match the documented scale exactly: max(tau, D0, 1). A negative tau cannot
     # enlarge its own tolerance and therefore cannot make a material failure easier
     # to hide.
     scale = np.maximum(np.maximum(tau, reference), 1.0)
@@ -97,6 +103,17 @@ def _negative_tolerance(
         settings.negative_absolute_tolerance,
         settings.negative_relative_tolerance * scale,
     )
+
+
+def _validate_channel(data: CalculationData, channel: str) -> LocalizationChannel:
+    if channel not in {"total", "alpha", "beta"}:
+        raise ValueError("localization channel must be total, alpha, or beta")
+    if channel == "total" and orbital_reference_kind(data) != "restricted_closed_shell":
+        raise ValueError(
+            "total ELF/LOL is supported only for demonstrably restricted closed-shell "
+            "data; request alpha or beta for open-shell data"
+        )
+    return channel  # type: ignore[return-value]
 
 
 def compute_elf_components(
@@ -225,4 +242,69 @@ def compute_lol_components(
         invalid_nonfinite_count=int(np.count_nonzero(invalid_nonfinite)),
         invalid_ked_count=int(np.count_nonzero(material_negative)),
         clamped_ked_count=int(np.count_nonzero(tiny_negative)),
+    )
+
+
+def evaluate_elf(
+    data: CalculationData,
+    points_bohr: np.ndarray,
+    *,
+    channel: LocalizationChannel = "total",
+    chunk_size: int | None = None,
+    density_floor: float = DEFAULT_LOCALIZATION_DENSITY_FLOOR,
+) -> LocalizationFieldBatch:
+    """Evaluate ELF at explicit Bohr points using the shared analytic field engine."""
+
+    selected = _validate_channel(data, channel)
+    settings = LocalizationSettings(density_floor=density_floor)
+    density = evaluate_density_fields(
+        data,
+        points_bohr,
+        kind=selected,
+        chunk_size=chunk_size,
+    )
+    kinetic = evaluate_kinetic_energy_density(
+        data,
+        points_bohr,
+        kind=selected,
+        chunk_size=chunk_size,
+    )
+    return compute_elf_components(
+        density.rho,
+        density.gradient,
+        kinetic.tau,
+        spin_resolved=selected != "total",
+        settings=settings,
+    )
+
+
+def evaluate_lol(
+    data: CalculationData,
+    points_bohr: np.ndarray,
+    *,
+    channel: LocalizationChannel = "total",
+    chunk_size: int | None = None,
+    density_floor: float = DEFAULT_LOCALIZATION_DENSITY_FLOOR,
+) -> LocalizationFieldBatch:
+    """Evaluate LOL at explicit Bohr points using the shared analytic field engine."""
+
+    selected = _validate_channel(data, channel)
+    settings = LocalizationSettings(density_floor=density_floor)
+    density = evaluate_density_fields(
+        data,
+        points_bohr,
+        kind=selected,
+        chunk_size=chunk_size,
+    )
+    kinetic = evaluate_kinetic_energy_density(
+        data,
+        points_bohr,
+        kind=selected,
+        chunk_size=chunk_size,
+    )
+    return compute_lol_components(
+        density.rho,
+        kinetic.tau,
+        spin_resolved=selected != "total",
+        settings=settings,
     )
