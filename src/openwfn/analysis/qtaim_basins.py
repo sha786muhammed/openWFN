@@ -692,12 +692,34 @@ def qtaim_basins(
     prepared = prepare_qtaim_basin_attractors(data, settings=controls)
     integrated = _integrate_qtaim_basin_populations(data, prepared, controls)
     if include_boundary_diagnostics:
+        from .qtaim_boundary import qtaim_zero_flux_diagnostics
+
+        boundary_result = qtaim_zero_flux_diagnostics(
+            lambda points: evaluate_basin_density_gradient(data, points),
+            prepared.attractor_positions_bohr,
+            bounds=prepared.bounds,
+            settings=controls,
+        )
         boundary: dict[str, object] = {
-            "status": "unavailable",
-            "warning": "Zero-flux boundary diagnostics are implemented in a later task of this feature branch.",
+            "requested": boundary_result.requested,
+            "status": boundary_result.status,
+            "crossing_sample_count": boundary_result.crossing_sample_count,
+            "resolved_sample_count": boundary_result.resolved_sample_count,
+            "unresolved_sample_count": boundary_result.unresolved_sample_count,
+            "median_residual": boundary_result.median_residual,
+            "p95_residual": boundary_result.p95_residual,
+            "max_residual": boundary_result.max_residual,
+            "unresolved_plane_fit_count": boundary_result.unresolved_plane_fit_count,
+            "unresolved_gradient_count": boundary_result.unresolved_gradient_count,
         }
-        passed = False
-        warnings = (*integrated.warnings, "Requested zero-flux boundary diagnostics are not yet available.")
+        passed = integrated.passed and boundary_result.status == "success"
+        if boundary_result.status == "success":
+            warnings = integrated.warnings
+        else:
+            warnings = (
+                *integrated.warnings,
+                "Requested zero-flux boundary diagnostics did not meet the configured quality gate.",
+            )
     else:
         boundary = {"status": "not_requested"}
         passed = integrated.passed
