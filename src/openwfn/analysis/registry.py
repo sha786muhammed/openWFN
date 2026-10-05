@@ -21,6 +21,7 @@ from ..services import (
 from ..spectral_services import orbital_dos, orbital_pdos
 from .excited_states import excited_state, excited_states, transition_dipoles, uvvis_spectrum
 from .nto import nto
+from .qtaim import qtaim
 from .realspace import density_derivatives, kinetic_energy_density
 from .structure_summary import structure_summary
 from .vibrations import ir_spectrum, normal_mode, raman_spectrum, vibrations
@@ -155,6 +156,13 @@ _ANALYSES = {
         "natural_transition_orbitals",
         nto,
         (_ISOLATED, _BASIS, _ORBITALS, _AO_OVERLAP, _EXCITED_STATES, _NTO_READY),
+    ),
+    "qtaim": AnalysisDefinition(
+        "qtaim",
+        "1",
+        "qtaim_topology",
+        qtaim,
+        (_ISOLATED, _BASIS, _TOTAL_DENSITY),
     ),
     "raman-spectrum": AnalysisDefinition(
         "raman-spectrum",
