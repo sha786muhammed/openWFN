@@ -121,3 +121,15 @@ def test_parse_critic2_basin_output_normalizes_critic2_ang_token_to_bohr() -> No
         rtol=0.0,
         atol=1.0e-12,
     )
+
+
+def test_parse_critic2_molecular_rows_accept_nonapplicable_multiplicity() -> None:
+    module = _module()
+    text = FIXTURE.read_text(encoding="utf-8")
+    text = text.replace("   8  1 ", "   8  -- ").replace("   1  1 ", "   1  -- ")
+
+    rows = module.parse_critic2_basin_output(text)
+
+    assert [row.atomic_number for row in rows] == [8, 1, 1]
+    assert [row.multiplicity for row in rows] == [None, None, None]
+    assert [row.population for row in rows] == pytest.approx([8.4, 0.8, 0.8])
