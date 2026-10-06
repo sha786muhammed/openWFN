@@ -78,7 +78,7 @@ def _position_factor(header_line: str) -> float:
     unit = match.group(1).strip().lower()
     if unit in {"bohr", "a.u.", "au", "atomic units", "atomic unit"}:
         return 1.0
-    if unit in {"angs.", "ang.", "angstrom", "angstroms", "å"}:
+    if unit in {"angs.", "ang.", "ang_", "angstrom", "angstroms", "å"}:
         return 1.0 / BOHR_TO_ANGSTROM
     if unit.startswith("cryst"):
         raise ValueError("Critic2 crystal-coordinate attractors cannot be mapped to molecular atoms")
