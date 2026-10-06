@@ -36,7 +36,7 @@ class Critic2BasinRow:
     identifier: int
     name: str
     atomic_number: int
-    multiplicity: int
+    multiplicity: int | None
     position_bohr: tuple[float, float, float]
     volume: float
     population: float
@@ -85,7 +85,7 @@ def _position_factor(header_line: str) -> float:
     raise ValueError(f"Unsupported Critic2 attractor position unit: {unit}")
 
 
-def _parse_attractor_positions(text: str) -> dict[int, tuple[str, int, int, tuple[float, float, float]]]:
+def _parse_attractor_positions(text: str) -> dict[int, tuple[str, int, int | None, tuple[float, float, float]]]:
     lines = text.splitlines()
     start = None
     factor = None
@@ -99,7 +99,7 @@ def _parse_attractor_positions(text: str) -> dict[int, tuple[str, int, int, tupl
     if start is None or factor is None:
         raise ValueError("Critic2 output is missing the integrated-attractor table")
 
-    rows: dict[int, tuple[str, int, int, tuple[float, float, float]]] = {}
+    rows: dict[int, tuple[str, int, int | None, tuple[float, float, float]]] = {}
     for line in lines[start:]:
         stripped = line.strip()
         if not stripped:
@@ -120,7 +120,7 @@ def _parse_attractor_positions(text: str) -> dict[int, tuple[str, int, int, tupl
             raise ValueError(f"Critic2 attractor table contains duplicate id {identifier}")
         name = tokens[3]
         atomic_number = int(tokens[4])
-        multiplicity = int(tokens[5])
+        multiplicity = None if tokens[5] == "--" else int(tokens[5])
         coords = tuple(_parse_float(token) * factor for token in tokens[6:9])
         rows[identifier] = (name, atomic_number, multiplicity, coords)
     if not rows:
@@ -128,7 +128,7 @@ def _parse_attractor_positions(text: str) -> dict[int, tuple[str, int, int, tupl
     return rows
 
 
-def _parse_integrated_properties(text: str) -> dict[int, tuple[str, int, int, float, float, float]]:
+def _parse_integrated_properties(text: str) -> dict[int, tuple[str, int, int | None, float, float, float]]:
     lines = text.splitlines()
     start = None
     for index, line in enumerate(lines):
@@ -142,7 +142,7 @@ def _parse_integrated_properties(text: str) -> dict[int, tuple[str, int, int, fl
     if start is None:
         raise ValueError("Critic2 output is missing the integrated atomic-properties table")
 
-    rows: dict[int, tuple[str, int, int, float, float, float]] = {}
+    rows: dict[int, tuple[str, int, int | None, float, float, float]] = {}
     for line in lines[start:]:
         stripped = line.strip()
         if stripped.startswith("-") or stripped.startswith("Sum"):
