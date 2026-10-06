@@ -1,6 +1,7 @@
 """Confirmed destinations and interruption-safe guided exports."""
 
 import os
+import stat
 import tempfile
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -26,6 +27,7 @@ class ExportLocation:
 def export_atomically(destination: OutputDestination, writer: Callable[[Path], T]) -> T:
     """Publish only a complete export; unapproved replacement is race-safe."""
     path = destination.path
+    previous_mode = stat.S_IMODE(path.stat().st_mode) if destination.overwrite and path.is_file() else None
     path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='.openwfn-export-', dir=path.parent) as directory:
         stage = Path(directory) / path.name
@@ -33,6 +35,8 @@ def export_atomically(destination: OutputDestination, writer: Callable[[Path], T
         if not stage.is_file():
             raise OSError('Exporter did not produce a complete file.')
         if destination.overwrite:
+            if previous_mode is not None:
+                stage.chmod(previous_mode)
             os.replace(stage, path)
         else:
             os.link(stage, path)

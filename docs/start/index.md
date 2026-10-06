@@ -1,10 +1,9 @@
 # Start here
 
-openWFN helps you move from a Gaussian checkpoint calculation to inspectable,
-reproducible analysis. You can work through a command line, a guided terminal,
-Python, or structured reports. An optional offline workbench supports
-visual inspection and teaching. Every surface uses the same calculation model and
-the same scientific conventions.
+openWFN post-processes supported quantum-chemistry files. Use the guided CLI,
+direct commands, Python, local MCP or a configured terminal assistant. The
+interfaces share the scientific engine. Reports and the offline workbench are
+optional exports, not requirements for an analysis.
 
 ## What openWFN is
 
@@ -13,7 +12,8 @@ constructs a typed representation of the calculation, and exposes geometry,
 topology, orbital, density, population, electrostatic-potential, export, and report
 operations when the required records are present.
 
-It does not run electronic-structure calculations and does not replace Gaussian.
+It does not run electronic-structure calculations or replace the program that
+produced your input.
 For proprietary binary `.chk` files, openWFN calls Gaussian's external `formchk`
 utility when that program is installed. It reads formatted `.fchk` files directly.
 

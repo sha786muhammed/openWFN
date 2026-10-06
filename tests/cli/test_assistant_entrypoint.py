@@ -75,3 +75,27 @@ def test_chat_malformed_input_exits_cleanly(tmp_path, capsys):
     assert main([str(source), 'chat', '--model', 'test', '--question', 'charge?']) != 0
     text = capsys.readouterr().err
     assert text and 'Traceback' not in text
+
+
+def test_chat_json_setup_failure_is_a_record(monkeypatch, capsys):
+    monkeypatch.delenv('OPENWFN_CHAT_MODEL', raising=False)
+    assert main(['--format', 'json', str(WATER), 'chat', '--question', 'charge?']) != 0
+    assert json.loads(capsys.readouterr().out)['status'] == 'failed'
+
+
+def test_chat_quiet_single_question_has_no_human_stdout(monkeypatch, capsys):
+    from openwfn.assistant_model import LocalModel
+    backend = LocalModel('test', transport=httpx.MockTransport(lambda _: httpx.Response(200,
+        json={'choices': [{'message': {'content': '{"action":"analysis","analysis":"summary"}'}}]})))
+    monkeypatch.setattr('openwfn.assistant_terminal.configured_model', lambda **_: backend)
+    assert main(['--quiet', str(WATER), 'chat', '--model', 'test', '--question', 'charge?']) == 0
+    assert capsys.readouterr().out == ''
+
+
+def test_chat_noninteractive_json_does_not_open_a_conversation(monkeypatch, capsys):
+    import sys
+    monkeypatch.setattr(sys.stdin, 'isatty', lambda: True)
+    monkeypatch.setattr(sys.stdout, 'isatty', lambda: True)
+    monkeypatch.setattr('builtins.input', lambda _: (_ for _ in ()).throw(AssertionError('prompted')))
+    assert main(['--format', 'json', '--non-interactive', str(WATER), 'chat', '--model', 'test']) != 0
+    assert json.loads(capsys.readouterr().out)['status'] == 'failed'

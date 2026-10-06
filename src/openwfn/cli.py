@@ -666,7 +666,8 @@ def main(argv: list[str] | None = None) -> int:
         return chat_command(args.file, model=args.model, endpoint=args.endpoint,
             allow_remote=args.allow_remote, format_hint=args.input_format,
             question=args.question, output_format=args.format, output_path=args.output,
-            overwrite=args.overwrite, confirm_grid=args.confirm_grid)
+            overwrite=args.overwrite, confirm_grid=args.confirm_grid,
+            context=_context(args), non_interactive=args.non_interactive)
 
     if args.command == "open":
         args.command = "interactive"
@@ -890,7 +891,7 @@ def main(argv: list[str] | None = None) -> int:
         command = "openwfn " + " ".join(raw_arguments)
         return execute(
             lambda: build_report_record(
-                require_calculation(),
+                load_input(Path(args.file), format_hint=args.input_format),
                 analyses,
                 args.report_output,
                 args.report_format,

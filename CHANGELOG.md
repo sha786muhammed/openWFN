@@ -2,6 +2,19 @@
 
 All notable changes to openWFN are documented in this file.
 
+## [0.12.0] - Unreleased
+
+- Include IOData, cclib and local MCP in the normal installation; retain existing extra names for compatibility. Model weights and Gaussian utilities are not bundled.
+- Add capability-aware guided entry and a bounded `analyze` overview. Use explicit `summary` for the existing summary-only schema in scripts.
+- Add local scientific chat with constrained tool plans, capability checks, fixed engine explanations, input-change detection, explicit remote permission and confirmed density settings. Models cannot supply scientific values or shell commands.
+- Share file, AO, grid and parameter limits across chat and read-only MCP; expose density integration and one-point real-space analyses without file writes.
+- Preserve unknown structure-only charge/spin, correct MOL/SDF property-charge precedence, and prevent rendered results from replacing input aliases. Publish exports atomically so failed writes preserve earlier files.
+- Add editable guided settings, reproducible commands, JSON/CSV saving and tested keyboard navigation. Keep numerical algorithms and existing scientific validation boundaries unchanged.
+- Remove archived internal planning documents, simplify user documentation and keep release history separate from onboarding.
+- Include the existing main-branch Experimental QTAIM critical-point, ELF/LOL and NCI tools. No QTAIM basin integration or new validation promotion is included.
+
+Release preparation only. No tag or publication is implied by this entry.
+
 ## [0.11.0] - 2026-10-04
 
 Stable feature release integrating native Hirshfeld analysis, vibrational spectroscopy, and method-general excited-state/UV–Vis post-processing through the shared openWFN model and interfaces.

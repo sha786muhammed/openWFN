@@ -94,3 +94,17 @@ def test_population_result_can_be_saved_as_csv(tmp_path, monkeypatch, capsys):
     interactive.run_interactive(None, WATER)
     assert output.is_file(), capsys.readouterr().out
     assert 'atomic_charges' in output.read_text()
+
+
+def test_atomic_overwrite_preserves_private_output_permissions(tmp_path):
+    import os
+    import stat
+    if os.name == 'nt':
+        pytest.skip('POSIX output permissions')
+    from openwfn.guided_exports import OutputDestination, export_atomically
+    destination = tmp_path / 'private.json'
+    destination.write_text('old')
+    destination.chmod(0o600)
+    export_atomically(OutputDestination(destination, overwrite=True),
+                     lambda stage: stage.write_text('new'))
+    assert stat.S_IMODE(destination.stat().st_mode) == 0o600

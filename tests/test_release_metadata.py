@@ -39,8 +39,8 @@ def citation_release_date() -> str:
     return match.group(1)
 
 
-def test_source_version_targets_current_stable() -> None:
-    assert project_version() == "0.11.0"
+def test_source_version_targets_pending_release() -> None:
+    assert project_version() == "0.12.0"
 
 
 def test_runtime_version_matches_project() -> None:
@@ -208,7 +208,7 @@ def test_readme_documents_binary_checkpoint_requirement() -> None:
 
 def test_changelog_contains_current_release() -> None:
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    assert f"## [{project_version()}] - 2026-10-04" in changelog
+    assert f"## [{project_version()}] - Unreleased" in changelog
 
 
 def test_release_notes_document_capability_boundaries() -> None:

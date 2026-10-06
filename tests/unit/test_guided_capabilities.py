@@ -56,6 +56,15 @@ def test_source_formal_charge_preserved(tmp_path):
     assert load(path).data.structure.charge == 1
 
 
+def test_mol_property_charge_replaces_the_whole_atom_charge_block(tmp_path):
+    lines = (ROOT / 'tests/fixtures/interop/sdf/water.sdf').read_text().splitlines()
+    lines[4] = lines[4][:36] + '  3' + lines[4][39:]  # +1 in the old atom block
+    text = '\n'.join(lines).replace('M  END', 'M  CHG  1   2  -1\nM  END')
+    path = tmp_path / 'charged.sdf'
+    path.write_text(text)
+    assert load(path).data.structure.charge == -1
+
+
 def test_ghost_hirshfeld_is_unavailable_before_computation():
     import iodata
 

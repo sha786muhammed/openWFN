@@ -1,10 +1,8 @@
 # Capability discovery
 
-These commands are available in openWFN 0.9.2. For IOData-backed formats, install:
-
-```bash
-python -m pip install "openwfn[interop]==0.9.2"
-```
+The prepared release includes its readers in the base installation. Published
+0.11.0 uses the `interop` extra for IOData formats. See
+[installation](../installation.md) for the current release state.
 
 Inspect the file before analysis:
 
@@ -46,7 +44,7 @@ available merely because a file has a grid or integrals. See the
 
 ## Grid resource safety
 
-Version 0.9.2 rejects molecular grids above 2,000,000 points before allocating
+Direct molecular grid operations reject grids above 2,000,000 points before allocating
 coordinate arrays. The limit applies to density integration, cube export and
 grid-based ESP. A rejected request must be retried with larger spacing or smaller
 padding; openWFN does not change either setting automatically. Smaller padding

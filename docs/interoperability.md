@@ -1,17 +1,10 @@
 # Interoperability
 
-Version 0.9.2 provides optional capability-aware ingestion. Install the
-optional format reader with:
-
-```bash
-python -m pip install "openwfn[interop]==0.9.2"
-```
-
-The base install still works without IOData. Gaussian FCHK continues through
-the native parser, and existing FCHK commands keep their meaning. The
-optional reader is pinned to `qc-iodata==1.0.1` and is used for formats without
-a stronger native path. A `.chk` file still needs Gaussian's external
-`formchk` converter.
+Supported inputs are normalized into file-specific components. The prepared
+0.12.0 release includes the pinned `qc-iodata==1.0.1` reader in the base install;
+published 0.11.0 uses the `interop` extra. Native parsers remain preferred for
+formats with a native path. Binary `.chk` still requires external Gaussian
+`formchk`. See [installation](installation.md) for the current release state.
 
 ## Inspect before analyzing
 

@@ -7,7 +7,8 @@ openwfn examples install DESTINATION [--overwrite]
 
 Run `openwfn --help` or `openwfn FILE COMMAND --help` for the installed release's authoritative syntax. Global options such as `--format json` and `--input-format FORMAT_ID` go before the input path.
 
-For interoperable inputs, install the appropriate optional extra and inspect capabilities before requesting analyses that may not be present in the source file:
+Inspect capabilities before requesting analyses that may not be present in the
+source file. The prepared release includes its readers in the normal install:
 
 ```bash
 openwfn molecule.molden capabilities
@@ -32,7 +33,7 @@ Guided menus depend on the loaded file's capabilities. Structure files do not im
 
 ## Scientific assistant
 
-The development checkout includes chat and MCP in the base installation.
+The prepared release includes chat and MCP in the base installation.
 Configure an existing model; no weights are downloaded automatically:
 
 ```bash
@@ -80,7 +81,7 @@ These are the public top-level choices shown by `openwfn --help`.
 | `interactive` | Start the guided terminal interface |
 | `graph` | Show molecular fragments |
 | `geometry` | Run distance, angle, and dihedral operations |
-| `population` | Run Mulliken or Löwdin population analysis |
+| `population` | Run Mulliken, Löwdin or supported ordinary Hirshfeld population analysis |
 | `bondorder` | Run Mayer AO bond-order analysis |
 | `orbitals` | Inspect frontier orbitals, compositions, cubes, DOS, and PDOS |
 | `excited` | Inspect source excited states, one state, or source transition dipoles |
@@ -99,7 +100,7 @@ These are the public top-level choices shown by `openwfn --help`.
 | `validate` | Run the density-conservation check |
 | `capabilities` | Report normalized component and analysis availability |
 | `doctor` | Inspect input type and available capabilities |
-| `properties` | Extract source-reported QC output properties with the optional cclib reader |
+| `properties` | Extract source-reported QC output properties with cclib |
 
 ## Inspection and structure
 

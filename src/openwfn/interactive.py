@@ -569,7 +569,7 @@ def run_interactive(lines, filename, *, format_hint=None):
         arguments = ('report', 'build', str(output.path), '--analyses', ','.join(analyses))
         show_result(export_atomically(output, lambda stage:
             build_report_record(
-                calculation,
+                session.data,
                 analyses,
                 stage,
                 "html",

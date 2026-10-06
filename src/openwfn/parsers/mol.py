@@ -50,16 +50,22 @@ def parse_mol_text(
             bonds.append(Bond(int(line[0:3]) - 1, int(line[3:6]) - 1, int(line[6:9])))
         except ValueError as exc:
             raise ParseError(f"Malformed V2000 bond at line {offset}.") from exc
-    for line in lines[4 + atom_count + bond_count:]:
+    properties = lines[4 + atom_count + bond_count:]
+    properties = properties[:next((i for i, line in enumerate(properties)
+                                   if line.startswith('M  END')), len(properties))]
+    # CTfile property charge/radical records replace the entire legacy charge block.
+    if any(line.startswith(('M  CHG', 'M  RAD')) for line in properties):
+        charges.clear()
+    for line in properties:
         if line.startswith("M  CHG"):
             fields = line.split()
             try:
                 count = int(fields[2])
-                if count < 1 or len(fields) != 3 + 2 * count:
+                if not 1 <= count <= 8 or len(fields) != 3 + 2 * count:
                     raise ValueError
                 for i in range(count):
                     index, value = int(fields[3 + 2*i]), int(fields[4 + 2*i])
-                    if not 1 <= index <= atom_count:
+                    if not 1 <= index <= atom_count or not -15 <= value <= 15:
                         raise ValueError
                     charges[index] = value
             except (ValueError, IndexError) as exc:

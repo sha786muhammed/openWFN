@@ -63,7 +63,7 @@ markdown_extensions:
 plugins:
   - search
 extra_css:
-  - stylesheets/openwfn-site-v2.css
+  - stylesheets/openwfn-site-v3.css
 extra_javascript:
   - javascripts/mathjax.js
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
@@ -72,8 +72,8 @@ nav:
   - Get Started:
       - Overview: start/index.md
       - Installation: installation.md
-      - Interoperability preview: interoperability.md
-      - Output properties preview: output-properties.md
+      - Input interoperability: interoperability.md
+      - Output properties: output-properties.md
       - Local MCP: mcp.md
       - Scientific assistant: assistant.md
       - Your first analysis: start/first-analysis.md
@@ -109,6 +109,7 @@ nav:
       - DOS and PDOS: science/dos-pdos.md
       - Vibrational spectroscopy: science/vibrational-spectroscopy.md
       - Excited states and UV–Vis: science/excited-states-uvvis.md
+      - QTAIM critical points: science/qtaim.md
       - ELF and LOL localization: science/elf-lol.md
       - NCI and RDG: science/nci-rdg.md
       - Validation status: science/validation-status.md
@@ -121,27 +122,9 @@ nav:
       - Code of Conduct: https://github.com/sha786muhammed/openWFN/blob/main/CODE_OF_CONDUCT.md
       - Maintainers: https://github.com/sha786muhammed/openWFN/blob/main/MAINTAINERS.md
       - Contributors: https://github.com/sha786muhammed/openWFN/blob/main/CONTRIBUTORS.md
-      - Roadmap: https://github.com/sha786muhammed/openWFN/blob/main/ROADMAP.md
       - Release history: project/release-history.md
-      - QC design and roadmap: project/everyday-qc-design.md
       - QC validation and gates: project/everyday-qc-validation.md
       - Experimental coverage: project/experimental-coverage.md
       - Runtime and resource validation: project/resource-validation.md
-      - Workflow stabilization: project/workflow-stabilization-design.md
-      - Product boundary and benchmarking: project/core-benchmarking-design.md
       - Releasing: releasing.md
-      - Releases:
-          - Version 0.10.1: releases/0.10.1.md
-          - Version 0.10.0: releases/0.10.0.md
-          - Version 0.10.0rc1: releases/0.10.0rc1.md
-          - Version 0.9.2: releases/0.9.2.md
-          - Version 0.9.1: releases/0.9.1.md
-          - Version 0.9.0: releases/0.9.0.md
-          - Version 0.8.2: releases/0.8.2.md
-          - Version 0.8.1: releases/0.8.1.md
-          - Version 0.8.0: releases/0.8.0.md
-          - Version 0.8.0a2: releases/0.8.0a2.md
-          - Version 0.8.0a1: releases/0.8.0a1.md
-          - Version 0.7.2: releases/0.7.2.md
-          - Version 0.7.1: releases/0.7.1.md
-          - Version 0.7.0: releases/0.7.0.md
+      - Release preparation: releases/0.12.0.md

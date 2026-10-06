@@ -11,7 +11,7 @@ still be recognized as single-frame XYZ when their contents match that format.
 | `.cub` | Gaussian volumetric grid |
 | `.cube` | Gaussian volumetric grid |
 | `.fch` | Gaussian formatted checkpoint |
-| `.fchk` | Gaussian formatted checkpoint and primary wavefunction path |
+| `.fchk` | Gaussian formatted checkpoint with native wavefunction records |
 | `.log` | Gaussian calculation metadata |
 | `.mol` | V2000 molecular structure |
 | `.out` | Gaussian calculation metadata |
@@ -29,15 +29,15 @@ ghost/ECP classification remain unconfirmed and are not inferred from symbols.
 
 ## Stable interoperability formats
 
-In 0.9.1, Molden detection also accepts `.molden.input` and recognizes
+Molden detection accepts `.molden.input` and recognizes
 the `[Molden Format]` header for unrecognized filenames. Structure exports warn
 when molecular charge or spin multiplicity cannot be retained, in addition to
 ghost/ECP warnings. Keep the original calculation and its metadata; reloading a
 structure export is not an electronic-state round-trip.
 
-This section describes openWFN 0.9.1. Install
-`python -m pip install "openwfn[interop]==0.9.1"` for the IOData-backed entries. This is the
-pinned IOData 1.0.1 readable-format inventory. “Stable” means ingestion passed
+The prepared release includes the IOData reader in its base installation;
+published 0.11.0 uses the `interop` extra. This is the pinned IOData 1.0.1
+readable-format inventory. “Stable” means ingestion passed
 the project fixture contract; it does not mean every analysis is available,
 or that all real-world variants have been independently validated. Native
 FCHK remains the preferred path for Gaussian formatted checkpoints. The

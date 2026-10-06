@@ -21,7 +21,8 @@ def configured_model(*, model: str | None = None, endpoint: str | None = None,
 
 def run_chat(session: AssistantSession, backend: LocalModel, *, question: str | None = None,
              output_format: str = 'plain', output_path: Path | None = None,
-             overwrite: bool = False, confirm_grid: bool = False) -> int:
+             overwrite: bool = False, confirm_grid: bool = False,
+             context: CommandContext | None = None) -> int:
     """Ask one question or run a terminal session; scientific output stays local."""
     from .interactive import confirm_output_path
 
@@ -43,8 +44,8 @@ def run_chat(session: AssistantSession, backend: LocalModel, *, question: str | 
             if answer.record is None:
                 raise ValueError(answer.text)
             return answer.record
-        return execute(operation, CommandContext(format=output_format, output_path=output_path,
-                                                overwrite=overwrite))
+        return execute(operation, context or CommandContext(input_path=session.source,
+            format=output_format, output_path=output_path, overwrite=overwrite))
 
     print('openWFN Scientific Assistant')
     print(f'Model: {backend.model} at {backend.endpoint}')
@@ -105,8 +106,14 @@ def chat_command(path: str | Path, *, model: str | None = None, endpoint: str | 
                  allow_remote: bool = False, format_hint: str | None = None,
                  question: str | None = None, output_format: str = 'plain',
                  output_path: Path | None = None, overwrite: bool = False,
-                 confirm_grid: bool = False) -> int:
+                 confirm_grid: bool = False, context: CommandContext | None = None,
+                 non_interactive: bool = False) -> int:
+    context = context or CommandContext(input_path=Path(path), format=output_format,
+                                        output_path=output_path, overwrite=overwrite)
     try:
+        if question is None and (non_interactive or context.quiet
+                or context.format in {'json', 'csv'} or context.output_path is not None):
+            raise ValueError('Use --question for structured, quiet, output-file or non-interactive chat.')
         session = AssistantSession(path, format_hint=format_hint)
         if output_path is not None and output_path.expanduser().resolve() == session.source:
             raise ValueError('The output path cannot replace the selected input file.')
@@ -114,9 +121,14 @@ def chat_command(path: str | Path, *, model: str | None = None, endpoint: str | 
         if question is None and not (sys.stdin.isatty() and sys.stdout.isatty()):
             raise ValueError('Chat needs a terminal, or use --question for a single request.')
     except (ValueError, RuntimeError, OSError) as exc:
+        if context.format == 'json':
+            from .app import _report_failure
+            _report_failure(exc, context)
+            return 2
         print(f'{exc}\nFor chat set OPENWFN_CHAT_MODEL or --model and configure a local model server. '
               'No model is downloaded automatically. Use `openwfn FILE open` for guided analysis '
               'without a model.', file=sys.stderr)
         return 2
     return run_chat(session, backend, question=question, output_format=output_format,
-                    output_path=output_path, overwrite=overwrite, confirm_grid=confirm_grid)
+                    output_path=output_path, overwrite=overwrite, confirm_grid=confirm_grid,
+                    context=context)

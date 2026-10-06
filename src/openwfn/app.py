@@ -31,6 +31,13 @@ def execute(operation: Callable[[], ResultRecord | int | None], context: Command
     """Execute one operation and translate expected failures to stable exit codes."""
 
     try:
+        if context.output_path is not None and context.input_path is not None:
+            output = context.output_path.expanduser()
+            source = context.input_path.expanduser()
+            if output.resolve() == source.resolve() or (
+                output.exists() and source.exists() and output.samefile(source)
+            ):
+                raise ValueError('The output path cannot replace the input file.')
         result = operation()
         if isinstance(result, ResultRecord):
             from .presentation import render
@@ -42,7 +49,9 @@ def execute(operation: Callable[[], ResultRecord | int | None], context: Command
                         f"Output exists: {context.output_path}. Pass --overwrite to replace it."
                     )
                 context.output_path.parent.mkdir(parents=True, exist_ok=True)
-                context.output_path.write_text(rendered, encoding="utf-8")
+                from .guided_exports import OutputDestination, export_atomically
+                export_atomically(OutputDestination(context.output_path, context.overwrite),
+                    lambda stage: stage.write_text(rendered, encoding="utf-8"))
                 if context.format == "json":
                     context.output_stream.write(rendered)
             elif not context.quiet or context.format == "json":
