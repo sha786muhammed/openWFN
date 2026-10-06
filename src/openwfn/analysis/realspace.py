@@ -18,6 +18,17 @@ DENSITY_DERIVATIVE_CONVENTION = "analytic_cartesian_ao_product_rule"
 KED_CONVENTION = "positive_definite_half_gradient_square"
 
 
+def _density_and_gradient(
+    values: np.ndarray, gradients: np.ndarray, matrix: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
+    """Shared product-rule contraction, including nonsymmetric density matrices."""
+    rho = np.einsum("pi,ij,pj->p", values, matrix, values, optimize=True)
+    gradient = np.einsum("pia,ij,pj->pa", gradients, matrix, values, optimize=True) + np.einsum(
+        "pi,ij,pja->pa", values, matrix, gradients, optimize=True
+    )
+    return rho, gradient
+
+
 @dataclass(frozen=True, slots=True)
 class DensityFieldBatch:
     """Electron-density values and Cartesian derivatives in atomic units."""
@@ -54,10 +65,7 @@ def _density_fields_for_matrix(
     gradients = ao.gradients
     hessians = ao.hessians
 
-    rho = np.einsum("pi,ij,pj->p", values, matrix, values, optimize=True)
-    gradient = np.einsum(
-        "pia,ij,pj->pa", gradients, matrix, values, optimize=True
-    ) + np.einsum("pi,ij,pja->pa", values, matrix, gradients, optimize=True)
+    rho, gradient = _density_and_gradient(values, gradients, matrix)
     hessian = (
         np.einsum("piab,ij,pj->pab", hessians, matrix, values, optimize=True)
         + np.einsum("pia,ij,pjb->pab", gradients, matrix, gradients, optimize=True)
@@ -129,6 +137,37 @@ def _validate_ked_kind(kind: str) -> None:
             "kinetic-energy-density kind must be total, alpha, or beta; "
             "a spin-difference field is signed and is not positive-definite"
         )
+
+
+def evaluate_density_gradient(
+    data: CalculationData,
+    points_bohr: np.ndarray,
+    *,
+    kind: DensityKind = "total",
+    chunk_size: int | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Evaluate only rho and its gradient through the shared analytic AO core.
+
+    This avoids Hessian allocation and contraction for gradient-flow algorithms.
+    Both product-rule terms are retained for nonsymmetric stored matrices.
+    """
+    if data.basis is None:
+        raise DataUnavailableError("Basis set is not available.")
+    points = _validate_points(points_bohr)
+    size = _bounded_realspace_chunk_size(data, len(points), chunk_size, requested_components=4)
+    density_matrix = density_matrix_for_kind(data, kind)
+    matrix = np.asarray(density_matrix.values, dtype=float)
+    if matrix.shape != (data.basis.n_functions, data.basis.n_functions):
+        raise ValueError("density matrix size does not match evaluated basis functions")
+    rho = np.empty(len(points), dtype=float)
+    gradient = np.empty((len(points), 3), dtype=float)
+    for start in range(0, len(points), size):
+        stop = start + size
+        ao = evaluate_ao_fields(data.basis, data.molecule, points[start:stop], derivatives=1)
+        rho[start:stop], gradient[start:stop] = _density_and_gradient(
+            ao.values, ao.gradients, matrix
+        )
+    return rho, gradient
 
 
 def evaluate_density_fields(

@@ -135,7 +135,9 @@ def test_density_derivatives_use_both_ao_factors_for_a_general_matrix() -> None:
 
     np.testing.assert_allclose(fields.gradient[0], expected_gradient, rtol=3e-6, atol=3e-7)
     np.testing.assert_allclose(fields.hessian[0], expected_hessian, rtol=3e-5, atol=3e-6)
-    assert fields.laplacian[0] == pytest.approx(float(np.trace(expected_hessian)), rel=3e-5, abs=3e-6)
+    assert fields.laplacian[0] == pytest.approx(
+        float(np.trace(expected_hessian)), rel=3e-5, abs=3e-6
+    )
 
 
 def test_restricted_closed_shell_alpha_beta_fields_are_half_total() -> None:
@@ -204,3 +206,24 @@ def test_density_field_rejects_invalid_chunk_size_before_evaluation() -> None:
 
     with pytest.raises(ValueError, match="chunk_size"):
         evaluate_density_fields(data, np.zeros((1, 3)), chunk_size=0)
+
+
+@pytest.mark.parametrize("kind", ["total", "alpha", "beta", "spin"])
+def test_gradient_only_matches_full_fields_and_requests_no_hessian(kind, monkeypatch):
+    from openwfn.analysis import realspace
+
+    data = _single_s_data(total=2.0, spin=0.4)
+    points = np.asarray([[0.2, 0.3, 0.1], [-0.3, 0.4, -0.2]])
+    full = realspace.evaluate_density_fields(data, points, kind=kind)
+    original = realspace.evaluate_ao_fields
+    orders = []
+
+    def evaluated(*args, **kwargs):
+        orders.append(kwargs["derivatives"])
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(realspace, "evaluate_ao_fields", evaluated)
+    rho, gradient = realspace.evaluate_density_gradient(data, points, kind=kind, chunk_size=1)
+    np.testing.assert_allclose(rho, full.rho, rtol=0, atol=1e-14)
+    np.testing.assert_allclose(gradient, full.gradient, rtol=0, atol=1e-14)
+    assert orders == [1, 1]

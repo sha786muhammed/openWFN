@@ -23,7 +23,7 @@ from . import limits
 from .atom_quadrature import AtomQuadratureSettings, iter_atom_centered_chunks
 from .density import evaluate_density
 from .qtaim import CriticalPoint, QTAIMSettings, SearchDiagnostics, search_critical_points
-from .realspace import evaluate_density_fields
+from .realspace import evaluate_density_fields, evaluate_density_gradient
 
 FieldEvaluator = Callable[[np.ndarray], tuple[np.ndarray, np.ndarray]]
 
@@ -394,8 +394,7 @@ def evaluate_basin_density_gradient(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Evaluate total density and gradient used by basin flow."""
 
-    fields = evaluate_density_fields(data, np.asarray(points_bohr, dtype=float), kind="total")
-    return fields.rho, fields.gradient
+    return evaluate_density_gradient(data, np.asarray(points_bohr, dtype=float), kind="total")
 
 
 def _validate_all_electron_basin_input(data: CalculationData) -> tuple[np.ndarray, np.ndarray]:

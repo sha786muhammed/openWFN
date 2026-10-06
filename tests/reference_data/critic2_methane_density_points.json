@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "program": "Critic2",
+  "release": "1.2",
+  "source_commit": "9731d532c6407d35c75bbce5af449211470437a7",
+  "binary_sha256": "47666a54d6edf25ddece23acdcb0a76b4f4e0d02d9f3deb83dd096f711143a36",
+  "input": "examples/methane/methane.fchk",
+  "input_sha256": "1c37731946a48c3b64abd2a6c6594322f15fa1a4d5081144ef3a53bc7337b343",
+  "transcript_sha256": "83ee1d755dfe7cf4e64848b766cffedbee89c46a50e46450a4d24dd14813bf8a",
+  "procedure_sha256": "73be2b58a03927ec216b6706f2f20c2b7cd3cf67e848e8d38df5c30aca152771",
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.39",
+  "units": {
+    "rho": "electron/bohr^3",
+    "gradient": "electron/bohr^4",
+    "laplacian": "electron/bohr^5"
+  },
+  "absolute_tolerance": 2e-08,
+  "tolerance_reason": "Printed reference precision plus density matrix/MO coefficient rounding mismatch below 4e-9 on this input; no relative tolerance.",
+  "points": [
+    {
+      "coordinates_angstrom": [
+        0.5,
+        0.3,
+        0.2
+      ],
+      "rho": 0.2267810656,
+      "gradient": [
+        -0.1699215336,
+        -0.01429039017,
+        0.06592707095
+      ],
+      "laplacian": -0.5260433893
+    },
+    {
+      "coordinates_angstrom": [
+        1.0,
+        0.2,
+        0.4
+      ],
+      "rho": 0.06530919681,
+      "gradient": [
+        -0.1194297171,
+        0.0499453776,
+        0.006892860184
+      ],
+      "laplacian": 0.09800899829
+    }
+  ]
+}
