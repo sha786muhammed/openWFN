@@ -5,8 +5,6 @@ Critic2 is validation-only. This script is intentionally outside the openWFN
 runtime package and never changes the production scientific engine.
 """
 
-from __future__ import annotations
-
 import argparse
 import hashlib
 import json
