@@ -1,0 +1,90 @@
+name: QTAIM basin Critic2 validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qtaim-basin-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  critic2-reference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout openWFN
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Set up Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install openWFN test environment
+        run: python -m pip install -e ".[test]"
+
+      - name: Install Critic2 build toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc gfortran cmake git
+
+      - name: Checkout pinned Critic2 1.2 source
+        run: |
+          git clone https://github.com/aoterodelaroza/critic2.git critic2-src
+          git -C critic2-src checkout 9731d532c6407d35c75bbce5af449211470437a7
+          test "$(git -C critic2-src rev-parse HEAD)" = "9731d532c6407d35c75bbce5af449211470437a7"
+
+      - name: Build pinned Critic2
+        run: |
+          cmake -S critic2-src -B critic2-src/build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=gcc \
+            -DCMAKE_Fortran_COMPILER=gfortran \
+            -DUSE_EXTERNAL_LAPACK=OFF \
+            -DUSE_LIBXC=OFF \
+            -DUSE_LIBCINT=OFF \
+            -DUSE_READLINE=OFF \
+            -DUSE_NLOPT=OFF \
+            -DENABLE_OPENMP=OFF \
+            -DBUILD_TESTING=OFF
+          cmake --build critic2-src/build --target critic2 -j2
+          test -x critic2-src/build/src/critic2
+
+      - name: Verify Critic2 parser tests
+        run: python -m pytest tests/validation/test_qtaim_basins_critic2_reference.py -q
+
+      - name: Generate independent Critic2 reference
+        env:
+          CRITIC_HOME: ${{ github.workspace }}/critic2-src
+        run: |
+          BUILD_DESC="GitHub Actions ubuntu-latest; $(gcc --version | head -1); $(gfortran --version | head -1); CMake $(cmake --version | head -1)"
+          python scripts/validate_qtaim_basins_critic2.py \
+            --critic2 critic2-src/build/src/critic2 \
+            --critic-home critic2-src \
+            --manifest validation/manifest.json \
+            --fixture water=examples/water/water.fchk \
+            --fixture methane=examples/methane/methane.fchk \
+            --fixture ammonia=examples/ammonia/ammonia.fchk \
+            --output qtaim-basins-reference.generated.json \
+            --lebedev-points 590 \
+            --mapping-tolerance-bohr 0.35 \
+            --critic2-source-commit 9731d532c6407d35c75bbce5af449211470437a7 \
+            --build-description "$BUILD_DESC"
+          echo "----- BEGIN QTAIM BASIN REFERENCE JSON -----"
+          cat qtaim-basins-reference.generated.json
+          echo "----- END QTAIM BASIN REFERENCE JSON -----"
+
+      - name: Upload generated reference
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: qtaim-basins-critic2-reference
+          path: qtaim-basins-reference.generated.json
+          if-no-files-found: error
