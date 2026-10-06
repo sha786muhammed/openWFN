@@ -28,7 +28,7 @@ def test_density_settings_forwarded(monkeypatch):
     answers = iter(['integrate', 'total', '0.3', '5'])
     captured = []
     monkeypatch.setattr(interactive, 'prompt_workflow', lambda _: next(workflows))
-    monkeypatch.setattr(interactive, 'prompt_page_navigation', lambda _: 'back')
+    monkeypatch.setattr(interactive, 'prompt_page_navigation', lambda _: 'home')
     monkeypatch.setattr('builtins.input', lambda _: next(answers))
     monkeypatch.setattr(OpenWFNCalculation, 'density', lambda self, kind, **settings:
                         captured.append((kind, settings)) or self.analyze('summary'))

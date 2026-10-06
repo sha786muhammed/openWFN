@@ -26,7 +26,7 @@ def test_xyz_actions_exclude_missing_wavefunction(tmp_path):
     session = build_guided_session(path)
     commands = {item.command for item in available_workflows(session)}
     assert {'summary', 'geometry', 'export'} <= commands
-    assert not {'orbitals', 'population', 'density', 'vibrations', 'workbench'} & commands
+    assert not {'orbitals', 'population', 'density', 'vibrations', 'workbench', 'report'} & commands
 
 
 def test_grid_session_does_not_require_molecule():
@@ -53,3 +53,13 @@ def test_source_formal_charge_preserved(tmp_path):
     path = tmp_path / 'charged.sdf'
     path.write_text(text.replace('M  END', 'M  CHG  1   1   1\nM  END'))
     assert load(path).data.structure.charge == 1
+
+
+def test_ghost_hirshfeld_is_unavailable_before_computation():
+    import iodata
+
+    from openwfn.guided import build_guided_session
+    path = Path(iodata.__file__).parent / 'test/data/water_dimer_ghost.fchk'
+    session = build_guided_session(path)
+    assert session.eligible('hirshfeld') is False
+    assert any('ghost' in reason.lower() for reason in session.analyses['hirshfeld']['missing_requirements'])

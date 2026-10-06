@@ -628,7 +628,7 @@ def main(argv: list[str] | None = None) -> int:
     elif implicit and can_prompt:
         args.command = "open"
 
-    if args.command == "open" and not can_prompt:
+    if (args.command == "open" or (args.command == "interactive" and args.format != "json")) and not can_prompt:
         print("Guided mode needs an interactive terminal. Use `openwfn FILE analyze` instead.", file=sys.stderr)
         return 2
 
@@ -1109,8 +1109,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "interactive":
         try:
-            run_interactive(None, str(args.file), format_hint=args.input_format)
-            return 0
+            from .utils import terminal_color
+            with terminal_color(not args.no_color and not args.plain and args.format != 'plain'):
+                return run_interactive(None, str(args.file), format_hint=args.input_format) or 0
         except Exception as exc:
             context = _context(args)
             return execute(lambda error=exc: (_ for _ in ()).throw(error), context)

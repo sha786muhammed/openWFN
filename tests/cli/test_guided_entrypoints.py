@@ -62,3 +62,9 @@ def test_file_only_explicit_input_format_is_bounded(monkeypatch, capsys):
     monkeypatch.setattr('sys.stdin.isatty', lambda: False)
     assert main(['--input-format', 'fchk', '--format', 'json', WATER]) == 0
     assert json.loads(capsys.readouterr().out)['kind'] == 'overview'
+
+
+def test_interactive_alias_never_prompts_when_redirected(monkeypatch, capsys):
+    monkeypatch.setattr('sys.stdin.isatty', lambda: False)
+    assert main(['--format', 'csv', WATER, 'interactive']) != 0
+    assert 'interactive terminal' in capsys.readouterr().err

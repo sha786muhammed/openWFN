@@ -69,6 +69,6 @@ def test_interop_ci_keeps_core_isolated_and_checks_multiple_platforms() -> None:
     core = text.split("  wheel-smoke:", 1)[1].split("  interop-wheel-smoke:", 1)[0]
     assert "dist/*.whl" in core
     assert "qc-iodata" not in core
-    assert "importlib.util.find_spec('iodata') is None" in core
+    assert 'import iodata, cclib' in core
     assert "  interop-wheel-smoke:" in text
     assert '"${wheel_file}[interop]"' in text

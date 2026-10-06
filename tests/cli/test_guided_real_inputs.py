@@ -14,7 +14,7 @@ def test_molden_guided_orbitals(name, monkeypatch, capsys):
     workflows = iter(['orbitals', 'exit'])
     monkeypatch.setattr('builtins.input', lambda _: '')
     monkeypatch.setattr(interactive, 'prompt_workflow', lambda _: next(workflows))
-    monkeypatch.setattr(interactive, 'prompt_page_navigation', lambda _: 'back')
+    monkeypatch.setattr(interactive, 'prompt_page_navigation', lambda _: 'home')
     interactive.run_interactive(None, ROOT/f'examples/everyday-qc/{name}.molden')
     output = capsys.readouterr().out
     assert 'Homo' in output
@@ -36,7 +36,7 @@ def test_guided_shared_real_analysis(workflow, answers, expected, monkeypatch, c
     workflows = iter([workflow, 'exit'])
     inputs = iter(answers)
     monkeypatch.setattr(interactive, 'prompt_workflow', lambda _: next(workflows))
-    monkeypatch.setattr(interactive, 'prompt_page_navigation', lambda _: 'back')
+    monkeypatch.setattr(interactive, 'prompt_page_navigation', lambda _: 'home')
     monkeypatch.setattr('builtins.input', lambda _: next(inputs))
     interactive.run_interactive(None, ROOT/'examples/everyday-qc/oh_diffuse_uhf.molden')
     output = capsys.readouterr().out
@@ -49,7 +49,7 @@ def test_bad_guided_point_returns_structured_failure_and_navigation(monkeypatch,
     workflows = iter(['density', 'exit'])
     inputs = iter(['esp', 'invalid coordinates'])
     monkeypatch.setattr(interactive, 'prompt_workflow', lambda _: next(workflows))
-    monkeypatch.setattr(interactive, 'prompt_page_navigation', lambda _: 'back')
+    monkeypatch.setattr(interactive, 'prompt_page_navigation', lambda _: 'home')
     monkeypatch.setattr('builtins.input', lambda _: next(inputs))
     interactive.run_interactive(None, ROOT/'examples/everyday-qc/water.molden')
     text = capsys.readouterr().out
@@ -64,7 +64,7 @@ def test_invalid_cube_mo_keeps_guided_session_alive(tmp_path, monkeypatch, capsy
     workflows = iter(['orbitals', 'exit'])
     inputs = iter(['cube', 'alpha', '999999', str(output), 'yes'])
     monkeypatch.setattr(interactive, 'prompt_workflow', lambda _: next(workflows))
-    monkeypatch.setattr(interactive, 'prompt_page_navigation', lambda _: 'back')
+    monkeypatch.setattr(interactive, 'prompt_page_navigation', lambda _: 'home')
     monkeypatch.setattr('builtins.input', lambda _: next(inputs))
     interactive.run_interactive(None, ROOT/'examples/everyday-qc/water.molden')
     text = capsys.readouterr().out

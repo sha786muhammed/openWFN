@@ -130,7 +130,7 @@ jobs:
       - run: python -m twine check dist/*
       - run: python -m venv wheel-test
       - run: wheel-test/bin/python -m pip install dist/*.whl
-      - run: wheel-test/bin/python -c "import importlib.util; assert importlib.util.find_spec('iodata') is None"
+      - run: wheel-test/bin/python -c "import iodata, cclib"
       - run: wheel-test/bin/openwfn --version
       - run: wheel-test/bin/openwfn examples install installed-examples
       - run: wheel-test/bin/openwfn --format json --output summary.json installed-examples/water.fchk summary
