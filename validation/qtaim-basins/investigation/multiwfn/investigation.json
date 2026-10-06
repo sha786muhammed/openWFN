@@ -1,0 +1,1119 @@
+{
+  "status": "investigation_only_not_accepted_release_reference",
+  "date": "2026-10-06",
+  "external_program": "Multiwfn",
+  "version": "3.8(dev), release date: 2024-Mar-7",
+  "mirror_repository": "https://github.com/ruixingw/Multiwfn-mirror",
+  "mirror_commit": "584bd99f284b7324354d6b836d19232657383733",
+  "binary_sha256": "bd1c6283e047f143580e088a62681129ff004b5812a7291756112a0ad053372f",
+  "settings_sha256": "a977802177b71b79e14536d2e5ee01e9a085572d6f4e7c314bbd4c1a33dbf57e",
+  "license_source": "https://github.com/ruixingw/Multiwfn-mirror/blob/584bd99f284b7324354d6b836d19232657383733/LICENSE.txt",
+  "citation": "Tian Lu, Feiwu Chen, J. Comput. Chem. 33, 580-592 (2012)",
+  "method": "Basin menu 17; density function 1; grid choices 2/3/4; mixed integration 7; exact boundary refinement 2; density integrand 1. Populations are raw integrals before Multiwfn normalization.",
+  "environment": {
+    "OMP_NUM_THREADS": "1",
+    "OMP_STACKSIZE": "128M",
+    "LD_LIBRARY_PATH": "/tmp/openwfn-012-toolchain/usr/lib/x86_64-linux-gnu"
+  },
+  "settings_transformation": "Only nthreads changed from 4 to 1; all remaining distributed settings unchanged. No wavefunction conversion. No external scientific source modifications.",
+  "cases": [
+    {
+      "case": "water",
+      "input_path": "examples/water/water.fchk",
+      "input_sha256": "f3c6cb5e1f9f205e49b439339bb0833160f56be68f40e1c1097db3f30f52dcf2",
+      "molecule": {
+        "atoms": [
+          {
+            "atomic_number": 8,
+            "coordinates": [
+              2.0765610629969862e-32,
+              8.926428534125518e-32,
+              0.11404874769861381
+            ],
+            "nuclear_charge": 8.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              -8.361943085079024e-31,
+              0.7804708051752508,
+              -0.45619499026527804
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              -9.558010743042007e-17,
+              -0.7804708051752508,
+              -0.45619499026527804
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          }
+        ],
+        "charge": 0,
+        "multiplicity": 1,
+        "metadata": {
+          "source_program": "Gaussian",
+          "route": null,
+          "method": "RHF",
+          "basis": "3-21G",
+          "energy_hartree": -75.58595974892307,
+          "terminated_normally": null,
+          "source_program_version": null
+        },
+        "provenance": {
+          "source_path": "/workspace/scratch/415762cb23f8/openWFN-012-ready/examples/water/water.fchk",
+          "sha256": "f3c6cb5e1f9f205e49b439339bb0833160f56be68f40e1c1097db3f30f52dcf2",
+          "parser": "gaussian-fchk",
+          "warnings": [],
+          "source_format": "fchk",
+          "parser_version": "1",
+          "transformations": []
+        },
+        "bonds": [
+          {
+            "atom1": 0,
+            "atom2": 1,
+            "order": 1
+          },
+          {
+            "atom1": 0,
+            "atom2": 2,
+            "order": 1
+          }
+        ],
+        "boundary_conditions": {
+          "kind": "isolated"
+        }
+      },
+      "uniform_spacing_bohr": 0.1,
+      "grid_selection": 2,
+      "populations_e": [
+        8.9269125134,
+        0.5363715031,
+        0.5363722013
+      ],
+      "charges_e": [
+        -0.9269125133999996,
+        0.46362849689999996,
+        0.46362779870000004
+      ],
+      "population_sum_e": 9.9996562178,
+      "expected_electrons_e": 10,
+      "electron_closure_error_e": 0.0003437821999998647,
+      "reported_attractor_to_atom_index_zero_based": {
+        "1": 2,
+        "2": 0,
+        "3": 1
+      },
+      "detected_attractor_inventory": "one mapped attractor per atom; no additional attractor reported on this finite grid; not proof of exhaustive absence",
+      "stdout_path": "validation/qtaim-basins/investigation/multiwfn/water-2.txt",
+      "stdout_sha256": "87911c64ce648f03c9a1291e2c12c9af9d8af4992f8092f0ec70f159c6ff98f5",
+      "stdin_path": "validation/qtaim-basins/investigation/multiwfn/water-2.stdin",
+      "stdin_sha256": "7a5acaad901b39728053f37da07db360b3483efe7a26b5ed917333bb7b8b9dde",
+      "command": [
+        "/tmp/openwfn-multiwfn-reference/Multiwfn",
+        "/workspace/scratch/415762cb23f8/openWFN-012-ready/examples/water/water.fchk"
+      ],
+      "stderr": ""
+    },
+    {
+      "case": "water",
+      "input_path": "examples/water/water.fchk",
+      "input_sha256": "f3c6cb5e1f9f205e49b439339bb0833160f56be68f40e1c1097db3f30f52dcf2",
+      "molecule": {
+        "atoms": [
+          {
+            "atomic_number": 8,
+            "coordinates": [
+              2.0765610629969862e-32,
+              8.926428534125518e-32,
+              0.11404874769861381
+            ],
+            "nuclear_charge": 8.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              -8.361943085079024e-31,
+              0.7804708051752508,
+              -0.45619499026527804
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              -9.558010743042007e-17,
+              -0.7804708051752508,
+              -0.45619499026527804
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          }
+        ],
+        "charge": 0,
+        "multiplicity": 1,
+        "metadata": {
+          "source_program": "Gaussian",
+          "route": null,
+          "method": "RHF",
+          "basis": "3-21G",
+          "energy_hartree": -75.58595974892307,
+          "terminated_normally": null,
+          "source_program_version": null
+        },
+        "provenance": {
+          "source_path": "/workspace/scratch/415762cb23f8/openWFN-012-ready/examples/water/water.fchk",
+          "sha256": "f3c6cb5e1f9f205e49b439339bb0833160f56be68f40e1c1097db3f30f52dcf2",
+          "parser": "gaussian-fchk",
+          "warnings": [],
+          "source_format": "fchk",
+          "parser_version": "1",
+          "transformations": []
+        },
+        "bonds": [
+          {
+            "atom1": 0,
+            "atom2": 1,
+            "order": 1
+          },
+          {
+            "atom1": 0,
+            "atom2": 2,
+            "order": 1
+          }
+        ],
+        "boundary_conditions": {
+          "kind": "isolated"
+        }
+      },
+      "uniform_spacing_bohr": 0.06,
+      "grid_selection": 3,
+      "populations_e": [
+        8.92664895,
+        0.5366780278,
+        0.5366728902
+      ],
+      "charges_e": [
+        -0.9266489500000006,
+        0.46332197220000004,
+        0.4633271098
+      ],
+      "population_sum_e": 9.999999868,
+      "expected_electrons_e": 10,
+      "electron_closure_error_e": 1.3200000026358794e-07,
+      "reported_attractor_to_atom_index_zero_based": {
+        "1": 2,
+        "2": 0,
+        "3": 1
+      },
+      "detected_attractor_inventory": "one mapped attractor per atom; no additional attractor reported on this finite grid; not proof of exhaustive absence",
+      "stdout_path": "validation/qtaim-basins/investigation/multiwfn/water-3.txt",
+      "stdout_sha256": "1047d8d2901ef3a635efe6753f3e3acc26908cc3157ebbef1b2a0414f5e324bb",
+      "stdin_path": "validation/qtaim-basins/investigation/multiwfn/water-3.stdin",
+      "stdin_sha256": "d93b813184d7658a18b06a9585f43958a15d781178f19b505b1fafd28734bfbf",
+      "command": [
+        "/tmp/openwfn-multiwfn-reference/Multiwfn",
+        "/workspace/scratch/415762cb23f8/openWFN-012-ready/examples/water/water.fchk"
+      ],
+      "stderr": ""
+    },
+    {
+      "case": "water",
+      "input_path": "examples/water/water.fchk",
+      "input_sha256": "f3c6cb5e1f9f205e49b439339bb0833160f56be68f40e1c1097db3f30f52dcf2",
+      "molecule": {
+        "atoms": [
+          {
+            "atomic_number": 8,
+            "coordinates": [
+              2.0765610629969862e-32,
+              8.926428534125518e-32,
+              0.11404874769861381
+            ],
+            "nuclear_charge": 8.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              -8.361943085079024e-31,
+              0.7804708051752508,
+              -0.45619499026527804
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              -9.558010743042007e-17,
+              -0.7804708051752508,
+              -0.45619499026527804
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          }
+        ],
+        "charge": 0,
+        "multiplicity": 1,
+        "metadata": {
+          "source_program": "Gaussian",
+          "route": null,
+          "method": "RHF",
+          "basis": "3-21G",
+          "energy_hartree": -75.58595974892307,
+          "terminated_normally": null,
+          "source_program_version": null
+        },
+        "provenance": {
+          "source_path": "/workspace/scratch/415762cb23f8/openWFN-012-ready/examples/water/water.fchk",
+          "sha256": "f3c6cb5e1f9f205e49b439339bb0833160f56be68f40e1c1097db3f30f52dcf2",
+          "parser": "gaussian-fchk",
+          "warnings": [],
+          "source_format": "fchk",
+          "parser_version": "1",
+          "transformations": []
+        },
+        "bonds": [
+          {
+            "atom1": 0,
+            "atom2": 1,
+            "order": 1
+          },
+          {
+            "atom1": 0,
+            "atom2": 2,
+            "order": 1
+          }
+        ],
+        "boundary_conditions": {
+          "kind": "isolated"
+        }
+      },
+      "uniform_spacing_bohr": 0.04,
+      "grid_selection": 4,
+      "populations_e": [
+        8.9254267347,
+        0.537286006,
+        0.5372852266
+      ],
+      "charges_e": [
+        -0.9254267347000003,
+        0.462713994,
+        0.4627147734
+      ],
+      "population_sum_e": 9.9999979673,
+      "expected_electrons_e": 10,
+      "electron_closure_error_e": 2.0326999994324524e-06,
+      "reported_attractor_to_atom_index_zero_based": {
+        "1": 2,
+        "2": 0,
+        "3": 1
+      },
+      "detected_attractor_inventory": "one mapped attractor per atom; no additional attractor reported on this finite grid; not proof of exhaustive absence",
+      "stdout_path": "validation/qtaim-basins/investigation/multiwfn/water-4.txt",
+      "stdout_sha256": "2b6e933d782d0c2fc65b3180fed8dbe034b3eea507705e384039558a4d471ce0",
+      "stdin_path": "validation/qtaim-basins/investigation/multiwfn/water-4.stdin",
+      "stdin_sha256": "d3efab0f57352d74f53d1224c3603e9a430079603acbbd66203034866e861271",
+      "command": [
+        "/tmp/openwfn-multiwfn-reference/Multiwfn",
+        "/workspace/scratch/415762cb23f8/openWFN-012-ready/examples/water/water.fchk"
+      ],
+      "stderr": ""
+    },
+    {
+      "case": "methane",
+      "input_path": "examples/methane/methane.fchk",
+      "input_sha256": "1c37731946a48c3b64abd2a6c6594322f15fa1a4d5081144ef3a53bc7337b343",
+      "molecule": {
+        "atoms": [
+          {
+            "atomic_number": 6,
+            "coordinates": [
+              1.175009447737331e-17,
+              -1.175009447737331e-17,
+              0.0
+            ],
+            "nuclear_charge": 6.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              0.6248632776200715,
+              0.6248632776200715,
+              0.6248632776200715
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              -0.6248632776200715,
+              -0.6248632776200715,
+              0.6248632776200715
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              -0.6248632776200715,
+              0.6248632776200715,
+              -0.6248632776200715
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              0.6248632776200715,
+              -0.6248632776200715,
+              -0.6248632776200715
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          }
+        ],
+        "charge": 0,
+        "multiplicity": 1,
+        "metadata": {
+          "source_program": "Gaussian",
+          "route": null,
+          "method": "RHF",
+          "basis": "3-21G",
+          "energy_hartree": -39.97687654112752,
+          "terminated_normally": null,
+          "source_program_version": null
+        },
+        "provenance": {
+          "source_path": "/workspace/scratch/415762cb23f8/openWFN-012-ready/examples/methane/methane.fchk",
+          "sha256": "1c37731946a48c3b64abd2a6c6594322f15fa1a4d5081144ef3a53bc7337b343",
+          "parser": "gaussian-fchk",
+          "warnings": [],
+          "source_format": "fchk",
+          "parser_version": "1",
+          "transformations": []
+        },
+        "bonds": [
+          {
+            "atom1": 0,
+            "atom2": 1,
+            "order": 1
+          },
+          {
+            "atom1": 0,
+            "atom2": 2,
+            "order": 1
+          },
+          {
+            "atom1": 0,
+            "atom2": 3,
+            "order": 1
+          },
+          {
+            "atom1": 0,
+            "atom2": 4,
+            "order": 1
+          }
+        ],
+        "boundary_conditions": {
+          "kind": "isolated"
+        }
+      },
+      "uniform_spacing_bohr": 0.1,
+      "grid_selection": 2,
+      "populations_e": [
+        6.0092678549,
+        0.9976578759,
+        0.997656024,
+        0.9976560239,
+        0.9976560239
+      ],
+      "charges_e": [
+        -0.009267854900000039,
+        0.0023421241000000093,
+        0.0023439760000000254,
+        0.0023439761000000336,
+        0.0023439761000000336
+      ],
+      "population_sum_e": 9.999893802599999,
+      "expected_electrons_e": 10,
+      "electron_closure_error_e": 0.00010619740000095135,
+      "reported_attractor_to_atom_index_zero_based": {
+        "1": 0,
+        "2": 4,
+        "3": 3,
+        "4": 1,
+        "5": 2
+      },
+      "detected_attractor_inventory": "one mapped attractor per atom; no additional attractor reported on this finite grid; not proof of exhaustive absence",
+      "stdout_path": "validation/qtaim-basins/investigation/multiwfn/methane-2.txt",
+      "stdout_sha256": "d8aa809734874ccebddc74b20b7551cbefb0d381dae0640471f7353fd55895c5",
+      "stdin_path": "validation/qtaim-basins/investigation/multiwfn/methane-2.stdin",
+      "stdin_sha256": "7a5acaad901b39728053f37da07db360b3483efe7a26b5ed917333bb7b8b9dde",
+      "command": [
+        "/tmp/openwfn-multiwfn-reference/Multiwfn",
+        "/workspace/scratch/415762cb23f8/openWFN-012-ready/examples/methane/methane.fchk"
+      ],
+      "stderr": ""
+    },
+    {
+      "case": "methane",
+      "input_path": "examples/methane/methane.fchk",
+      "input_sha256": "1c37731946a48c3b64abd2a6c6594322f15fa1a4d5081144ef3a53bc7337b343",
+      "molecule": {
+        "atoms": [
+          {
+            "atomic_number": 6,
+            "coordinates": [
+              1.175009447737331e-17,
+              -1.175009447737331e-17,
+              0.0
+            ],
+            "nuclear_charge": 6.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              0.6248632776200715,
+              0.6248632776200715,
+              0.6248632776200715
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              -0.6248632776200715,
+              -0.6248632776200715,
+              0.6248632776200715
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              -0.6248632776200715,
+              0.6248632776200715,
+              -0.6248632776200715
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              0.6248632776200715,
+              -0.6248632776200715,
+              -0.6248632776200715
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          }
+        ],
+        "charge": 0,
+        "multiplicity": 1,
+        "metadata": {
+          "source_program": "Gaussian",
+          "route": null,
+          "method": "RHF",
+          "basis": "3-21G",
+          "energy_hartree": -39.97687654112752,
+          "terminated_normally": null,
+          "source_program_version": null
+        },
+        "provenance": {
+          "source_path": "/workspace/scratch/415762cb23f8/openWFN-012-ready/examples/methane/methane.fchk",
+          "sha256": "1c37731946a48c3b64abd2a6c6594322f15fa1a4d5081144ef3a53bc7337b343",
+          "parser": "gaussian-fchk",
+          "warnings": [],
+          "source_format": "fchk",
+          "parser_version": "1",
+          "transformations": []
+        },
+        "bonds": [
+          {
+            "atom1": 0,
+            "atom2": 1,
+            "order": 1
+          },
+          {
+            "atom1": 0,
+            "atom2": 2,
+            "order": 1
+          },
+          {
+            "atom1": 0,
+            "atom2": 3,
+            "order": 1
+          },
+          {
+            "atom1": 0,
+            "atom2": 4,
+            "order": 1
+          }
+        ],
+        "boundary_conditions": {
+          "kind": "isolated"
+        }
+      },
+      "uniform_spacing_bohr": 0.06,
+      "grid_selection": 3,
+      "populations_e": [
+        6.018824683,
+        0.9952904223,
+        0.9952910872,
+        0.9952910872,
+        0.9952910872
+      ],
+      "charges_e": [
+        -0.018824683000000064,
+        0.004709577700000023,
+        0.004708912799999965,
+        0.004708912799999965,
+        0.004708912799999965
+      ],
+      "population_sum_e": 9.9999883669,
+      "expected_electrons_e": 10,
+      "electron_closure_error_e": 1.1633099999741603e-05,
+      "reported_attractor_to_atom_index_zero_based": {
+        "1": 0,
+        "2": 4,
+        "3": 3,
+        "4": 2,
+        "5": 1
+      },
+      "detected_attractor_inventory": "one mapped attractor per atom; no additional attractor reported on this finite grid; not proof of exhaustive absence",
+      "stdout_path": "validation/qtaim-basins/investigation/multiwfn/methane-3.txt",
+      "stdout_sha256": "d9156537babec5a3fc15959531a3d1e72deafba4cae11890a1444b21904a4ab7",
+      "stdin_path": "validation/qtaim-basins/investigation/multiwfn/methane-3.stdin",
+      "stdin_sha256": "d93b813184d7658a18b06a9585f43958a15d781178f19b505b1fafd28734bfbf",
+      "command": [
+        "/tmp/openwfn-multiwfn-reference/Multiwfn",
+        "/workspace/scratch/415762cb23f8/openWFN-012-ready/examples/methane/methane.fchk"
+      ],
+      "stderr": ""
+    },
+    {
+      "case": "methane",
+      "input_path": "examples/methane/methane.fchk",
+      "input_sha256": "1c37731946a48c3b64abd2a6c6594322f15fa1a4d5081144ef3a53bc7337b343",
+      "molecule": {
+        "atoms": [
+          {
+            "atomic_number": 6,
+            "coordinates": [
+              1.175009447737331e-17,
+              -1.175009447737331e-17,
+              0.0
+            ],
+            "nuclear_charge": 6.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              0.6248632776200715,
+              0.6248632776200715,
+              0.6248632776200715
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              -0.6248632776200715,
+              -0.6248632776200715,
+              0.6248632776200715
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              -0.6248632776200715,
+              0.6248632776200715,
+              -0.6248632776200715
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              0.6248632776200715,
+              -0.6248632776200715,
+              -0.6248632776200715
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          }
+        ],
+        "charge": 0,
+        "multiplicity": 1,
+        "metadata": {
+          "source_program": "Gaussian",
+          "route": null,
+          "method": "RHF",
+          "basis": "3-21G",
+          "energy_hartree": -39.97687654112752,
+          "terminated_normally": null,
+          "source_program_version": null
+        },
+        "provenance": {
+          "source_path": "/workspace/scratch/415762cb23f8/openWFN-012-ready/examples/methane/methane.fchk",
+          "sha256": "1c37731946a48c3b64abd2a6c6594322f15fa1a4d5081144ef3a53bc7337b343",
+          "parser": "gaussian-fchk",
+          "warnings": [],
+          "source_format": "fchk",
+          "parser_version": "1",
+          "transformations": []
+        },
+        "bonds": [
+          {
+            "atom1": 0,
+            "atom2": 1,
+            "order": 1
+          },
+          {
+            "atom1": 0,
+            "atom2": 2,
+            "order": 1
+          },
+          {
+            "atom1": 0,
+            "atom2": 3,
+            "order": 1
+          },
+          {
+            "atom1": 0,
+            "atom2": 4,
+            "order": 1
+          }
+        ],
+        "boundary_conditions": {
+          "kind": "isolated"
+        }
+      },
+      "uniform_spacing_bohr": 0.04,
+      "grid_selection": 4,
+      "populations_e": [
+        6.0215961893,
+        0.9945969102,
+        0.9945957586,
+        0.9945957405,
+        0.9945957405
+      ],
+      "charges_e": [
+        -0.02159618930000029,
+        0.005403089800000038,
+        0.005404241399999954,
+        0.005404259500000008,
+        0.005404259500000008
+      ],
+      "population_sum_e": 9.9999803391,
+      "expected_electrons_e": 10,
+      "electron_closure_error_e": 1.9660899999607295e-05,
+      "reported_attractor_to_atom_index_zero_based": {
+        "1": 0,
+        "2": 4,
+        "3": 3,
+        "4": 1,
+        "5": 2
+      },
+      "detected_attractor_inventory": "one mapped attractor per atom; no additional attractor reported on this finite grid; not proof of exhaustive absence",
+      "stdout_path": "validation/qtaim-basins/investigation/multiwfn/methane-4.txt",
+      "stdout_sha256": "78df9759bf2650a0a01b49cc3577f0623317d6ff7768480126a088b5776eea0c",
+      "stdin_path": "validation/qtaim-basins/investigation/multiwfn/methane-4.stdin",
+      "stdin_sha256": "d3efab0f57352d74f53d1224c3603e9a430079603acbbd66203034866e861271",
+      "command": [
+        "/tmp/openwfn-multiwfn-reference/Multiwfn",
+        "/workspace/scratch/415762cb23f8/openWFN-012-ready/examples/methane/methane.fchk"
+      ],
+      "stderr": ""
+    },
+    {
+      "case": "ammonia",
+      "input_path": "examples/ammonia/ammonia.fchk",
+      "input_sha256": "cc6ef792b77b38b35a176bcb9856f10c178ad072fb5f56e8fa78d0f91c817d90",
+      "molecule": {
+        "atoms": [
+          {
+            "atomic_number": 7,
+            "coordinates": [
+              8.798786228256715e-21,
+              0.0848585998338295,
+              5.0191849796134e-32
+            ],
+            "nuclear_charge": 7.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              -0.961838261308019,
+              -0.19773040714352216,
+              -6.29540902533594e-28
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              0.4809191317123639,
+              -0.19813989611123073,
+              0.8330138000088819
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              0.4809191317123639,
+              -0.19813989611123073,
+              -0.8330138000088819
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          }
+        ],
+        "charge": 0,
+        "multiplicity": 1,
+        "metadata": {
+          "source_program": "Gaussian",
+          "route": null,
+          "method": "RHF",
+          "basis": "3-21G",
+          "energy_hartree": -55.87220344538076,
+          "terminated_normally": null,
+          "source_program_version": null
+        },
+        "provenance": {
+          "source_path": "/workspace/scratch/415762cb23f8/openWFN-012-ready/examples/ammonia/ammonia.fchk",
+          "sha256": "cc6ef792b77b38b35a176bcb9856f10c178ad072fb5f56e8fa78d0f91c817d90",
+          "parser": "gaussian-fchk",
+          "warnings": [],
+          "source_format": "fchk",
+          "parser_version": "1",
+          "transformations": []
+        },
+        "bonds": [
+          {
+            "atom1": 0,
+            "atom2": 1,
+            "order": 1
+          },
+          {
+            "atom1": 0,
+            "atom2": 2,
+            "order": 1
+          },
+          {
+            "atom1": 0,
+            "atom2": 3,
+            "order": 1
+          }
+        ],
+        "boundary_conditions": {
+          "kind": "isolated"
+        }
+      },
+      "uniform_spacing_bohr": 0.1,
+      "grid_selection": 2,
+      "populations_e": [
+        7.9690521868,
+        0.6767566283,
+        0.6772989787,
+        0.6772974009
+      ],
+      "charges_e": [
+        -0.9690521867999999,
+        0.32324337169999995,
+        0.3227010213,
+        0.3227025991
+      ],
+      "population_sum_e": 10.0004051947,
+      "expected_electrons_e": 10,
+      "electron_closure_error_e": 0.0004051947000007772,
+      "reported_attractor_to_atom_index_zero_based": {
+        "1": 1,
+        "2": 0,
+        "3": 3,
+        "4": 2
+      },
+      "detected_attractor_inventory": "one mapped attractor per atom; no additional attractor reported on this finite grid; not proof of exhaustive absence",
+      "stdout_path": "validation/qtaim-basins/investigation/multiwfn/ammonia-2.txt",
+      "stdout_sha256": "af928f02f952a2cd0a184cd12abebb1a386e50f08ac9ae972c0ecdffea835c61",
+      "stdin_path": "validation/qtaim-basins/investigation/multiwfn/ammonia-2.stdin",
+      "stdin_sha256": "7a5acaad901b39728053f37da07db360b3483efe7a26b5ed917333bb7b8b9dde",
+      "command": [
+        "/tmp/openwfn-multiwfn-reference/Multiwfn",
+        "/workspace/scratch/415762cb23f8/openWFN-012-ready/examples/ammonia/ammonia.fchk"
+      ],
+      "stderr": ""
+    },
+    {
+      "case": "ammonia",
+      "input_path": "examples/ammonia/ammonia.fchk",
+      "input_sha256": "cc6ef792b77b38b35a176bcb9856f10c178ad072fb5f56e8fa78d0f91c817d90",
+      "molecule": {
+        "atoms": [
+          {
+            "atomic_number": 7,
+            "coordinates": [
+              8.798786228256715e-21,
+              0.0848585998338295,
+              5.0191849796134e-32
+            ],
+            "nuclear_charge": 7.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              -0.961838261308019,
+              -0.19773040714352216,
+              -6.29540902533594e-28
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              0.4809191317123639,
+              -0.19813989611123073,
+              0.8330138000088819
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              0.4809191317123639,
+              -0.19813989611123073,
+              -0.8330138000088819
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          }
+        ],
+        "charge": 0,
+        "multiplicity": 1,
+        "metadata": {
+          "source_program": "Gaussian",
+          "route": null,
+          "method": "RHF",
+          "basis": "3-21G",
+          "energy_hartree": -55.87220344538076,
+          "terminated_normally": null,
+          "source_program_version": null
+        },
+        "provenance": {
+          "source_path": "/workspace/scratch/415762cb23f8/openWFN-012-ready/examples/ammonia/ammonia.fchk",
+          "sha256": "cc6ef792b77b38b35a176bcb9856f10c178ad072fb5f56e8fa78d0f91c817d90",
+          "parser": "gaussian-fchk",
+          "warnings": [],
+          "source_format": "fchk",
+          "parser_version": "1",
+          "transformations": []
+        },
+        "bonds": [
+          {
+            "atom1": 0,
+            "atom2": 1,
+            "order": 1
+          },
+          {
+            "atom1": 0,
+            "atom2": 2,
+            "order": 1
+          },
+          {
+            "atom1": 0,
+            "atom2": 3,
+            "order": 1
+          }
+        ],
+        "boundary_conditions": {
+          "kind": "isolated"
+        }
+      },
+      "uniform_spacing_bohr": 0.06,
+      "grid_selection": 3,
+      "populations_e": [
+        7.9686169161,
+        0.6771064985,
+        0.677134782,
+        0.677131347
+      ],
+      "charges_e": [
+        -0.9686169161000002,
+        0.32289350149999996,
+        0.322865218,
+        0.322868653
+      ],
+      "population_sum_e": 9.9999895436,
+      "expected_electrons_e": 10,
+      "electron_closure_error_e": 1.0456400000080635e-05,
+      "reported_attractor_to_atom_index_zero_based": {
+        "1": 1,
+        "2": 0,
+        "3": 3,
+        "4": 2
+      },
+      "detected_attractor_inventory": "one mapped attractor per atom; no additional attractor reported on this finite grid; not proof of exhaustive absence",
+      "stdout_path": "validation/qtaim-basins/investigation/multiwfn/ammonia-3.txt",
+      "stdout_sha256": "0c8b9b6be1414c5ccf8271dcb75fb3c4aa75539e3ca55ae2b1a98bd1bc83f775",
+      "stdin_path": "validation/qtaim-basins/investigation/multiwfn/ammonia-3.stdin",
+      "stdin_sha256": "d93b813184d7658a18b06a9585f43958a15d781178f19b505b1fafd28734bfbf",
+      "command": [
+        "/tmp/openwfn-multiwfn-reference/Multiwfn",
+        "/workspace/scratch/415762cb23f8/openWFN-012-ready/examples/ammonia/ammonia.fchk"
+      ],
+      "stderr": ""
+    },
+    {
+      "case": "ammonia",
+      "input_path": "examples/ammonia/ammonia.fchk",
+      "input_sha256": "cc6ef792b77b38b35a176bcb9856f10c178ad072fb5f56e8fa78d0f91c817d90",
+      "molecule": {
+        "atoms": [
+          {
+            "atomic_number": 7,
+            "coordinates": [
+              8.798786228256715e-21,
+              0.0848585998338295,
+              5.0191849796134e-32
+            ],
+            "nuclear_charge": 7.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              -0.961838261308019,
+              -0.19773040714352216,
+              -6.29540902533594e-28
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              0.4809191317123639,
+              -0.19813989611123073,
+              0.8330138000088819
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          },
+          {
+            "atomic_number": 1,
+            "coordinates": [
+              0.4809191317123639,
+              -0.19813989611123073,
+              -0.8330138000088819
+            ],
+            "nuclear_charge": 1.0,
+            "coordinate_unit": "angstrom"
+          }
+        ],
+        "charge": 0,
+        "multiplicity": 1,
+        "metadata": {
+          "source_program": "Gaussian",
+          "route": null,
+          "method": "RHF",
+          "basis": "3-21G",
+          "energy_hartree": -55.87220344538076,
+          "terminated_normally": null,
+          "source_program_version": null
+        },
+        "provenance": {
+          "source_path": "/workspace/scratch/415762cb23f8/openWFN-012-ready/examples/ammonia/ammonia.fchk",
+          "sha256": "cc6ef792b77b38b35a176bcb9856f10c178ad072fb5f56e8fa78d0f91c817d90",
+          "parser": "gaussian-fchk",
+          "warnings": [],
+          "source_format": "fchk",
+          "parser_version": "1",
+          "transformations": []
+        },
+        "bonds": [
+          {
+            "atom1": 0,
+            "atom2": 1,
+            "order": 1
+          },
+          {
+            "atom1": 0,
+            "atom2": 2,
+            "order": 1
+          },
+          {
+            "atom1": 0,
+            "atom2": 3,
+            "order": 1
+          }
+        ],
+        "boundary_conditions": {
+          "kind": "isolated"
+        }
+      },
+      "uniform_spacing_bohr": 0.04,
+      "grid_selection": 4,
+      "populations_e": [
+        7.9684420368,
+        0.6772383701,
+        0.6771584086,
+        0.6771546277
+      ],
+      "charges_e": [
+        -0.9684420368,
+        0.3227616299,
+        0.3228415914,
+        0.3228453723
+      ],
+      "population_sum_e": 9.9999934432,
+      "expected_electrons_e": 10,
+      "electron_closure_error_e": 6.5568000007232285e-06,
+      "reported_attractor_to_atom_index_zero_based": {
+        "1": 1,
+        "2": 0,
+        "3": 3,
+        "4": 2
+      },
+      "detected_attractor_inventory": "one mapped attractor per atom; no additional attractor reported on this finite grid; not proof of exhaustive absence",
+      "stdout_path": "validation/qtaim-basins/investigation/multiwfn/ammonia-4.txt",
+      "stdout_sha256": "398c157daef408fd245acf7ec69d1fa7b30e305c1519ef4a94bd3d95ff6e8c20",
+      "stdin_path": "validation/qtaim-basins/investigation/multiwfn/ammonia-4.stdin",
+      "stdin_sha256": "d3efab0f57352d74f53d1224c3603e9a430079603acbbd66203034866e861271",
+      "command": [
+        "/tmp/openwfn-multiwfn-reference/Multiwfn",
+        "/workspace/scratch/415762cb23f8/openWFN-012-ready/examples/ammonia/ammonia.fchk"
+      ],
+      "stderr": ""
+    }
+  ]
+}
