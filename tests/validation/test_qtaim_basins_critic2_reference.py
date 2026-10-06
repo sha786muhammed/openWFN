@@ -107,3 +107,17 @@ def test_map_critic2_rows_to_atoms_rejects_ambiguous_or_missing_match() -> None:
             np.asarray([[0.0, 0.0, 0.0], [50.0, 0.0, 0.0], [-50.0, 0.0, 0.0]]),
             tolerance_bohr=0.1,
         )
+
+
+def test_parse_critic2_basin_output_normalizes_critic2_ang_token_to_bohr() -> None:
+    module = _module()
+    text = FIXTURE.read_text(encoding="utf-8").replace("Position (bohr)", "Position (ang_)")
+    rows = module.parse_critic2_basin_output(text)
+
+    expected = np.asarray([[0.0, 0.0, 0.0], [1.43, 1.10, 0.0], [-1.43, 1.10, 0.0]])
+    np.testing.assert_allclose(
+        np.asarray([row.position_bohr for row in rows]),
+        expected / module.BOHR_TO_ANGSTROM,
+        rtol=0.0,
+        atol=1.0e-12,
+    )
