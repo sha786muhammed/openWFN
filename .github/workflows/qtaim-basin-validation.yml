@@ -74,7 +74,7 @@ jobs:
             --fixture methane=examples/methane/methane.fchk \
             --fixture ammonia=examples/ammonia/ammonia.fchk \
             --output qtaim-basins-reference.generated.json \
-            --lebedev-points 590 \
+            --lebedev-points 4802 \
             --mapping-tolerance-bohr 0.35 \
             --critic2-source-commit 9731d532c6407d35c75bbce5af449211470437a7 \
             --build-description "$BUILD_DESC"
