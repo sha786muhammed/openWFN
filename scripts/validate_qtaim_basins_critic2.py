@@ -15,7 +15,7 @@ import os
 import re
 import subprocess
 import tempfile
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
