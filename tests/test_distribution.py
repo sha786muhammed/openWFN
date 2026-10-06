@@ -39,7 +39,7 @@ def built_archives(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path
 
 
 def test_installed_distribution_version() -> None:
-    assert version("openwfn") == "0.11.0"
+    assert version("openwfn") == "0.12.0"
 
 
 def test_console_script_targets_cli_main() -> None:
@@ -91,7 +91,7 @@ def test_built_wheel_contains_runtime_modules_assets_examples_and_notices(
     assert any(name.endswith("/3Dmol-min.js.LICENSE.txt") for name in license_paths)
 
 
-def test_built_wheel_declares_interop_as_optional_extra(
+def test_built_wheel_includes_format_readers_by_default(
     built_archives: tuple[Path, Path],
 ) -> None:
     wheel, _ = built_archives
@@ -105,10 +105,16 @@ def test_built_wheel_declares_interop_as_optional_extra(
         requirement.startswith("qc-iodata==1.0.1") and "interop" in requirement
         for requirement in requirements
     )
-    assert not any(
+    assert any(
         requirement.startswith("qc-iodata") and "interop" not in requirement
         for requirement in requirements
     )
+    assert any(requirement.startswith('cclib==1.8.1') and 'extra' not in requirement
+               for requirement in requirements)
+    assert any(requirement.startswith('mcp==2.2.0') and 'extra' not in requirement
+               for requirement in requirements)
+    assert any(requirement.startswith('httpx') and 'extra' not in requirement
+               for requirement in requirements)
 
 
 def test_source_distribution_contains_project_policies_and_provenance(

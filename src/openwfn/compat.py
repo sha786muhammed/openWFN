@@ -2,7 +2,7 @@
 
 from .analysis.grids import set_cli_max_grid_points
 
-_GLOBAL_OPTIONS_WITH_VALUES = {"--output", "--format"}
+_GLOBAL_OPTIONS_WITH_VALUES = {"--output", "--format", "--input-format"}
 _GLOBAL_FLAGS = {
     "--quiet",
     "--verbose",

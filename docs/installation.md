@@ -1,26 +1,13 @@
 # Installation
 
-openWFN requires Python 3.10–3.13.
+openWFN supports Python 3.10–3.13.
 
-!!! note "Current release"
+!!! note "Release preparation"
 
-    The stable release is 0.11.0. See the
-    [0.11.0 release notes](releases/0.11.0.md) for support boundaries.
+    This checkout prepares 0.12.0. The published version remains 0.11.0 until
+    the [release gates](releases/0.12.0.md) pass.
 
-## Optional features
-
-In your environment, install only the optional features you need:
-
-```bash
-python -m pip install "openwfn[interop,outputs,mcp]==0.11.0"
-openwfn --version
-```
-
-The extras enable IOData ingestion, source-reported output extraction, and
-local MCP respectively. Local MCP is Stable within its tested read-only scope; QC output extraction
-remains Experimental.
-
-## Stable release
+## Use a separate environment
 
 ```bash
 python -m venv .venv
@@ -30,68 +17,52 @@ python -m pip install --upgrade openwfn
 openwfn --version
 ```
 
-On Windows, activate with `.venv\Scripts\activate`.
+On Windows, activate with `.venv\Scripts\activate`. With Conda, create an
+environment with a supported Python version, then use its `python -m pip`.
 
-## Exact release
+For this preparation checkout, replace the package-install command with:
 
-Pin the exact release when reproducing research:
+```bash
+python -m pip install -e .
+```
+
+The prepared release includes format readers, output extraction, local MCP and
+terminal chat in the base installation. Existing `interop`, `outputs` and
+`mcp` extra names remain accepted for compatibility. Published 0.11.0 still
+uses `openwfn[interop,outputs,mcp]==0.11.0` to enable those readers/interfaces.
+
+## What installation does not supply
+
+A chat model must already be configured. No weights are downloaded and no model
+calls are made by installation. See [Scientific assistant](assistant.md) or
+[MCP setup](mcp.md).
+
+Gaussian binary `.chk` conversion needs licensed Gaussian `formchk` on
+`PATH`. Formatted `.fchk` files do not need Gaussian. File support and
+analysis availability are different; check `openwfn FILE capabilities`.
+
+## Check with packaged examples
+
+```bash
+openwfn examples install ./openwfn-examples
+openwfn ./openwfn-examples/water.fchk summary
+```
+
+The install command also copies the eleven-molecule everyday-QC corpus to
+`openwfn-examples/everyday-qc/`. It does not replace existing files unless
+you explicitly permit overwrite.
+
+## Reproducing an older analysis
+
+Use the exact version recorded with that work. For the current published release:
 
 ```bash
 python -m pip install openwfn==0.11.0
 ```
 
-For reproducing work created with the immediately previous stable release, use:
+Older release pins and their support boundaries are retained in
+[release history](project/release-history.md), rather than mixed into this setup guide.
 
-```bash
-python -m pip install openwfn==0.10.1
-```
-
-For older work created with openWFN 0.10.0, use:
-
-```bash
-python -m pip install openwfn==0.10.0
-```
-
-For older work created with openWFN 0.9.2, use:
-
-```bash
-python -m pip install openwfn==0.9.2
-```
-
-For historical work created with openWFN 0.8.0, use:
-
-```bash
-python -m pip install openwfn==0.8.0
-```
-
-Historical pins are for reproducing older analyses; new work should use the current stable release unless a study requires an older environment.
-
-## Conda
-
-```bash
-conda create -n openwfn python=3.12
-conda activate openwfn
-python -m pip install --upgrade openwfn
-```
-
-Binary `.chk` conversion requires Gaussian's licensed `formchk` program on `PATH`. FCHK files do not require Gaussian.
-
-## Installed real-workflow corpus
-
-The wheel contains the same eleven everyday-QC Molden inputs used by release CI. Install the versioned examples with:
-
-```bash
-openwfn examples install installed-examples
-```
-
-The full corpus is written to `installed-examples/everyday-qc/`; the historical top-level `water.fchk` example remains available and the command's existing return/output contract is retained.
-
-## Resource monitoring
-
-Install `openwfn[interop,resources]==0.11.0` for everyday QC and optional
-trusted-process monitoring. The `resources` extra does not change scientific
-labels and does not provide OS hard quotas.
-
-The [0.10.0rc1 candidate notes](releases/0.10.0rc1.md),
-[0.10.0 stable notes](releases/0.10.0.md), and
-[0.10.1 release notes](releases/0.10.1.md) are retained for historical reproduction; 0.11.0 supersedes the 0.10 stable line.
+Optional trusted-process monitoring is available with the `resources` extra.
+It records runtime/resource evidence; it is not an OS quota or a change to
+scientific validation status.

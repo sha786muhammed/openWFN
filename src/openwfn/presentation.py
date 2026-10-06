@@ -15,6 +15,8 @@ def _display_name(name: str) -> str:
 
 
 def _plain_value(key: str, value: Any, units: dict[str, str]) -> str:
+    if value is None:
+        return 'Unavailable'
     unit = units.get(key)
     return f"{value} {unit}" if unit else str(value)
 
@@ -240,6 +242,14 @@ def render(result: ResultRecord, context: CommandContext) -> str:
         writer.writerow([*headings, "validation_status"])
         writer.writerow([*result.data.values(), result.validation_status])
         return stream.getvalue()
+
+    if result.kind == 'overview':
+        sections = ['Input overview']
+        for payload in result.data.get('results', {}).values():
+            sections.append(render(ResultRecord.from_dict(payload), context).rstrip())
+        sections.append('Next actions: ' + ', '.join(result.data.get('next_actions', [])))
+        sections.extend(_status_lines(result, context))
+        return '\n\n'.join(sections) + '\n'
 
     if result.kind == "viewer_export":
         lines = [f"Standalone molecule viewer exported to: {result.data['output']}"]

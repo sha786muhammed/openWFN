@@ -116,13 +116,13 @@ def test_summary_json_uses_the_registered_analysis_envelope() -> None:
     assert len(payload["provenance"]["input_sha256"]) == 64
 
 
-def test_non_interactive_file_without_command_defaults_to_summary() -> None:
+def test_non_interactive_file_without_command_defaults_to_overview() -> None:
     result = run_cli("--non-interactive", "--format", "json", str(WATER))
 
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
-    assert payload["kind"] == "summary"
-    assert payload["data"]["formula"] == "H2O"
+    assert payload["kind"] == "overview"
+    assert payload["data"]["results"]["summary"]["data"]["formula"] == "H2O"
 
 
 def test_doctor_describes_gaussian_output_metadata_without_traceback(tmp_path: Path) -> None:

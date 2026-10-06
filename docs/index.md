@@ -1,19 +1,17 @@
 ---
 title: Wavefunction analysis
-description: Unified wavefunction post-processing for reproducible computational chemistry.
+description: Wavefunction and quantum-chemistry post-processing with CLI, Python, MCP and local chat.
 hide:
   - toc
 ---
 
-!!! note "Current release"
+!!! note "Release preparation"
 
-    This site documents openWFN 0.11.0. Install it with
-    `python -m pip install --upgrade openwfn`, or pin the release with
-    `python -m pip install openwfn==0.11.0` for reproducible work.
-    See the [0.11.0 release notes](releases/0.11.0.md) for changes and support boundaries.
+    This checkout prepares 0.12.0. The published release is still 0.11.0 until
+    [release checks](releases/0.12.0.md) pass. New guided/chat features require
+    this checkout before publication.
 
 <div class="ow-home" markdown="1">
-
 <section class="ow-intro">
   <div class="ow-intro__brand" markdown="1">
 
@@ -21,124 +19,105 @@ hide:
   <img src="assets/images/openwfn-brand.svg" alt="openWFN" width="560" height="120">
 </div>
 
-<p class="ow-kicker">Wavefunction post-processing</p>
+<p class="ow-kicker">Quantum-chemistry post-processing</p>
 
 <h1>Wavefunction analysis, made reproducible.</h1>
 
-<p class="ow-lede">A unified post-processing toolkit for turning quantum-chemistry calculations into traceable, reproducible, review-ready results.</p>
+<p class="ow-lede">Wavefunction post-processing for quantum chemistry. Use the same scientific engine from the CLI, Python, MCP or terminal chat.</p>
 
-<p class="ow-context">Work locally through the command line or Python, from individual calculations to high-throughput collections.</p>
+<p class="ow-context">Analyze individual calculations and high-throughput collections. The available properties depend on the records in each file.</p>
 
 <div class="ow-actions">
-  <a class="ow-button ow-button--primary" href="start/first-analysis/">Run your first analysis</a>
-  <a class="ow-button" href="reference/cli/">Explore the CLI</a>
+  <a class="ow-button ow-button--primary" href="start/first-analysis/">Start an analysis</a>
+  <a class="ow-button" href="reference/formats-and-exports/">Check file support</a>
 </div>
 
-<p class="ow-meta">Python 3.10–3.13 · MIT licensed · local by design</p>
+<p class="ow-meta">Python 3.10–3.13 · MIT project code · local analysis</p>
 
   </div>
   <div class="ow-intro__command">
-    <div class="ow-command-label"><span>Quick start</span><span>Terminal</span></div>
-    <pre><code>python -m pip install --upgrade openwfn
-openwfn examples install ./openwfn-examples
+    <div class="ow-command-label"><span>Guided CLI</span><span>Terminal</span></div>
+    <pre><code># Release-preparation checkout:
+python -m pip install -e .
 
-openwfn ./openwfn-examples/water.fchk doctor
-openwfn ./openwfn-examples/water.fchk orbitals frontier</code></pre>
-    <a href="quick-start/">Installation and first steps →</a>
+openwfn molecule.molden open
+openwfn molecule.molden capabilities
+
+# A script-friendly result
+openwfn --format json molecule.molden summary</code></pre>
+    <a href="installation/">Installation and model setup →</a>
   </div>
 </section>
 
-## One toolkit for the complete analysis path
-
-<p class="ow-section-intro">Keep scientific interpretation, automation, evidence, and research output connected to the same calculation record.</p>
+## Choose how you work
 
 <div class="ow-capability-grid" markdown="1">
 
 <div class="ow-capability" markdown="1">
-<span class="ow-capability__number">01</span>
-### Analyze
-Inspect molecular structure, orbitals, electron density, atomic populations, electrostatic potential, vibrational spectra, excited states, and derived properties.
+<span class="ow-capability__number">CLI</span>
+### Guided or direct
+Open a file, choose an eligible workflow and adjust its settings. Use explicit commands for scripts.
+[CLI reference](reference/cli.md)
 </div>
 
 <div class="ow-capability" markdown="1">
-<span class="ow-capability__number">02</span>
-### Automate
-Use stable CLI commands, a typed Python model, structured results, resumable batches, and machine-readable exports.
+<span class="ow-capability__number">Python</span>
+### Use the API
+Load supported files and obtain versioned results with units, warnings and source provenance.
+[Python API](reference/python-api.md)
 </div>
 
 <div class="ow-capability" markdown="1">
-<span class="ow-capability__number">03</span>
-### Validate
-Track parser provenance, transformations, units, numerical controls, capability status, and fixture-backed evidence.
+<span class="ow-capability__number">MCP</span>
+### Connect a local client
+Expose read-only analyses inside a chosen input directory. Inspect capabilities before requesting a property.
+[MCP setup](mcp.md)
 </div>
 
 <div class="ow-capability" markdown="1">
-<span class="ow-capability__number">04</span>
-### Publish
-Produce JSON, CSV, figures, cube files, reports, and structures for review and reuse.
+<span class="ow-capability__number">Chat</span>
+### Ask a scientific question
+A configured model selects a tool; openWFN supplies the values and explanations. No model is downloaded automatically.
+[Scientific assistant](assistant.md)
 </div>
 
 </div>
 
-## A reproducible workflow, not a collection of scripts
-
-<div class="ow-workflow">
-<div class="ow-steps">
-<div class="ow-step"><strong>Inspect</strong><span>Identify the calculation and discover which scientific records are available.</span></div>
-<div class="ow-step"><strong>Analyze</strong><span>Run explicit methods with documented assumptions, units, and numerical controls.</span></div>
-<div class="ow-step"><strong>Verify</strong><span>Review status, provenance, convergence, validation evidence, and known limitations.</span></div>
-<div class="ow-step"><strong>Share</strong><span>Export durable results for collaborators, downstream systems, or publication.</span></div>
-</div>
-<div class="ow-terminal">
-<div class="ow-terminal__bar"><span>Structured analysis</span><span>water.fchk</span></div>
-<pre><code><span class="ow-prompt">$</span> openwfn water.fchk doctor
-Status: Stable
-Capabilities: basis, orbitals, density
-
-<span class="ow-prompt">$</span> openwfn water.fchk orbitals frontier
-HOMO       -0.477229 hartree
-LUMO        0.261095 hartree
-Gap         0.738323 hartree
-
-<span class="ow-prompt">$</span> openwfn batch ./calculations \
-    --analyses summary,frontier --output-dir ./results</code></pre>
-</div>
-</div>
-
-## Trust is visible
-
-<p class="ow-section-intro">Each capability has an explicit evidence boundary. Successful execution alone is not presented as universal scientific validation.</p>
-
-<div class="ow-proof-strip">
-  <div class="ow-proof ow-proof--stable"><strong>Stable</strong><span>Implemented and regression tested</span></div>
-  <div class="ow-proof ow-proof--validated"><strong>Validated</strong><span>Quantitative evidence for named fixtures</span></div>
-  <div class="ow-proof ow-proof--experimental"><strong>Experimental</strong><span>Available with documented caution</span></div>
-  <div class="ow-proof ow-proof--unsupported"><strong>Unsupported</strong><span>Required records, method, or evidence are absent</span></div>
-</div>
-
-<p class="ow-evidence-links"><a href="science/validation-status/">Review the Validation matrix</a> · <a href="limitations/">Understand the Limitations</a> · <a href="methods/">Read the Methods</a></p>
+## Start with the data in your file
 
 <section class="ow-support" markdown="1">
 
-## Current support, stated precisely
+| Input family | What to check |
+| --- | --- |
+| FCHK/FCH, Molden/`.molden.input`, WFN, WFX, MWFN, MKL | Basis, orbitals, density and electronic state actually present |
+| Cube/CUB | Stored field, axes and units; a grid is not a complete wavefunction |
+| Gaussian, ORCA and Q-Chem LOG/OUT | Source-reported properties and available spectroscopy records |
+| XYZ, PDB, MOL, SDF | Structure and supported formal-charge records; no inferred wavefunction |
 
-Gaussian formatted-checkpoint data remain the preferred native full-wavefunction path. The optional interoperability layer adds a pinned, fixture-tested multi-format ingestion contract, including the Molden inputs used by the everyday-QC release corpus. Structure-only XYZ, MOL/SDF, and PDB inputs expose only the records they actually contain. Use `capabilities` before analysis when the source format may be incomplete.
-
-[See formats and exports](reference/formats-and-exports.md) · [Review validation evidence](project/everyday-qc-validation.md)
+Binary Gaussian `.chk` needs the separately installed Gaussian `formchk`
+utility. A successful parse does not make every analysis available.
+[Formats and exports](reference/formats-and-exports.md) explain the tested contract.
 
 </section>
 
-## Start from your role
+## Check the result before using it
 
-<div class="ow-paths">
-  <div class="ow-path"><strong>For researchers</strong><p>Examine methods, evidence, provenance, reproducible reports, limitations, and Citation guidance.</p><a href="start/learning-paths/#researcher-path">Research workflow →</a></div>
-  <div class="ow-path"><strong>For students</strong><p>Build concepts from coordinates and orbitals through density, charges, spectroscopy, and electrostatic potential.</p><a href="start/learning-paths/#student-path">Learning path →</a></div>
-  <div class="ow-path"><strong>For developers</strong><p>Integrate the Python model or extend parsers, analyses, exporters, and validation fixtures.</p><a href="start/learning-paths/#developer-path">Developer path →</a></div>
+<div class="ow-proof-strip">
+  <div class="ow-proof ow-proof--stable"><strong>Stable</strong><span>Documented, regression-tested interface</span></div>
+  <div class="ow-proof ow-proof--validated"><strong>Validated</strong><span>Numerical evidence for a named scope</span></div>
+  <div class="ow-proof ow-proof--experimental"><strong>Experimental</strong><span>Independent validation is incomplete</span></div>
+  <div class="ow-proof ow-proof--unsupported"><strong>Unsupported</strong><span>The required data or method is unavailable</span></div>
 </div>
+
+Execution status and scientific validation are separate. A `partial` result
+keeps its warnings. Unknown charge, spin or convergence is not guessed.
+Density settings must be converged for the property and system being studied.
+
+[Methods](methods.md) · [Validation evidence](science/validation-status.md) ·
+[Limitations](limitations.md)
 
 <div class="ow-closing">
-  <strong>From calculated wavefunctions to trustworthy scientific evidence.</strong>
-  <span><a href="start/first-analysis/">Get started</a> · <a href="citation/">Citation</a> · <a href="https://github.com/sha786muhammed/openWFN">GitHub</a></span>
+  <strong>Keep the input hash, settings and complete result with your analysis.</strong>
+  <span><a href="citation/">Citation</a> · <a href="project/contributing/">Contributing</a> · <a href="https://github.com/sha786muhammed/openWFN">GitHub</a></span>
 </div>
-
 </div>

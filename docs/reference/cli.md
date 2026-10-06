@@ -7,7 +7,8 @@ openwfn examples install DESTINATION [--overwrite]
 
 Run `openwfn --help` or `openwfn FILE COMMAND --help` for the installed release's authoritative syntax. Global options such as `--format json` and `--input-format FORMAT_ID` go before the input path.
 
-For interoperable inputs, install the appropriate optional extra and inspect capabilities before requesting analyses that may not be present in the source file:
+Inspect capabilities before requesting analyses that may not be present in the
+source file. The prepared release includes its readers in the normal install:
 
 ```bash
 openwfn molecule.molden capabilities
@@ -16,6 +17,34 @@ openwfn calculation.out summary
 ```
 
 A parser being able to read a file does not mean every analysis is available. Missing records fail explicitly rather than being reconstructed silently.
+
+## Guided entry and overview
+
+```bash
+openwfn                              # Ask for an input file in a terminal
+openwfn molecule.fchk                 # Open guided mode in a terminal
+openwfn molecule.molden open          # Explicit guided mode
+openwfn --format json molecule.fchk analyze
+```
+
+`analyze` returns a bounded overview: molecular summary, frontier orbital energies when available, and supported next actions. It does not integrate density, calculate populations, or create exports. A file-only invocation outside an interactive terminal also returns this overview. Use the explicit `summary` command to keep the summary-only result schema.
+
+Guided menus depend on the loaded file's capabilities. Structure files do not imply a wavefunction; unknown electronic charge or multiplicity stays unknown. Density integration asks for spacing and padding in bohr and checks grid dimensions before allocating points. Save prompts show the absolute destination and require confirmation. Missing extensions are supplied; input and existing files are protected. Suggested destinations are under `results/` in the directory where the session started. Browser opening is optional.
+
+## Scientific assistant
+
+The prepared release includes chat and MCP in the base installation.
+Configure an existing model; no weights are downloaded automatically:
+
+```bash
+openwfn molecule.molden chat --model qwen3:8b
+openwfn --format json molecule.fchk chat --model qwen3:8b \
+  --question "What is the HOMO-LUMO gap?"
+```
+
+The model selects a tool, and openWFN renders the scientific answer. See
+[Scientific assistant](../assistant.md) for configuration, privacy, confirmation
+and resource limits. A missing model does not prevent ordinary CLI/API analysis.
 
 ## Global options
 
@@ -38,6 +67,9 @@ These are the public top-level choices shown by `openwfn --help`.
 |---|---|
 | `examples` | Install packaged example inputs |
 | `summary` | Summarize molecular identity and calculation state |
+| `analyze` | Bounded overview with eligible next analyses; no automatic exports |
+| `open` | Open capability-aware guided terminal mode |
+| `chat` | Ask a configured model to select scientific tools; openWFN supplies the values |
 | `info` | Show detailed FCHK metadata |
 | `dist` | Legacy distance command |
 | `angle` | Legacy angle command |
@@ -49,7 +81,7 @@ These are the public top-level choices shown by `openwfn --help`.
 | `interactive` | Start the guided terminal interface |
 | `graph` | Show molecular fragments |
 | `geometry` | Run distance, angle, and dihedral operations |
-| `population` | Run Mulliken or Löwdin population analysis |
+| `population` | Run Mulliken, Löwdin or supported ordinary Hirshfeld population analysis |
 | `bondorder` | Run Mayer AO bond-order analysis |
 | `orbitals` | Inspect frontier orbitals, compositions, cubes, DOS, and PDOS |
 | `excited` | Inspect source excited states, one state, or source transition dipoles |
@@ -68,7 +100,7 @@ These are the public top-level choices shown by `openwfn --help`.
 | `validate` | Run the density-conservation check |
 | `capabilities` | Report normalized component and analysis availability |
 | `doctor` | Inspect input type and available capabilities |
-| `properties` | Extract source-reported QC output properties with the optional cclib reader |
+| `properties` | Extract source-reported QC output properties with cclib |
 
 ## Inspection and structure
 

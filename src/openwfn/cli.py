@@ -316,6 +316,14 @@ def main(argv: list[str] | None = None) -> int:
 
     subparsers.add_parser("examples", help="Install redistributable example inputs")
     subparsers.add_parser("summary", help="Show professional molecular summary")
+    subparsers.add_parser("analyze", help="Show a bounded overview and available next analyses")
+    subparsers.add_parser("open", help="Open the guided terminal interface")
+    p_chat = subparsers.add_parser("chat", help="Ask a configured model to select openWFN scientific tools")
+    p_chat.add_argument("--model", help="Installed model name (or OPENWFN_CHAT_MODEL)")
+    p_chat.add_argument("--endpoint", help="OpenAI-compatible model base URL; defaults to local Ollama /v1")
+    p_chat.add_argument("--allow-remote", action="store_true", help="Allow sending questions and capabilities to the configured HTTPS model endpoint")
+    p_chat.add_argument("--question", help="Ask one question instead of opening a conversation")
+    p_chat.add_argument("--confirm-grid", action="store_true", help="Approve the model-requested density grid within assistant resource limits")
     subparsers.add_parser("info", help="Show detailed FCHK metadata")
 
     p_dist = subparsers.add_parser("dist", help="Distance between two atoms")
@@ -598,11 +606,37 @@ def main(argv: list[str] | None = None) -> int:
     ]
 
     translated_arguments = translate_legacy_args(raw_arguments)
-    translated_arguments = complete_implicit_command(
+    completed_arguments = complete_implicit_command(
         translated_arguments,
-        stdin_is_tty=sys.stdin.isatty(),
+        stdin_is_tty=False,
     )
+    implicit = completed_arguments != translated_arguments
+    translated_arguments = completed_arguments
+    if implicit:
+        translated_arguments[-1] = "analyze"
     args = parser.parse_args(translated_arguments)
+
+    can_prompt = (sys.stdin.isatty() and sys.stdout.isatty()
+                  and args.format not in {"json", "csv"}
+                  and not args.non_interactive and args.output is None and not args.quiet)
+    if not raw_arguments:
+        if not can_prompt:
+            parser.print_help()
+            return 2
+        try:
+            filename = input("Input file (blank to quit): ").strip()
+        except (EOFError, KeyboardInterrupt):
+            return 0
+        if not filename:
+            return 0
+        args.file = filename
+        args.command = "open"
+    elif implicit and can_prompt:
+        args.command = "open"
+
+    if (args.command == "open" or (args.command == "interactive" and args.format != "json")) and not can_prompt:
+        print("Guided mode needs an interactive terminal. Use `openwfn FILE analyze` instead.", file=sys.stderr)
+        return 2
 
     if args.command == "examples":
         parser.error("use `openwfn examples install DESTINATION` without an input file")
@@ -620,6 +654,23 @@ def main(argv: list[str] | None = None) -> int:
 
     def require_calculation() -> CalculationData:
         return _require_calculation(Path(args.file), format_hint=args.input_format)
+
+    if args.command == "analyze":
+        from .guided import build_guided_session, build_overview
+
+        return execute(lambda: build_overview(build_guided_session(
+            Path(args.file), format_hint=args.input_format)), _context(args))
+
+    if args.command == "chat":
+        from .assistant_terminal import chat_command
+        return chat_command(args.file, model=args.model, endpoint=args.endpoint,
+            allow_remote=args.allow_remote, format_hint=args.input_format,
+            question=args.question, output_format=args.format, output_path=args.output,
+            overwrite=args.overwrite, confirm_grid=args.confirm_grid,
+            context=_context(args), non_interactive=args.non_interactive)
+
+    if args.command == "open":
+        args.command = "interactive"
 
     if args.command == "properties":
         from .output_properties import read_output
@@ -840,7 +891,7 @@ def main(argv: list[str] | None = None) -> int:
         command = "openwfn " + " ".join(raw_arguments)
         return execute(
             lambda: build_report_record(
-                require_calculation(),
+                load_input(Path(args.file), format_hint=args.input_format),
                 analyses,
                 args.report_output,
                 args.report_format,
@@ -1072,8 +1123,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "interactive":
         try:
-            run_interactive(None, str(args.file))
-            return 0
+            from .utils import terminal_color
+            with terminal_color(not args.no_color and not args.plain and args.format != 'plain'):
+                return run_interactive(None, str(args.file), format_hint=args.input_format) or 0
         except Exception as exc:
             context = _context(args)
             return execute(lambda error=exc: (_ for _ in ()).throw(error), context)

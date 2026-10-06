@@ -28,13 +28,14 @@ def set_cli_max_grid_points(limit: int | None) -> None:
     _CLI_MAX_GRID_POINTS = limit
 
 
-def molecular_grid_points(
+def molecular_grid_layout(
     molecule: Molecule,
     *,
     spacing_bohr: float,
     padding_bohr: float,
     max_grid_points: int | None = None,
-) -> tuple[np.ndarray, tuple[float, float, float], tuple[int, int, int]]:
+) -> tuple[np.ndarray, tuple[int, int, int]]:
+    """Validate grid dimensions without allocating the point array."""
     if not isfinite(spacing_bohr) or spacing_bohr <= 0.0:
         raise ValueError("grid spacing must be positive and finite")
     if not isfinite(padding_bohr) or padding_bohr <= 0.0:
@@ -66,6 +67,21 @@ def molecular_grid_points(
             f"{limit:,}. Increase spacing or reduce padding, or raise max_grid_points "
             "only after confirming sufficient memory; no grid was allocated."
         )
+    return lower, shape
+
+
+def molecular_grid_points(
+    molecule: Molecule,
+    *,
+    spacing_bohr: float,
+    padding_bohr: float,
+    max_grid_points: int | None = None,
+) -> tuple[np.ndarray, tuple[float, float, float], tuple[int, int, int]]:
+    lower, shape = molecular_grid_layout(
+        molecule, spacing_bohr=spacing_bohr, padding_bohr=padding_bohr,
+        max_grid_points=max_grid_points,
+    )
+    count = prod(shape)
     axes = [
         lower[index] + np.arange(shape[index]) * spacing_bohr
         for index in range(3)

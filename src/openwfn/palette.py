@@ -54,17 +54,37 @@ def prompt_workflow(workflows: Sequence[Workflow] = WORKFLOWS) -> str:
     """Prompt with arrow-key navigation when questionary is installed."""
 
     try:
-        import questionary
-
-        choices = [questionary.Choice(workflow.label, value=workflow.command) for workflow in workflows]
-        selected = questionary.select(
-            "Select a workflow",
-            choices=[*choices, questionary.Choice("Quit", value="q")],
-            qmark="❯",
-        ).ask()
-        return selected or "q"
+        return terminal_selection('Select a workflow', workflows, cancel='q')
     except ImportError:
+        for index, workflow in enumerate(workflows, 1):
+            print(f"{index}. {workflow.label} ({workflow.command})")
         try:
-            return input("openWFN/main > ").strip().casefold()
-        except EOFError:
+            choice = input("Choose a number or command; q to quit > ").strip().casefold()
+            if choice.isdigit() and 1 <= int(choice) <= len(workflows):
+                return workflows[int(choice) - 1].command
+            return choice
+        except (EOFError, KeyboardInterrupt):
             return "q"
+    except (EOFError, KeyboardInterrupt):
+        return 'q'
+
+
+def terminal_selection(message: str, workflows: Sequence[Workflow], *,
+                       default: str | None = None, cancel: str = 'back') -> str:
+    """Shared arrow-key selector with an actual Escape binding."""
+    import questionary
+    from questionary.constants import DEFAULT_STYLE
+
+    from .utils import color_enabled
+
+    choices = [questionary.Choice(workflow.label, value=workflow.command) for workflow in workflows]
+    style = None if color_enabled() else questionary.Style([(selector, '') for selector, _ in DEFAULT_STYLE.style_rules])
+    question = questionary.select(message, choices=choices, default=default, qmark='❯',
+                                 instruction='Up/Down move · Enter select · Esc back · Ctrl+C cancel', style=style)
+    @question.application.key_bindings.add('escape')
+    def escape(event):
+        event.app.exit(result=cancel)
+    @question.application.key_bindings.add('c-d')
+    def eof(event):
+        event.app.exit(exception=EOFError)
+    return question.unsafe_ask() or cancel

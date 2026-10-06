@@ -8,14 +8,16 @@ from typing import Any, Iterable
 
 from . import __version__
 from .analysis.registry import run_analysis_safe
+from .data import OpenWFNData, wrap_calculation
+from .guided_exports import OutputDestination, export_atomically
 from .model import CalculationData
 from .results import ResultRecord
 
 
-def _sections(data: CalculationData, analyses: Iterable[str]) -> list[dict[str, Any]]:
+def _sections(results: Iterable[ResultRecord]) -> list[dict[str, Any]]:
     sections: list[dict[str, Any]] = []
-    for name in analyses:
-        result = run_analysis_safe(data, name)
+    for result in results:
+        name = result.analysis_name
         if result.status == "failed":
             sections.append(
                 {
@@ -23,6 +25,7 @@ def _sections(data: CalculationData, analyses: Iterable[str]) -> list[dict[str, 
                     "status": "Unavailable",
                     "validation_status": "Unsupported",
                     "error": result.error.message if result.error else "Unknown analysis failure",
+                    "provenance": result.provenance,
                 }
             )
         else:
@@ -36,6 +39,7 @@ def _sections(data: CalculationData, analyses: Iterable[str]) -> list[dict[str, 
                     "data": result.data,
                     "units": result.units,
                     "warnings": list(result.warnings),
+                    "provenance": result.provenance,
                 }
             )
     return sections
@@ -478,8 +482,8 @@ def _markdown(manifest: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def build_report(
-    data: CalculationData,
+def _build_report(
+    data: CalculationData | OpenWFNData,
     analyses: Iterable[str],
     output: Path,
     report_format: str,
@@ -488,7 +492,7 @@ def build_report(
     *,
     generated_at: str | None = None,
     overwrite: bool = False,
-) -> Path:
+) -> tuple[Path, list[ResultRecord]]:
     """Build a self-contained research report without network dependencies."""
 
     if report_format not in {"html", "markdown"}:
@@ -498,7 +502,16 @@ def build_report(
         raise ValueError(f"{report_format} reports require a {expected_suffix} output path")
     if output.exists() and not overwrite:
         raise FileExistsError(f"Output exists: {output}. Pass overwrite=True to replace it.")
-    provenance = data.molecule.provenance
+    normalized = data if isinstance(data, OpenWFNData) else wrap_calculation(data)
+    provenance = normalized.provenance
+    if provenance and provenance.source_path:
+        source = Path(provenance.source_path).expanduser()
+        if source.resolve() == output.resolve() or (
+            source.exists() and output.exists() and source.samefile(output)
+        ):
+            raise ValueError("Report output cannot replace its scientific input.")
+    metadata = normalized.calculation.molecule.metadata if normalized.calculation is not None else None
+    results = [run_analysis_safe(normalized, name) for name in analyses]
     manifest = {
         "schema_version": "1.0",
         "generated_at": generated_at or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
@@ -508,27 +521,44 @@ def build_report(
         "input": {
             "path": provenance.source_path if provenance else "Unavailable",
             "sha256": provenance.sha256 if provenance else "Unavailable",
-            "source_program": data.molecule.metadata.source_program,
-            "method": data.molecule.metadata.method,
-            "basis": data.molecule.metadata.basis,
+            "source_program": normalized.metadata.source_program,
+            "method": metadata.method if metadata else None,
+            "basis": metadata.basis if metadata else None,
         },
-        "sections": _sections(data, analyses),
+        "sections": _sections(results),
     }
     output.parent.mkdir(parents=True, exist_ok=True)
     text = _html(manifest) if report_format == "html" else _markdown(manifest)
-    output.write_text(text, encoding="utf-8")
-    return output
+    export_atomically(OutputDestination(output, overwrite), lambda stage: stage.write_text(text, encoding="utf-8"))
+    return output, results
+
+
+def build_report(
+    data: CalculationData | OpenWFNData,
+    analyses: Iterable[str],
+    output: Path,
+    report_format: str,
+    command: str,
+    parameters: dict[str, Any],
+    *,
+    generated_at: str | None = None,
+    overwrite: bool = False,
+) -> Path:
+    """Write a complete report, retaining unknown data and each analysis status."""
+    path, _ = _build_report(data, analyses, output, report_format, command, parameters,
+                            generated_at=generated_at, overwrite=overwrite)
+    return path
 
 
 def build_report_record(
-    data: CalculationData,
+    data: CalculationData | OpenWFNData,
     analyses: tuple[str, ...],
     output: Path,
     report_format: str,
     command: str,
     overwrite: bool = False,
 ) -> ResultRecord:
-    path = build_report(
+    path, results = _build_report(
         data,
         analyses,
         output,
@@ -537,7 +567,6 @@ def build_report_record(
         {"analyses": list(analyses), "format": report_format},
         overwrite=overwrite,
     )
-    results = [run_analysis_safe(data, name) for name in analyses]
     warnings = tuple(dict.fromkeys(w for result in results for w in result.warnings))
     return ResultRecord(
         kind="research_report",
@@ -545,4 +574,5 @@ def build_report_record(
         validation_status="Stable",
         status="partial" if any(result.status != "success" for result in results) else "success",
         warnings=warnings,
+        provenance=results[0].provenance if results else {},
     )

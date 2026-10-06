@@ -1,5 +1,13 @@
 # Release history
 
+## 0.12.0 — release preparation
+
+Guided workflows, built-in format readers and local MCP, a grounded terminal
+assistant, and output/parser hardening. The release is not published yet;
+scientific validation boundaries are unchanged.
+
+[Read the preparation notes](../releases/0.12.0.md)
+
 ## 0.11.0 — Hirshfeld, spectroscopy, and excited states
 
 Stable feature release integrating ordinary Hirshfeld populations/charges,

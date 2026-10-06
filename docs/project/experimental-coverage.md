@@ -2,7 +2,7 @@
 
 This is a coverage audit, not a blanket promotion to Validated. Eleven actual
 converged PySCF single-point wavefunctions are committed in
-[`examples/everyday-qc`](../../examples/everyday-qc/).
+[`examples/everyday-qc`](https://github.com/sha786muhammed/openWFN/tree/main/examples/everyday-qc/).
 The corpus includes restricted, doublet/triplet unrestricted, charged, pure
 spherical, Cartesian, diffuse, aromatic and intermolecular examples.
 Generated geometries are demonstrations, not optimized reference structures.

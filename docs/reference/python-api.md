@@ -1,7 +1,7 @@
 # Python API reference
 
-This reference describes openWFN 0.9.2. Optional output extraction remains
-Experimental; ingestion support does not imply every analysis is available.
+This reference describes the current Python interfaces. Output extraction
+remains Experimental; a supported input format does not guarantee every analysis.
 
 The stable import surface is declared by `openwfn.__all__`. Import from `openwfn` rather than internal modules when possible.
 
@@ -58,7 +58,8 @@ The stable import surface is declared by `openwfn.__all__`. Import from `openwfn
 
 ### `read_output(path) -> ResultRecord`
 
-This Experimental function requires the `outputs` extra (`cclib==1.8.1`).
+This Experimental function uses `cclib==1.8.1`, included in the prepared base
+installation. Published 0.11.0 uses the `outputs` extra.
 It reads QC text output directly, independently of `load()` and the
 wavefunction-analysis registry:
 
@@ -87,7 +88,7 @@ the input hash, parser/software versions and source path. See
 
 ### `load(path, *, format_hint=None) -> OpenWFNCalculation`
 
-Load a supported file through native ingestion or the optional IOData 1.0.1
+Load a supported file through native ingestion or the IOData 1.0.1
 adapter. The returned object exposes `OpenWFNData` via `.data`; it may hold
 structure, a full isolated calculation, periodic data, grids, integrals, and
 metadata as separate optional components. Only use molecular analysis methods

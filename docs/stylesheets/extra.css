@@ -128,8 +128,8 @@
   display: grid;
   gap: clamp(2rem, 5vw, 5rem);
   grid-template-columns: minmax(0, 1.12fr) minmax(18rem, 0.88fr);
-  margin: 0.7rem 0 3.4rem;
-  padding: clamp(2rem, 5vw, 4.5rem) 0;
+  margin: 0.7rem 0 2rem;
+  padding: clamp(1rem, 2vw, 2rem) 0;
 }
 
 .ow-intro__brand { min-width: 0; }
@@ -159,11 +159,11 @@
 [data-md-color-scheme="slate"] .ow-kicker { color: #67e8f9; }
 
 .ow-intro h1 {
-  font-size: clamp(2.35rem, 5vw, 4.4rem);
-  letter-spacing: -0.055em;
-  line-height: 0.98;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  letter-spacing: -0.035em;
+  line-height: 1.15;
   margin: 0 0 1.15rem;
-  max-width: 12ch;
+  max-width: 22ch;
 }
 
 .ow-lede {
@@ -396,7 +396,7 @@
 
 @media (max-width: 60rem) {
   .ow-intro { grid-template-columns: 1fr; }
-  .ow-intro h1 { max-width: 15ch; }
+  .ow-intro h1 { max-width: 22ch; }
   .ow-intro__command { max-width: 42rem; }
   .ow-workflow { grid-template-columns: 1fr; }
 }
@@ -408,7 +408,7 @@
   .ow-intro { gap: 1.5rem; margin-top: 0; padding: 1.5rem 0 2.5rem; }
   .ow-brand-panel { margin-bottom: 1.2rem; }
   .ow-brand-panel img { max-width: min(100%, 15rem); }
-  .ow-intro h1 { font-size: clamp(2.35rem, 12vw, 3.25rem); }
+  .ow-intro h1 { font-size: clamp(1.8rem, 7vw, 2.4rem); }
   .ow-actions { align-items: stretch; flex-direction: column; }
   .ow-button { width: 100%; }
   .ow-capability-grid, .ow-proof-strip, .ow-paths { grid-template-columns: 1fr; }

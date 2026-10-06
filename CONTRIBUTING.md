@@ -18,6 +18,19 @@ python -m pip install -e ".[test,docs]"
 Use a focused branch. Do not commit virtual environments, caches, build output,
 coverage files, generated package metadata, or research data.
 
+## Repository map
+
+| Location | Purpose |
+| --- | --- |
+| `src/openwfn/analysis/` | Scientific methods and the shared analysis registry |
+| `src/openwfn/parsers/`, `adapters/` | Native readers and normalized interoperability |
+| `src/openwfn/api.py`, `cli.py`, `assistant*.py`, `mcp_server.py` | Public interface boundaries |
+| `src/openwfn/exporters/`, `workbench/`, `reporting.py` | Result exports and presentation |
+| `tests/` | Interface, parser, numerical and regression tests |
+| `validation/` | Named references, manifests and comparison evidence |
+| `docs/` | Current user documentation and historical release notes |
+| `scripts/` | Repository, validation, distribution and release checks |
+
 ## Run the checks
 
 ```bash

@@ -117,11 +117,11 @@ def test_stable_interop_table_matches_pinned_inventory_and_validation_manifest()
 
 def test_mkdocs_loads_scholarly_theme_and_mathjax() -> None:
     config = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
-    stylesheet_entry = "stylesheets/openwfn-site-v2.css"
+    stylesheet_entry = "stylesheets/openwfn-site-v3.css"
     stylesheet = ROOT / "docs" / stylesheet_entry
 
     assert stylesheet_entry in config
-    assert '@import url("extra.css?v=20260913");' in stylesheet.read_text(
+    assert '@import url("extra.css?v=20261006");' in stylesheet.read_text(
         encoding="utf-8"
     )
     assert "javascripts/mathjax.js" in config
@@ -205,19 +205,11 @@ def test_every_public_image_has_complete_factual_provenance() -> None:
 def test_homepage_contains_product_paths_and_trust_links() -> None:
     home = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
 
-    for phrase in (
-        "Analyze",
-        "Automate",
-        "Validate",
-        "Publish",
-        "For researchers",
-        "For students",
-        "For developers",
-        "Validation",
-        "Limitations",
-        "Citation",
+    for destination in (
+        'reference/cli.md', 'reference/python-api.md', 'mcp.md', 'assistant.md',
+        'science/validation-status.md', 'limitations.md', 'citation/',
     ):
-        assert phrase in home
+        assert destination in home
 
 
 def test_homepage_uses_documentation_first_product_components() -> None:
@@ -226,7 +218,7 @@ def test_homepage_uses_documentation_first_product_components() -> None:
 
     for component in (
         "ow-intro", "ow-intro__brand", "ow-intro__command",
-        "ow-capability-grid", "ow-terminal", "ow-proof-strip", "ow-support",
+        "ow-capability-grid", "ow-proof-strip", "ow-support",
     ):
         assert component in home
         assert f".{component}" in styles
@@ -286,8 +278,8 @@ def test_header_has_no_duplicate_plain_title_and_home_identifies_toolkit() -> No
     assert ".md-header__topic { display: none; }" in styles
     assert ".md-header__title { display: none; }" not in styles
     product_description = (
-        "A unified post-processing toolkit for turning quantum-chemistry "
-        "calculations into traceable, reproducible, review-ready results."
+        "Wavefunction post-processing for quantum chemistry. Use the same scientific "
+        "engine from the CLI, Python, MCP or terminal chat."
     )
     assert product_description in home
     assert product_description in readme
@@ -330,7 +322,7 @@ def test_public_installation_copy_documents_stable_release() -> None:
     )
 
     assert "python -m pip install --upgrade openwfn" in public
-    assert "python -m pip install openwfn==0.8.0" in public
+    assert "python -m pip install openwfn==0.11.0" in public
     assert "pre-release handbook" not in public.lower()
 
 
@@ -545,10 +537,7 @@ def test_workbench_has_scoped_stable_interface_and_preserves_field_evidence() ->
     quick_start = (ROOT / "docs" / "quick-start.md").read_text(encoding="utf-8")
     metadata = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
 
-    assert "| Research reports |" in readme
-    assert "| Interactive workbench |" in readme
-    assert "| Interactive workbench | Offline workspaces" in readme
-    assert "Stable interface" in readme
+    assert "optional exports" in readme or "export options" in readme
     assert "Stable interface" in workbench
     assert "conservation status independently" in workbench
     assert "browser-report.json" in workbench

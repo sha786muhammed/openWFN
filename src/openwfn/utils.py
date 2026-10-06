@@ -1,18 +1,40 @@
 # src/openwfn/utils.py
 
+import os
 import sys
+from contextlib import contextmanager
+from contextvars import ContextVar
 from typing import Sequence
+
+_COLOR = ContextVar('openwfn_terminal_color', default=True)
+
+
+def color_enabled() -> bool:
+    return _COLOR.get() and 'NO_COLOR' not in os.environ
+
+
+@contextmanager
+def terminal_color(enabled: bool):
+    token = _COLOR.set(enabled)
+    try:
+        yield
+    finally:
+        _COLOR.reset(token)
+
+
+def _styled(text: str, code: str) -> str:
+    return f'\033[{code}m{text}\033[0m' if color_enabled() else text
 
 
 def print_header(text: str):
     """Print a professional themed header."""
-    print(f"\n\033[1;36m{text}\033[0m")
-    print("\033[1;36m" + "-" * len(text) + "\033[0m")
+    print('\n' + _styled(text, '1;36'))
+    print(_styled('-' * len(text), '1;36'))
 
 
 def print_subheader(text: str):
     """Print a compact section title."""
-    print(f"\n\033[1m{text}\033[0m")
+    print('\n' + _styled(text, '1'))
 
 def print_table_header(columns: list[tuple[str, int]]):
     """Print the header for a table with specified column widths."""
@@ -33,19 +55,19 @@ def print_table_row(data: list[tuple[str, int]]):
 
 def print_success(text: str):
     """Print a success message in green."""
-    print(f"\033[32m{text}\033[0m")
+    print(_styled(text, '32'))
 
 def print_warning(text: str):
     """Print a warning message in yellow."""
-    print(f"\033[33mWarning: {text}\033[0m")
+    print(_styled(f'Warning: {text}', '33'))
 
 def print_error(text: str):
     """Print an error message in red."""
-    print(f"\033[1;31mError: {text}\033[0m", file=sys.stderr)
+    print(_styled(f'Error: {text}', '1;31'), file=sys.stderr)
 
 def highlight(text: str) -> str:
     """Return text wrapped in a highlight color (cyan)."""
-    return f"\033[1;36m{text}\033[0m"
+    return _styled(text, '1;36')
 
 
 def print_key_value_rows(rows: Sequence[tuple[str, str]]) -> None:

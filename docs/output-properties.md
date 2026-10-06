@@ -1,10 +1,10 @@
 # Source-reported output properties
 
-This Experimental interface in 0.9.2 reads properties printed in QC text
-output through the optional cclib reader. Install:
+This Experimental interface reads properties printed in QC text output.
+The prepared 0.12.0 release includes cclib in the base install; published
+0.11.0 uses the `outputs` extra. See [installation](installation.md).
 
 ```bash
-python -m pip install "openwfn[outputs]==0.9.2"
 python -m openwfn.cli --format json calculation.out properties
 ```
 
