@@ -133,3 +133,36 @@ def test_parse_critic2_molecular_rows_accept_nonapplicable_multiplicity() -> Non
     assert [row.atomic_number for row in rows] == [8, 1, 1]
     assert [row.multiplicity for row in rows] == [None, None, None]
     assert [row.population for row in rows] == pytest.approx([8.4, 0.8, 0.8])
+
+
+def test_parse_critic2_molecular_properties_without_volume_column() -> None:
+    module = _module()
+    text = FIXTURE.read_text(encoding="utf-8")
+    text = text.replace(
+        "# Id   cp   ncp   Name  Z   mult     Volume            Pop             Lap",
+        "# Id   cp   ncp   Name  Z   mult       Pop             Lap",
+    )
+    text = text.replace(
+        "  1    1    1       O   8  1    1.20000000E+01  8.40000000E+00  1.00000000E-04",
+        "  1    1    1       O   8  1    8.40000000E+00  1.00000000E-04",
+    )
+    text = text.replace(
+        "  2    2    2       H   1  1    8.00000000E+00  8.00000000E-01 -5.00000000E-05",
+        "  2    2    2       H   1  1    8.00000000E-01 -5.00000000E-05",
+    )
+    text = text.replace(
+        "  3    3    3       H   1  1    8.00000000E+00  8.00000000E-01 -5.00000000E-05",
+        "  3    3    3       H   1  1    8.00000000E-01 -5.00000000E-05",
+    )
+    text = text.replace(
+        "  Sum                            2.80000000E+01  1.00000000E+01  0.00000000E+00",
+        "  Sum                            1.00000000E+01  0.00000000E+00",
+    )
+
+    rows = module.parse_critic2_basin_output(text)
+
+    assert [row.volume for row in rows] == [None, None, None]
+    assert [row.population for row in rows] == pytest.approx([8.4, 0.8, 0.8])
+    assert [row.laplacian_integral for row in rows] == pytest.approx(
+        [1.0e-4, -5.0e-5, -5.0e-5]
+    )
