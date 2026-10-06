@@ -27,8 +27,11 @@ def test_parse_critic2_basin_output_reads_positions_and_population() -> None:
     assert [row.atomic_number for row in rows] == [8, 1, 1]
     assert [row.name for row in rows] == ["O", "H", "H"]
     assert [row.population for row in rows] == pytest.approx([8.4, 0.8, 0.8])
-    assert np.asarray([row.position_bohr for row in rows]) == pytest.approx(
-        [[0.0, 0.0, 0.0], [1.43, 1.10, 0.0], [-1.43, 1.10, 0.0]]
+    np.testing.assert_allclose(
+        np.asarray([row.position_bohr for row in rows]),
+        np.asarray([[0.0, 0.0, 0.0], [1.43, 1.10, 0.0], [-1.43, 1.10, 0.0]]),
+        rtol=0.0,
+        atol=1.0e-12,
     )
 
 
