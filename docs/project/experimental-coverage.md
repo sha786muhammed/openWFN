@@ -1,5 +1,10 @@
 # Experimental functionality: evidence and real examples
 
+The development basin feature is scientifically blocked: reference closure and
+per-atom convergence have not met the prescribed gate. The
+[readiness audit](0.12-readiness.md) records actual failures, repaired checks,
+real-molecule investigations and resource measurements; it is not a promotion.
+
 This is a coverage audit, not a blanket promotion to Validated. Eleven actual
 converged PySCF single-point wavefunctions are committed in
 [`examples/everyday-qc`](../../examples/everyday-qc/).

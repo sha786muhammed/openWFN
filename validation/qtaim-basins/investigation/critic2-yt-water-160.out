@@ -1,0 +1,221 @@
+                  _   _     _          ___     
+                 (_) | |   (_)        |__ \    
+     ___   _ __   _  | |_   _    ___     ) |   
+    / __| | '__| | | | __| | |  / __|   / /    
+   | (__  | |    | | | |_  | | | (__   / /_    
+    \___| |_|    |_|  \__| |_|  \___| |____|   
+
+* CRITIC2: analysis of real-space scalar fields in solids and molecules.
+  (c) 1996-2019 A. Otero-de-la-Roza, A. Martin-Pendas, V. Lua~na
+  Distributed under GNU GPL v.3 (see COPYING for details)
+  Bugs, requests, and rants: aoterodelaroza@gmail.com 
+  Website: https://aoterodelaroza.github.io/critic2/
+  If you find this software useful, please cite:
+  A. Otero-de-la-Roza et al., Comput. Phys. Commun. 185 (2014) 1007-1018.
+  A. Otero-de-la-Roza et al., Comput. Phys. Commun. 180 (2009) 157-166.
+
++ critic2 (development), version 1.2.2
+         host: Linux-6.18.44
+         date: Tue 06 Oct 2026 09:42:45
+ compiled dat: /usr/local/share/critic2
+      datadir: /tmp/openwfn-012-critic2/dat
+...was found?: T
+       spglib: 1.13.0
+        libxc: <unavailable>
+
+CRITIC2--2026/10/6, 09:53:13.847
+
+critic2:1> %% molecule /workspace/scratch/415762cb23f8/openWFN-012-ready/examples/water/water.fchk 3
+
+* Molecular structure
+  From: /workspace/scratch/415762cb23f8/openWFN-012-ready/examples/water/water.fchk
+  Encompassing cell dimensions (bohr): 11.338357  14.288109  12.415961  
+  Encompassing cell dimensions (ang): 6.000000  7.560942  6.570244  
+  Empirical formula: O_(1) H_(2) 
+  Number of atoms: 3
+  Number of atomic species: 2
+  Number of electrons (with zero atomic charge): 10
+  Molar mass (amu): 18.015
+
++ List of atomic species: 
+# spc = atomic species. Z = atomic number. name = atomic name (symbol).
+# Q = charge.
+# spc  Z   name      Q    
+   1   8    O_     0.0000 
+   2   1    H_     0.0000 
+
++ List of atoms in Cartesian coordinates (ang_): 
+# at = complete list atomic ID. xyz = Cartesian coordinates. spc = atomic species.
+# name = atomic name (symbol). Z = atomic number. dnn = nearest-neighbor distance.
+# nat = non-equivalent atom id. mol = molecular fragment.
+# at         x                y                z         spc  name    Z     dnn     nat mol 
+   1     0.0000000000     0.0000000000     0.1140487472   1    O_     8    0.9666    1   1  
+   2     0.0000000000     0.7804708017    -0.4561949883   2    H_     1    0.9666    2   1  
+   3     0.0000000000    -0.7804708017    -0.4561949883   2    H_     1    0.9666    3   1  
+
++ Limits of the molecular cell (in fractions of the unit cell).
+# The part of the unit cell outside the molecular cell represents
+# infinity (no CPs or gradient paths in it).
+  x-axis: 0.1000 -> 0.9000
+  y-axis: 0.0794 -> 0.9206
+  z-axis: 0.0913 -> 0.9087
+
++ List of fragments in the system (1)
+# Id = fragment ID. nat = number of atoms in fragment. C-o-m = center of mass (ang_).
+# Discrete = is this fragment finite?
+# Id  nat           Center of mass            Discrete
+  1    3      0.000000    0.000000    0.050239   Yes  
+
+* List of scalar fields
++ Field number 0
+  Name: <promolecular>
+  Source: <generated>
+  Type: promolecular
+  Use core densities? F
+  Numerical derivatives? F
+  Nuclear CP signature: -3
+  Number of non-equivalent critical points: 3
+  Number of critical points in the unit cell: 3
+  Alias for this field (2): $0, $rho0
+  This is the REFERENCE field.
+
+* List of integrable properties (2)
+#  Id  Type  Field  Name  
+    1  fval      0  Pop    
+    2  lval      0  Lap    
+
+* List of additional properties at critical points (0)
+
+* List of core and pseudopotential charges for each field
+# id  type   core?  ZPSP
+  0  promol   no   
+
+critic2:2> %% load /workspace/scratch/415762cb23f8/openWFN-012-ready/examples/water/water.fchk
+
++ Field number 1
+  Name: water.fchk
+  Source: /workspace/scratch/415762cb23f8/openWFN-012-ready/examples/water/water.fchk
+  Type: molecular wavefunction
+  Wavefunction type: restricted
+  Number of MOs (total): 5
+  Number of MOs (occupied): 5
+  Number of primitives (GTO): 21
+  Number of EDFs: 0
+  Use core densities? F
+  Numerical derivatives? F
+  Nuclear CP signature: -3
+  Number of non-equivalent critical points: 3
+  Number of critical points in the unit cell: 3
+  Alias for this field (1): $1
+
+* Field number 1 is now REFERENCE.
+
+critic2:3> %% load as "$1" 160 160 160
+
++ Field number 2
+  Name: <generated>, grid: $1
+  Source: <generated>
+  Type: grid
+  Grid dimensions : 160  160  160  
+  Max. length Voronoi-relevant vector (ang_):  0.04726  
+  First elements... 1.633100359468E-18  2.249341724662E-18  3.084477973377E-18  
+  Last elements... 7.280804440091E-20  5.016004878862E-20  3.440489234021E-20  
+  Sum of elements... 2.038777175889E+04
+  Sum of squares of elements... 1.784835852875E+05
+  Cell integral (grid SUM) = 10.01186620
+  Min: 1.77798086E-20
+  Average: 4.97748334E-03
+  Max: 2.32184769E+02
+  Interpolation mode (1=nearest,2=linear,3=spline,4=tricubic,5=smoothrho): 4
+  Use core densities? F
+  Numerical derivatives? F
+  Nuclear CP signature: -3
+  Number of non-equivalent critical points: 3
+  Number of critical points in the unit cell: 3
+  Alias for this field (1): $2
+
+critic2:4> %% reference 2
+
+* Field number 2 is now REFERENCE.
+
+* List of integrable properties (2)
+#  Id  Type  Field  Name  
+    1  fval      2  Pop    
+    2  lval      2  Lap    
+
+* Summary of critical points for the reference field
+  Non-equivalent critical points = 3
+  Cell critical points = 3
+  Topological class (n|b|r|c): 3(3) 0(0) 0(0) 0(0) 
+  Poincare-Hopf sum: 3
+
+critic2:5> %% integrable 2
+
+* List of integrable properties (3)
+#  Id  Type  Field  Name  
+    1  fval      2  Pop    
+    2  lval      2  Lap    
+    3   f        2  $2    
+
+critic2:6> %% YT JSON /tmp/openwfn-012-yt/water-160.json
+
+* Yu-Trinkle integration 
+  Please cite: 
+  Min Yu, Dallas Trinkle, J. Chem. Phys. 134 (2011) 064111.
++ Distance for atomic assignment (ang_): 1.0000E+40
++ Attractors in YT: 3
++ Attractors after reordering: 3
+
++ Integrating atomic properties
+
++ Integrated property (number 1): Pop
++ Integrated property (number 2): Lap
++ Integrated property (number 3): $2
+
+* List of properties integrated in the attractor basins
++ The "Label" entries will be used to identify the integrable property
+  in the tables of integrated atomic properties. The entries with
+  an "x" will not be integrated.
+# id    Label      fid  Field       Additional
+  1        Pop       2 Field (v)     
+  2        Lap       2 Laplcn (v)    
+  3         $2       2 Field         
+
+* Key for the interpretation of table headings
+# Id = attractor identifier
+# cp/at = critical point/atom from the complete CP/atom list
+# (lvec) = lattice translation from CP/atom to the main cell's representative
+# ncp/nat = critical point/atom from the non-equivalent CP/atom list
+# Name = atomic name
+# Z = atomic number
+# Position = attractor position
+# Mol = molecule identifier (see corresponding table above)
+# Volume = volume of the reference field basins.
+# Pop (population) = the reference field integrated in its own basins.
+# Lap = Laplacian of the reference field integrated in the reference field basins.
+# $xxx = field xxx integrated in the basins of the reference field.
+
+* List of attractors integrated
+# Id   cp   ncp   Name  Z   mult           Position (ang_) 
+  1    1    1      O_   8   --    0.0000000    0.0000000    0.1140487  
+  2    2    2      H_   1   --    0.0000000    0.7804708   -0.4561950  
+  3    3    3      H_   1   --    0.0000000   -0.7804708   -0.4561950  
+
+* Integrated atomic properties
+# (See key above for interpretation of column headings.)
+# Integrable properties 1 to 3
+# Id   cp   ncp   Name  Z   mult       Pop             Lap             $2        
+  1    1    1      O_   8   --   8.98484609E+00  1.24333850E-01  8.98484609E+00 
+  2    2    2      H_   1   --   5.13510052E-01 -6.21669250E-02  5.13510052E-01 
+  3    3    3      H_   1   --   5.13510052E-01 -6.21669250E-02  5.13510052E-01 
+--------------------------------------------------------------------------------
+  Sum                            1.00118662E+01 -1.26107458E-13  1.00118662E+01 
+
+* WRITE JSON file: /tmp/openwfn-012-yt/water-160.json
+
+critic2:7> 
+CRITIC2 ended successfully (0 WARNINGS, 0 COMMENTS)
+
+Elapsed wall time: 42s
+Elapsed CPU time: 42s
+CRITIC2--2026/10/6, 09:53:56.836

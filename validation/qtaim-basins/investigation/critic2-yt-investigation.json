@@ -1,0 +1,86 @@
+{
+  "status": "not_accepted_reference",
+  "program": "Critic2",
+  "source_commit": "9731d532c6407d35c75bbce5af449211470437a7",
+  "method": "Yu-Trinkle; molecular border 3 angstrom; LOAD AS independent FCHK density",
+  "cases": [
+    {
+      "case": "water",
+      "n": 160,
+      "populations": [
+        8.98484609,
+        0.513510052,
+        0.513510052
+      ],
+      "seconds": 42.995385652000095,
+      "input_sha256": "f3c6cb5e1f9f205e49b439339bb0833160f56be68f40e1c1097db3f30f52dcf2",
+      "stdout_sha256": "f0d2d10cd6a73b65213c58c86c4655011da43ffd7c3d8b9db0739cbde8ed5c74"
+    },
+    {
+      "case": "methane",
+      "n": 160,
+      "populations": [
+        5.99322115,
+        1.00204955,
+        1.0020496,
+        1.0020496,
+        1.0020496
+      ],
+      "seconds": 26.449559975000057,
+      "input_sha256": "1c37731946a48c3b64abd2a6c6594322f15fa1a4d5081144ef3a53bc7337b343",
+      "stdout_sha256": "f3a4d65ad84932c83fce5ee8531072f1bb56a07c683fc6d39298776a258ea429"
+    },
+    {
+      "case": "ammonia",
+      "n": 160,
+      "populations": [
+        8.02537908,
+        0.660100374,
+        0.659179898,
+        0.659179898
+      ],
+      "seconds": 27.89285367100001,
+      "input_sha256": "cc6ef792b77b38b35a176bcb9856f10c178ad072fb5f56e8fa78d0f91c817d90",
+      "stdout_sha256": "7b57a6631fd681a35e322fb99d0bba2bc0eb30f2207a6dde9f4d9d7ec1aa560e"
+    },
+    {
+      "case": "water",
+      "n": 240,
+      "populations": [
+        8.96798258,
+        0.516122653,
+        0.516122653
+      ],
+      "seconds": 145.11729871700004,
+      "input_sha256": "f3c6cb5e1f9f205e49b439339bb0833160f56be68f40e1c1097db3f30f52dcf2",
+      "stdout_sha256": "66866fcfd5d6620c4b5516a00b887efad28f32e7eb8cccebb05a22788c28e715"
+    },
+    {
+      "case": "methane",
+      "n": 240,
+      "populations": [
+        5.99240302,
+        1.00190072,
+        1.00190075,
+        1.00190075,
+        1.00190075
+      ],
+      "seconds": 86.81382950900002,
+      "input_sha256": "1c37731946a48c3b64abd2a6c6594322f15fa1a4d5081144ef3a53bc7337b343",
+      "stdout_sha256": "60d270adc1660088ae1c666f682363777e6b3b2d8424904f9ef6c211e6d474d2"
+    },
+    {
+      "case": "ammonia",
+      "n": 240,
+      "populations": [
+        8.01643342,
+        0.662581284,
+        0.660522712,
+        0.660522712
+      ],
+      "seconds": 151.54134313300005,
+      "input_sha256": "cc6ef792b77b38b35a176bcb9856f10c178ad072fb5f56e8fa78d0f91c817d90",
+      "stdout_sha256": "e53ece658ce45bd1ac7d31ebe8e18b2b30e35f1575ffcdb616fe62e96edd825d"
+    }
+  ]
+}

@@ -116,7 +116,8 @@ fields before electronic analyses.
 | `geometry_angle(i, j, k)` | Angle in degrees; one-based atom numbers |
 | `geometry_dihedral(i, j, k, l)` | Signed torsion in degrees; one-based atom numbers |
 | `orbitals(spin)` | Frontier orbitals for `"alpha"`, `"beta"`, or spin-complete `"all"` |
-| `population(method)` | Populations for `"mulliken"` or `"lowdin"` |
+| `population(method)` | Populations for `"mulliken"`, `"lowdin"`, or `"hirshfeld"` |
+| `qtaim_basins(settings=None, include_boundary_diagnostics=False)` | Experimental all-electron QTAIM populations and charges; explicit unresolved-density and closure diagnostics |
 | `density(kind, spacing_bohr=0.15, padding_bohr=6.0)` | Grid integration for `"total"`, `"alpha"`, `"beta"`, or `"spin"` |
 | `nci_cube(output, field="signed_density", ...)` | Experimental total-density NCI cube for `rho`, `lambda2`, `signed_density`, or bounded `rdg` |
 
@@ -232,6 +233,7 @@ RDG cube export requires an explicit positive finite `rdg_cap`; only the declare
 | `orbital-composition` | Experimental default HOMO/alpha/Lowdin AO projections |
 | `pdos` | Experimental atom-resolved Lowdin PDOS by default |
 | `qtaim` | Experimental bounded QTAIM critical-point topology and optional bond-path diagnostics; search completeness is never implied |
+| `qtaim-basins` | Experimental all-electron atomic basin populations from bounded density-gradient flow; unresolved density and closure remain explicit |
 | `raman-spectrum` | Experimental source Raman activities plus Gaussian-broadened activity curve |
 | `summary` | Version 2: complete molecular summary or partial structure-only/periodic summary |
 | `transition-dipoles` | Experimental source-reported excited-state transition dipoles |

@@ -128,6 +128,12 @@ Release CI additionally builds the wheel, installs it into a clean environment, 
 
 ## Remaining scientific boundaries
 
+The 0.12 basin audit found a rejected independent water reference and failed
+water/methane population-refinement gates. Actual comparisons are now mandatory
+in the dedicated scientific workflow and publication gate. See the
+[readiness record](0.12-readiness.md); passing existing workflows does not close
+this new scientific gate.
+
 Vibrational spectroscopy and excited-state/UV–Vis analyses remain Experimental until independently generated reference data and predeclared acceptance tolerances support narrower promotion. Genuine transition-density NTOs, analytic density derivatives, QTAIM/ELF/LOL/NCI topology and basin integration each require their own method definition, reference data and validation gate.
 
 Cartesian AO normalization can differ across programs. Physical fields and representation-invariant quantities are compared where appropriate; representation-dependent Löwdin quantities are not claimed equivalent when the AO normalization convention differs. ECPs, arbitrary diffuse tails, broad high-angular-momentum molecular coverage and correlated post-SCF densities retain their documented limitations.

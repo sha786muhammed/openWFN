@@ -49,7 +49,7 @@ These are the public top-level choices shown by `openwfn --help`.
 | `interactive` | Start the guided terminal interface |
 | `graph` | Show molecular fragments |
 | `geometry` | Run distance, angle, and dihedral operations |
-| `population` | Run Mulliken or Löwdin population analysis |
+| `population` | Run Mulliken, Löwdin, Hirshfeld, or Experimental QTAIM population analysis |
 | `bondorder` | Run Mayer AO bond-order analysis |
 | `orbitals` | Inspect frontier orbitals, compositions, cubes, DOS, and PDOS |
 | `excited` | Inspect source excited states, one state, or source transition dipoles |
@@ -94,6 +94,7 @@ CLI atom indices are one-based. Summary bonds and fragments use a geometry heuri
 | `orbitals` | `orbitals composition`, `orbitals cube`, `orbitals dos`, `orbitals pdos` | Availability depends on the required wavefunction records |
 | `bondorder` | `bondorder mayer [--threshold VALUE]` | Mayer status follows input diagnostics and the documented validation boundary |
 | `population` | `population mulliken` or `population lowdin` | Requires AO density and overlap data; conservation failures return `partial` with warnings |
+| `population` | `population qtaim [--boundary-diagnostics] [quadrature/flow options]` | Experimental all-electron gradient-flow basins; see [controls and scientific gates](../science/qtaim-basins.md) |
 | `density` | `density integrate [--kind total\|alpha\|beta\|spin]` | Grid integration with explicit conservation diagnostics |
 | `density` | `density cube OUTPUT [grid options]` | Generated grid keeps its actual success/partial and validation state |
 | `nci` | `nci cube OUTPUT --field rho\|lambda2\|signed-density\|rdg [options]` | Experimental total-density NCI field export; RDG requires explicit `--rdg-cap` |

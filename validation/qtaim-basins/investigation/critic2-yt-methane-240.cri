@@ -1,0 +1,6 @@
+molecule /workspace/scratch/415762cb23f8/openWFN-012-ready/examples/methane/methane.fchk 3
+load /workspace/scratch/415762cb23f8/openWFN-012-ready/examples/methane/methane.fchk
+load as "$1" 240 240 240
+reference 2
+integrable 2
+YT JSON /tmp/openwfn-012-yt/methane-240.json

@@ -1,0 +1,224 @@
+                  _   _     _          ___     
+                 (_) | |   (_)        |__ \    
+     ___   _ __   _  | |_   _    ___     ) |   
+    / __| | '__| | | | __| | |  / __|   / /    
+   | (__  | |    | | | |_  | | | (__   / /_    
+    \___| |_|    |_|  \__| |_|  \___| |____|   
+
+* CRITIC2: analysis of real-space scalar fields in solids and molecules.
+  (c) 1996-2019 A. Otero-de-la-Roza, A. Martin-Pendas, V. Lua~na
+  Distributed under GNU GPL v.3 (see COPYING for details)
+  Bugs, requests, and rants: aoterodelaroza@gmail.com 
+  Website: https://aoterodelaroza.github.io/critic2/
+  If you find this software useful, please cite:
+  A. Otero-de-la-Roza et al., Comput. Phys. Commun. 185 (2014) 1007-1018.
+  A. Otero-de-la-Roza et al., Comput. Phys. Commun. 180 (2009) 157-166.
+
++ critic2 (development), version 1.2.2
+         host: Linux-6.18.44
+         date: Tue 06 Oct 2026 09:42:45
+ compiled dat: /usr/local/share/critic2
+      datadir: /tmp/openwfn-012-critic2/dat
+...was found?: T
+       spglib: 1.13.0
+        libxc: <unavailable>
+
+CRITIC2--2026/10/6, 09:53:40.296
+
+critic2:1> %% molecule /workspace/scratch/415762cb23f8/openWFN-012-ready/examples/ammonia/ammonia.fchk 3
+
+* Molecular structure
+  From: /workspace/scratch/415762cb23f8/openWFN-012-ready/examples/ammonia/ammonia.fchk
+  Encompassing cell dimensions (bohr): 14.064773  11.873146  14.486693  
+  Encompassing cell dimensions (ang): 7.442757  6.282998  7.666028  
+  Empirical formula: N_(1) H_(3) 
+  Number of atoms: 4
+  Number of atomic species: 2
+  Number of electrons (with zero atomic charge): 10
+  Molar mass (amu): 17.031
+
++ List of atomic species: 
+# spc = atomic species. Z = atomic number. name = atomic name (symbol).
+# Q = charge.
+# spc  Z   name      Q    
+   1   7    N_     0.0000 
+   2   1    H_     0.0000 
+
++ List of atoms in Cartesian coordinates (ang_): 
+# at = complete list atomic ID. xyz = Cartesian coordinates. spc = atomic species.
+# name = atomic name (symbol). Z = atomic number. dnn = nearest-neighbor distance.
+# nat = non-equivalent atom id. mol = molecular fragment.
+# at         x                y                z         spc  name    Z     dnn     nat mol 
+   1     0.0000000000     0.0848585995     0.0000000000   1    N_     7    1.0025    1   1  
+   2    -0.9618382571    -0.1977304063     0.0000000000   2    H_     1    1.0025    2   1  
+   3     0.4809191296    -0.1981398952     0.8330137963   2    H_     1    1.0026    3   1  
+   4     0.4809191296    -0.1981398952    -0.8330137963   2    H_     1    1.0026    4   1  
+
++ Limits of the molecular cell (in fractions of the unit cell).
+# The part of the unit cell outside the molecular cell represents
+# infinity (no CPs or gradient paths in it).
+  x-axis: 0.0806 -> 0.9194
+  y-axis: 0.0955 -> 0.9045
+  z-axis: 0.0783 -> 0.9217
+
++ List of fragments in the system (1)
+# Id = fragment ID. nat = number of atoms in fragment. C-o-m = center of mass (ang_).
+# Discrete = is this fragment finite?
+# Id  nat           Center of mass            Discrete
+  1    4      0.000000    0.034636   -0.000000   Yes  
+
+* List of scalar fields
++ Field number 0
+  Name: <promolecular>
+  Source: <generated>
+  Type: promolecular
+  Use core densities? F
+  Numerical derivatives? F
+  Nuclear CP signature: -3
+  Number of non-equivalent critical points: 4
+  Number of critical points in the unit cell: 4
+  Alias for this field (2): $0, $rho0
+  This is the REFERENCE field.
+
+* List of integrable properties (2)
+#  Id  Type  Field  Name  
+    1  fval      0  Pop    
+    2  lval      0  Lap    
+
+* List of additional properties at critical points (0)
+
+* List of core and pseudopotential charges for each field
+# id  type   core?  ZPSP
+  0  promol   no   
+
+critic2:2> %% load /workspace/scratch/415762cb23f8/openWFN-012-ready/examples/ammonia/ammonia.fchk
+
++ Field number 1
+  Name: ammonia.fchk
+  Source: /workspace/scratch/415762cb23f8/openWFN-012-ready/examples/ammonia/ammonia.fchk
+  Type: molecular wavefunction
+  Wavefunction type: restricted
+  Number of MOs (total): 5
+  Number of MOs (occupied): 5
+  Number of primitives (GTO): 24
+  Number of EDFs: 0
+  Use core densities? F
+  Numerical derivatives? F
+  Nuclear CP signature: -3
+  Number of non-equivalent critical points: 4
+  Number of critical points in the unit cell: 4
+  Alias for this field (1): $1
+
+* Field number 1 is now REFERENCE.
+
+critic2:3> %% load as "$1" 160 160 160
+
++ Field number 2
+  Name: <generated>, grid: $1
+  Source: <generated>
+  Type: grid
+  Grid dimensions : 160  160  160  
+  Max. length Voronoi-relevant vector (ang_):  0.04791  
+  First elements... 1.008820833864E-21  1.628900493119E-21  2.614169242415E-21  
+  Last elements... 1.057539314334E-18  7.370225249818E-19  5.105695978811E-19  
+  Sum of elements... 1.693787211513E+04
+  Sum of squares of elements... 9.019214383117E+04
+  Cell integral (grid SUM) = 10.00383925
+  Min: 1.38693012E-22
+  Average: 4.13522268E-03
+  Max: 1.26858455E+02
+  Interpolation mode (1=nearest,2=linear,3=spline,4=tricubic,5=smoothrho): 4
+  Use core densities? F
+  Numerical derivatives? F
+  Nuclear CP signature: -3
+  Number of non-equivalent critical points: 4
+  Number of critical points in the unit cell: 4
+  Alias for this field (1): $2
+
+critic2:4> %% reference 2
+
+* Field number 2 is now REFERENCE.
+
+* List of integrable properties (2)
+#  Id  Type  Field  Name  
+    1  fval      2  Pop    
+    2  lval      2  Lap    
+
+* Summary of critical points for the reference field
+  Non-equivalent critical points = 4
+  Cell critical points = 4
+  Topological class (n|b|r|c): 4(4) 0(0) 0(0) 0(0) 
+  Poincare-Hopf sum: 4
+
+critic2:5> %% integrable 2
+
+* List of integrable properties (3)
+#  Id  Type  Field  Name  
+    1  fval      2  Pop    
+    2  lval      2  Lap    
+    3   f        2  $2    
+
+critic2:6> %% YT JSON /tmp/openwfn-012-yt/ammonia-160.json
+
+* Yu-Trinkle integration 
+  Please cite: 
+  Min Yu, Dallas Trinkle, J. Chem. Phys. 134 (2011) 064111.
++ Distance for atomic assignment (ang_): 1.0000E+40
++ Attractors in YT: 4
++ Attractors after reordering: 4
+
++ Integrating atomic properties
+
++ Integrated property (number 1): Pop
++ Integrated property (number 2): Lap
++ Integrated property (number 3): $2
+
+* List of properties integrated in the attractor basins
++ The "Label" entries will be used to identify the integrable property
+  in the tables of integrated atomic properties. The entries with
+  an "x" will not be integrated.
+# id    Label      fid  Field       Additional
+  1        Pop       2 Field (v)     
+  2        Lap       2 Laplcn (v)    
+  3         $2       2 Field         
+
+* Key for the interpretation of table headings
+# Id = attractor identifier
+# cp/at = critical point/atom from the complete CP/atom list
+# (lvec) = lattice translation from CP/atom to the main cell's representative
+# ncp/nat = critical point/atom from the non-equivalent CP/atom list
+# Name = atomic name
+# Z = atomic number
+# Position = attractor position
+# Mol = molecule identifier (see corresponding table above)
+# Volume = volume of the reference field basins.
+# Pop (population) = the reference field integrated in its own basins.
+# Lap = Laplacian of the reference field integrated in the reference field basins.
+# $xxx = field xxx integrated in the basins of the reference field.
+
+* List of attractors integrated
+# Id   cp   ncp   Name  Z   mult           Position (ang_) 
+  1    1    1      N_   7   --    0.0000000    0.0848586    0.0000000  
+  2    2    2      H_   1   --   -0.9618383   -0.1977304    0.0000000  
+  3    3    3      H_   1   --    0.4809191   -0.1981399    0.8330138  
+  4    4    4      H_   1   --    0.4809191   -0.1981399   -0.8330138  
+
+* Integrated atomic properties
+# (See key above for interpretation of column headings.)
+# Integrable properties 1 to 3
+# Id   cp   ncp   Name  Z   mult       Pop             Lap             $2        
+  1    1    1      N_   7   --   8.02537908E+00  1.29408891E-01  8.02537908E+00 
+  2    2    2      H_   1   --   6.60100374E-01 -3.47072552E-02  6.60100374E-01 
+  3    3    3      H_   1   --   6.59179898E-01 -4.73508179E-02  6.59179898E-01 
+  4    4    4      H_   1   --   6.59179898E-01 -4.73508179E-02  6.59179898E-01 
+--------------------------------------------------------------------------------
+  Sum                            1.00038393E+01 -2.09455370E-12  1.00038393E+01 
+
+* WRITE JSON file: /tmp/openwfn-012-yt/ammonia-160.json
+
+critic2:7> 
+CRITIC2 ended successfully (0 WARNINGS, 0 COMMENTS)
+
+Elapsed wall time: 27s
+Elapsed CPU time: 27s
+CRITIC2--2026/10/6, 09:54:08.183

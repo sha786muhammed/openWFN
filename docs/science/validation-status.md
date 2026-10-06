@@ -2,6 +2,10 @@
 
 openWFN separates implementation availability from scientific confidence.
 
+Development `qtaim-basins` remains **Experimental** and its independent release
+gate is blocked. Conservation alone does not validate individual populations.
+See the [0.12 readiness audit](../project/0.12-readiness.md).
+
 - **Stable** — supported interface with tests for expected behavior.
 - **Validated** — compared against defined numerical invariants or reference expectations for the named validation set.
 - **Experimental** — available for investigation, but evidence is not broad enough for routine research claims.

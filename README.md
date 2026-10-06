@@ -165,6 +165,7 @@ The default density spacing of **0.15 bohr** is an accuracy/performance tradeoff
 | Orbitals | Alpha/beta and spin-complete frontier energies and HOMO–LUMO information | Stable interface; fixture-backed regressions |
 | Population | Mulliken and symmetric Löwdin populations and charges | Stable interface; conservation checked and fixture-scoped |
 | Hirshfeld population | Ordinary neutral-pro-atom H/C/N/O populations/charges | Validated only for the named ten-case all-electron scope |
+| QTAIM atomic basins (development) | Bounded total-density gradient-flow populations/charges | Experimental; independent agreement and grid-convergence release gates remain open |
 | Density | Total, alpha, beta, and spin integration and cube export | Validated only for named active validation fixtures and tolerances |
 | Electrostatic potential | Nuclear and charge-model point ESP | Stable interface; special-case regressions included |
 | Gaussian-integral electronic/total ESP | AO-density Coulomb integrals with independent references | Validated for the eleven-case set |

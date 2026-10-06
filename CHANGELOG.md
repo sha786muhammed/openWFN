@@ -2,6 +2,17 @@
 
 All notable changes to openWFN are documented in this file.
 
+## Unreleased — 0.12 readiness investigation
+
+- Fail closed on deficient/nonphysical Critic2 references and require actual basin
+  agreement/convergence comparisons, retained failure evidence and a scientific
+  publication gate.
+- Keep expensive basin execution deferred from MCP and disclose that limitation.
+- Reuse shared analytic density/gradient contractions without redundant Hessians
+  during basin flow; preserve numerical output and bounded AO chunks.
+- Document Experimental basin behavior and the failed water/reference and
+  water/methane convergence gates. This is not a release or validation promotion.
+
 ## [0.11.0] - 2026-10-04
 
 Stable feature release integrating native Hirshfeld analysis, vibrational spectroscopy, and method-general excited-state/UV–Vis post-processing through the shared openWFN model and interfaces.

@@ -56,6 +56,10 @@ research-report rendering, and an offline Workbench workspace. It remains
 **Experimental** because parser/regression/interface parity is not an independent
 scientific validation corpus.
 
+The basin stage remains blocked on independent reference closure and
+per-atom grid convergence. Keep PR #57 draft and preserve Experimental status.
+See the [basin evidence and readiness](docs/science/qtaim-basins.md) for concrete evidence.
+
 The staged sequence through excited states/UV–Vis, NTO, density derivatives,
 QTAIM, ELF/LOL and NCI/RDG now has first-party implementations, each retaining
 its own scientific confidence boundary. ELF/LOL and NCI/RDG each add required

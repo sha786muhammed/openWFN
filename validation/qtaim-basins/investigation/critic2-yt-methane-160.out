@@ -1,0 +1,227 @@
+                  _   _     _          ___     
+                 (_) | |   (_)        |__ \    
+     ___   _ __   _  | |_   _    ___     ) |   
+    / __| | '__| | | | __| | |  / __|   / /    
+   | (__  | |    | | | |_  | | | (__   / /_    
+    \___| |_|    |_|  \__| |_|  \___| |____|   
+
+* CRITIC2: analysis of real-space scalar fields in solids and molecules.
+  (c) 1996-2019 A. Otero-de-la-Roza, A. Martin-Pendas, V. Lua~na
+  Distributed under GNU GPL v.3 (see COPYING for details)
+  Bugs, requests, and rants: aoterodelaroza@gmail.com 
+  Website: https://aoterodelaroza.github.io/critic2/
+  If you find this software useful, please cite:
+  A. Otero-de-la-Roza et al., Comput. Phys. Commun. 185 (2014) 1007-1018.
+  A. Otero-de-la-Roza et al., Comput. Phys. Commun. 180 (2009) 157-166.
+
++ critic2 (development), version 1.2.2
+         host: Linux-6.18.44
+         date: Tue 06 Oct 2026 09:42:45
+ compiled dat: /usr/local/share/critic2
+      datadir: /tmp/openwfn-012-critic2/dat
+...was found?: T
+       spglib: 1.13.0
+        libxc: <unavailable>
+
+CRITIC2--2026/10/6, 09:53:13.847
+
+critic2:1> %% molecule /workspace/scratch/415762cb23f8/openWFN-012-ready/examples/methane/methane.fchk 3
+
+* Molecular structure
+  From: /workspace/scratch/415762cb23f8/openWFN-012-ready/examples/methane/methane.fchk
+  Encompassing cell dimensions (bohr): 13.699998  13.699998  13.699998  
+  Encompassing cell dimensions (ang): 7.249727  7.249727  7.249727  
+  Empirical formula: C_(1) H_(4) 
+  Number of atoms: 5
+  Number of atomic species: 2
+  Number of electrons (with zero atomic charge): 10
+  Molar mass (amu): 16.042
+
++ List of atomic species: 
+# spc = atomic species. Z = atomic number. name = atomic name (symbol).
+# Q = charge.
+# spc  Z   name      Q    
+   1   6    C_     0.0000 
+   2   1    H_     0.0000 
+
++ List of atoms in Cartesian coordinates (ang_): 
+# at = complete list atomic ID. xyz = Cartesian coordinates. spc = atomic species.
+# name = atomic name (symbol). Z = atomic number. dnn = nearest-neighbor distance.
+# nat = non-equivalent atom id. mol = molecular fragment.
+# at         x                y                z         spc  name    Z     dnn     nat mol 
+   1     0.0000000000     0.0000000000     0.0000000000   1    C_     6    1.0823    1   1  
+   2     0.6248632749     0.6248632749     0.6248632749   2    H_     1    1.0823    2   1  
+   3    -0.6248632749    -0.6248632749     0.6248632749   2    H_     1    1.0823    3   1  
+   4    -0.6248632749     0.6248632749    -0.6248632749   2    H_     1    1.0823    4   1  
+   5     0.6248632749    -0.6248632749    -0.6248632749   2    H_     1    1.0823    5   1  
+
++ Limits of the molecular cell (in fractions of the unit cell).
+# The part of the unit cell outside the molecular cell represents
+# infinity (no CPs or gradient paths in it).
+  x-axis: 0.0828 -> 0.9172
+  y-axis: 0.0828 -> 0.9172
+  z-axis: 0.0828 -> 0.9172
+
++ List of fragments in the system (1)
+# Id = fragment ID. nat = number of atoms in fragment. C-o-m = center of mass (ang_).
+# Discrete = is this fragment finite?
+# Id  nat           Center of mass            Discrete
+  1    5      0.000000    0.000000    0.000000   Yes  
+
+* List of scalar fields
++ Field number 0
+  Name: <promolecular>
+  Source: <generated>
+  Type: promolecular
+  Use core densities? F
+  Numerical derivatives? F
+  Nuclear CP signature: -3
+  Number of non-equivalent critical points: 5
+  Number of critical points in the unit cell: 5
+  Alias for this field (2): $0, $rho0
+  This is the REFERENCE field.
+
+* List of integrable properties (2)
+#  Id  Type  Field  Name  
+    1  fval      0  Pop    
+    2  lval      0  Lap    
+
+* List of additional properties at critical points (0)
+
+* List of core and pseudopotential charges for each field
+# id  type   core?  ZPSP
+  0  promol   no   
+
+critic2:2> %% load /workspace/scratch/415762cb23f8/openWFN-012-ready/examples/methane/methane.fchk
+
++ Field number 1
+  Name: methane.fchk
+  Source: /workspace/scratch/415762cb23f8/openWFN-012-ready/examples/methane/methane.fchk
+  Type: molecular wavefunction
+  Wavefunction type: restricted
+  Number of MOs (total): 5
+  Number of MOs (occupied): 5
+  Number of primitives (GTO): 27
+  Number of EDFs: 0
+  Use core densities? F
+  Numerical derivatives? F
+  Nuclear CP signature: -3
+  Number of non-equivalent critical points: 5
+  Number of critical points in the unit cell: 5
+  Alias for this field (1): $1
+
+* Field number 1 is now REFERENCE.
+
+critic2:3> %% load as "$1" 160 160 160
+
++ Field number 2
+  Name: <generated>, grid: $1
+  Source: <generated>
+  Type: grid
+  Grid dimensions : 160  160  160  
+  Max. length Voronoi-relevant vector (ang_):  0.04531  
+  First elements... 2.867261528971E-23  4.344163642781E-23  6.601573670889E-23  
+  Last elements... 1.403166619431E-17  9.963895193371E-18  7.037481776497E-18  
+  Sum of elements... 1.593162615383E+04
+  Sum of squares of elements... 5.117016325213E+04
+  Cell integral (grid SUM) = 10.00141949
+  Min: 2.86726153E-23
+  Average: 3.88955717E-03
+  Max: 9.39083796E+01
+  Interpolation mode (1=nearest,2=linear,3=spline,4=tricubic,5=smoothrho): 4
+  Use core densities? F
+  Numerical derivatives? F
+  Nuclear CP signature: -3
+  Number of non-equivalent critical points: 5
+  Number of critical points in the unit cell: 5
+  Alias for this field (1): $2
+
+critic2:4> %% reference 2
+
+* Field number 2 is now REFERENCE.
+
+* List of integrable properties (2)
+#  Id  Type  Field  Name  
+    1  fval      2  Pop    
+    2  lval      2  Lap    
+
+* Summary of critical points for the reference field
+  Non-equivalent critical points = 5
+  Cell critical points = 5
+  Topological class (n|b|r|c): 5(5) 0(0) 0(0) 0(0) 
+  Poincare-Hopf sum: 5
+
+critic2:5> %% integrable 2
+
+* List of integrable properties (3)
+#  Id  Type  Field  Name  
+    1  fval      2  Pop    
+    2  lval      2  Lap    
+    3   f        2  $2    
+
+critic2:6> %% YT JSON /tmp/openwfn-012-yt/methane-160.json
+
+* Yu-Trinkle integration 
+  Please cite: 
+  Min Yu, Dallas Trinkle, J. Chem. Phys. 134 (2011) 064111.
++ Distance for atomic assignment (ang_): 1.0000E+40
++ Attractors in YT: 5
++ Attractors after reordering: 5
+
++ Integrating atomic properties
+
++ Integrated property (number 1): Pop
++ Integrated property (number 2): Lap
++ Integrated property (number 3): $2
+
+* List of properties integrated in the attractor basins
++ The "Label" entries will be used to identify the integrable property
+  in the tables of integrated atomic properties. The entries with
+  an "x" will not be integrated.
+# id    Label      fid  Field       Additional
+  1        Pop       2 Field (v)     
+  2        Lap       2 Laplcn (v)    
+  3         $2       2 Field         
+
+* Key for the interpretation of table headings
+# Id = attractor identifier
+# cp/at = critical point/atom from the complete CP/atom list
+# (lvec) = lattice translation from CP/atom to the main cell's representative
+# ncp/nat = critical point/atom from the non-equivalent CP/atom list
+# Name = atomic name
+# Z = atomic number
+# Position = attractor position
+# Mol = molecule identifier (see corresponding table above)
+# Volume = volume of the reference field basins.
+# Pop (population) = the reference field integrated in its own basins.
+# Lap = Laplacian of the reference field integrated in the reference field basins.
+# $xxx = field xxx integrated in the basins of the reference field.
+
+* List of attractors integrated
+# Id   cp   ncp   Name  Z   mult           Position (ang_) 
+  1    1    1      C_   6   --    0.0000000    0.0000000    0.0000000  
+  2    2    2      H_   1   --    0.6248633    0.6248633    0.6248633  
+  3    3    3      H_   1   --   -0.6248633   -0.6248633    0.6248633  
+  4    4    4      H_   1   --   -0.6248633    0.6248633   -0.6248633  
+  5    5    5      H_   1   --    0.6248633   -0.6248633   -0.6248633  
+
+* Integrated atomic properties
+# (See key above for interpretation of column headings.)
+# Integrable properties 1 to 3
+# Id   cp   ncp   Name  Z   mult       Pop             Lap             $2        
+  1    1    1      C_   6   --   5.99322115E+00 -4.13585593E-04  5.99322115E+00 
+  2    2    2      H_   1   --   1.00204955E+00  1.04551980E-04  1.00204955E+00 
+  3    3    3      H_   1   --   1.00204960E+00  1.03011203E-04  1.00204960E+00 
+  4    4    4      H_   1   --   1.00204960E+00  1.03011203E-04  1.00204960E+00 
+  5    5    5      H_   1   --   1.00204960E+00  1.03011203E-04  1.00204960E+00 
+--------------------------------------------------------------------------------
+  Sum                            1.00014195E+01 -5.13538161E-12  1.00014195E+01 
+
+* WRITE JSON file: /tmp/openwfn-012-yt/methane-160.json
+
+critic2:7> 
+CRITIC2 ended successfully (0 WARNINGS, 0 COMMENTS)
+
+Elapsed wall time: 26s
+Elapsed CPU time: 26s
+CRITIC2--2026/10/6, 09:53:40.287
