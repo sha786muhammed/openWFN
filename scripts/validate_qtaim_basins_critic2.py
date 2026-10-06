@@ -83,11 +83,11 @@ def _position_factor(header_line: str) -> float:
     raise ValueError(f"Unsupported Critic2 attractor position unit: {unit}")
 
 
-def _critic2_table_tokens(line: str) -> list[str] | None:
+def _critic2_table_tokens(line: str, *, min_columns: int = 9) -> list[str] | None:
     """Return fixed table columns for a Critic2 data row, or None for non-rows."""
 
     tokens = line.split()
-    if len(tokens) < 9:
+    if len(tokens) < min_columns:
         return None
     try:
         int(tokens[0])
@@ -119,7 +119,7 @@ def _parse_attractor_positions(text: str) -> dict[int, tuple[str, int, int | Non
             continue
         if stripped.startswith("*"):
             break
-        tokens = _critic2_table_tokens(line)
+        tokens = _critic2_table_tokens(line, min_columns=9 if has_volume else 8)
         if tokens is None:
             if rows:
                 break
@@ -185,7 +185,7 @@ def _parse_integrated_properties(
             break
         if not stripped or stripped.startswith("#"):
             continue
-        tokens = _critic2_table_tokens(line)
+        tokens = _critic2_table_tokens(line, min_columns=9 if has_volume else 8)
         if tokens is None:
             if rows:
                 break
