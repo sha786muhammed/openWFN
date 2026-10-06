@@ -27,8 +27,6 @@ CRITIC2_COMMIT = "9731d532c6407d35c75bbce5af449211470437a7"
 DEFAULT_LEBEDEV_POINTS = 590
 
 _POSITION_HEADER = re.compile(r"Position\s*\(([^)]+)\)", re.IGNORECASE)
-_ROW_PREFIX = re.compile(r"^\s*\d+\s+\d+\s+\d+\s+[A-Za-z][A-Za-z0-9]*\s+\d+\s+(?:\d+|--)\s+")
-_FLOAT_TOKEN = r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[EeDd][+-]?\d+)?"
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,6 +83,19 @@ def _position_factor(header_line: str) -> float:
     raise ValueError(f"Unsupported Critic2 attractor position unit: {unit}")
 
 
+def _critic2_table_tokens(line: str) -> list[str] | None:
+    """Return fixed table columns for a Critic2 data row, or None for non-rows."""
+
+    tokens = line.split()
+    if len(tokens) < 9:
+        return None
+    try:
+        int(tokens[0])
+    except ValueError:
+        return None
+    return tokens
+
+
 def _parse_attractor_positions(text: str) -> dict[int, tuple[str, int, int | None, tuple[float, float, float]]]:
     lines = text.splitlines()
     start = None
@@ -108,13 +119,11 @@ def _parse_attractor_positions(text: str) -> dict[int, tuple[str, int, int | Non
             continue
         if stripped.startswith("*"):
             break
-        if not _ROW_PREFIX.match(line):
+        tokens = _critic2_table_tokens(line)
+        if tokens is None:
             if rows:
                 break
             continue
-        tokens = line.split()
-        if len(tokens) < 9:
-            raise ValueError("Critic2 attractor row has too few columns")
         identifier = int(tokens[0])
         if identifier in rows:
             raise ValueError(f"Critic2 attractor table contains duplicate id {identifier}")
@@ -149,13 +158,11 @@ def _parse_integrated_properties(text: str) -> dict[int, tuple[str, int, int | N
             break
         if not stripped or stripped.startswith("#"):
             continue
-        if not _ROW_PREFIX.match(line):
+        tokens = _critic2_table_tokens(line)
+        if tokens is None:
             if rows:
                 break
             continue
-        tokens = line.split()
-        if len(tokens) < 9:
-            raise ValueError("Critic2 integrated-property row has too few columns")
         identifier = int(tokens[0])
         if identifier in rows:
             raise ValueError(f"Critic2 integrated-property table contains duplicate id {identifier}")
