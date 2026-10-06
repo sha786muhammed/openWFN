@@ -24,7 +24,8 @@ from openwfn.ingest import load_input
 
 CRITIC2_RELEASE = "1.2"
 CRITIC2_COMMIT = "9731d532c6407d35c75bbce5af449211470437a7"
-DEFAULT_LEBEDEV_POINTS = 590
+DEFAULT_LEBEDEV_POINTS = 4802
+REFERENCE_POPULATION_CLOSURE_TOLERANCE_E = 1.0e-2
 
 _POSITION_HEADER = re.compile(r"Position\s*\(([^)]+)\)", re.IGNORECASE)
 
@@ -309,6 +310,31 @@ def map_critic2_rows_to_atoms(
     return ordered
 
 
+def validate_reference_population_closure(
+    *,
+    population_sum_e: float,
+    expected_electrons_e: float,
+    tolerance_e: float,
+    case_id: str,
+) -> float:
+    """Reject externally generated basin references that fail electron closure."""
+
+    values = (population_sum_e, expected_electrons_e, tolerance_e)
+    if not all(math.isfinite(float(value)) for value in values):
+        raise ValueError(f"Critic2 reference electron closure inputs are nonfinite for {case_id}")
+    if tolerance_e <= 0.0:
+        raise ValueError("Critic2 reference electron-closure tolerance must be positive")
+    residual = abs(float(population_sum_e) - float(expected_electrons_e))
+    if residual > tolerance_e:
+        raise ValueError(
+            f"Critic2 reference electron closure failed for {case_id}: "
+            f"population sum {population_sum_e:.12g} e vs expected "
+            f"{expected_electrons_e:.12g} e (residual {residual:.6g} e > "
+            f"{tolerance_e:.6g} e)"
+        )
+    return residual
+
+
 def _manifest_hashes(path: Path) -> dict[str, str]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     result: dict[str, str] = {}
@@ -413,6 +439,14 @@ def generate_reference(
                 tolerance_bohr=mapping_tolerance_bohr,
             )
             populations = [float(row.population) for row in ordered]
+            population_sum = float(sum(populations))
+            expected_electrons = float(np.sum(numbers) - charge)
+            population_closure_residual = validate_reference_population_closure(
+                population_sum_e=population_sum,
+                expected_electrons_e=expected_electrons,
+                tolerance_e=REFERENCE_POPULATION_CLOSURE_TOLERANCE_E,
+                case_id=identifier,
+            )
             charges = [float(z) - pop for z, pop in zip(numbers, populations)]
             records.append(
                 {
@@ -426,7 +460,9 @@ def generate_reference(
                     ],
                     "populations_e": populations,
                     "charges_e": charges,
-                    "population_sum_e": float(sum(populations)),
+                    "population_sum_e": population_sum,
+                    "expected_electrons_e": expected_electrons,
+                    "population_closure_residual_e": population_closure_residual,
                     "charge_sum_e": float(sum(charges)),
                     "expected_molecular_charge_e": float(charge),
                     "critic2_input": command_input,
@@ -442,6 +478,7 @@ def generate_reference(
         "integration_method": "molecular bisection",
         "angular_quadrature": {"kind": "Lebedev", "points": int(lebedev_points)},
         "mapping_tolerance_bohr": float(mapping_tolerance_bohr),
+        "reference_population_closure_tolerance_e": REFERENCE_POPULATION_CLOSURE_TOLERANCE_E,
         "build_provenance": build_description,
         "fixtures": records,
     }
