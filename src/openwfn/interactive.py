@@ -1,3 +1,4 @@
+from math import isfinite, prod
 from pathlib import Path
 from typing import Callable
 
@@ -6,11 +7,12 @@ from . import (
     utils,  # type: ignore
 )
 from . import commands as cmd  # type: ignore
-from .api import load
+from .analysis.grids import molecular_grid_layout
 from .app import CommandContext
 from .errors import DataUnavailableError
 from .fchk import print_atom_table  # type: ignore
 from .geometry import molecular_formula  # type: ignore
+from .guided import GuidedSession, available_workflows, build_guided_session
 from .palette import prompt_workflow
 from .presentation import render
 from .reporting import build_report_record
@@ -81,6 +83,60 @@ def prompt_int(prompt: str) -> int | None:
             return int(value)
         except ValueError:
             utils.print_error("Please enter a whole-number atom index, or press Enter to cancel.")
+
+
+def prompt_choice(prompt: str, choices: tuple[str, ...], default: str) -> str:
+    """Accept only the displayed enum values; never forward terminal escapes."""
+    while True:
+        value = input(prompt).strip().casefold() or default
+        if value in choices:
+            return value
+        if value in {"back", "home", "quit", "exit"}:
+            raise EOFError
+        print("Choose " + ", ".join(choices) + "; or enter back to cancel.")
+
+
+def prompt_positive_float(prompt: str, default: float) -> float:
+    while True:
+        value = input(prompt).strip()
+        if value.casefold() in {"back", "home", "quit", "exit"}:
+            raise EOFError
+        try:
+            number = float(value) if value else default
+            if isfinite(number) and number > 0:
+                return number
+        except ValueError:
+            pass
+        print("Enter a positive finite number, or back to cancel.")
+
+
+def confirm_output_path(session: GuidedSession, label: str, suffix: str) -> Path | None:
+    """Confirm a new destination; input and existing files remain protected."""
+    default = session.directory / "results" / f"{session.source.stem}-{label}{suffix}"
+    while True:
+        try:
+            value = input(f"Output path [{default}] (back to cancel): ").strip()
+            if value.casefold() in {"back", "home", "quit", "exit"}:
+                return None
+            path = Path(value).expanduser() if value else default
+            if not path.suffix:
+                path = path.with_suffix(suffix)
+            if path.suffix.lower() != suffix:
+                print(f"This export requires {suffix}; choose another path.")
+                continue
+            path = path.resolve()
+            if path == session.source or path.exists():
+                print("Input and existing files are protected; choose a new output path.")
+                continue
+            print(f"Save to: {path}")
+            if input("Confirm save? [y/N]: ").strip().casefold() not in {"y", "yes"}:
+                return None
+            path.parent.mkdir(parents=True, exist_ok=True)
+            return path
+        except (EOFError, KeyboardInterrupt):
+            return None
+        except OSError as exc:
+            print(f"Cannot use that destination: {exc}")
 
 
 def prompt_indices(labels: tuple[str, ...]) -> list[int] | None:
@@ -173,11 +229,11 @@ def prompt_page_navigation(prompt_label: str) -> str:
     while True:
         try:
             choice = input(f"{utils.highlight(f'{PRODUCT_NAME}/{prompt_name}')} > ").strip().lower()
-        except EOFError:
+        except (EOFError, KeyboardInterrupt):
             print("\n")
             return "exit"
 
-        if choice in {"back", "b", "0"}:
+        if choice in {"back", "b", "0", "home"}:
             return "back"
         if choice in {"exit", "quit", "x"}:
             return "exit"
@@ -188,7 +244,9 @@ def run_guided_action(action: Callable[[], None], title: str) -> None:
     """Keep expected input/data failures inside the standard result boundary."""
     try:
         action()
-    except (DataUnavailableError, ValueError, IndexError, FileExistsError) as exc:
+    except (EOFError, KeyboardInterrupt):
+        print("\nAction cancelled; no default operation was started.")
+    except (DataUnavailableError, ValueError, IndexError, OSError) as exc:
         record = ResultRecord.failure(kind="guided_workflow", analysis_name=title,
                                       analysis_version="1", exception=exc, elapsed_seconds=0.)
         print(render(record, CommandContext(format="plain")), end="")
@@ -213,16 +271,14 @@ def run_input_page(title: str, description: str, action: Callable[[], None]) -> 
             return nav
 
 
-def run_interactive(lines, filename):
-    client = load(Path(filename))
+def run_interactive(lines, filename, *, format_hint=None):
+    session = build_guided_session(Path(filename), format_hint=format_hint)
+    client = session.calculation
     calculation = client.data.calculation
-    if calculation is None:
-        raise DataUnavailableError("Guided wavefunction workflows require an isolated molecular calculation.")
-    molecule = calculation.molecule
-    atomic_numbers = [atom.atomic_number for atom in molecule.atoms]
-    coordinates = [atom.coordinates for atom in molecule.atoms]
-    scalars = {"Charge": molecule.charge, "Multiplicity": molecule.multiplicity,
-               "Number of atoms": len(molecule.atoms)}
+    structure = client.data.structure
+    atoms = structure.coordinates if structure is not None else ()
+    atomic_numbers = list(structure.atomic_numbers) if structure is not None else []
+    coordinates = list(atoms)
     menu_filename = str(Path(filename).name)
 
     def show_result(result) -> None:
@@ -232,7 +288,7 @@ def run_interactive(lines, filename):
         show_result(client.analyze("summary"))
 
     def show_info() -> None:
-        cmd.cmd_info(scalars, atomic_numbers, coordinates)
+        cmd.cmd_info({"Charge": structure.charge, "Multiplicity": structure.multiplicity}, atomic_numbers, coordinates)
 
     def show_table() -> None:
         utils.print_header("Coordinate Table")
@@ -254,57 +310,60 @@ def run_interactive(lines, filename):
             show_result(client.geometry_dihedral(*indices))
 
     def export_xyz() -> None:
-        out = prompt_output_filename(filename)
+        out = confirm_output_path(session, "structure", ".xyz")
         if out:
             cmd.cmd_xyz(out, atomic_numbers, coordinates)
         else:
             utils.print_warning("Export cancelled.")
 
     def open_viewer() -> None:
-        default_name = f"{Path(filename).stem}-workbench.html"
-        try:
-            out = input(f"Enter output HTML workbench filename [{default_name}]: ").strip()
-        except EOFError:
-            out = ""
-        out = out or default_name
+        out = confirm_output_path(session, "workbench", ".html")
         if out:
             open_browser = prompt_open_in_browser()
             show_result(export_workbench_record(calculation, Path(out)))
             if open_browser:
                 import webbrowser
 
-                webbrowser.open(Path(out).resolve().as_uri())
+                if not webbrowser.open(Path(out).resolve().as_uri()):
+                    print(f"Browser did not open. The saved file is available at {out}.")
         else:
             utils.print_warning("Viewer export cancelled.")
 
     def ask(prompt: str, default: str) -> str:
-        try:
-            return input(prompt).strip() or default
-        except EOFError:
-            return default
+        return input(prompt).strip() or default
 
     def show_orbitals() -> None:
-        operation = ask("Orbital analysis [frontier/composition/cube/dos/pdos; default frontier]: ", "frontier").casefold()
-        spin = ask("Spin channel [alpha/beta/all; default alpha]: ", "alpha").casefold()
+        operations = ["frontier"]
+        operations.extend(name for name, analysis in (("composition", "orbital-composition"),
+                          ("dos", "dos"), ("pdos", "pdos")) if session.eligible(analysis))
+        if client.data.basis is not None and client.data.alpha_orbitals is not None:
+            operations.append("cube")
+        operation = prompt_choice(f"Orbital analysis [{'/'.join(operations)}; default frontier]: ", tuple(operations), "frontier")
+        spins = ("alpha", "beta") if client.data.beta_orbitals is not None else ("alpha",)
+        if operation in {"frontier", "dos", "pdos"}:
+            spins = (*spins, "all")
+        spin = prompt_choice(f"Spin channel [{'/'.join(spins)}; default alpha]: ", spins, "alpha")
         if operation == "frontier":
             show_result(client.orbitals(spin))
         elif operation in {"composition", "cube"}:
             mo = ask("MO [homo/lumo/one-based number; default homo]: ", "homo")
             if operation == "composition":
-                method = ask("Population convention [lowdin/mulliken; default lowdin]: ", "lowdin")
+                method = prompt_choice("Population convention [lowdin/mulliken; default lowdin]: ", ("lowdin", "mulliken"), "lowdin")
                 show_result(client.orbital_composition(mo=mo, spin=spin, method=method))
             else:
-                output = ask("Output cube path [orbital.cube]: ", "orbital.cube")
-                show_result(client.orbital_cube(output, mo=mo, spin=spin))
+                output = confirm_output_path(session, "orbital", ".cube")
+                if output is not None:
+                    show_result(client.orbital_cube(output, mo=mo, spin=spin))
         elif operation in {"dos", "pdos"}:
             show_result(client.dos(spin=spin) if operation == "dos" else client.pdos(spin=spin))
         else:
             utils.print_error("Unknown orbital analysis.")
 
     def show_vibrations() -> None:
-        operation = ask(
-            "Vibrational workflow [modes/ir/raman/mode; default modes]: ", "modes"
-        ).casefold()
+        operations = ["modes"]
+        operations.extend(name for name, analysis in (("ir", "ir-spectrum"),
+                          ("raman", "raman-spectrum"), ("mode", "normal-mode")) if session.eligible(analysis))
+        operation = prompt_choice(f"Vibrational workflow [{'/'.join(operations)}; default modes]: ", tuple(operations), "modes")
         if operation in {"modes", "vibrations"}:
             show_result(client.analyze("vibrations"))
         elif operation == "ir":
@@ -318,13 +377,25 @@ def run_interactive(lines, filename):
             utils.print_error("Unknown vibrational workflow.")
 
     def show_density() -> None:
-        operation = ask(
+        operation = prompt_choice(
             "Density/population workflow [integrate/esp/hirshfeld; default integrate]: ",
-            "integrate",
-        ).casefold()
+            ("integrate", "esp", "hirshfeld"), "integrate",
+        )
         if operation == "integrate":
-            kind = ask("Density component [total/alpha/beta/spin; default total]: ", "total").casefold()
-            show_result(client.density(kind))
+            kinds = ("total", "alpha", "beta", "spin") if client.data.spin_density is not None else ("total",)
+            kind = prompt_choice(f"Density component [{'/'.join(kinds)}; default total]: ", kinds, "total")
+            while True:
+                spacing = prompt_positive_float("Grid spacing in bohr [0.15]: ", .15)
+                padding = prompt_positive_float("Padding in bohr [6]: ", 6.)
+                try:
+                    _, shape = molecular_grid_layout(calculation.molecule, spacing_bohr=spacing, padding_bohr=padding)
+                except ValueError as exc:
+                    print(str(exc))
+                    print("Edit spacing/padding or enter back to cancel.")
+                    continue
+                print(f"Grid: {shape}, {prod(shape):,} points; spacing {spacing:g} bohr, padding {padding:g} bohr.")
+                show_result(client.density(kind, spacing_bohr=spacing, padding_bohr=padding))
+                break
         elif operation == "esp":
             point = tuple(float(value) for value in ask("ESP coordinates x y z in angstrom [5 0 0]: ", "5 0 0").split())
             component = ask("ESP component [total/electronic/nuclear/mulliken/lowdin; default total]: ", "total")
@@ -335,11 +406,13 @@ def run_interactive(lines, filename):
             utils.print_error("Unknown density/population workflow.")
 
     def create_report() -> None:
-        output = Path(f"{Path(filename).stem}-report.html")
+        output = confirm_output_path(session, "report", ".html")
+        if output is None:
+            return
         show_result(
             build_report_record(
                 calculation,
-                ("summary", "frontier", "mulliken", "lowdin"),
+                tuple(name for name in ("summary", "frontier", "mulliken", "lowdin") if session.eligible(name)),
                 output,
                 "html",
                 f"openwfn {filename} report build {output}",
@@ -348,7 +421,8 @@ def run_interactive(lines, filename):
         )
 
     def show_bonds() -> None:
-        method = ask("Bond analysis [geometry/mayer/fragments; default geometry]: ", "geometry").casefold()
+        methods = ("geometry", "mayer", "fragments") if session.eligible("mayer") else ("geometry", "fragments")
+        method = prompt_choice(f"Bond analysis [{'/'.join(methods)}; default geometry]: ", methods, "geometry")
         if method == "mayer":
             show_result(client.mayer())
         elif method == "fragments":
@@ -362,13 +436,72 @@ def run_interactive(lines, filename):
         cmd.cmd_graph(atomic_numbers, coordinates)
 
     while True:
-        print_landing_page(menu_filename, atomic_numbers, scalars)
+        print(f"\n{PRODUCT_NAME} {__version__} / {menu_filename}")
+        if structure is not None:
+            formula = client.analyze("summary").data.get("formula", "unknown composition")
+            print(f"{formula} · {len(atoms)} centers · "
+                  f"charge {structure.charge if structure.charge is not None else 'unknown'} · "
+                  f"multiplicity {structure.multiplicity if structure.multiplicity is not None else 'unknown'}")
+        else:
+            print("Stored volumetric grid; no molecular wavefunction inferred.")
 
-        raw_choice = prompt_workflow()
+        try:
+            raw_choice = prompt_workflow(available_workflows(session))
+        except (EOFError, KeyboardInterrupt):
+            break
         action = FEATURE_ALIASES.get(raw_choice, raw_choice)
+
+        if action not in {workflow.command for workflow in available_workflows(session)} and action != "q":
+            print("That workflow is unavailable for this input; choose a displayed workflow.")
+            continue
 
         if action == "summary":
             nav = run_static_page("Molecular Summary", "A one-page overview of the current molecule.", show_summary)
+        elif action == "unavailable":
+            for name, capability in session.analyses.items():
+                if not capability["available"]:
+                    print(f"{name}: missing {', '.join(capability['missing_requirements'])}")
+            continue
+        elif action == "grid":
+            for grid in client.data.grids:
+                print(f"Shape: {grid.shape}; origin (angstrom): {grid.origin}; "
+                      f"axes (angstrom): {grid.axes}; stored value unit: {grid.value_unit}")
+                print("Grid inspection does not establish the physical identity of the stored scalar field.")
+            nav = prompt_page_navigation("Stored grid")
+        elif action == "properties":
+            from .output_properties import read_output
+            nav = run_static_page("Source properties", "Properties reported in the source output, not recomputed.",
+                                  lambda: show_result(read_output(Path(filename))))
+        elif action == "population":
+            methods = tuple(name for name in ("mulliken", "lowdin", "hirshfeld") if session.eligible(name))
+            def show_population():
+                method = prompt_choice(f"Population method [{'/'.join(methods)}]: ", methods, methods[0])
+                show_result(client.analyze(method))
+            nav = run_static_page("Population analysis", "Charges depend on the selected partitioning convention.", show_population)
+        elif action == "excited":
+            nav = run_static_page("Excited states", "Source-reported excited states.",
+                                  lambda: show_result(client.analyze("excited-states")))
+        elif action == "file":
+            try:
+                new_name = input("Input file (blank to cancel): ").strip()
+                if not new_name:
+                    continue
+                new_session = build_guided_session(Path(new_name))
+            except (EOFError, KeyboardInterrupt):
+                continue
+            except (ValueError, OSError, DataUnavailableError) as exc:
+                print(f"Could not open input: {exc}")
+                continue
+            session = new_session
+            client = session.calculation
+            filename = session.source
+            calculation = client.data.calculation
+            structure = client.data.structure
+            atoms = structure.coordinates if structure is not None else ()
+            atomic_numbers = list(structure.atomic_numbers) if structure is not None else []
+            coordinates = list(atoms)
+            menu_filename = session.source.name
+            continue
         elif action == "geometry":
             try:
                 geometry_choice = input("Geometry command [distance/angle/dihedral/back]: ").strip().casefold()

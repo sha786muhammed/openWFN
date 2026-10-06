@@ -25,6 +25,7 @@ def parse_mol_text(
     if len(lines) < 4 + atom_count + bond_count:
         raise ParseError("Truncated V2000 atom or bond block.")
     atoms: list[Atom] = []
+    charges: dict[int, int] = {}
     for offset, line in enumerate(lines[4 : 4 + atom_count], start=5):
         try:
             coordinates = (float(line[0:10]), float(line[10:20]), float(line[20:30]))
@@ -34,6 +35,13 @@ def parse_mol_text(
         if symbol not in SYMBOL_TO_Z:
             raise ParseError(f"Unknown V2000 element {symbol!r} at line {offset}.")
         atoms.append(Atom(SYMBOL_TO_Z[symbol], coordinates))
+        try:
+            code = int(line[36:39].strip() or "0")
+        except ValueError as exc:
+            raise ParseError(f"Malformed V2000 charge at line {offset}.") from exc
+        if code not in range(8):
+            raise ParseError(f"Unsupported V2000 charge code at line {offset}.")
+        charges[len(atoms)] = {1: 3, 2: 2, 3: 1, 5: -1, 6: -2, 7: -3}.get(code, 0)
     bonds: list[Bond] = []
     for offset, line in enumerate(
         lines[4 + atom_count : 4 + atom_count + bond_count], start=5 + atom_count
@@ -42,10 +50,24 @@ def parse_mol_text(
             bonds.append(Bond(int(line[0:3]) - 1, int(line[3:6]) - 1, int(line[6:9])))
         except ValueError as exc:
             raise ParseError(f"Malformed V2000 bond at line {offset}.") from exc
+    for line in lines[4 + atom_count + bond_count:]:
+        if line.startswith("M  CHG"):
+            fields = line.split()
+            try:
+                count = int(fields[2])
+                if count < 1 or len(fields) != 3 + 2 * count:
+                    raise ValueError
+                for i in range(count):
+                    index, value = int(fields[3 + 2*i]), int(fields[4 + 2*i])
+                    if not 1 <= index <= atom_count:
+                        raise ValueError
+                    charges[index] = value
+            except (ValueError, IndexError) as exc:
+                raise ParseError("Malformed V2000 M CHG record.") from exc
     raw = provenance_bytes if provenance_bytes is not None else text.encode("utf-8")
     molecule = Molecule(
         atoms=tuple(atoms),
-        charge=0,
+        charge=sum(charges.values()),
         multiplicity=1,
         metadata=CalculationMetadata(source_program=parser_name.upper()),
         provenance=Provenance(

@@ -17,6 +17,19 @@ openwfn calculation.out summary
 
 A parser being able to read a file does not mean every analysis is available. Missing records fail explicitly rather than being reconstructed silently.
 
+## Guided entry and overview
+
+```bash
+openwfn                              # Ask for an input file in a terminal
+openwfn molecule.fchk                 # Open guided mode in a terminal
+openwfn molecule.molden open          # Explicit guided mode
+openwfn --format json molecule.fchk analyze
+```
+
+`analyze` returns a bounded overview: molecular summary, frontier orbital energies when available, and supported next actions. It does not integrate density, calculate populations, or create exports. A file-only invocation outside an interactive terminal also returns this overview. Use the explicit `summary` command to keep the summary-only result schema.
+
+Guided menus depend on the loaded file's capabilities. Structure files do not imply a wavefunction; unknown electronic charge or multiplicity stays unknown. Density integration asks for spacing and padding in bohr and checks grid dimensions before allocating points. Save prompts show the absolute destination and require confirmation. Missing extensions are supplied; input and existing files are protected. Suggested destinations are under `results/` in the directory where the session started. Browser opening is optional.
+
 ## Global options
 
 | Option | Purpose |
@@ -38,6 +51,8 @@ These are the public top-level choices shown by `openwfn --help`.
 |---|---|
 | `examples` | Install packaged example inputs |
 | `summary` | Summarize molecular identity and calculation state |
+| `analyze` | Bounded overview with eligible next analyses; no automatic exports |
+| `open` | Open capability-aware guided terminal mode |
 | `info` | Show detailed FCHK metadata |
 | `dist` | Legacy distance command |
 | `angle` | Legacy angle command |

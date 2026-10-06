@@ -45,7 +45,14 @@ def _generated_provenance(path: Path, *, parser: str, source_format: str) -> Pro
 
 def _normalize_native(parsed: Any, path: Path, *, source_format: str) -> OpenWFNData:
     if isinstance(parsed, CalculationData):
-        return wrap_calculation(parsed)
+        normalized = wrap_calculation(parsed)
+        if source_format in {"xyz", "pdb", "mol", "sdf"} and normalized.structure is not None:
+            normalized = replace(normalized, structure=replace(
+                normalized.structure,
+                charge=None if source_format in {"xyz", "pdb"} else parsed.molecule.charge,
+                multiplicity=None,
+            ))
+        return normalized
     if isinstance(parsed, VolumetricGrid):
         return OpenWFNData(
             calculation=None,

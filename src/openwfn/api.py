@@ -77,15 +77,15 @@ class OpenWFNCalculation:
     def analyze_geometry(self) -> ResultRecord:
         """Return basic geometry metadata in the standard result envelope."""
 
-        if self.data.calculation is not None:
+        if self.data.structure is not None:
+            atom_count = len(self.data.structure.coordinates)
+            charge = self.data.structure.charge
+            multiplicity = self.data.structure.multiplicity
+        elif self.data.calculation is not None:
             structure = self.data.calculation.molecule
             atom_count = len(structure.atoms)
             charge = structure.charge
             multiplicity = structure.multiplicity
-        elif self.data.structure is not None:
-            atom_count = len(self.data.structure.coordinates)
-            charge = self.data.structure.charge
-            multiplicity = self.data.structure.multiplicity
         else:
             return self._unavailable(
                 "geometry_summary", "geometry_summary", "Atomic structure is not available for this input."
