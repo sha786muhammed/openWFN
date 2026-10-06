@@ -163,9 +163,7 @@ def test_parse_critic2_molecular_properties_without_volume_column() -> None:
 
     assert [row.volume for row in rows] == [None, None, None]
     assert [row.population for row in rows] == pytest.approx([8.4, 0.8, 0.8])
-    assert [row.laplacian_integral for row in rows] == pytest.approx(
-        [1.0e-4, -5.0e-5, -5.0e-5]
-    )
+    assert [row.laplacian_integral for row in rows] == pytest.approx([1.0e-4, -5.0e-5, -5.0e-5])
 
 
 def test_parse_critic2_molecular_properties_without_volume() -> None:
@@ -223,3 +221,103 @@ def test_external_reference_population_closure_is_required() -> None:
         tolerance_e=0.01,
         case_id="methane",
     ) == pytest.approx(0.00055467)
+
+
+@pytest.mark.parametrize(
+    "populations",
+    [[8.92438591, 0.249463015, 0.249565213], [float("nan"), 0.5, 0.5], [11.0, -0.5, -0.5]],
+)
+def test_independent_reference_rejects_bad_closure_or_nonphysical_values(populations) -> None:
+    module = _module()
+    with pytest.raises(ValueError, match="closure|finite|negative"):
+        module.validate_reference_populations(populations, expected_electrons=10.0)
+
+
+def test_independent_reference_records_closure_without_renormalization() -> None:
+    module = _module()
+    populations = [8.4, 0.8, 0.799]
+    diagnostics = module.validate_reference_populations(populations, expected_electrons=10.0)
+    assert diagnostics["electron_count_residual_e"] == pytest.approx(0.001)
+    assert populations == [8.4, 0.8, 0.799]
+
+
+def test_comparison_gate_rejects_bad_convergence_despite_electron_closure():
+    module = _module()
+    medium = np.asarray([6.0107921593470595, .996812988554884, .996812988554884, .996812988554884, .996812988554884])
+    fine = np.asarray([6.0460756290778415, .988471889376745, .988471889376745, .988471889376745, .988471889376745])
+    report = module.assess_basin_convergence(
+        reference_populations=fine.tolist(), medium_populations=medium.tolist(),
+        fine_populations=fine.tolist(), fine_electron_residual=.00004,
+        fine_charge_residual=.00004, fine_unresolved_electrons=1e-9,
+    )
+    assert not report['passed']
+    assert report['checks']['grid_refinement'] is False
+    assert report['checks']['reference_agreement'] is True
+
+
+def test_comparison_gate_requires_independent_agreement_and_all_declared_rules():
+    module = _module()
+    kwargs = dict(reference_populations=[8.4, .8, .8], medium_populations=[8.4, .8, .8],
+                  fine_populations=[8.405, .7975, .7975], fine_electron_residual=.001,
+                  fine_charge_residual=.001, fine_unresolved_electrons=.0001)
+    assert module.assess_basin_convergence(**kwargs)['passed']
+    for key, value in [('fine_populations', [8.45, .775, .775]), ('fine_electron_residual', .1),
+                       ('fine_charge_residual', .1), ('fine_unresolved_electrons', .1)]:
+        assert not module.assess_basin_convergence(**{**kwargs, key: value})['passed']
+
+
+def test_generator_preserves_raw_evidence_but_does_not_publish_bad_reference(tmp_path, monkeypatch):
+    import hashlib
+    import json
+
+    module = _module()
+    source = tmp_path / 'water.fchk'
+    source.write_text('test input')
+    manifest = tmp_path / 'manifest.json'
+    manifest.write_text(json.dumps({'cases': [{'id': 'water', 'status': 'active',
+        'sha256': hashlib.sha256(source.read_bytes()).hexdigest()}]}))
+    stdout = FIXTURE.read_text().replace('8.40000000E+00', '8.00000000E+00')
+    monkeypatch.setattr(module, '_run_critic2', lambda *a, **kw: ('input', stdout, ''))
+    monkeypatch.setattr(module, '_calculation_geometry', lambda path: (
+        np.asarray([8, 1, 1]), np.asarray([[0., 0., 0.], [1.43, 1.1, 0.], [-1.43, 1.1, 0.]]), 0))
+    output = tmp_path / 'reference.json'
+    with pytest.raises(ValueError, match='closure'):
+        module.generate_reference(critic2=tmp_path / 'critic2', fixtures=[('water', source)],
+            manifest=manifest, output=output, critic_home=None, lebedev_points=590,
+            mapping_tolerance_bohr=.35, source_commit=module.CRITIC2_COMMIT,
+            build_description='test double; not scientific reference')
+    assert not output.exists()
+    assert (tmp_path / 'reference.raw/water.out').read_text() == stdout
+
+
+@pytest.mark.parametrize('partial_grid', ['medium', 'fine'])
+def test_comparison_cannot_promote_engine_partial_results_to_pass(tmp_path, monkeypatch, partial_grid):
+    import hashlib
+    from types import SimpleNamespace
+
+    import openwfn.api
+
+    module = _module()
+    source = tmp_path / 'molecule.fchk'
+    source.write_text('fixture')
+    count = 0
+
+    def analyze(**kwargs):
+        nonlocal count
+        name = ['coarse', 'medium', 'fine'][count]
+        count += 1
+        record = {'status': 'partial' if name == partial_grid else 'success',
+                  'data': {'atoms': [{'electron_population': 1.}, {'electron_population': 1.}],
+                           'diagnostics': {'electron_count_residual': 0., 'charge_closure_residual': 0.,
+                                           'unresolved_electrons': 0., 'population_partition_residual': 1e-7}}}
+        return SimpleNamespace(as_dict=lambda: record)
+
+    monkeypatch.setattr(openwfn.api, 'load', lambda path: SimpleNamespace(qtaim_basins=analyze))
+    output = tmp_path / 'comparison.json'
+    report = module.compare_openwfn_reference({'fixtures': [{'id': 'test', 'path': str(source),
+        'sha256': hashlib.sha256(source.read_bytes()).hexdigest(), 'atomic_numbers': [1, 1],
+        'expected_molecular_charge_e': 0, 'populations_e': [1., 1.]}]}, output)
+    assert count == 3
+    assert not report['passed']
+    assert not report['fixtures'][0]['assessment']['passed']
+    assert output.exists()

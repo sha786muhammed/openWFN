@@ -252,3 +252,26 @@ def test_real_orca_output_properties(inputs):
             assert record["provenance"]["input_sha256"]
 
     asyncio.run(check())
+
+
+def test_mcp_basin_analysis_is_deferred_before_loading_or_running(inputs, monkeypatch):
+    from mcp import Client
+
+    from openwfn import mcp_server
+
+    def unexpected_load(*args, **kwargs):
+        raise AssertionError("Expensive basin analysis must be blocked before scientific loading")
+
+    monkeypatch.setattr(mcp_server, "load_input", unexpected_load)
+
+    async def check():
+        async with Client(mcp_server.create_server(inputs)) as client:
+            response = await client.call_tool(
+                "run_analysis", {"path": "water molecule.fchk", "analysis": "qtaim-basins"}
+            )
+            record = response.structured_content
+            assert record["status"] == "failed"
+            assert "outside MCP" in record["error"]["message"]
+            assert record["error"]["category"] == "ValueError"
+
+    asyncio.run(check())

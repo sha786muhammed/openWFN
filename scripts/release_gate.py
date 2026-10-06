@@ -8,6 +8,7 @@ from urllib.request import Request, urlopen
 REQUIRED = frozenset({
     'Tests and quality', 'Documentation', 'Security audit',
     'Offline workbench browser validation',
+    'QTAIM basin Critic2 validation',
 })
 
 

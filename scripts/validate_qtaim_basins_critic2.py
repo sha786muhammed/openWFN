@@ -12,9 +12,9 @@ import math
 import os
 import re
 import subprocess
-import tempfile
 from dataclasses import dataclass
 from pathlib import Path
+from time import perf_counter
 from typing import Iterable
 
 import numpy as np
@@ -80,7 +80,9 @@ def _position_factor(header_line: str) -> float:
     if unit in {"angs.", "ang.", "ang_", "angstrom", "angstroms", "å"}:
         return 1.0 / BOHR_TO_ANGSTROM
     if unit.startswith("cryst"):
-        raise ValueError("Critic2 crystal-coordinate attractors cannot be mapped to molecular atoms")
+        raise ValueError(
+            "Critic2 crystal-coordinate attractors cannot be mapped to molecular atoms"
+        )
     raise ValueError(f"Unsupported Critic2 attractor position unit: {unit}")
 
 
@@ -97,7 +99,9 @@ def _critic2_table_tokens(line: str, *, min_columns: int = 9) -> list[str] | Non
     return tokens
 
 
-def _parse_attractor_positions(text: str) -> dict[int, tuple[str, int, int | None, tuple[float, float, float]]]:
+def _parse_attractor_positions(
+    text: str,
+) -> dict[int, tuple[str, int, int | None, tuple[float, float, float]]]:
     lines = text.splitlines()
     start = None
     factor = None
@@ -198,14 +202,14 @@ def _parse_integrated_properties(
             )
         identifier = int(tokens[0])
         if identifier in rows:
-            raise ValueError(f"Critic2 integrated-property table contains duplicate id {identifier}")
+            raise ValueError(
+                f"Critic2 integrated-property table contains duplicate id {identifier}"
+            )
         name = tokens[3]
         atomic_number = int(tokens[4])
         multiplicity = None if tokens[5] == "--" else int(tokens[5])
         property_tokens = tokens[6 : 6 + len(property_names)]
-        volume = (
-            None if volume_index is None else _parse_float(property_tokens[volume_index])
-        )
+        volume = None if volume_index is None else _parse_float(property_tokens[volume_index])
         population = _parse_float(property_tokens[population_index])
         laplacian = _parse_float(property_tokens[laplacian_index])
         rows[identifier] = (
@@ -219,6 +223,7 @@ def _parse_integrated_properties(
     if not rows:
         raise ValueError("Critic2 integrated-property table contains no rows")
     return rows
+
 
 def parse_critic2_basin_output(text: str) -> list[Critic2BasinRow]:
     """Parse one complete Critic2 molecular bisection integration block."""
@@ -402,6 +407,111 @@ def _calculation_geometry(path: Path) -> tuple[np.ndarray, np.ndarray, int]:
     return numbers, positions_bohr, int(calculation.molecule.charge)
 
 
+def validate_reference_populations(
+    populations: list[float], *, expected_electrons: float, tolerance_e: float = 0.01
+) -> dict[str, float]:
+    """Reject unusable independent references; never correct their populations."""
+    values = np.asarray(populations, dtype=float)
+    if values.ndim != 1 or not len(values) or not np.all(np.isfinite(values)):
+        raise ValueError("Independent reference populations must be finite and nonempty")
+    if np.any(values < 0):
+        raise ValueError("Independent reference contains negative electron populations")
+    if not np.isfinite(expected_electrons) or expected_electrons <= 0:
+        raise ValueError("Expected reference electron count must be positive and finite")
+    if not np.isfinite(tolerance_e) or tolerance_e <= 0:
+        raise ValueError("Reference closure tolerance must be positive and finite")
+    residual = validate_reference_population_closure(
+        population_sum_e=float(values.sum()), expected_electrons_e=expected_electrons,
+        tolerance_e=tolerance_e, case_id="independent reference",
+    )
+    return {"expected_electrons_e": expected_electrons, "electron_count_residual_e": residual}
+
+
+def assess_basin_convergence(
+    *, reference_populations, medium_populations, fine_populations,
+    fine_electron_residual, fine_charge_residual, fine_unresolved_electrons,
+) -> dict[str, object]:
+    """Apply the predeclared independent-agreement and convergence gates."""
+    reference, medium, fine = (
+        np.asarray(values, dtype=float)
+        for values in (reference_populations, medium_populations, fine_populations)
+    )
+    if reference.ndim != 1 or not len(reference) or medium.shape != reference.shape or fine.shape != reference.shape:
+        raise ValueError("Basin comparison requires matching nonempty atom vectors")
+    if not all(np.all(np.isfinite(values)) for values in (reference, medium, fine)):
+        raise ValueError("Basin comparison requires finite atom populations")
+    diagnostics = np.asarray([fine_electron_residual, fine_charge_residual, fine_unresolved_electrons])
+    if not np.all(np.isfinite(diagnostics)) or np.any(diagnostics < 0):
+        raise ValueError("Basin comparison requires finite nonnegative diagnostics")
+    reference_error = float(np.max(np.abs(fine - reference)))
+    refinement_error = float(np.max(np.abs(fine - medium)))
+    checks = {
+        "reference_agreement": reference_error <= 0.02,
+        "grid_refinement": refinement_error <= 0.01,
+        "electron_closure": float(fine_electron_residual) <= 0.01,
+        "charge_closure": float(fine_charge_residual) <= 0.01,
+        "unresolved_electrons": float(fine_unresolved_electrons) <= 0.001,
+    }
+    return {
+        "passed": all(checks.values()), "checks": checks,
+        "max_reference_error_e": reference_error,
+        "max_medium_to_fine_shift_e": refinement_error,
+        "tolerances_e": {"reference_agreement": 0.02, "grid_refinement": 0.01,
+                         "electron_closure": 0.01, "charge_closure": 0.01,
+                         "unresolved_electrons": 0.001},
+    }
+
+
+def compare_openwfn_reference(reference: dict[str, object], output: Path) -> dict[str, object]:
+    """Run all three prescribed grids, retaining failed scientific evidence."""
+    from openwfn.analysis.atom_quadrature import AtomQuadratureSettings
+    from openwfn.analysis.qtaim_basins import QTAIMBasinSettings
+    from openwfn.api import load
+
+    fixtures = reference.get("fixtures")
+    if not isinstance(fixtures, list) or not fixtures:
+        raise ValueError("Independent comparison requires nonempty reference fixtures")
+    report = {"schema_version": 1, "passed": True, "fixtures": []}
+    grids = (("coarse", 32, 8, 16, 16.), ("medium", 48, 12, 24, 18.),
+             ("fine", 72, 16, 32, 20.))
+    for fixture in fixtures:
+        path = Path(fixture["path"])
+        verify_fixture_sha256(path, fixture["sha256"])
+        expected = float(sum(fixture["atomic_numbers"]) - fixture["expected_molecular_charge_e"])
+        validate_reference_populations(fixture["populations_e"], expected_electrons=expected)
+        calculation = load(path)
+        series = {}
+        for name, radial, theta, phi, extent in grids:
+            settings = QTAIMBasinSettings(quadrature=AtomQuadratureSettings(
+                radial_points=radial, theta_points=theta, phi_points=phi,
+                radial_extent_bohr=extent, chunk_size=4096))
+            started = perf_counter()
+            result = calculation.qtaim_basins(settings=settings, include_boundary_diagnostics=False)
+            series[name] = {"elapsed_seconds": perf_counter() - started, "result": result.as_dict()}
+        medium, fine = series["medium"]["result"], series["fine"]["result"]
+        if medium["status"] != "success" or fine["status"] != "success":
+            assessment = {
+                "passed": False,
+                "reason": "Medium/fine scientific engine result is not successful; partial or failed results cannot pass validation",
+            }
+        else:
+            diagnostics = fine["data"]["diagnostics"]
+            assessment = assess_basin_convergence(
+                reference_populations=fixture["populations_e"],
+                medium_populations=[a["electron_population"] for a in medium["data"]["atoms"]],
+                fine_populations=[a["electron_population"] for a in fine["data"]["atoms"]],
+                fine_electron_residual=diagnostics["electron_count_residual"],
+                fine_charge_residual=diagnostics["charge_closure_residual"],
+                fine_unresolved_electrons=diagnostics["unresolved_electrons"],
+            )
+        report["fixtures"].append({"id": fixture["id"], "sha256": fixture["sha256"],
+                                   "grids": series, "assessment": assessment})
+        report["passed"] = report["passed"] and assessment["passed"]
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return report
+
+
 def generate_reference(
     *,
     critic2: Path,
@@ -417,58 +527,59 @@ def generate_reference(
     hashes = _manifest_hashes(manifest)
     records: list[dict[str, object]] = []
 
-    with tempfile.TemporaryDirectory(prefix="openwfn-qtaim-critic2-") as tmp:
-        tmp_path = Path(tmp)
-        for identifier, path in fixtures:
-            if identifier not in hashes:
-                raise ValueError(f"Fixture {identifier!r} has no active hash in {manifest}")
-            observed_hash = verify_fixture_sha256(path, hashes[identifier])
-            command_input, stdout, stderr = _run_critic2(
-                critic2,
-                path,
-                lebedev_points=lebedev_points,
-                critic_home=critic_home,
-            )
-            (tmp_path / f"{identifier}.out").write_text(stdout, encoding="utf-8")
-            numbers, positions_bohr, charge = _calculation_geometry(path)
-            parsed = parse_critic2_basin_output(stdout)
-            ordered = map_critic2_rows_to_atoms(
-                parsed,
-                numbers,
-                positions_bohr,
-                tolerance_bohr=mapping_tolerance_bohr,
-            )
-            populations = [float(row.population) for row in ordered]
-            population_sum = float(sum(populations))
-            expected_electrons = float(np.sum(numbers) - charge)
-            population_closure_residual = validate_reference_population_closure(
-                population_sum_e=population_sum,
-                expected_electrons_e=expected_electrons,
-                tolerance_e=REFERENCE_POPULATION_CLOSURE_TOLERANCE_E,
-                case_id=identifier,
-            )
-            charges = [float(z) - pop for z, pop in zip(numbers, populations)]
-            records.append(
-                {
-                    "id": identifier,
-                    "path": str(path.as_posix()),
-                    "sha256": observed_hash,
-                    "atom_count": int(len(numbers)),
-                    "atomic_numbers": [int(value) for value in numbers],
-                    "critic2_attractor_positions_bohr": [
-                        [float(value) for value in row.position_bohr] for row in ordered
-                    ],
-                    "populations_e": populations,
-                    "charges_e": charges,
-                    "population_sum_e": population_sum,
-                    "expected_electrons_e": expected_electrons,
-                    "population_closure_residual_e": population_closure_residual,
-                    "charge_sum_e": float(sum(charges)),
-                    "expected_molecular_charge_e": float(charge),
-                    "critic2_input": command_input,
-                    "critic2_stderr": stderr,
-                }
-            )
+    raw_directory = output.with_suffix(".raw")
+    raw_directory.mkdir(parents=True, exist_ok=True)
+    for identifier, path in fixtures:
+        if identifier not in hashes:
+            raise ValueError(f"Fixture {identifier!r} has no active hash in {manifest}")
+        observed_hash = verify_fixture_sha256(path, hashes[identifier])
+        command_input, stdout, stderr = _run_critic2(
+            critic2,
+            path,
+            lebedev_points=lebedev_points,
+            critic_home=critic_home,
+        )
+        if not re.fullmatch(r"[A-Za-z0-9_-]+", identifier):
+            raise ValueError("Reference fixture identifiers must be safe filenames")
+        (raw_directory / f"{identifier}.out").write_text(stdout, encoding="utf-8")
+        (raw_directory / f"{identifier}.cri").write_text(command_input, encoding="utf-8")
+        (raw_directory / f"{identifier}.err").write_text(stderr, encoding="utf-8")
+        numbers, positions_bohr, charge = _calculation_geometry(path)
+        parsed = parse_critic2_basin_output(stdout)
+        ordered = map_critic2_rows_to_atoms(
+            parsed,
+            numbers,
+            positions_bohr,
+            tolerance_bohr=mapping_tolerance_bohr,
+        )
+        populations = [float(row.population) for row in ordered]
+        diagnostics = validate_reference_populations(
+            populations, expected_electrons=float(sum(numbers) - charge)
+        )
+        charges = [float(z) - pop for z, pop in zip(numbers, populations)]
+        records.append(
+            {
+                "id": identifier,
+                "path": str(path.as_posix()),
+                "sha256": observed_hash,
+                "atom_count": int(len(numbers)),
+                "atomic_numbers": [int(value) for value in numbers],
+                "critic2_attractor_positions_bohr": [
+                    [float(value) for value in row.position_bohr] for row in ordered
+                ],
+                "populations_e": populations,
+                "charges_e": charges,
+                "population_sum_e": float(sum(populations)),
+                "expected_electrons_e": diagnostics["expected_electrons_e"],
+                "population_closure_residual_e": diagnostics["electron_count_residual_e"],
+                "charge_sum_e": float(sum(charges)),
+                "expected_molecular_charge_e": float(charge),
+                "reference_diagnostics": diagnostics,
+                "critic2_input": command_input,
+                "critic2_stderr": stderr,
+                "critic2_stdout_sha256": hashlib.sha256(stdout.encode("utf-8")).hexdigest(),
+            }
+        )
 
     payload: dict[str, object] = {
         "schema_version": 1,
@@ -507,11 +618,13 @@ def main() -> int:
     parser.add_argument("--mapping-tolerance-bohr", type=float, default=0.35)
     parser.add_argument("--critic2-source-commit", default=CRITIC2_COMMIT)
     parser.add_argument("--build-description", default="not recorded")
+    parser.add_argument("--compare-openwfn", action="store_true",
+                        help="Require independent agreement and coarse/medium/fine convergence")
     args = parser.parse_args()
 
     if args.lebedev_points <= 0:
         parser.error("--lebedev-points must be positive")
-    generate_reference(
+    payload = generate_reference(
         critic2=args.critic2,
         fixtures=args.fixture,
         manifest=args.manifest,
@@ -522,6 +635,10 @@ def main() -> int:
         source_commit=args.critic2_source_commit,
         build_description=args.build_description,
     )
+    if args.compare_openwfn:
+        comparison = compare_openwfn_reference(payload, args.output.with_suffix(".comparison.json"))
+        if not comparison["passed"]:
+            return 1
     return 0
 
 

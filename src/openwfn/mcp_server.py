@@ -15,6 +15,9 @@ from .results import ResultRecord
 
 JsonScalar = str | int | float | bool | None
 MAX_ANALYSIS_PARAMETERS = 32
+# Basin integration is intentionally deferred from MCP until a bounded server
+# execution policy is available. Registry membership is not transport approval.
+MCP_DEFERRED_ANALYSES = frozenset({"qtaim-basins"})
 
 
 def _analysis_parameters(parameters: dict[str, JsonScalar] | None) -> dict[str, JsonScalar]:
@@ -105,7 +108,11 @@ def create_server(data_root: str | Path, *, max_file_bytes: int = 100 * 1024 * 1
     @server.tool(annotations=annotations, structured_output=True)
     def list_analyses() -> dict[str, Any]:
         """List supported registry analyses. Availability depends on the input file."""
-        return {"analyses": list(available_analyses()), "output_properties_tool": "output_properties"}
+        return {
+            "analyses": list(available_analyses()),
+            "deferred_analyses": sorted(MCP_DEFERRED_ANALYSES),
+            "output_properties_tool": "output_properties",
+        }
 
     @server.tool(annotations=annotations, structured_output=True)
     def inspect_file(path: str, format_hint: str | None = None) -> dict[str, Any]:
@@ -126,6 +133,11 @@ def create_server(data_root: str | Path, *, max_file_bytes: int = 100 * 1024 * 1
         def execute() -> ResultRecord:
             if analysis not in available_analyses():
                 raise ValueError(f"Unknown analysis: {analysis}")
+            if analysis in MCP_DEFERRED_ANALYSES:
+                raise ValueError(
+                    f"{analysis} is deferred from MCP because bounded server execution "
+                    "is not implemented; run this analysis outside MCP using the CLI or Python API."
+                )
             clean_parameters = _analysis_parameters(parameters)
             data = load_input(source, format_hint=format_hint)
             definition = _resolve(analysis)

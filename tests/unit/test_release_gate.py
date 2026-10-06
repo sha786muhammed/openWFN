@@ -26,3 +26,13 @@ def test_gate_uses_latest_attempt_and_waits_for_running_checks():
     assert workflow_outcome([*items, retry], 'reviewed') == 'pending'
     retry.update(status='completed', conclusion='failure')
     assert workflow_outcome([*items, retry], 'reviewed') == 'failed'
+
+
+def test_basin_scientific_validation_is_a_required_publication_gate():
+    name = 'QTAIM basin Critic2 validation'
+    assert name in REQUIRED
+    items = [item for item in runs() if item['name'] != name]
+    assert workflow_outcome(items, 'reviewed') == 'pending'
+    items.append({'id': 100, 'name': name, 'head_sha': 'reviewed',
+                  'status': 'completed', 'conclusion': 'failure'})
+    assert workflow_outcome(items, 'reviewed') == 'failed'

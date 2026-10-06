@@ -64,6 +64,8 @@ jobs:
       - name: Generate independent Critic2 reference
         env:
           CRITIC_HOME: ${{ github.workspace }}/critic2-src
+          OPENBLAS_NUM_THREADS: "1"
+          OMP_NUM_THREADS: "1"
         run: |
           BUILD_DESC="GitHub Actions ubuntu-latest; $(gcc --version | head -1); $(gfortran --version | head -1); CMake $(cmake --version | head -1)"
           python scripts/validate_qtaim_basins_critic2.py \
@@ -77,14 +79,19 @@ jobs:
             --lebedev-points 4802 \
             --mapping-tolerance-bohr 0.35 \
             --critic2-source-commit 9731d532c6407d35c75bbce5af449211470437a7 \
-            --build-description "$BUILD_DESC"
+            --build-description "$BUILD_DESC" \
+            --compare-openwfn
           echo "----- BEGIN QTAIM BASIN REFERENCE JSON -----"
           cat qtaim-basins-reference.generated.json
           echo "----- END QTAIM BASIN REFERENCE JSON -----"
 
       - name: Upload generated reference
+        if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: qtaim-basins-critic2-reference
-          path: qtaim-basins-reference.generated.json
+          path: |
+            qtaim-basins-reference.generated.json
+            qtaim-basins-reference.generated.comparison.json
+            qtaim-basins-reference.generated.raw/
           if-no-files-found: error
