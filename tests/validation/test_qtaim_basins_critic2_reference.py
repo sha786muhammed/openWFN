@@ -166,3 +166,41 @@ def test_parse_critic2_molecular_properties_without_volume_column() -> None:
     assert [row.laplacian_integral for row in rows] == pytest.approx(
         [1.0e-4, -5.0e-5, -5.0e-5]
     )
+
+
+def test_parse_critic2_molecular_properties_without_volume() -> None:
+    module = _module()
+    text = """* Integration of basin properties by bisection
+* List of attractors integrated
+# Id   cp   ncp   Name  Z   mult           Position (bohr)
+  1    1    1      O_   8   1     0.0000000    0.0000000    0.0000000
+
+* Integrated atomic properties
+# (See key above for interpretation of column headings.)
+# Integrable properties 1 to 2
+# Id   cp   ncp   Name  Z   mult       Pop             Lap
+  1    1    1      O_   8   1    8.92438605E+00  1.36704494E-03
+----------------------------------------------------------------
+  Sum                            8.92438605E+00  1.36704494E-03
+"""
+    rows = module.parse_critic2_basin_output(text)
+
+    assert len(rows) == 1
+    assert rows[0].volume is None
+    assert rows[0].population == pytest.approx(8.92438605)
+    assert rows[0].laplacian_integral == pytest.approx(1.36704494e-3)
+
+
+def test_critic2_input_uses_explicit_population_focused_radial_controls(tmp_path: Path) -> None:
+    module = _module()
+    fchk = tmp_path / "water.fchk"
+    fchk.write_text("fixture", encoding="utf-8")
+
+    script = module.build_critic2_input(fchk, lebedev_points=590)
+
+    assert "int_radial type qags" in script.lower()
+    assert "abserr 1e-10" in script.lower()
+    assert "relerr 1e-10" in script.lower()
+    assert "errprop 2" in script.lower()
+    assert "prec 1e-6" in script.lower()
+    assert "integrals lebedev 590" in script.lower()
