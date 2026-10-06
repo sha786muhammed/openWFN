@@ -27,7 +27,7 @@ CRITIC2_COMMIT = "9731d532c6407d35c75bbce5af449211470437a7"
 DEFAULT_LEBEDEV_POINTS = 590
 
 _POSITION_HEADER = re.compile(r"Position\s*\(([^)]+)\)", re.IGNORECASE)
-_ROW_PREFIX = re.compile(r"^\s*\d+\s+\d+\s+\d+\s+[A-Za-z][A-Za-z0-9]*\s+\d+\s+\d+\s+")
+_ROW_PREFIX = re.compile(r"^\\s*\\d+\\s+\\d+\\s+\\d+\\s+[A-Za-z][A-Za-z0-9]*\\s+\\d+\\s+(?:\\d+|--)\\s+")
 _FLOAT_TOKEN = r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[EeDd][+-]?\d+)?"
 
 
