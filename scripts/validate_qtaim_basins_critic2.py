@@ -119,7 +119,7 @@ def _parse_attractor_positions(text: str) -> dict[int, tuple[str, int, int | Non
             continue
         if stripped.startswith("*"):
             break
-        tokens = _critic2_table_tokens(line, min_columns=9 if has_volume else 8)
+        tokens = _critic2_table_tokens(line)
         if tokens is None:
             if rows:
                 break
@@ -185,7 +185,7 @@ def _parse_integrated_properties(
             break
         if not stripped or stripped.startswith("#"):
             continue
-        tokens = _critic2_table_tokens(line, min_columns=9 if has_volume else 8)
+        tokens = _critic2_table_tokens(line, min_columns=6 + len(property_names))
         if tokens is None:
             if rows:
                 break
