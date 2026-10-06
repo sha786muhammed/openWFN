@@ -204,3 +204,22 @@ def test_critic2_input_uses_explicit_population_focused_radial_controls(tmp_path
     assert "errprop 2" in script.lower()
     assert "prec 1e-6" in script.lower()
     assert "integrals lebedev 590" in script.lower()
+
+
+def test_external_reference_population_closure_is_required() -> None:
+    module = _module()
+
+    with pytest.raises(ValueError, match="closure|electron"):
+        module.validate_reference_population_closure(
+            population_sum_e=9.423414138,
+            expected_electrons_e=10.0,
+            tolerance_e=0.01,
+            case_id="water",
+        )
+
+    assert module.validate_reference_population_closure(
+        population_sum_e=9.99944533,
+        expected_electrons_e=10.0,
+        tolerance_e=0.01,
+        case_id="methane",
+    ) == pytest.approx(0.00055467)
