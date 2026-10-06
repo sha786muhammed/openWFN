@@ -134,6 +134,7 @@ def available_workflows(session: GuidedSession) -> tuple[Workflow, ...]:
         workflows.append(Workflow("Create a report", "report"))
         if data.basis is not None:
             workflows.append(Workflow("Export offline 3D workbench", "workbench"))
+    workflows.append(Workflow("Ask the scientific assistant", "chat"))
     workflows.extend((Workflow("Why is an analysis unavailable?", "unavailable"),
                       Workflow("Open another file", "file"), Workflow("Quit", "exit")))
     return tuple(workflows)

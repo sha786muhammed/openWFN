@@ -30,6 +30,21 @@ openwfn --format json molecule.fchk analyze
 
 Guided menus depend on the loaded file's capabilities. Structure files do not imply a wavefunction; unknown electronic charge or multiplicity stays unknown. Density integration asks for spacing and padding in bohr and checks grid dimensions before allocating points. Save prompts show the absolute destination and require confirmation. Missing extensions are supplied; input and existing files are protected. Suggested destinations are under `results/` in the directory where the session started. Browser opening is optional.
 
+## Scientific assistant
+
+The development checkout includes chat and MCP in the base installation.
+Configure an existing model; no weights are downloaded automatically:
+
+```bash
+openwfn molecule.molden chat --model qwen3:8b
+openwfn --format json molecule.fchk chat --model qwen3:8b \
+  --question "What is the HOMO-LUMO gap?"
+```
+
+The model selects a tool, and openWFN renders the scientific answer. See
+[Scientific assistant](../assistant.md) for configuration, privacy, confirmation
+and resource limits. A missing model does not prevent ordinary CLI/API analysis.
+
 ## Global options
 
 | Option | Purpose |
@@ -53,6 +68,7 @@ These are the public top-level choices shown by `openwfn --help`.
 | `summary` | Summarize molecular identity and calculation state |
 | `analyze` | Bounded overview with eligible next analyses; no automatic exports |
 | `open` | Open capability-aware guided terminal mode |
+| `chat` | Ask a configured model to select scientific tools; openWFN supplies the values |
 | `info` | Show detailed FCHK metadata |
 | `dist` | Legacy distance command |
 | `angle` | Legacy angle command |

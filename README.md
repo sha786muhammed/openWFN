@@ -25,7 +25,15 @@
 
 ---
 
-openWFN connects scientific analysis, automation, validation evidence, and research output through one typed calculation model. It works locally through the command line or Python, from individual calculations and high-throughput collections.
+openWFN reads quantum-chemistry files and runs post-processing analyses through
+the command line, Python or local MCP. Results include units, source provenance
+and numerical warnings. Use it for individual calculations or collections of files.
+
+The development checkout adds capability-aware guided mode, built-in format
+readers and MCP, and a terminal scientific assistant. These changes are not yet
+the published 0.11.0 release. See [Scientific assistant](docs/assistant.md) for
+local-model setup and the privacy boundary. Numerical answers come from
+openWFN results, not generated model prose.
 
 ## Analyze · Automate · Validate · Publish
 

@@ -75,6 +75,7 @@ nav:
       - Interoperability preview: interoperability.md
       - Output properties preview: output-properties.md
       - Local MCP: mcp.md
+      - Scientific assistant: assistant.md
       - Your first analysis: start/first-analysis.md
       - Quick start: quick-start.md
       - Learning paths: start/learning-paths.md

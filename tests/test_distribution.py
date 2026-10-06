@@ -111,6 +111,10 @@ def test_built_wheel_includes_format_readers_by_default(
     )
     assert any(requirement.startswith('cclib==1.8.1') and 'extra' not in requirement
                for requirement in requirements)
+    assert any(requirement.startswith('mcp==2.2.0') and 'extra' not in requirement
+               for requirement in requirements)
+    assert any(requirement.startswith('httpx') and 'extra' not in requirement
+               for requirement in requirements)
 
 
 def test_source_distribution_contains_project_policies_and_provenance(

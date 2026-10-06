@@ -15,14 +15,8 @@ python -m pip install --upgrade openwfn
 openwfn --version
 ```
 
-Expected version output for this handbook:
-
-```text
-openWFN 0.8.2
-```
-
 Use `python -m pip` so installation and execution refer to the same Python
-environment.
+environment. Record the installed version when reproducing an analysis.
 
 ## 2. Install the maintained example
 

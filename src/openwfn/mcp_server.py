@@ -1,17 +1,19 @@
-"""Optional read-only stdio MCP adapter for selected existing analyses."""
+"""Read-only local MCP access to openWFN scientific analyses."""
 
 import argparse
+from dataclasses import replace
 from math import isfinite
 from pathlib import Path
 from time import perf_counter
 from typing import Any, Callable
 
 from . import __version__
-from .analysis.registry import _resolve, available_analyses, run_analysis_safe
-from .ingest import load_input
+from .analysis.registry import available_analyses
+from .assistant import AnalysisPlan, AssistantSession
 from .inspection import build_capabilities_result
 from .output_properties import read_output
 from .results import ResultRecord
+from .tool_policy import ToolPolicy, allowed_parameters
 
 JsonScalar = str | int | float | bool | None
 MAX_ANALYSIS_PARAMETERS = 32
@@ -39,25 +41,16 @@ def _analysis_parameters(parameters: dict[str, JsonScalar] | None) -> dict[str, 
 
 
 def create_server(data_root: str | Path, *, max_file_bytes: int = 100 * 1024 * 1024,
-                  max_basis_functions: int = 256) -> Any:
+                  max_basis_functions: int = 256, max_grid_points: int = 200_000) -> Any:
     """Create an MCP server restricted to regular files beneath ``data_root``.
 
     No server is started here. The caller owns the directory and must keep it
     private from untrusted writers while the server is running.
     """
-    root = Path(data_root).expanduser().resolve()
-    if not root.is_dir():
-        raise ValueError("data_root must be an existing directory")
-    if max_basis_functions <= 0:
-        raise ValueError("max_basis_functions must be positive")
-    if max_file_bytes <= 0:
-        raise ValueError("max_file_bytes must be positive")
-    try:
-        from mcp.server import MCPServer
-        from mcp.server.mcpserver.exceptions import ToolError
-        from mcp_types import ToolAnnotations
-    except ImportError as exc:
-        raise RuntimeError("Install the MCP extra: pip install 'openwfn[mcp]'") from exc
+    policy = ToolPolicy(Path(data_root), max_file_bytes, max_basis_functions, max_grid_points)
+    from mcp.server import MCPServer
+    from mcp.server.mcpserver.exceptions import ToolError
+    from mcp_types import ToolAnnotations
 
     server = MCPServer(
         "openWFN", version=__version__, log_level="WARNING",
@@ -66,7 +59,9 @@ def create_server(data_root: str | Path, *, max_file_bytes: int = 100 * 1024 * 1
             "Inspect capabilities before requesting wavefunction analyses. Preserve units, "
             "provenance, warnings and status in answers. A partial result is incomplete; "
             "a failed result is not a scientific answer. Never infer missing properties. "
-            "Output properties are source-reported, not recomputed from a wavefunction."
+            "Output properties are source-reported, not recomputed from a wavefunction. "
+            "Ask the user to approve density settings before setting confirmed=true. "
+            "Real-space points use Cartesian bohr. Experimental analyses stay Experimental."
         ),
     )
     annotations = ToolAnnotations(
@@ -75,22 +70,15 @@ def create_server(data_root: str | Path, *, max_file_bytes: int = 100 * 1024 * 1
     )
 
     def checked_path(path: str) -> Path:
-        candidate = Path(path).expanduser()
-        if not candidate.is_absolute():
-            candidate = root / candidate
-        candidate = candidate.resolve()
-        if not candidate.is_relative_to(root):
-            raise ToolError("Input must be inside the configured data root")
-        if not candidate.is_file():
-            raise ToolError("Input must be an existing regular file")
-        if candidate.suffix.casefold() == ".chk":
-            raise ToolError(
-                "Binary .chk inputs are disabled in the read-only MCP adapter. "
-                "Convert to .fchk outside MCP, then provide that file."
-            )
-        if candidate.stat().st_size > max_file_bytes:
-            raise ToolError("Input exceeds the configured file-size limit")
-        return candidate
+        try:
+            return policy.checked_path(path)
+        except ValueError as exc:
+            raise ToolError(str(exc)) from exc
+
+    def session(source, hint=None):
+        return AssistantSession(source, data_root=policy.root, format_hint=hint,
+            max_file_bytes=policy.max_file_bytes, max_basis_functions=policy.max_basis_functions,
+            max_grid_points=policy.max_grid_points)
 
     def result(operation: Callable[[], ResultRecord], kind: str) -> dict[str, Any]:
         started = perf_counter()
@@ -105,13 +93,19 @@ def create_server(data_root: str | Path, *, max_file_bytes: int = 100 * 1024 * 1
     @server.tool(annotations=annotations, structured_output=True)
     def list_analyses() -> dict[str, Any]:
         """List supported registry analyses. Availability depends on the input file."""
-        return {"analyses": list(available_analyses()), "output_properties_tool": "output_properties"}
+        return {"analyses": list(available_analyses()), "output_properties_tool": "output_properties",
+                "density_tool": "integrate_density",
+                "parameters": {name: list(allowed_parameters(name)) for name in available_analyses()}}
 
     @server.tool(annotations=annotations, structured_output=True)
     def inspect_file(path: str, format_hint: str | None = None) -> dict[str, Any]:
         """Inspect file-specific wavefunction capabilities; use output_properties for QC logs."""
         source = checked_path(path)
-        return result(lambda: build_capabilities_result(source, format_hint=format_hint), "capabilities")
+        def inspect():
+            selected = session(source, format_hint)
+            record = build_capabilities_result(source, format_hint=format_hint)
+            return replace(record, data={**record.data, 'analyses': selected.model_context()['analyses']})
+        return result(inspect, "capabilities")
 
     @server.tool(annotations=annotations, structured_output=True)
     def run_analysis(
@@ -120,28 +114,49 @@ def create_server(data_root: str | Path, *, max_file_bytes: int = 100 * 1024 * 1
         format_hint: str | None = None,
         parameters: dict[str, JsonScalar] | None = None,
     ) -> dict[str, Any]:
-        """Run one registered analysis with optional scalar parameters."""
+        """Run a registered analysis or stored-grid inspection with bounded scalar settings.
+
+        ELF/LOL/NCI and derivatives accept x_bohr/y_bohr/z_bohr for one point.
+        Density integration uses the separate confirmation-aware tool.
+        """
         source = checked_path(path)
 
         def execute() -> ResultRecord:
-            if analysis not in available_analyses():
+            if analysis not in (*available_analyses(), 'stored-grid'):
                 raise ValueError(f"Unknown analysis: {analysis}")
             clean_parameters = _analysis_parameters(parameters)
-            data = load_input(source, format_hint=format_hint)
-            definition = _resolve(analysis)
-            needs_overlap = any("ao_overlap" in requirement.alternatives
-                                for requirement in definition.requirements)
-            if needs_overlap and data.calculation is not None and data.calculation.basis is not None:
-                count = data.calculation.basis.n_functions
-                if count > max_basis_functions:
-                    raise ValueError(f"AO resource limit: {count} basis functions exceed configured {max_basis_functions}; run dense analyses outside MCP or explicitly raise the server limit.")
-            return run_analysis_safe(data, analysis, **clean_parameters)
+            answer = session(source, format_hint).execute(AnalysisPlan('analysis', analysis, clean_parameters))
+            if answer.record is None:
+                raise ValueError(answer.text)
+            return answer.record
 
         return result(execute, analysis)
 
     @server.tool(annotations=annotations, structured_output=True)
+    def integrate_density(path: str, kind: str = 'total', spacing_bohr: float = .3,
+                          padding_bohr: float = 6., confirmed: bool = False,
+                          format_hint: str | None = None) -> dict[str, Any]:
+        """Check a density integral after user approval of kind, spacing and padding.
+
+        Settings are bohr. This does not establish SCF or grid convergence.
+        Resource limits still apply. Do not set confirmed without user approval.
+        """
+        source = checked_path(path)
+        def integrate():
+            selected = session(source, format_hint)
+            answer = selected.execute(AnalysisPlan('analysis', 'density', {
+                'kind': kind, 'spacing_bohr': spacing_bohr, 'padding_bohr': padding_bohr}),
+                confirm=lambda _: confirmed)
+            if answer.record is None:
+                return selected.refresh().calculation._with_provenance(ResultRecord.failure(
+                    kind='density_integration', analysis_name='density', analysis_version='1',
+                    exception=ValueError(answer.text), elapsed_seconds=0.))
+            return answer.record
+        return result(integrate, 'density')
+
+    @server.tool(annotations=annotations, structured_output=True)
     def output_properties(path: str) -> dict[str, Any]:
-        """Extract source-reported QC output properties using the optional cclib reader."""
+        """Extract source-reported QC properties; missing values are never recomputed."""
         source = checked_path(path)
         return result(lambda: read_output(source), "output_properties")
 
@@ -154,10 +169,11 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--data-root", required=True, help="Directory containing permitted input files")
     parser.add_argument("--max-file-bytes", type=int, default=100 * 1024 * 1024)
     parser.add_argument("--max-basis-functions", type=int, default=256, help="AO limit for overlap-based registry analyses")
+    parser.add_argument("--max-grid-points", type=int, default=200_000)
     args = parser.parse_args(argv)
     try:
         server = create_server(args.data_root, max_file_bytes=args.max_file_bytes,
-                               max_basis_functions=args.max_basis_functions)
+                               max_basis_functions=args.max_basis_functions, max_grid_points=args.max_grid_points)
     except (ValueError, RuntimeError) as exc:
         parser.error(str(exc))
     server.run(transport="stdio")

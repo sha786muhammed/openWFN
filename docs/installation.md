@@ -9,6 +9,12 @@ openWFN requires Python 3.10–3.13.
 
 ## Optional features
 
+In the development checkout, readers, output extraction, MCP and terminal chat
+are part of the base installation (`python -m pip install -e .`). Chat still
+needs an existing configured model; installation does not download one. See
+[Scientific assistant](assistant.md). The extra-install commands below apply
+to the published 0.11.0 release.
+
 In your environment, install only the optional features you need:
 
 ```bash

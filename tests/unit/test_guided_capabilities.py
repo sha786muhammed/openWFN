@@ -26,6 +26,7 @@ def test_xyz_actions_exclude_missing_wavefunction(tmp_path):
     session = build_guided_session(path)
     commands = {item.command for item in available_workflows(session)}
     assert {'summary', 'geometry', 'export'} <= commands
+    assert 'chat' in commands
     assert not {'orbitals', 'population', 'density', 'vibrations', 'workbench', 'report'} & commands
 
 

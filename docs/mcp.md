@@ -6,13 +6,15 @@ It runs locally over stdio and reads files inside one configured directory. It d
 
 ## Install
 
-Use a separate environment, then install the optional features:
+Use a separate environment. The development version includes the MCP SDK and
+format/output readers in the normal installation:
 
 ```bash
-python -m pip install "openwfn[mcp,interop,outputs]"
+python -m pip install -e .
 ```
 
-The base openWFN installation does not require the MCP SDK. The `interop` and `outputs` extras enable the existing IOData and cclib readers respectively.
+Published 0.11.0 installations still use the `mcp`, `interop` and `outputs`
+extras. Existing extra names remain accepted for compatibility in this checkout.
 
 ## Connect a client
 
@@ -42,6 +44,12 @@ Host configuration syntax can vary. The command starts a server that waits for M
 | `inspect_file(path, format_hint=None)` | Report file-specific capabilities. |
 | `run_analysis(path, analysis, format_hint=None, parameters=None)` | Run one registered analysis with an optional validated scalar parameter mapping. |
 | `output_properties(path)` | Extract source-reported QC output properties with cclib. |
+| `integrate_density(path, kind, spacing_bohr, padding_bohr, confirmed=False)` | Check density after approval of the grid settings, within resource limits. |
+
+`list_analyses` also lists accepted scalar parameter names. For a one-point
+ELF/LOL/NCI or derivative calculation, pass `x_bohr`, `y_bohr`, and `z_bohr`.
+`run_analysis` also accepts `stored-grid` for bounded stored-field inspection;
+it does not infer that a scalar grid is an electron density.
 
 `parameters` is a JSON object whose values are simple scalars accepted by the selected registered analysis. Nested objects/lists and non-finite numeric values are rejected rather than forwarded ambiguously. For example, an agent may request:
 
@@ -99,7 +107,12 @@ Invalid paths and inputs larger than the configured limit produce MCP tool error
 
 The adapter does not write output files or execute shell commands. Symlinks resolving outside the data root are rejected. The default per-file limit is 100 MiB; `--max-file-bytes` changes it. This is an input-size check, not a hard bound on parser memory or analysis runtime.
 
-Overlap-based analyses are limited to 256 AO functions by default before overlap construction. Configure an intentional higher limit with `--max-basis-functions N` or `create_server(root, max_basis_functions=N)`. DOS/PDOS retain their own bounded output limits. File-writing plots/cubes/reports, batch execution, and Workbench generation remain outside the read-only MCP surface.
+Computations other than summary are limited to 256 AO functions by default.
+Configure an intentional higher limit with `--max-basis-functions N` or
+`create_server(root, max_basis_functions=N)`. Density grids are limited to
+200,000 points by default (`--max-grid-points`); spectra to 4,096 samples.
+QTAIM is limited to 32 centers. File-writing plots/cubes/reports, batch execution,
+and Workbench generation remain outside the read-only MCP surface.
 
 Use a dedicated input directory that untrusted processes cannot modify while the server runs. The local interface is not an adversarial sandbox and has no OS-enforced CPU, memory, or execution-time isolation. Results include source paths; consider that before sharing them with an external client. Remote deployment requires separate access control, upload validation, authentication, and resource isolation.
 

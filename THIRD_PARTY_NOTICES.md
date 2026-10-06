@@ -19,33 +19,33 @@ file included here is reproduced from the 3Dmol.js upstream `LICENSE` file. No
 exact release or source revision is claimed because the bundled minified file
 does not identify one and the available repository record does not prove one.
 
-## IOData (optional interoperability backend)
+## IOData (format reader)
 
 - Distribution: `qc-iodata`
 - Version pinned by openWFN 0.9 interoperability contract: `1.0.1`
 - Upstream project: <https://github.com/theochem/iodata>
-- Purpose: optional parsing backend for additional quantum-chemistry and molecular file formats
+- Purpose: parsing backend for additional quantum-chemistry and molecular file formats
 - License: GPL-3.0-or-later
-- Installation: `pip install "openwfn[interop]"`
+- Installation: base dependency in this development checkout; `interop` extra in published 0.11.0
 - Bundling status: not vendored or redistributed inside openWFN
 
-IOData is an optional, separately installed dependency. openWFN-owned code and
+IOData is a separately installed dependency, not copied into the wheel. openWFN-owned code and
 public result contracts remain independent of IOData's internal Python objects.
 
-## cclib (optional QC output reader)
+## cclib (QC output reader)
 
 - Distribution and pinned version: `cclib==1.8.1`
 - Upstream project: <https://github.com/cclib/cclib>
 - Purpose: source-reported property extraction from QC text outputs
 - License reported by the installed distribution: BSD-3-Clause
-- Installation: `pip install "openwfn[outputs]"` after a release containing this extra
+- Installation: base dependency in this development checkout; `outputs` extra in published 0.11.0
 - Bundling status: not vendored or redistributed inside openWFN
 
-## MCP Python SDK (optional local protocol adapter)
+## MCP Python SDK (local protocol adapter)
 
 - Distribution and pinned version: `mcp==2.2.0`
 - Upstream project: <https://github.com/modelcontextprotocol/python-sdk>
 - Purpose: local stdio MCP client/server communication
 - License reported by the installed distribution: MIT
-- Installation: `pip install "openwfn[mcp]"` after a release containing this extra
+- Installation: base dependency in this development checkout; `mcp` extra in published 0.11.0
 - Bundling status: not vendored or redistributed inside openWFN

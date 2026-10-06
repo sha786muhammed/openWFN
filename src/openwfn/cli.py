@@ -318,6 +318,12 @@ def main(argv: list[str] | None = None) -> int:
     subparsers.add_parser("summary", help="Show professional molecular summary")
     subparsers.add_parser("analyze", help="Show a bounded overview and available next analyses")
     subparsers.add_parser("open", help="Open the guided terminal interface")
+    p_chat = subparsers.add_parser("chat", help="Ask a configured model to select openWFN scientific tools")
+    p_chat.add_argument("--model", help="Installed model name (or OPENWFN_CHAT_MODEL)")
+    p_chat.add_argument("--endpoint", help="OpenAI-compatible model base URL; defaults to local Ollama /v1")
+    p_chat.add_argument("--allow-remote", action="store_true", help="Allow sending questions and capabilities to the configured HTTPS model endpoint")
+    p_chat.add_argument("--question", help="Ask one question instead of opening a conversation")
+    p_chat.add_argument("--confirm-grid", action="store_true", help="Approve the model-requested density grid within assistant resource limits")
     subparsers.add_parser("info", help="Show detailed FCHK metadata")
 
     p_dist = subparsers.add_parser("dist", help="Distance between two atoms")
@@ -654,6 +660,13 @@ def main(argv: list[str] | None = None) -> int:
 
         return execute(lambda: build_overview(build_guided_session(
             Path(args.file), format_hint=args.input_format)), _context(args))
+
+    if args.command == "chat":
+        from .assistant_terminal import chat_command
+        return chat_command(args.file, model=args.model, endpoint=args.endpoint,
+            allow_remote=args.allow_remote, format_hint=args.input_format,
+            question=args.question, output_format=args.format, output_path=args.output,
+            overwrite=args.overwrite, confirm_grid=args.confirm_grid)
 
     if args.command == "open":
         args.command = "interactive"

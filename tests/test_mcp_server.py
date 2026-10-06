@@ -40,7 +40,7 @@ def test_tools_preserve_results_and_reject_unsafe_paths(inputs, tmp_path):
         async with Client(create_server(inputs)) as client:
             listing = await client.list_tools()
             assert {tool.name for tool in listing.tools} == {
-                "inspect_file", "list_analyses", "run_analysis", "output_properties"
+                "inspect_file", "list_analyses", "run_analysis", "output_properties", "integrate_density"
             }
             assert all(tool.annotations.read_only_hint for tool in listing.tools)
             catalog = (await client.call_tool("list_analyses", {})).structured_content
@@ -251,4 +251,42 @@ def test_real_orca_output_properties(inputs):
             )
             assert record["provenance"]["input_sha256"]
 
+    asyncio.run(check())
+
+
+def test_mcp_density_requires_confirmation_and_obeys_grid_limit(inputs):
+    from mcp import Client
+
+    from openwfn.mcp_server import create_server
+
+    async def check():
+        async with Client(create_server(inputs)) as client:
+            unconfirmed = await client.call_tool('integrate_density', {'path': 'water molecule.fchk'})
+            assert unconfirmed.structured_content['status'] == 'failed'
+            assert 'confirm' in unconfirmed.structured_content['error']['message'].lower()
+            huge = await client.call_tool('integrate_density', {
+                'path': 'water molecule.fchk', 'spacing_bohr': .001, 'confirmed': True})
+            assert huge.structured_content['status'] == 'failed'
+            assert 'limit' in huge.structured_content['error']['message'].lower()
+            record = await client.call_tool('integrate_density', {'path': 'water molecule.fchk',
+                'spacing_bohr': .4, 'padding_bohr': 4., 'confirmed': True})
+            assert record.structured_content['kind'] == 'density_integration'
+            assert record.structured_content['status'] == 'partial'
+            assert record.structured_content['warnings']
+            assert record.structured_content['provenance']['input_sha256']
+    asyncio.run(check())
+
+
+def test_mcp_point_analysis_preserves_coordinate_units_and_validation_status(inputs):
+    from mcp import Client
+
+    from openwfn.mcp_server import create_server
+
+    async def check():
+        async with Client(create_server(inputs)) as client:
+            record = await client.call_tool('run_analysis', {'path': 'water molecule.fchk',
+                'analysis': 'elf', 'parameters': {'x_bohr': 0., 'y_bohr': 0., 'z_bohr': 0.}})
+            assert record.structured_content['validation_status'] == 'Experimental'
+            assert record.structured_content['data']['points_bohr'] == [[0., 0., 0.]]
+            assert record.structured_content['units']['points_bohr'] == 'bohr'
     asyncio.run(check())

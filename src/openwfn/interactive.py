@@ -665,6 +665,10 @@ def run_interactive(lines, filename, *, format_hint=None):
             coordinates = list(atoms)
             menu_filename = session.source.name
             continue
+        elif action == "chat":
+            from .assistant_terminal import chat_command
+            chat_command(session.source, format_hint=session.format_hint)
+            continue
         elif action == "geometry":
             try:
                 geometry_choice = input("Geometry command [distance/angle/dihedral/back]: ").strip().casefold()
