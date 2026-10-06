@@ -161,7 +161,7 @@ def _parse_integrated_properties(text: str) -> dict[int, tuple[str, int, int | N
             raise ValueError(f"Critic2 integrated-property table contains duplicate id {identifier}")
         name = tokens[3]
         atomic_number = int(tokens[4])
-        multiplicity = int(tokens[5])
+        multiplicity = None if tokens[5] == "--" else int(tokens[5])
         volume = _parse_float(tokens[6])
         population = _parse_float(tokens[7])
         laplacian = _parse_float(tokens[8])
