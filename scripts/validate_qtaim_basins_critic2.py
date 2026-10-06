@@ -149,7 +149,19 @@ def _parse_integrated_properties(text: str) -> dict[int, tuple[str, int, int | N
                     start = header_index + 1
                     break
     if start is None:
-        raise ValueError("Critic2 output is missing the integrated atomic-properties table")
+        marker = next(
+            (index for index, line in enumerate(lines) if "Integrated atomic" in line),
+            None,
+        )
+        if marker is None:
+            excerpt_lines = lines[-40:]
+        else:
+            excerpt_lines = lines[max(0, marker - 4) : marker + 30]
+        excerpt = "\n".join(excerpt_lines)
+        raise ValueError(
+            "Critic2 output is missing the integrated atomic-properties table; "
+            f"output excerpt follows:\n{excerpt}"
+        )
 
     rows: dict[int, tuple[str, int, int | None, float, float, float]] = {}
     for line in lines[start:]:
