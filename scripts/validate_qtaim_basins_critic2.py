@@ -36,7 +36,7 @@ class Critic2BasinRow:
     atomic_number: int
     multiplicity: int | None
     position_bohr: tuple[float, float, float]
-    volume: float
+    volume: float | None
     population: float
     laplacian_integral: float
 
@@ -137,18 +137,28 @@ def _parse_attractor_positions(text: str) -> dict[int, tuple[str, int, int | Non
     return rows
 
 
-def _parse_integrated_properties(text: str) -> dict[int, tuple[str, int, int | None, float, float, float]]:
+def _parse_integrated_properties(
+    text: str,
+) -> dict[int, tuple[str, int, int | None, float | None, float, float]]:
     lines = text.splitlines()
     start = None
+    property_names: list[str] | None = None
     for index, line in enumerate(lines):
         if line.strip().startswith("* Integrated atomic properties"):
-            for header_index in range(index + 1, min(index + 10, len(lines))):
-                if re.search(r"\bVolume\b", lines[header_index]) and re.search(
-                    r"\bPop\b", lines[header_index]
-                ):
+            for header_index in range(index + 1, min(index + 12, len(lines))):
+                stripped = lines[header_index].strip()
+                if not stripped.startswith("# Id"):
+                    continue
+                header_tokens = stripped.lstrip("#").split()
+                if len(header_tokens) < 7:
+                    continue
+                names = header_tokens[6:]
+                lowered = [name.lower() for name in names]
+                if "pop" in lowered and "lap" in lowered:
                     start = header_index + 1
+                    property_names = names
                     break
-    if start is None:
+    if start is None or property_names is None:
         marker = next(
             (index for index, line in enumerate(lines) if "Integrated atomic" in line),
             None,
@@ -159,11 +169,16 @@ def _parse_integrated_properties(text: str) -> dict[int, tuple[str, int, int | N
             excerpt_lines = lines[max(0, marker - 4) : marker + 30]
         excerpt = "\n".join(excerpt_lines)
         raise ValueError(
-            "Critic2 output is missing the integrated atomic-properties table; "
+            "Critic2 output is missing a Pop/Lap integrated atomic-properties table; "
             f"output excerpt follows:\n{excerpt}"
         )
 
-    rows: dict[int, tuple[str, int, int | None, float, float, float]] = {}
+    lowered_names = [name.lower() for name in property_names]
+    population_index = lowered_names.index("pop")
+    laplacian_index = lowered_names.index("lap")
+    volume_index = lowered_names.index("volume") if "volume" in lowered_names else None
+
+    rows: dict[int, tuple[str, int, int | None, float | None, float, float]] = {}
     for line in lines[start:]:
         stripped = line.strip()
         if stripped.startswith("-") or stripped.startswith("Sum"):
@@ -175,15 +190,23 @@ def _parse_integrated_properties(text: str) -> dict[int, tuple[str, int, int | N
             if rows:
                 break
             continue
+        expected_columns = 6 + len(property_names)
+        if len(tokens) < expected_columns:
+            raise ValueError(
+                "Critic2 integrated-property row has fewer columns than its property header"
+            )
         identifier = int(tokens[0])
         if identifier in rows:
             raise ValueError(f"Critic2 integrated-property table contains duplicate id {identifier}")
         name = tokens[3]
         atomic_number = int(tokens[4])
         multiplicity = None if tokens[5] == "--" else int(tokens[5])
-        volume = _parse_float(tokens[6])
-        population = _parse_float(tokens[7])
-        laplacian = _parse_float(tokens[8])
+        property_tokens = tokens[6 : 6 + len(property_names)]
+        volume = (
+            None if volume_index is None else _parse_float(property_tokens[volume_index])
+        )
+        population = _parse_float(property_tokens[population_index])
+        laplacian = _parse_float(property_tokens[laplacian_index])
         rows[identifier] = (
             name,
             atomic_number,
@@ -195,7 +218,6 @@ def _parse_integrated_properties(text: str) -> dict[int, tuple[str, int, int | N
     if not rows:
         raise ValueError("Critic2 integrated-property table contains no rows")
     return rows
-
 
 def parse_critic2_basin_output(text: str) -> list[Critic2BasinRow]:
     """Parse one complete Critic2 molecular bisection integration block."""
@@ -216,7 +238,9 @@ def parse_critic2_basin_output(text: str) -> list[Critic2BasinRow]:
                 f"Critic2 row metadata mismatch for id {identifier}: "
                 f"{(name, atomic_number, multiplicity)} != {(pname, pz, pmult)}"
             )
-        values = (*position_bohr, volume, population, laplacian)
+        values = (*position_bohr, population, laplacian)
+        if volume is not None:
+            values = (*values, volume)
         if not all(math.isfinite(float(value)) for value in values):
             raise ValueError(f"Critic2 row {identifier} contains nonfinite values")
         result.append(
@@ -302,6 +326,7 @@ def build_critic2_input(fchk_path: Path, *, lebedev_points: int) -> str:
     return (
         f"molecule {absolute}\n"
         f"load {absolute}\n"
+        "int_radial type qags abserr 1e-10 relerr 1e-10 errprop 2 prec 1e-6\n"
         "auto\n"
         f"integrals lebedev {int(lebedev_points)}\n"
     )
