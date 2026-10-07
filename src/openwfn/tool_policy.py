@@ -78,7 +78,7 @@ def validate_parameters(analysis: str, parameters: dict | None) -> dict:
     for key, value in parameters.items():
         if key not in allowed:
             raise ValueError(f'Unsupported parameter for {analysis}: {key}')
-        enums = {'spin': ('alpha', 'beta', 'all'),
+        enums = {'spin': () if analysis == 'nto' else ('alpha', 'beta', 'all'),
                  'method': ('mulliken', 'lowdin') if analysis == 'orbital-composition' else (),
                  'kind': ('total', 'alpha', 'beta', 'spin') if analysis == 'density' else ()}
         if key in enums and enums[key] and value not in enums[key]:

@@ -49,3 +49,9 @@ def test_model_cannot_answer_offset_orbital_with_plain_frontier_record():
             return AnalysisPlan('analysis', 'frontier-all')
     with pytest.raises(ValueError, match='offset'):
         AssistantSession(SOURCE).ask('What is HOMO-1 energy?', Planner())
+
+
+@pytest.mark.parametrize('spin', [None, 'restricted', 'alpha'])
+def test_nto_source_spin_selector_is_not_orbital_channel_enum(spin):
+    plan = AnalysisPlan('analysis', 'nto', {'state': 1, 'spin': spin})
+    assert plan.parameters['spin'] == spin
