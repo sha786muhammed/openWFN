@@ -4,6 +4,9 @@ All notable changes to openWFN are documented in this file.
 
 ## [0.12.0] - Unreleased
 
+- Route explicit short orbital/metadata chat questions directly to scientific tools, avoiding model latency and unnecessary restricted-spin prompts. Distinguish model timeouts from connection failures and show waiting progress on stderr.
+- Render missing report values as "Not available" and show labelled, one-based atom/element population tables in HTML and Markdown without changing raw JSON values, units, provenance or scientific status.
+
 - Include IOData, cclib and local MCP in the normal installation; retain existing extra names for compatibility. Model weights and Gaussian utilities are not bundled.
 - Add capability-aware guided entry and a bounded `analyze` overview. Use explicit `summary` for the existing summary-only schema in scripts.
 - Add local scientific chat with constrained tool plans, capability checks, fixed engine explanations, input-change detection, explicit remote permission and confirmed density settings. Models cannot supply scientific values or shell commands.

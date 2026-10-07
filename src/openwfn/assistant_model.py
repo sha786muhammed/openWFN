@@ -125,6 +125,9 @@ class LocalModel:
                             raise ValueError('Model response exceeds the size limit; no analysis ran.')
             content = json.loads(body)['choices'][0]['message']['content']
             return AnalysisPlan.from_json(content)
+        except httpx.TimeoutException as exc:
+            raise RuntimeError(f'Model request timed out after {self.timeout:g} seconds; no analysis ran. '
+                               'Use a direct CLI command or guided analysis for this request.') from exc
         except httpx.HTTPError as exc:
             raise RuntimeError('Could not reach the configured model endpoint; no analysis ran.') from exc
         except (KeyError, IndexError, TypeError, UnicodeError) as exc:

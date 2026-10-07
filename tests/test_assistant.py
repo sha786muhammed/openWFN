@@ -186,3 +186,68 @@ def test_explicit_homo_question_cannot_silently_select_orbital_one():
             return AnalysisPlan('analysis', 'orbital-composition', {'mo': 1})
     with pytest.raises(ValueError, match='HOMO'):
         AssistantSession(WATER).ask('Which atoms contribute to HOMO?', Planner())
+
+
+@pytest.mark.parametrize('question', ['What is the HOMO energy?', 'what is the HUMO',
+                                     'Show the LUMO energy', 'What is the HOMO-LUMO gap?'])
+def test_simple_frontier_questions_do_not_wait_for_model(question):
+    from openwfn.assistant import AssistantSession
+    class OfflinePlanner:
+        def plan(self, *_):
+            raise RuntimeError('model is offline')
+    record = AssistantSession(WATER).ask(question, OfflinePlanner()).record
+    assert record.status == 'success'
+    assert record.data['reference_kind'] == 'restricted_closed_shell'
+    assert record.data['alpha']['homo_number'] == 5
+    assert record.data['beta'] is None
+
+
+def test_direct_frontier_request_does_not_fabricate_missing_orbitals(tmp_path):
+    from openwfn.assistant import AssistantSession
+    source = tmp_path / 'atom.xyz'
+    source.write_text('1\nHe\nHe 0 0 0\n')
+    class OfflinePlanner:
+        def plan(self, *_):
+            raise RuntimeError('model is offline')
+    answer = AssistantSession(source).ask('What is the HOMO energy?', OfflinePlanner())
+    assert answer.record.status == 'failed'
+    assert answer.record.error.category == 'DataUnavailableError'
+
+
+def test_only_fallback_questions_signal_model_planning():
+    from openwfn.assistant import AnalysisPlan, AssistantSession
+    class Planner:
+        def plan(self, *_):
+            return AnalysisPlan('analysis', 'summary')
+    events = []
+    session = AssistantSession(WATER)
+    session.ask('What is the HOMO energy?', Planner(), on_model_request=lambda: events.append('waiting'))
+    assert events == []
+    session.ask('Tell me about this calculation', Planner(), on_model_request=lambda: events.append('waiting'))
+    assert events == ['waiting']
+
+
+@pytest.mark.parametrize('question', ['What is the charge?', 'What is the multiplicity?',
+                                     'Show the formula', 'What are the charge and spin?'])
+def test_simple_metadata_questions_do_not_wait_for_model(question, tmp_path):
+    from openwfn.assistant import AssistantSession
+    source = tmp_path / 'atom.xyz'
+    source.write_text('1\natom\nHe 0 0 0\n')
+    class OfflinePlanner:
+        def plan(self, *_):
+            raise RuntimeError('model is offline')
+    record = AssistantSession(source).ask(question, OfflinePlanner()).record
+    assert record.data['formula'] == 'He'
+    assert record.data['charge'] is None
+    assert record.data['multiplicity'] is None
+    assert record.status == 'partial'
+
+
+def test_offset_orbital_question_is_not_silently_replaced_by_homo():
+    from openwfn.assistant import AnalysisPlan, AssistantSession
+    class Planner:
+        def plan(self, question, context):
+            return AnalysisPlan('clarify', clarification='orbital')
+    answer = AssistantSession(WATER).ask('What is the HOMO-1 energy?', Planner())
+    assert answer.record is None
+    assert 'orbital' in answer.text.lower()

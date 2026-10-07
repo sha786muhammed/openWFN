@@ -99,3 +99,15 @@ def test_chat_noninteractive_json_does_not_open_a_conversation(monkeypatch, caps
     monkeypatch.setattr('builtins.input', lambda _: (_ for _ in ()).throw(AssertionError('prompted')))
     assert main(['--format', 'json', '--non-interactive', str(WATER), 'chat', '--model', 'test']) != 0
     assert json.loads(capsys.readouterr().out)['status'] == 'failed'
+
+
+def test_chat_fallback_progress_does_not_pollute_json(monkeypatch, capsys):
+    from openwfn.assistant_model import LocalModel
+    backend = LocalModel('test', transport=httpx.MockTransport(lambda _: httpx.Response(200,
+        json={'choices': [{'message': {'content': '{"action":"analysis","analysis":"summary"}'}}]})))
+    monkeypatch.setattr('openwfn.assistant_terminal.configured_model', lambda **_: backend)
+    assert main(['--format', 'json', str(WATER), 'chat', '--model', 'test',
+                 '--question', 'Tell me about this calculation']) == 0
+    captured = capsys.readouterr()
+    assert json.loads(captured.out)['status'] == 'success'
+    assert 'Waiting for test' in captured.err

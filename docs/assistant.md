@@ -5,6 +5,18 @@ Chat uses an existing model to choose an openWFN tool. The engine supplies the
 values, units, warnings and provenance; generated numerical prose is not shown.
 No model is trained or downloaded by openWFN.
 
+Short requests for HOMO/LUMO energy, the HOMO–LUMO gap, charge, multiplicity or
+formula use a small explicit local routing vocabulary. They call the scientific
+engine without waiting for a model response. The common `HUMO` typo is recognized
+in these short requests. Orbital energies use the all-channel record: restricted
+files need no alpha/beta clarification, while unrestricted files retain both channels.
+This routing does not guess offset orbitals such as HOMO−1 or interpret arbitrary prose.
+Model configuration is still required when starting chat.
+
+Other questions use the configured model. A waiting message goes to stderr, not
+machine-readable stdout. Response timeouts are reported as timeouts, separately
+from connection failures; no scientific result is fabricated when planning fails.
+
 ## Start a local conversation
 
 Install this checkout in an environment, and configure a model already available

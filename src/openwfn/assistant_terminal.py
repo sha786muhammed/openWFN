@@ -35,7 +35,13 @@ def run_chat(session: AssistantSession, backend: LocalModel, *, question: str | 
         return input('Run this numerical grid? [yes/no]: ').strip().lower() == 'yes'
 
     def ask(text):
-        return session.ask(text, backend, confirm=confirmation)
+        def progress():
+            if context is None or not context.quiet:
+                stream = context.error_stream if context is not None else sys.stderr
+                print(f'Waiting for {backend.model} to select a tool (timeout {backend.timeout:g}s). '
+                      'Ctrl+C cancels; direct CLI and guided analysis do not wait for a model.',
+                      file=stream, flush=True)
+        return session.ask(text, backend, confirm=confirmation, on_model_request=progress)
 
     if question is not None:
         from .app import execute

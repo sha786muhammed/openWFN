@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass, field
 from math import prod
 from pathlib import Path
@@ -97,6 +98,21 @@ class AssistantAnswer:
     record: ResultRecord | None = None
 
 
+def _direct_plan(question: str) -> AnalysisPlan | None:
+    """Route only explicitly supported short requests; other wording uses the model."""
+    text = ' '.join(question.casefold().split()).strip(' ?!.')
+    text = re.sub(r'^please ', '', text)
+    text = re.sub(r'^(?:what (?:is|are) |show (?:me )?|tell me )', '', text)
+    text = re.sub(r'^(?:the |my )', '', text)
+    # A narrowly supported spelling correction, not fuzzy scientific interpretation.
+    text = re.sub(r'\bhumo\b', 'homo', text)
+    if text in {'homo', 'homo energy', 'lumo', 'lumo energy', 'homo-lumo gap', 'homo lumo gap'}:
+        return AnalysisPlan('analysis', 'frontier-all')
+    if text in {'charge', 'spin', 'multiplicity', 'charge and spin', 'charge and multiplicity', 'formula'}:
+        return AnalysisPlan('analysis', 'summary')
+    return None
+
+
 def grounded_answer(record: ResultRecord, explanation: str = 'none') -> AssistantAnswer:
     text = render(record, CommandContext(format='plain'))
     if record.status != 'failed' and explanation != 'none':
@@ -179,12 +195,19 @@ class AssistantSession:
                 'clarifications': list(_CLARIFICATIONS), 'explanations': list(_EXPLANATIONS),
                 'point_parameters': 'x_bohr, y_bohr, z_bohr are Cartesian bohr; state/mode/MO indices are one-based'}
 
-    def ask(self, question: str, planner, *, confirm: Callable[[dict], bool] | None = None) -> AssistantAnswer:
+    def ask(self, question: str, planner, *, confirm: Callable[[dict], bool] | None = None,
+            on_model_request: Callable[[], None] | None = None) -> AssistantAnswer:
         """Route one question, retaining bounded context for a clarification reply."""
         if not isinstance(question, str) or not question.strip() or len(question) > 4000:
             raise ValueError('Ask a non-blank question of at most 4000 characters.')
         context = self.model_context()
-        plan = planner.plan(question, context)
+        plan = _direct_plan(question)
+        if plan is not None and context['source_format'] in _OUTPUT_FORMATS:
+            plan = AnalysisPlan('analysis', 'output-properties')
+        if plan is None:
+            if on_model_request is not None:
+                on_model_request()
+            plan = planner.plan(question, context)
         if not isinstance(plan, AnalysisPlan):
             raise ValueError('The model must return a validated analysis plan.')
         requested = explicit_orbital(question, self.last_question)
