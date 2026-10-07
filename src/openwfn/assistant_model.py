@@ -47,7 +47,7 @@ class LocalModel:
     def __init__(self, model: str, *, endpoint: str = 'http://127.0.0.1:11434/v1',
                  allow_remote: bool = False, api_key: str | None = None,
                  timeout: float = 60., transport: httpx.BaseTransport | None = None):
-        if not isinstance(model, str) or not model.strip() or len(model) > 120:
+        if not isinstance(model, str) or not model.strip() or len(model) > 120 or not model.isprintable():
             raise ValueError('Configure a model name with --model or OPENWFN_CHAT_MODEL.')
         parsed = urlsplit(endpoint)
         if parsed.scheme not in {'http', 'https'} or not parsed.hostname or parsed.username \
@@ -125,7 +125,60 @@ class LocalModel:
                             raise ValueError('Model response exceeds the size limit; no analysis ran.')
             content = json.loads(body)['choices'][0]['message']['content']
             return AnalysisPlan.from_json(content)
+        except httpx.TimeoutException as exc:
+            raise RuntimeError(f'Model request timed out after {self.timeout:g} seconds; no analysis ran. '
+                               'Use a direct CLI command or guided analysis for this request.') from exc
         except httpx.HTTPError as exc:
             raise RuntimeError('Could not reach the configured model endpoint; no analysis ran.') from exc
         except (KeyError, IndexError, TypeError, UnicodeError) as exc:
             raise ValueError('The model did not return a valid scientific tool plan; no analysis ran.') from exc
+
+    def explain(self, question: str, history: list[dict]) -> str:
+        """General model-generated explanation, never a scientific ResultRecord."""
+        if not isinstance(question, str) or not question.strip() or len(question) > 4000:
+            raise ValueError('Ask a non-blank question of at most 4000 characters.')
+        if not isinstance(history, list) or len(history) > 12:
+            raise ValueError('Conversation history exceeds the context limit.')
+        if any(not isinstance(item, dict) or set(item) != {'role', 'content'}
+               or item['role'] not in {'user', 'assistant'} or not isinstance(item['content'], str)
+               for item in history):
+            raise ValueError('Invalid conversation history.')
+        if len(json.dumps(history, ensure_ascii=False).encode()) > 32768:
+            raise ValueError('Conversation history exceeds the context limit.')
+        instruction = (
+            'You are the openWFN Scientific Assistant. Explain quantum chemistry naturally and '
+            'with detail appropriate to the question. State assumptions and uncertainty. '
+            'This is conceptual conversation, not a calculation. Do not invent file-specific '
+            'values, claim a tool ran, claim independent validation, or fabricate references. '
+            'No file contents or numerical results are supplied. If a question needs them, '
+            'ask the user to run openWFN analysis. You have no tools, shell or file access. '
+            'You may discuss equations and general examples, clearly marked as examples.'
+        )
+        payload = {'model': self.model, 'stream': False, 'temperature': 0,
+                   'max_tokens': 2048, 'messages': [{'role': 'system', 'content': instruction},
+                   *history, {'role': 'user', 'content': question}]}
+        if self.model.lower().startswith('qwen3'):
+            payload['messages'][-1]['content'] += '\n/no_think'
+        headers = {'Authorization': f'Bearer {self.api_key}'} if self.api_key else {}
+        try:
+            with httpx.Client(timeout=self.timeout, follow_redirects=False, trust_env=False,
+                              transport=self.transport) as client:
+                with client.stream('POST', self.endpoint + '/chat/completions',
+                                   json=payload, headers=headers) as response:
+                    if response.status_code != 200:
+                        raise RuntimeError(f'Model endpoint returned HTTP {response.status_code}.')
+                    body = bytearray()
+                    for chunk in response.iter_bytes():
+                        body.extend(chunk)
+                        if len(body) > 65536:
+                            raise ValueError('Model explanation exceeds the response limit.')
+            content = json.loads(body)['choices'][0]['message']['content']
+            if not isinstance(content, str) or not content.strip():
+                raise ValueError('The model returned an empty explanation.')
+            return content.strip()
+        except httpx.TimeoutException as exc:
+            raise RuntimeError(f'Model explanation timed out after {self.timeout:g} seconds.') from exc
+        except httpx.HTTPError as exc:
+            raise RuntimeError('Could not reach the configured model endpoint.') from exc
+        except (KeyError, IndexError, TypeError, UnicodeError) as exc:
+            raise ValueError('Invalid model explanation response.') from exc

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/images/openwfn-brand.svg" width="360" alt="openWFN">
+  <img src="https://raw.githubusercontent.com/sha786muhammed/openWFN/main/docs/assets/images/openwfn-brand.svg" width="360" alt="openWFN">
 </p>
 
 <p align="center"><strong>Wavefunction analysis, made reproducible.</strong></p>
@@ -16,9 +16,8 @@ openWFN reads supported quantum-chemistry files and returns analysis results
 with units, warnings and source provenance. Analyze individual calculations and
 high-throughput collections without changing the scientific engine between interfaces.
 
-This branch prepares **0.12.0**. The published release is still **0.11.0** until
-[release checks](docs/releases/0.12.0.md) pass. The new guided/chat features and
-base-install readers require this checkout before publication.
+See the [0.12.0 release notes](docs/releases/0.12.0.md) for the supported
+interfaces, verification and scientific boundaries.
 
 ## Install and inspect a file
 
@@ -29,7 +28,7 @@ python -m pip install --upgrade openwfn
 openwfn --version
 ```
 
-For this release-preparation checkout, use a separate environment:
+For development from source, use a separate environment:
 
 ```bash
 python -m venv .venv
@@ -37,7 +36,7 @@ source .venv/bin/activate
 python -m pip install -e .
 ```
 
-The prepared release includes format readers, output extraction, Python API,
+The normal installation includes format readers, output extraction, Python API,
 local MCP and terminal chat in the normal installation. No model weights,
 Gaussian utilities or public servers are installed automatically.
 
@@ -125,11 +124,13 @@ Configure an existing local model; openWFN does not train or download one:
 
 ```bash
 openwfn molecule.molden chat --model qwen3:8b
+openwfn chat
 ```
 
-The model selects a tool request. openWFN checks capabilities and settings and
-renders the values and explanations from the scientific result. Remote model
-use requires explicit permission. See [assistant setup](docs/assistant.md).
+For file questions, openWFN checks capabilities and settings and supplies the
+scientific values. General conversation works without a file and is labelled
+as model-generated, not independently verified. Remote model use requires
+explicit permission. See [assistant setup](docs/assistant.md).
 
 The normal installation also includes a read-only local MCP server:
 

@@ -67,7 +67,10 @@ def test_interop_ci_keeps_core_isolated_and_checks_multiple_platforms() -> None:
     assert "matrix.os" in text and "macos-latest" in text and "windows-latest" in text
     assert "molden/water.molden capabilities" in text
     core = text.split("  wheel-smoke:", 1)[1].split("  interop-wheel-smoke:", 1)[0]
-    assert "dist/*.whl" in core
+    assert "find dist -name '*.whl'" in core
+    assert '"${wheel_file}[resources]"' in core
+    assert "benchmark_resources.py --examples-dir installed-examples/everyday-qc" in core
+    assert "installed-wheel-resource-report" in core
     assert "qc-iodata" not in core
     assert 'import iodata, cclib' in core
     assert "  interop-wheel-smoke:" in text

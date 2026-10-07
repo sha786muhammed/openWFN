@@ -155,6 +155,9 @@ def complete_implicit_command(arguments: list[str], *, stdin_is_tty: bool) -> li
     if index + 1 != len(translated) or translated[index].startswith("-"):
         return translated
 
+    if translated[index] == 'chat':
+        return translated
+
     command = (
         "interactive"
         if stdin_is_tty and "--non-interactive" not in translated

@@ -2,7 +2,13 @@
 
 All notable changes to openWFN are documented in this file.
 
-## [0.12.0] - Unreleased
+## [0.12.0] - 2026-10-07
+
+- Use the selected pixel wordmark across interactive terminal screens, README, documentation, browser icon and offline HTML exports. The browser icon uses the matching W initial.
+- Add file-free, labelled scientific conversation, session-only connection/model controls, editable input and cancellation back to the prompt. Supported short file-property requests work without a model. Model explanations are not independently verified scientific results.
+
+- Route explicit short orbital/metadata chat questions directly to scientific tools, avoiding model latency and unnecessary restricted-spin prompts. Distinguish model timeouts from connection failures and show waiting progress on stderr.
+- Render missing report values as "Not available" and show labelled, one-based atom/element population tables in HTML and Markdown without changing raw JSON values, units, provenance or scientific status.
 
 - Include IOData, cclib and local MCP in the normal installation; retain existing extra names for compatibility. Model weights and Gaussian utilities are not bundled.
 - Add capability-aware guided entry and a bounded `analyze` overview. Use explicit `summary` for the existing summary-only schema in scripts.

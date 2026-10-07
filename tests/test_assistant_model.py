@@ -87,3 +87,12 @@ def test_model_schema_constrains_spin_method_and_explicit_homo():
     context = {'analyses': {'orbital-composition': {'parameters': ['mo', 'spin', 'method']}}}
     plan = LocalModel('test', transport=httpx.MockTransport(respond)).plan('Which atoms contribute to HOMO?', context)
     assert plan.parameters['mo'] == 'homo'
+
+
+def test_model_read_timeout_is_not_reported_as_unreachable_server():
+    from openwfn.assistant_model import LocalModel
+    def timeout(request):
+        raise httpx.ReadTimeout('response timed out', request=request)
+    with pytest.raises(RuntimeError, match='timed out') as caught:
+        LocalModel('test', timeout=2, transport=httpx.MockTransport(timeout)).plan('question', {'analyses': {}})
+    assert 'reach' not in str(caught.value)

@@ -40,7 +40,8 @@ def test_excited_state_report_renders_table_and_inline_uvvis(tmp_path: Path) -> 
     assert "Excitation energy (eV)" in text
     assert 'class="uvvis-stick-table"' in text
     assert "Validation status: <strong>Experimental</strong>" in text
-    assert "http://" not in text and "https://" not in text
+    offline_text = text.replace("http://www.w3.org/2000/svg", "")
+    assert "http://" not in offline_text and "https://" not in offline_text
 
 
 def test_excited_state_report_embedded_json_matches_python_results(tmp_path: Path) -> None:

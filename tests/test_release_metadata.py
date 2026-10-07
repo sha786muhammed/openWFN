@@ -121,13 +121,13 @@ def test_citation_contains_verified_software_fields() -> None:
     for required in (
         "type: software",
         'title: "openWFN: Wavefunction post-processing analysis toolkit"',
-        'version: "0.11.0"',
-        "date-released: 2026-10-04",
+        'version: "0.12.0"',
+        "date-released: 2026-10-07",
         "family-names: Shaji",
         "given-names: Muhammed Shah",
         "license: MIT",
         'repository-code: "https://github.com/sha786muhammed/openWFN"',
-        'url: "https://github.com/sha786muhammed/openWFN/releases/tag/v0.11.0"',
+        'url: "https://github.com/sha786muhammed/openWFN/releases/tag/v0.12.0"',
     ):
         assert required in citation
 
@@ -157,9 +157,9 @@ def test_citation_guide_matches_cff() -> None:
     for field in (
         "Muhammed Shah Shaji",
         "openWFN: Wavefunction post-processing analysis toolkit",
-        "0.11.0",
+        "0.12.0",
         "2026",
-        "https://github.com/sha786muhammed/openWFN/releases/tag/v0.11.0",
+        "https://github.com/sha786muhammed/openWFN/releases/tag/v0.12.0",
         "@software{shaji_openwfn_2026",
     ):
         assert field in guide
@@ -208,7 +208,7 @@ def test_readme_documents_binary_checkpoint_requirement() -> None:
 
 def test_changelog_contains_current_release() -> None:
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    assert f"## [{project_version()}] - Unreleased" in changelog
+    assert f"## [{project_version()}] - 2026-10-07" in changelog
 
 
 def test_release_notes_document_capability_boundaries() -> None:

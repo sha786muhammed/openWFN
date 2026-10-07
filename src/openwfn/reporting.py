@@ -8,13 +8,14 @@ from typing import Any, Iterable
 
 from . import __version__
 from .analysis.registry import run_analysis_safe
+from .constants import Z_TO_SYMBOL
 from .data import OpenWFNData, wrap_calculation
 from .guided_exports import OutputDestination, export_atomically
 from .model import CalculationData
 from .results import ResultRecord
 
 
-def _sections(results: Iterable[ResultRecord]) -> list[dict[str, Any]]:
+def _sections(results: Iterable[ResultRecord], atom_labels: list[str]) -> list[dict[str, Any]]:
     sections: list[dict[str, Any]] = []
     for result in results:
         name = result.analysis_name
@@ -26,6 +27,7 @@ def _sections(results: Iterable[ResultRecord]) -> list[dict[str, Any]]:
                     "validation_status": "Unsupported",
                     "error": result.error.message if result.error else "Unknown analysis failure",
                     "provenance": result.provenance,
+                    "atom_labels": atom_labels,
                 }
             )
         else:
@@ -40,6 +42,7 @@ def _sections(results: Iterable[ResultRecord]) -> list[dict[str, Any]]:
                     "units": result.units,
                     "warnings": list(result.warnings),
                     "provenance": result.provenance,
+                    "atom_labels": atom_labels,
                 }
             )
     return sections
@@ -66,7 +69,17 @@ def _title(name: str) -> str:
 
 
 def _display_optional(value: object) -> str:
-    return "—" if value is None else str(value)
+    return "Not available" if value is None else str(value)
+
+
+def _population_rows(section: dict[str, Any]) -> list[tuple[int, str, object, object]]:
+    data = section['data']
+    charges = data['atomic_charges']
+    populations = data['electron_populations']
+    labels = section['atom_labels']
+    if len(charges) != len(populations) or len(charges) != len(labels):
+        raise ValueError('Population arrays do not match the input atom ordering; report was not written.')
+    return [(index + 1, labels[index], populations[index], charges[index]) for index in range(len(labels))]
 
 
 def _vibrational_mode_table(section: dict[str, Any]) -> str:
@@ -346,6 +359,12 @@ def _available_html(section: dict[str, Any]) -> str:
         f"<p>Result status: {escape(section.get('result_status', 'success'))}</p>"
         + (f'<ul class="warnings">{warnings}</ul>' if warnings else "")
     )
+    if section['name'] in {'mulliken', 'lowdin'}:
+        rows = ''.join('<tr>' + ''.join(f'<td>{escape(_display_optional(value))}</td>' for value in row)
+                       + '</tr>' for row in _population_rows(section))
+        prefix += ('<div class="table-scroll"><table class="population-table"><thead><tr>'
+                   '<th>Atom</th><th>Element</th><th>Electron population (electron)</th><th>Charge (e)</th>'
+                   '</tr></thead><tbody>' + rows + '</tbody></table></div>')
     if section["name"] == "vibrations":
         data = section["data"]
         summary = (
@@ -383,14 +402,17 @@ def _available_html(section: dict[str, Any]) -> str:
         )
         return prefix + details + _uvvis_svg(section) + _uvvis_table(section)
     rows = "".join(
-        f"<tr><th>{escape(_title(key))}</th><td>{escape(str(value))}</td>"
+        f"<tr><th>{escape(_title(key))}</th><td>{escape(_display_optional(value))}</td>"
         f"<td>{escape(section['units'].get(key, ''))}</td></tr>"
         for key, value in section["data"].items()
+        if section['name'] not in {'mulliken', 'lowdin'} or key not in {'atomic_charges', 'electron_populations'}
     )
     return prefix + f"<table>{rows}</table>"
 
 
 def _html(manifest: dict[str, Any]) -> str:
+    from .branding import wordmark_svg
+
     sections = []
     for section in manifest["sections"]:
         heading = escape(_title(section["name"]))
@@ -409,8 +431,9 @@ def _html(manifest: dict[str, Any]) -> str:
 body{{font:16px/1.55 system-ui,sans-serif;margin:0;color:#172033;background:#f4f7fb}}
 main{{max-width:960px;margin:auto;padding:2rem}}header,section{{background:white;padding:1.4rem;margin:1rem 0;border:1px solid #dce3ee;border-radius:10px}}
 h1,h2{{color:#123d6a}}table{{border-collapse:collapse;width:100%;margin:.75rem 0 1.25rem}}th,td{{text-align:left;padding:.55rem;border-bottom:1px solid #e5eaf1}}.unavailable{{color:#8b2e2e}}
+.ow-logo svg{{display:block;width:100%;height:auto}}
 .table-scroll{{overflow-x:auto}}.vibrational-mode-table th,.spectrum-stick-table th,.excited-state-table th,.uvvis-stick-table th{{width:auto;white-space:nowrap}}.spectroscopy-summary{{display:flex;flex-wrap:wrap;gap:.65rem 1.2rem;margin:.8rem 0 1rem;color:#40516b}}.spectrum-details{{color:#40516b}}.spectrum-plot{{display:block;width:100%;height:auto;margin:1rem 0 1.25rem;background:#fbfcfe;border:1px solid #e5eaf1;border-radius:8px}}.axis{{stroke:#607089;stroke-width:1}}.spectrum-curve{{fill:none;stroke:#123d6a;stroke-width:2}}.spectrum-stick{{stroke:#7890ad;stroke-width:1;opacity:.55}}.tick-label{{font-size:12px;fill:#607089}}.warnings{{color:#7b4e12}}
-</style></head><body><main><header><h1>openWFN Research Report</h1>
+</style></head><body><main><header><div class="ow-logo" style="max-width:360px">{wordmark_svg().strip()}</div><h1>openWFN Research Report</h1>
 <p>Generated: {escape(manifest['generated_at'])}</p><p>openWFN version: {escape(manifest['openwfn_version'])}</p>
 <p>Input SHA-256: <code>{escape(manifest['input']['sha256'])}</code></p></header>
 {''.join(sections)}<section><h2>Reproducibility</h2><p>Command: <code>{escape(manifest['command'])}</code></p></section>
@@ -474,9 +497,17 @@ def _markdown(manifest: dict[str, Any]) -> str:
         if section["name"] == "hirshfeld":
             lines.extend(_hirshfeld_markdown(section))
             continue
+        if section['name'] in {'mulliken', 'lowdin'}:
+            lines.extend(('| Atom | Element | Electron population (electron) | Charge (e) |',
+                          '| ---: | :--- | ---: | ---: |'))
+            lines.extend('| ' + ' | '.join(_display_optional(value) for value in row) + ' |'
+                         for row in _population_rows(section))
+            lines.append('')
         for key, value in section["data"].items():
+            if section['name'] in {'mulliken', 'lowdin'} and key in {'atomic_charges', 'electron_populations'}:
+                continue
             unit = section["units"].get(key, "")
-            lines.append(f"- {_title(key)}: {value}{f' {unit}' if unit else ''}")
+            lines.append(f"- {_title(key)}: {_display_optional(value)}{f' {unit}' if unit else ''}")
         lines.append("")
     lines.extend(("## Reproducibility", "", f"Command: `{manifest['command']}`", ""))
     return "\n".join(lines)
@@ -512,6 +543,12 @@ def _build_report(
             raise ValueError("Report output cannot replace its scientific input.")
     metadata = normalized.calculation.molecule.metadata if normalized.calculation is not None else None
     results = [run_analysis_safe(normalized, name) for name in analyses]
+    structure = normalized.structure
+    atom_labels = []
+    if structure is not None:
+        effective_charges = structure.effective_nuclear_charges or (None,) * len(structure.atomic_numbers)
+        atom_labels = [Z_TO_SYMBOL.get(number, 'Unknown') + (' (ghost)' if charge == 0 else '')
+                       for number, charge in zip(structure.atomic_numbers, effective_charges, strict=True)]
     manifest = {
         "schema_version": "1.0",
         "generated_at": generated_at or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
@@ -525,7 +562,7 @@ def _build_report(
             "method": metadata.method if metadata else None,
             "basis": metadata.basis if metadata else None,
         },
-        "sections": _sections(results),
+        "sections": _sections(results, atom_labels),
     }
     output.parent.mkdir(parents=True, exist_ok=True)
     text = _html(manifest) if report_format == "html" else _markdown(manifest)

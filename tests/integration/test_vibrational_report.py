@@ -40,7 +40,8 @@ def test_vibrational_report_renders_mode_table_and_inline_spectra(tmp_path: Path
     assert "Wavenumber (cm^-1)" in text
     assert "<svg" in text
     assert "Validation status: <strong>Experimental</strong>" in text
-    assert "http://" not in text and "https://" not in text
+    offline_text = text.replace("http://www.w3.org/2000/svg", "")
+    assert "http://" not in offline_text and "https://" not in offline_text
 
 
 def test_vibrational_report_embedded_json_matches_python_results(tmp_path: Path) -> None:
