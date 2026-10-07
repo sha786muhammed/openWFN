@@ -2,11 +2,6 @@
 
 openWFN supports Python 3.10–3.13.
 
-!!! note "Release preparation"
-
-    This checkout prepares 0.12.0. The published version remains 0.11.0 until
-    the [release gates](releases/0.12.0.md) pass.
-
 ## Use a separate environment
 
 ```bash
@@ -20,21 +15,21 @@ openwfn --version
 On Windows, activate with `.venv\Scripts\activate`. With Conda, create an
 environment with a supported Python version, then use its `python -m pip`.
 
-For this preparation checkout, replace the package-install command with:
+For development from source, replace the package-install command with:
 
 ```bash
 python -m pip install -e .
 ```
 
-The prepared release includes format readers, output extraction, local MCP and
+The normal installation includes format readers, output extraction, local MCP and
 terminal chat in the base installation. Existing `interop`, `outputs` and
-`mcp` extra names remain accepted for compatibility. Published 0.11.0 still
-uses `openwfn[interop,outputs,mcp]==0.11.0` to enable those readers/interfaces.
+`mcp` extra names remain accepted for compatibility.
 
 ## What installation does not supply
 
-A chat model must already be configured. No weights are downloaded and no model
-calls are made by installation. See [Scientific assistant](assistant.md) or
+A chat model is needed for general conversation, not for file analysis. Use
+`openwfn chat` and `/connect` for setup guidance. No weights are downloaded and
+no model calls are made by installation. See [Scientific assistant](assistant.md) or
 [MCP setup](mcp.md).
 
 Gaussian binary `.chk` conversion needs licensed Gaussian `formchk` on
@@ -57,7 +52,7 @@ you explicitly permit overwrite.
 Use the exact version recorded with that work. For the current published release:
 
 ```bash
-python -m pip install openwfn==0.11.0
+python -m pip install openwfn==0.12.0
 ```
 
 Older release pins and their support boundaries are retained in

@@ -236,7 +236,7 @@ def test_readme_opens_with_canonical_product_identity() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
     assert '<p align="center">' in readme
-    assert 'src="docs/assets/images/openwfn-brand.svg"' in readme
+    assert 'src="https://raw.githubusercontent.com/sha786muhammed/openWFN/main/docs/assets/images/openwfn-brand.svg"' in readme
     assert "bgcolor=" not in readme
     assert "Wavefunction analysis, made reproducible." in readme
     assert "openwfn-orbital-hero.webp" not in readme
@@ -256,7 +256,7 @@ def test_public_brand_uses_one_canonical_logo() -> None:
     from openwfn.branding import wordmark_svg
 
     assert brand == wordmark_svg()
-    assert 'src="docs/assets/images/openwfn-brand.svg"' in readme
+    assert 'src="https://raw.githubusercontent.com/sha786muhammed/openWFN/main/docs/assets/images/openwfn-brand.svg"' in readme
     assert 'src="assets/images/openwfn-brand.svg"' in home
     assert "logo: assets/images/openwfn-brand.svg" in config
     assert ".md-header__button.md-logo img" in styles
@@ -321,7 +321,7 @@ def test_public_installation_copy_documents_stable_release() -> None:
     )
 
     assert "python -m pip install --upgrade openwfn" in public
-    assert "python -m pip install openwfn==0.11.0" in public
+    assert "python -m pip install openwfn==0.12.0" in public
     assert "pre-release handbook" not in public.lower()
 
 

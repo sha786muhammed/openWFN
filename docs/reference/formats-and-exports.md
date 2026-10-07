@@ -35,8 +35,7 @@ when molecular charge or spin multiplicity cannot be retained, in addition to
 ghost/ECP warnings. Keep the original calculation and its metadata; reloading a
 structure export is not an electronic-state round-trip.
 
-The prepared release includes the IOData reader in its base installation;
-published 0.11.0 uses the `interop` extra. This is the pinned IOData 1.0.1
+openWFN includes the IOData reader in its base installation. This is the pinned IOData 1.0.1
 readable-format inventory. “Stable” means ingestion passed
 the project fixture contract; it does not mean every analysis is available,
 or that all real-world variants have been independently validated. Native

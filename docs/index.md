@@ -5,12 +5,6 @@ hide:
   - toc
 ---
 
-!!! note "Release preparation"
-
-    This checkout prepares 0.12.0. The published release is still 0.11.0 until
-    [release checks](releases/0.12.0.md) pass. New guided/chat features require
-    this checkout before publication.
-
 <div class="ow-home" markdown="1">
 <section class="ow-intro">
   <div class="ow-intro__brand" markdown="1">
@@ -37,8 +31,7 @@ hide:
   </div>
   <div class="ow-intro__command">
     <div class="ow-command-label"><span>Guided CLI</span><span>Terminal</span></div>
-    <pre><code># Release-preparation checkout:
-python -m pip install -e .
+    <pre><code>python -m pip install --upgrade openwfn
 
 openwfn molecule.molden open
 openwfn molecule.molden capabilities
@@ -77,7 +70,7 @@ Expose read-only analyses inside a chosen input directory. Inspect capabilities 
 <div class="ow-capability" markdown="1">
 <span class="ow-capability__number">Chat</span>
 ### Ask a scientific question
-A configured model selects a tool; openWFN supplies the values and explanations. No model is downloaded automatically.
+Ask file questions backed by openWFN results, or connect a model for general scientific conversation. Model explanations are labelled separately. No model is downloaded automatically.
 [Scientific assistant](assistant.md)
 </div>
 

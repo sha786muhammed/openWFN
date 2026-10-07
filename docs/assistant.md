@@ -1,6 +1,6 @@
 # Scientific assistant
 
-The development version includes terminal chat and MCP in the normal installation.
+openWFN includes terminal chat and MCP in the normal installation.
 Chat can discuss quantum chemistry without a file, or use an existing model to
 choose an openWFN tool for an open file. File-backed values, units, warnings and
 provenance come from the engine. General explanations are model-generated,

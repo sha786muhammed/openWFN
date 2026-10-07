@@ -6,15 +6,15 @@ It runs locally over stdio and reads files inside one configured directory. It d
 
 ## Install
 
-Use a separate environment. The development version includes the MCP SDK and
+Use a separate environment. openWFN includes the MCP SDK and
 format/output readers in the normal installation:
 
 ```bash
-python -m pip install -e .
+python -m pip install --upgrade openwfn
 ```
 
-Published 0.11.0 installations still use the `mcp`, `interop` and `outputs`
-extras. Existing extra names remain accepted for compatibility in this checkout.
+Existing `mcp`, `interop` and `outputs` extra names remain accepted for compatibility;
+they are not required for these interfaces in 0.12.0.
 
 ## Connect a client
 

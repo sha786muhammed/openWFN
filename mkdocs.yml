@@ -127,4 +127,4 @@ nav:
       - Experimental coverage: project/experimental-coverage.md
       - Runtime and resource validation: project/resource-validation.md
       - Releasing: releasing.md
-      - Release preparation: releases/0.12.0.md
+      - Current release: releases/0.12.0.md

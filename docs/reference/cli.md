@@ -8,7 +8,7 @@ openwfn examples install DESTINATION [--overwrite]
 Run `openwfn --help` or `openwfn FILE COMMAND --help` for the installed release's authoritative syntax. Global options such as `--format json` and `--input-format FORMAT_ID` go before the input path.
 
 Inspect capabilities before requesting analyses that may not be present in the
-source file. The prepared release includes its readers in the normal install:
+source file. openWFN includes its readers in the normal install:
 
 ```bash
 openwfn molecule.molden capabilities
@@ -33,7 +33,7 @@ Guided menus depend on the loaded file's capabilities. Structure files do not im
 
 ## Scientific assistant
 
-The prepared release includes chat and MCP in the base installation.
+openWFN includes chat and MCP in the base installation.
 Configure an existing model; no weights are downloaded automatically:
 
 ```bash

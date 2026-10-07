@@ -2,7 +2,7 @@
 
 All notable changes to openWFN are documented in this file.
 
-## [0.12.0] - Unreleased
+## [0.12.0] - 2026-10-07
 
 - Use the selected pixel wordmark across interactive terminal screens, README, documentation, browser icon and offline HTML exports. The browser icon uses the matching W initial.
 - Add file-free, labelled scientific conversation, session-only connection/model controls, editable input and cancellation back to the prompt. Supported short file-property requests work without a model. Model explanations are not independently verified scientific results.

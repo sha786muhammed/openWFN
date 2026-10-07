@@ -1,6 +1,6 @@
 # Release history
 
-## 0.12.0 — release preparation
+## 0.12.0 — guided workflows and scientific assistant
 
 Guided workflows, built-in format readers and local MCP, a grounded terminal
 assistant, and output/parser hardening. The release is not published yet;
