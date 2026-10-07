@@ -10,6 +10,9 @@ from typing import Callable
 
 from .analysis.grids import molecular_grid_layout
 from .analysis.registry import run_analysis_safe
+from .assistant_help import missing_spectrum_guidance
+from .assistant_intents import requested_family, resolve_intent
+from .assistant_requests import PendingRequest, bind_reply
 from .errors import DataUnavailableError, OpenWFNError
 from .guided import build_guided_session, inspect_stored_grid
 from .output_properties import read_output
@@ -20,6 +23,7 @@ from .tool_policy import (
     ToolPolicy,
     allowed_parameters,
     explicit_orbital,
+    validate_intent_plan,
     validate_parameters,
 )
 
@@ -42,6 +46,7 @@ _CLARIFICATIONS = {
     'orbital': 'Which orbital: HOMO, LUMO, or a one-based orbital number?',
     'state': 'Which excited state number would you like to inspect?',
     'points': 'Specify a point as x, y, z in bohr for this real-space analysis.',
+    'density-operation': 'Choose density integration, cube export, or point evaluation. Reply integrate, cube, or point.',
 }
 _OUTPUT_FORMATS = {'gaussianlog', 'orcalog', 'qchemlog', 'cp2klog'}
 
@@ -100,21 +105,16 @@ class AssistantAnswer:
 
 def _direct_plan(question: str) -> AnalysisPlan | None:
     """Route only explicitly supported short requests; other wording uses the model."""
-    text = ' '.join(question.casefold().split()).strip(' ?!.')
-    text = re.sub(r'^please ', '', text)
-    text = re.sub(r'^(?:what (?:is|are) |show (?:me )?|tell me )', '', text)
-    text = re.sub(r'^(?:the |my )', '', text)
-    # A narrowly supported spelling correction, not fuzzy scientific interpretation.
-    text = re.sub(r'\bhumo\b', 'homo', text)
-    if text in {'homo', 'homo energy', 'lumo', 'lumo energy', 'homo-lumo gap', 'homo lumo gap'}:
-        return AnalysisPlan('analysis', 'frontier-all')
-    if text in {'charge', 'spin', 'multiplicity', 'charge and spin', 'charge and multiplicity', 'formula'}:
-        return AnalysisPlan('analysis', 'summary')
+    intent = resolve_intent(question)
+    if intent is not None and intent.analysis is not None and intent.missing_slot is None:
+        return AnalysisPlan('analysis', intent.analysis, intent.parameters)
     return None
 
 
 def grounded_answer(record: ResultRecord, explanation: str = 'none') -> AssistantAnswer:
     text = render(record, CommandContext(format='plain'))
+    if record.status == 'failed' and missing_spectrum_guidance(record.analysis_name):
+        text += '\n' + missing_spectrum_guidance(record.analysis_name) + '\n'
     if record.status != 'failed' and explanation != 'none':
         # Only engine-known templates reach the answer. No generated prose is displayed.
         if explanation == 'orbital-gap':
@@ -151,6 +151,7 @@ class AssistantSession:
         self._session = None
         self.last_plan = None
         self.last_question = None
+        self.pending_request = None
         self.refresh()
 
     def _digest(self):
@@ -174,6 +175,7 @@ class AssistantSession:
             self._session, self._sha256 = session, sha256
             self.last_plan = None
             self.last_question = None
+            self.pending_request = None
         return self._session
 
     def model_context(self) -> dict:
@@ -189,7 +191,8 @@ class AssistantSession:
                                         'parameters': []}
         # No title, raw file, result arrays, source path, or file hash is sent to a model.
         return {'source_format': session.data.provenance.source_format, 'analyses': catalog,
-                'previous_question': self.last_question,
+                'previous_question': self.pending_request.original_question if self.pending_request else None,
+                'resolved_slots': self.pending_request.resolved_slots if self.pending_request else {},
                 'previous_request': None if self.last_plan is None else {
                     'analysis': self.last_plan.analysis, 'parameters': self.last_plan.parameters},
                 'clarifications': list(_CLARIFICATIONS), 'explanations': list(_EXPLANATIONS),
@@ -201,15 +204,52 @@ class AssistantSession:
         if not isinstance(question, str) or not question.strip() or len(question) > 4000:
             raise ValueError('Ask a non-blank question of at most 4000 characters.')
         context = self.model_context()
+        intent = resolve_intent(question)
         plan = _direct_plan(question)
-        if plan is not None and context['source_format'] in _OUTPUT_FORMATS:
+        if self.pending_request is not None:
+            bound = bind_reply(self.pending_request, question)
+            if isinstance(bound, AnalysisPlan):
+                plan = bound
+                intent = self.pending_request.intent
+            elif isinstance(bound, PendingRequest):
+                self.pending_request = bound
+                plan = None
+                intent = bound.intent
+                if bound.intent and bound.intent.family == 'density':
+                    self.pending_request = None
+                    return AssistantAnswer('Use guided analysis for density cube export or explicit-point evaluation; no analysis ran.')
+                context = self.model_context()
+            elif intent is not None or re.match(r'^(?:what|where|show|please|explain|inspect)\b', question, re.I):
+                self.pending_request = None
+                context = self.model_context()
+            else:
+                from dataclasses import replace
+                attempts = self.pending_request.attempts + 1
+                if attempts >= 2:
+                    self.pending_request = None
+                    return AssistantAnswer('Unable to resolve this choice. Use guided analysis; no analysis ran.')
+                self.pending_request = replace(self.pending_request, attempts=attempts)
+                return AssistantAnswer(_CLARIFICATIONS[self.pending_request.clarification])
+        if plan is None and intent is not None and intent.missing_slot:
+            self.pending_request = PendingRequest(question, intent, intent.missing_slot, {}, self._sha256)
+            return AssistantAnswer(_CLARIFICATIONS[intent.missing_slot])
+        if plan is not None and plan.analysis in {'summary', 'frontier-all'} and context['source_format'] in _OUTPUT_FORMATS:
             plan = AnalysisPlan('analysis', 'output-properties')
         if plan is None:
+            if planner is None:
+                return AssistantAnswer('Use /connect for this question, or choose a workflow in guided analysis.')
             if on_model_request is not None:
                 on_model_request()
             plan = planner.plan(question, context)
         if not isinstance(plan, AnalysisPlan):
             raise ValueError('The model must return a validated analysis plan.')
+        original_question = self.pending_request.original_question if self.pending_request else question
+        if re.search(r'\b(?:homo|humo|lumo)\s*[+−-]\s*\d+', original_question, re.I) and plan.analysis in {
+                'frontier', 'beta-frontier', 'frontier-all', 'output-properties'}:
+            raise ValueError('An offset orbital cannot be answered with a plain frontier record; no analysis ran.')
+        validate_intent_plan(intent or requested_family(
+            self.pending_request.original_question if self.pending_request else question), plan,
+            resolved_slots=self.pending_request.resolved_slots if self.pending_request else {})
         requested = explicit_orbital(question, self.last_question)
         if plan.analysis == 'orbital-composition' and requested:
             selected = plan.parameters.get('mo', 'homo')
@@ -218,9 +258,18 @@ class AssistantSession:
         if self._digest() != self._sha256:
             self.refresh()
             raise ValueError('Input changed during model planning; ask again for the current file.')
+        if plan.action == 'clarify':
+            original = self.pending_request.original_question if self.pending_request else question
+            attempts = self.pending_request.attempts + 1 if self.pending_request else 0
+            if attempts >= 2:
+                self.pending_request = None
+                return AssistantAnswer('Unable to resolve this choice. Use guided analysis; no analysis ran.')
+            self.pending_request = PendingRequest(original, intent, plan.clarification,
+                self.pending_request.resolved_slots if self.pending_request else {}, self._sha256, attempts)
+        else:
+            self.pending_request = None
         answer = self.execute(plan, confirm=confirm)
-        if plan.action != 'clarify' or self.last_question is None:
-            self.last_question = question
+        self.last_question = question if plan.action != 'clarify' else self.pending_request.original_question
         return answer
 
     def execute(self, plan: AnalysisPlan, *, confirm: Callable[[dict], bool] | None = None) -> AssistantAnswer:

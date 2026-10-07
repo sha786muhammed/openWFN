@@ -78,6 +78,11 @@ def validate_parameters(analysis: str, parameters: dict | None) -> dict:
     for key, value in parameters.items():
         if key not in allowed:
             raise ValueError(f'Unsupported parameter for {analysis}: {key}')
+        enums = {'spin': ('alpha', 'beta', 'all'),
+                 'method': ('mulliken', 'lowdin') if analysis == 'orbital-composition' else (),
+                 'kind': ('total', 'alpha', 'beta', 'spin') if analysis == 'density' else ()}
+        if key in enums and enums[key] and value not in enums[key]:
+            raise ValueError(f'{key} must be one of {", ".join(enums[key])}.')
         if value is not None and not isinstance(value, (str, bool, int, float)):
             raise ValueError('Analysis parameters must be JSON scalars.')
         if isinstance(value, str) and len(value) > 80:
@@ -92,3 +97,38 @@ def validate_parameters(analysis: str, parameters: dict | None) -> dict:
                 raise ValueError(f'{key} must be a finite number.')
         clean[key] = value
     return clean
+
+
+def validate_intent_plan(intent, plan, *, resolved_slots=None) -> None:
+    """Reject valid-looking plans that change an explicitly requested task."""
+    if plan.action != 'analysis':
+        permitted = {'ir': (), 'raman': (), 'summary': (),
+                     'vibrations': ('state',), 'frontier': ('spin', 'orbital'),
+                     'population': ('method',), 'composition': ('projection-method', 'spin', 'orbital'),
+                     'density': ('density-operation', 'points')}
+        if intent and intent.family in permitted and plan.clarification not in permitted[intent.family]:
+            raise ValueError('The clarification does not match the requested property; use guided analysis. No analysis ran.')
+        return
+    families = {'ir': {'ir-spectrum'}, 'raman': {'raman-spectrum'},
+                'vibrations': {'vibrations', 'normal-mode'},
+                'frontier': {'frontier', 'beta-frontier', 'frontier-all', 'output-properties'},
+                'population': {'mulliken', 'lowdin', 'hirshfeld', 'output-properties'},
+                'density': {'density'}, 'summary': {'summary', 'output-properties'},
+                'composition': {'orbital-composition'}}
+    if intent and plan.analysis not in families.get(intent.family, {plan.analysis}):
+        raise ValueError('The model plan does not match the requested property; no analysis ran. Use guided analysis.')
+    slots = resolved_slots or {}
+    if 'spin' in slots:
+        actual = 'beta' if plan.analysis == 'beta-frontier' else plan.parameters.get('spin', 'alpha')
+        if plan.analysis == 'frontier-all':
+            actual = 'all'
+        if actual != slots['spin']:
+            raise ValueError('The model plan contradicts the selected orbital channel; no analysis ran.')
+    for slot, parameter in (('projection-method', 'method'), ('orbital', 'mo'),
+                            ('state', 'mode' if plan.analysis == 'normal-mode' else 'state')):
+        if slot in slots and plan.parameters.get(parameter) != slots[slot]:
+            raise ValueError(f'The model plan contradicts the selected {slot}; no analysis ran.')
+    if 'method' in slots and plan.analysis != slots['method']:
+        raise ValueError('The model plan contradicts the selected population method; no analysis ran.')
+    if 'points' in slots and any(plan.parameters.get(k) != v for k, v in slots['points'].items()):
+        raise ValueError('The model plan contradicts the selected point; no analysis ran.')

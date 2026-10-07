@@ -207,6 +207,8 @@ def run_chat(session: AssistantSession | None, backend: LocalModel | None, *, qu
         except EOFError:
             return 0
         except KeyboardInterrupt:
+            if controller.file_session:
+                controller.file_session.pending_request = None
             print('\nCancelled. No partial result was saved. /quit exits.')
         except (ValueError, RuntimeError, OSError) as exc:
             print('Cannot complete this request: ' + safe_terminal_text(str(exc)))
