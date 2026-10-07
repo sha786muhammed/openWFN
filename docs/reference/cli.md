@@ -38,6 +38,7 @@ Configure an existing model; no weights are downloaded automatically:
 
 ```bash
 openwfn molecule.molden chat --model qwen3:8b
+openwfn chat
 openwfn --format json molecule.fchk chat --model qwen3:8b \
   --question "What is the HOMO-LUMO gap?"
 ```
@@ -69,7 +70,7 @@ These are the public top-level choices shown by `openwfn --help`.
 | `summary` | Summarize molecular identity and calculation state |
 | `analyze` | Bounded overview with eligible next analyses; no automatic exports |
 | `open` | Open capability-aware guided terminal mode |
-| `chat` | Ask a configured model to select scientific tools; openWFN supplies the values |
+| `chat` | Scientific conversation with or without a file; file-backed values come from openWFN |
 | `info` | Show detailed FCHK metadata |
 | `dist` | Legacy distance command |
 | `angle` | Legacy angle command |

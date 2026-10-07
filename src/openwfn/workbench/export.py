@@ -3,6 +3,7 @@
 from html import escape
 from pathlib import Path
 
+from ..branding import wordmark_svg
 from ..model import CalculationData
 from ..results import ResultRecord
 from .payload import WorkbenchPayload
@@ -28,7 +29,7 @@ def export_workbench(
 :root{color-scheme:dark;--bg:#08111f;--panel:#101c2d;--line:#26364d;--text:#e7eef8;--muted:#9db0c9;--accent:#42c8f5}
 *{box-sizing:border-box}body{margin:0;font:16px/1.45 system-ui,sans-serif;background:var(--bg);color:var(--text)}
 .topbar{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--line);background:#0b1626}
-.brand{font-weight:750;letter-spacing:.02em}.brand span{color:var(--accent)}.layout{display:grid;grid-template-columns:220px minmax(320px,1fr) 300px;height:calc(100vh - 96px)}
+.brand{font-weight:750;letter-spacing:.02em}.brand svg{display:block;width:150px;height:auto}.layout{display:grid;grid-template-columns:220px minmax(320px,1fr) 300px;height:calc(100vh - 96px)}
 aside{background:var(--panel);padding:16px;border-right:1px solid var(--line)}#property-panel{border-right:0;border-left:1px solid var(--line);overflow:auto}
 .workspace{display:block;width:100%;padding:11px 12px;margin:4px 0;text-align:left;color:var(--text);background:transparent;border:1px solid transparent;border-radius:7px;font:inherit;cursor:pointer}
 .workspace:hover,.workspace.active{background:#172941;border-color:#315071}.workspace:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
@@ -38,7 +39,7 @@ aside{background:var(--panel);padding:16px;border-right:1px solid var(--line)}#p
 .surface-controls label,.vibration-controls label,.excited-state-controls label{display:block;margin-top:12px;color:var(--muted)}#field-select,#isovalue,#vibration-mode-select,#vibration-amplitude,#excited-state-select{width:100%;margin-top:6px}#field-select,#vibration-mode-select,#excited-state-select{padding:8px;background:#14243a;color:var(--text);border:1px solid var(--line);border-radius:6px}.legend-row{display:flex;gap:12px;margin-top:10px}.swatch{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px}.positive{background:#2dd4bf}.negative{background:#f472b6}
 .vibration-controls,.excited-state-controls{margin-top:8px}.vibration-details,.excited-state-details{padding:9px;margin:9px 0;background:#0b1626;border-radius:6px;font-size:.88rem}.spectrum-card{margin:12px 0;padding:8px;background:#0b1626;border:1px solid var(--line);border-radius:7px}.spectrum-card h3{margin:0 0 6px;font-size:.9rem;color:var(--muted)}.spectrum-svg{display:block;width:100%;height:145px}.spectrum-axis{stroke:#6f819a;stroke-width:1}.spectrum-curve{fill:none;stroke:var(--accent);stroke-width:1.8}.spectrum-stick{stroke:#8296b2;stroke-width:1;opacity:.65;cursor:pointer}.spectrum-stick.selected{stroke:#fbbf24;stroke-width:2}.spectrum-label{fill:#9db0c9;font-size:9px}.vector-key{font-size:.82rem;color:var(--muted);margin-top:7px}.state-source-note{font-size:.82rem;color:var(--muted);margin-top:9px}
 @media(max-width:850px){.layout{grid-template-columns:170px 1fr}.layout>#property-panel{display:none}}@media(max-width:600px){.layout{display:block;height:auto}#workflow-sidebar{display:flex;overflow:auto;border-right:0}.workspace{min-width:max-content}#viewer{height:65vh}.topbar{height:auto;padding:14px}.status{height:auto}}
-</style></head><body><header class="topbar"><div class="brand"><span>open</span>WFN Workbench</div><div>__TITLE__</div></header>
+</style></head><body><header class="topbar"><div class="brand">__BRAND__</div><div>__TITLE__</div></header>
 <main class="layout"><aside id="workflow-sidebar" aria-label="Scientific workspaces"><div class="panel-title">Workspaces</div>
 <button class="workspace active" data-workspace="structure">Structure</button><button class="workspace" data-workspace="orbitals">Orbitals</button><button class="workspace" data-workspace="vibrations">Vibrations</button><button class="workspace" data-workspace="excited-states">Excited States</button><button class="workspace" data-workspace="density">Density</button><button class="workspace" data-workspace="esp">ESP</button><button class="workspace" data-workspace="measurements">Measurements</button></aside>
 <section id="viewer" aria-label="Three-dimensional molecule viewer"></section><aside id="property-panel"><div class="panel-title">Properties</div><div id="properties"></div>
@@ -79,7 +80,7 @@ function showWorkspace(name){activeWorkspace=name;document.querySelectorAll('.wo
 const source=name==='structure'?{...payload.molecule,...payload.properties.calculation}:payload.properties[name]||{status:'No embedded field'};props.replaceChildren();Object.entries(source).forEach(([key,value])=>{const row=document.createElement('div');row.className='property';const label=document.createElement('strong');label.textContent=key.replaceAll('_',' ');row.append(label,document.createTextNode(typeof value==='object'?JSON.stringify(value):String(value)));props.append(row)});if(name==='measurements')resetMeasurement();if(name==='vibrations')configureVibrations();if(name==='excited-states')configureExcitedStates();document.getElementById('status-line').textContent=`Offline · molecular data remains on this device · ${name==='excited-states'?'Excited States':name[0].toUpperCase()+name.slice(1)} workspace`}
 document.querySelectorAll('.workspace').forEach(button=>button.addEventListener('click',()=>showWorkspace(button.dataset.workspace)));showWorkspace('structure');
 </script></body></html>"""
-    document = document.replace("__TITLE__", escape(title)).replace("__PAYLOAD__", payload).replace("__ENGINE__", engine)
+    document = document.replace("__BRAND__", wordmark_svg().strip()).replace("__TITLE__", escape(title)).replace("__PAYLOAD__", payload).replace("__ENGINE__", engine)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(document, encoding="utf-8")
     return path

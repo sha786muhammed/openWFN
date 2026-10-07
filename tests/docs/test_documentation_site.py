@@ -156,18 +156,16 @@ def test_homepage_build_has_distinct_title_and_project_favicon(tmp_path: Path) -
     assert (output / "assets" / "images" / "openwfn-icon-v2.svg").is_file()
 
 
-def test_favicon_uses_full_orbital_mark_on_transparent_background() -> None:
+def test_favicon_uses_shared_pixel_initial_on_transparent_background() -> None:
     favicon = ROOT / "docs" / "assets" / "images" / "openwfn-icon-v2.svg"
     root = ET.fromstring(favicon.read_text(encoding="utf-8"))
     namespace = "{http://www.w3.org/2000/svg}"
 
-    assert root.findall(f"{namespace}rect") == []
-    image = root.find(f".//{namespace}image")
-    assert image is not None
-    assert float(image.attrib["width"]) > 128
-    group = root.find(f"{namespace}g")
-    assert group is not None
-    assert group.attrib["transform"] == "matrix(0.84 0 0 0.84 -8 10)"
+    from openwfn.branding import icon_svg
+
+    assert favicon.read_text(encoding="utf-8") == icon_svg()
+    assert root.find(f"{namespace}image") is None
+    assert root.attrib["viewBox"] == "0 0 32 32"
 
 
 def test_public_images_have_provenance_and_are_bounded() -> None:
@@ -255,8 +253,9 @@ def test_public_brand_uses_one_canonical_logo() -> None:
 
     assert brand_path.exists()
     brand = brand_path.read_text(encoding="utf-8")
-    assert 'fill="#17213f"' in brand
-    assert "data:image/png;base64," in brand
+    from openwfn.branding import wordmark_svg
+
+    assert brand == wordmark_svg()
     assert 'src="docs/assets/images/openwfn-brand.svg"' in readme
     assert 'src="assets/images/openwfn-brand.svg"' in home
     assert "logo: assets/images/openwfn-brand.svg" in config

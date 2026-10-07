@@ -1,10 +1,10 @@
 assets:
   openwfn-brand.svg:
     source: project-created
-    generation_record: Exact creation tool and source-editing session not recorded
-    sha256: 1247b257565e627b2c219aab7efb1504f2c5c3fa4119764a00ebd29b793db59a
+    generation_record: scripts/sync_brand_assets.py from src/openwfn/branding.py; owner-selected pixel lettering
+    sha256: b0b06c614a5c23b322b7179e06c9533a6376d9c734b50bae1919eff8b6242656
     license: MIT project asset
-    transformation: Embeds the compact project mark on a navy background for consistent display
+    transformation: Font-independent vector rendering of the shared terminal pixel wordmark on a dark background
     alt: openWFN
   openwfn-header.png:
     source: project-created
@@ -15,11 +15,11 @@ assets:
     alt: openWFN
   openwfn-icon-v2.svg:
     source: project-created
-    generation_record: Exact creation tool and source-editing session not recorded
-    sha256: ce4f202c8741bf4b0312114c252c400bc5a4f37ba3a49ac3240fe835acea9b43
+    generation_record: scripts/sync_brand_assets.py from src/openwfn/branding.py
+    sha256: e5d9964cd1571b4e0388629ee0ff500b3a498563de7afa44803610b738cfdb79
     license: MIT project asset
-    transformation: Embeds a compact crop of the project header mark in a transparent square SVG viewport
-    alt: openWFN orbital symbol
+    transformation: The same cyan W glyph from the wordmark in a transparent square viewport
+    alt: openWFN pixel W
   openwfn-orbital-hero.webp:
     source: project-created
     generation_record: Exact creation tool, prompt, and conversion procedure not recorded

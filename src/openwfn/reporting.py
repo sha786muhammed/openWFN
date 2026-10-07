@@ -411,6 +411,8 @@ def _available_html(section: dict[str, Any]) -> str:
 
 
 def _html(manifest: dict[str, Any]) -> str:
+    from .branding import wordmark_svg
+
     sections = []
     for section in manifest["sections"]:
         heading = escape(_title(section["name"]))
@@ -429,8 +431,9 @@ def _html(manifest: dict[str, Any]) -> str:
 body{{font:16px/1.55 system-ui,sans-serif;margin:0;color:#172033;background:#f4f7fb}}
 main{{max-width:960px;margin:auto;padding:2rem}}header,section{{background:white;padding:1.4rem;margin:1rem 0;border:1px solid #dce3ee;border-radius:10px}}
 h1,h2{{color:#123d6a}}table{{border-collapse:collapse;width:100%;margin:.75rem 0 1.25rem}}th,td{{text-align:left;padding:.55rem;border-bottom:1px solid #e5eaf1}}.unavailable{{color:#8b2e2e}}
+.ow-logo svg{{display:block;width:100%;height:auto}}
 .table-scroll{{overflow-x:auto}}.vibrational-mode-table th,.spectrum-stick-table th,.excited-state-table th,.uvvis-stick-table th{{width:auto;white-space:nowrap}}.spectroscopy-summary{{display:flex;flex-wrap:wrap;gap:.65rem 1.2rem;margin:.8rem 0 1rem;color:#40516b}}.spectrum-details{{color:#40516b}}.spectrum-plot{{display:block;width:100%;height:auto;margin:1rem 0 1.25rem;background:#fbfcfe;border:1px solid #e5eaf1;border-radius:8px}}.axis{{stroke:#607089;stroke-width:1}}.spectrum-curve{{fill:none;stroke:#123d6a;stroke-width:2}}.spectrum-stick{{stroke:#7890ad;stroke-width:1;opacity:.55}}.tick-label{{font-size:12px;fill:#607089}}.warnings{{color:#7b4e12}}
-</style></head><body><main><header><h1>openWFN Research Report</h1>
+</style></head><body><main><header><div class="ow-logo" style="max-width:360px">{wordmark_svg().strip()}</div><h1>openWFN Research Report</h1>
 <p>Generated: {escape(manifest['generated_at'])}</p><p>openWFN version: {escape(manifest['openwfn_version'])}</p>
 <p>Input SHA-256: <code>{escape(manifest['input']['sha256'])}</code></p></header>
 {''.join(sections)}<section><h2>Reproducibility</h2><p>Command: <code>{escape(manifest['command'])}</code></p></section>

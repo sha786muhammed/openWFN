@@ -125,6 +125,7 @@ Configure an existing local model; openWFN does not train or download one:
 
 ```bash
 openwfn molecule.molden chat --model qwen3:8b
+openwfn chat
 ```
 
 The model selects a tool request. openWFN checks capabilities and settings and

@@ -9,12 +9,10 @@ ROOT = Path(__file__).resolve().parents[2]
 WATER = ROOT / 'examples/water/water.fchk'
 
 
-def test_chat_without_model_explains_setup_and_does_not_install(monkeypatch, capsys):
+def test_chat_direct_property_without_model_runs_engine(monkeypatch, capsys):
     monkeypatch.delenv('OPENWFN_CHAT_MODEL', raising=False)
-    assert main([str(WATER), 'chat', '--question', 'charge?']) == 2
-    text = capsys.readouterr().err
-    assert 'OPENWFN_CHAT_MODEL' in text
-    assert 'guided' in text.lower()
+    assert main([str(WATER), 'chat', '--question', 'charge?']) == 0
+    assert 'Charge' in capsys.readouterr().out
 
 
 def test_chat_json_is_only_an_engine_record(monkeypatch, capsys):
@@ -79,7 +77,7 @@ def test_chat_malformed_input_exits_cleanly(tmp_path, capsys):
 
 def test_chat_json_setup_failure_is_a_record(monkeypatch, capsys):
     monkeypatch.delenv('OPENWFN_CHAT_MODEL', raising=False)
-    assert main(['--format', 'json', str(WATER), 'chat', '--question', 'charge?']) != 0
+    assert main(['--format', 'json', str(WATER), 'chat', '--question', 'Inspect another property']) != 0
     assert json.loads(capsys.readouterr().out)['status'] == 'failed'
 
 
@@ -111,3 +109,31 @@ def test_chat_fallback_progress_does_not_pollute_json(monkeypatch, capsys):
     captured = capsys.readouterr()
     assert json.loads(captured.out)['status'] == 'success'
     assert 'Waiting for test' in captured.err
+
+
+def test_file_free_single_question_returns_labelled_model_explanation(monkeypatch, capsys):
+    from openwfn.assistant_model import LocalModel
+    backend = LocalModel('test', transport=httpx.MockTransport(lambda _: httpx.Response(200,
+        json={'choices': [{'message': {'content': 'A basis set represents orbitals.'}}]})))
+    monkeypatch.setattr('openwfn.assistant_terminal.configured_model', lambda **_: backend)
+    assert main(['chat', '--model', 'test', '--question', 'Explain basis sets']) == 0
+    text = capsys.readouterr().out
+    assert 'Model explanation' in text and 'No calculation was run' in text
+
+
+def test_file_free_structured_chat_does_not_fabricate_record(capsys):
+    assert main(['--format', 'json', 'chat', '--question', 'Explain basis sets']) != 0
+    assert json.loads(capsys.readouterr().out)['status'] == 'failed'
+
+
+def test_cancelled_chat_returns_to_prompt(monkeypatch, capsys):
+    from openwfn.assistant_terminal import run_chat
+    answers = iter([KeyboardInterrupt(), '/quit'])
+    def prompt(_):
+        value = next(answers)
+        if isinstance(value, BaseException):
+            raise value
+        return value
+    monkeypatch.setattr('builtins.input', prompt)
+    assert run_chat(None, None) == 0
+    assert 'Cancelled' in capsys.readouterr().out

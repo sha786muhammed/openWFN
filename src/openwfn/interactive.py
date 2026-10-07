@@ -6,6 +6,8 @@ from math import isfinite, prod
 from pathlib import Path
 from typing import Callable
 
+from rich.console import Console
+
 from . import (
     __version__,  # type: ignore
     utils,  # type: ignore
@@ -13,6 +15,7 @@ from . import (
 from . import commands as cmd  # type: ignore
 from .analysis.grids import molecular_grid_layout
 from .app import CommandContext
+from .branding import print_welcome
 from .errors import DataUnavailableError, OpenWFNError
 from .fchk import print_atom_table  # type: ignore
 from .geometry import molecular_formula  # type: ignore
@@ -592,6 +595,7 @@ def run_interactive(lines, filename, *, format_hint=None):
     def show_graph() -> None:
         cmd.cmd_graph(atomic_numbers, coordinates)
 
+    print_welcome(Console(no_color=not utils.color_enabled()), mode='Guided analysis')
     pending_workflow = None
     while True:
         print(f"\n{PRODUCT_NAME} {__version__} / {menu_filename}")

@@ -34,7 +34,8 @@ def test_html_report_contains_reproducibility_and_analysis_sections(tmp_path: Pa
     assert "Frontier Orbitals" in text
     assert "Mulliken Population" in text
     assert "Validation status" in text
-    assert "http://" not in text and "https://" not in text
+    offline_text = text.replace("http://www.w3.org/2000/svg", "")
+    assert "http://" not in offline_text and "https://" not in offline_text
 
 
 def test_markdown_report_records_unavailable_analysis_instead_of_omitting_it(tmp_path: Path) -> None:

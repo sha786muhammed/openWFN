@@ -94,7 +94,7 @@ def load_data(filename: str) -> tuple[str, dict[str, Any], list[int], list[tuple
 
 def _context(args: argparse.Namespace) -> CommandContext:
     return CommandContext(
-        input_path=Path(args.file),
+        input_path=Path(args.file) if args.file is not None else None,
         output_path=args.output,
         format="plain" if args.plain else args.format,
         color=not args.no_color and args.format == "table",
@@ -641,7 +641,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "examples":
         parser.error("use `openwfn examples install DESTINATION` without an input file")
 
-    if args.file is None:
+    if args.file is None and args.command != "chat":
         parser.error("an input file is required unless --version is used")
 
     if args.command in {

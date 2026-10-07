@@ -4,6 +4,9 @@ All notable changes to openWFN are documented in this file.
 
 ## [0.12.0] - Unreleased
 
+- Use the selected pixel wordmark across interactive terminal screens, README, documentation, browser icon and offline HTML exports. The browser icon uses the matching W initial.
+- Add file-free, labelled scientific conversation, session-only connection/model controls, editable input and cancellation back to the prompt. Supported short file-property requests work without a model. Model explanations are not independently verified scientific results.
+
 - Route explicit short orbital/metadata chat questions directly to scientific tools, avoiding model latency and unnecessary restricted-spin prompts. Distinguish model timeouts from connection failures and show waiting progress on stderr.
 - Render missing report values as "Not available" and show labelled, one-based atom/element population tables in HTML and Markdown without changing raw JSON values, units, provenance or scientific status.
 
