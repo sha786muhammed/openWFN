@@ -71,3 +71,16 @@ def test_invalid_cube_mo_keeps_guided_session_alive(tmp_path, monkeypatch, capsy
     assert 'Result Status: failed' in text
     assert 'Exiting openWFN.' in text
     assert not output.exists()
+
+
+@pytest.mark.parametrize('cancel', ['back', 'home'])
+def test_open_file_navigation_is_not_treated_as_filename(cancel, monkeypatch, capsys):
+    workflows = iter(['file', 'summary', 'exit'])
+    monkeypatch.setattr(interactive, 'prompt_workflow', lambda _: next(workflows))
+    monkeypatch.setattr(interactive, 'prompt_page_navigation', lambda _: 'home')
+    monkeypatch.setattr('builtins.input', lambda _: cancel)
+    interactive.run_interactive(None, ROOT/'examples/everyday-qc/water.molden')
+    output = capsys.readouterr().out
+    assert 'Could not open input' not in output
+    assert 'H2O' in output
+    assert 'Exiting openWFN.' in output

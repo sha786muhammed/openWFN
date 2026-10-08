@@ -650,8 +650,8 @@ def run_interactive(lines, filename, *, format_hint=None):
                         lambda: show_result(client.analyze("excited-states"), ('excited', 'states')))
         elif action == "file":
             try:
-                new_name = input("Input file (blank to cancel): ").strip()
-                if not new_name:
+                new_name = input("Input file (blank/back to cancel): ").strip()
+                if not new_name or new_name.casefold() in {'back', 'home'}:
                     continue
                 new_session = build_guided_session(Path(new_name))
             except (EOFError, KeyboardInterrupt):

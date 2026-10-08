@@ -3,6 +3,7 @@
 import csv
 import io
 import json
+from pathlib import Path
 from typing import Any
 
 from .app import CommandContext
@@ -107,17 +108,24 @@ def _csv_uvvis(result: ResultRecord) -> str:
     return stream.getvalue()
 
 
+def source_status_lines(result: ResultRecord, *, input_path: Path | None = None) -> list[str]:
+    """Source caveats shared by full and compact human views."""
+    lines = []
+    source_format = result.provenance.get("source_format")
+    if source_format == "fchk" or (
+        input_path is not None
+        and input_path.suffix.lower() in {".fchk", ".fch", ".chk"}
+    ):
+        lines.append("Source Calculation Status: Unknown from FCHK (convergence is not established)")
+    return lines
+
+
 def _status_lines(result: ResultRecord, context: CommandContext) -> list[str]:
     lines = [
         f"Analysis Validation Status: {result.validation_status}",
         f"Result Status: {result.status}",
+        *source_status_lines(result, input_path=context.input_path),
     ]
-    source_format = result.provenance.get("source_format")
-    if source_format == "fchk" or (
-        context.input_path is not None
-        and context.input_path.suffix.lower() in {".fchk", ".fch", ".chk"}
-    ):
-        lines.append("Source Calculation Status: Unknown from FCHK (convergence is not established)")
     if result.error is not None:
         lines.append(f"Error: {result.error.message}")
     lines.extend(f"Warning: {warning}" for warning in result.warnings)

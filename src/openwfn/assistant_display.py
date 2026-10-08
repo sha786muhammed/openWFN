@@ -3,7 +3,8 @@
 import re
 
 from .assistant import AssistantAnswer
-from .presentation import CommandContext, render
+from .assistant_help import missing_spectrum_guidance
+from .presentation import CommandContext, render, source_status_lines
 
 
 def safe_terminal_text(text: str) -> str:
@@ -42,8 +43,11 @@ def render_chat_answer(answer: AssistantAnswer, *, question: str, source_label: 
             lines.append('Restricted closed-shell calculation.')
     if not lines:
         lines.append(render(record, CommandContext(format='plain')).strip())
+        if record.status == 'failed' and missing_spectrum_guidance(record.analysis_name):
+            lines.append(missing_spectrum_guidance(record.analysis_name))
     else:
         lines.append(f'Result: {record.status} · Analysis status: {record.validation_status}')
+        lines.extend(source_status_lines(record))
         lines.extend('Warning: ' + warning for warning in record.warnings)
     source = source_label or record.provenance.get('source_path', 'source unavailable')
     lines.append(f'Source: {source}\n/record for the complete result, units and provenance.')

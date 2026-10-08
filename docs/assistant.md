@@ -15,6 +15,24 @@ files need no alpha/beta clarification, while unrestricted files retain both cha
 This routing does not guess offset orbitals such as HOMO−1 or interpret arbitrary prose.
 These supported short file questions do not require a model connection.
 
+The same local path accepts phrases such as “HUMO value” and “HOMO value of the
+FCHK”. IR, Raman and vibration requests check file capabilities without a model;
+missing records produce a specific explanation rather than a request for a
+population method. IR requires frequencies and IR intensities, while Raman
+requires frequencies and Raman activities.
+
+Population-method and density-operation questions retain an explicit pending
+choice. Follow-up replies fill that choice rather than starting an unrelated
+analysis. Invalid replies are bounded; a new explicit request replaces the old
+task. Ctrl+C, file/model switches and `/clear` discard pending choices while
+keeping earlier scientific records. Model plans that contradict a selected
+channel, method, orbital or point are rejected before calculation.
+
+Greetings and reviewed FCHK-format help work without a model. Product help is
+separate from general, unverified scientific explanations. Compact orbital
+answers retain the FCHK convergence caveat; successful analysis does not establish
+source convergence.
+
 Other questions use the configured model. A waiting message goes to stderr, not
 machine-readable stdout. Response timeouts are reported as timeouts, separately
 from connection failures; no scientific result is fabricated when planning fails.
