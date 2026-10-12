@@ -57,7 +57,7 @@ you explicitly permit overwrite.
 Use the exact version recorded with that work. For the current published release:
 
 ```bash
-python -m pip install openwfn==0.12.0
+python -m pip install openwfn==0.13.0
 ```
 
 Older release pins and their support boundaries are retained in

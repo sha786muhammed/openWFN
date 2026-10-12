@@ -1,7 +1,7 @@
 # Citation
 
-Cite the openWFN version you used. The example below is for version 0.12.0,
-dated October 7, 2026. For a source checkout, record the commit as well.
+Cite the openWFN version you used. The example below is for version 0.13.0,
+dated October 12, 2026. For a source checkout, record the commit as well.
 Keep input checksums with your results.
 
 ## Cite the software release
@@ -12,7 +12,7 @@ is the machine-readable source for the software citation.
 
 Plain text:
 
-> Muhammed Shah Shaji (2026). openWFN: Wavefunction post-processing analysis toolkit (Version 0.12.0) [Computer software]. https://github.com/sha786muhammed/openWFN/releases/tag/v0.12.0
+> Muhammed Shah Shaji (2026). openWFN: Wavefunction post-processing analysis toolkit (Version 0.13.0) [Computer software]. https://github.com/sha786muhammed/openWFN/releases/tag/v0.13.0
 
 BibTeX:
 
@@ -21,8 +21,8 @@ BibTeX:
   author  = {Muhammed Shah Shaji},
   title   = {openWFN: Wavefunction post-processing analysis toolkit},
   year    = {2026},
-  version = {0.12.0},
-  url     = {https://github.com/sha786muhammed/openWFN/releases/tag/v0.12.0},
+  version = {0.13.0},
+  url     = {https://github.com/sha786muhammed/openWFN/releases/tag/v0.13.0},
   license = {MIT}
 }
 ```

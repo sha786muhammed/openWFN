@@ -330,7 +330,7 @@ def test_public_installation_copy_documents_stable_release() -> None:
     )
 
     assert "python -m pip install --upgrade openwfn" in public
-    assert "python -m pip install openwfn==0.12.0" in public
+    assert "python -m pip install openwfn==0.13.0" in public
     assert "pre-release handbook" not in public.lower()
 
 
