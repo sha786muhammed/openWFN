@@ -1,6 +1,8 @@
 # Everyday QC validation and evidence
 
-This page describes the **current** validation state for openWFN 0.11.0. Historical development captures remain in the repository for provenance, but they do not override the current capability registry in `validation/manifest.json`.
+Find reference comparisons for the everyday-QC methods here.
+`validation/manifest.json` records the supported validation scope. Older
+reports document earlier work; they do not replace the current evidence.
 
 ## Current status
 

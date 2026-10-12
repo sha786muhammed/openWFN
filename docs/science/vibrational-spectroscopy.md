@@ -1,6 +1,9 @@
 # Vibrational spectroscopy
 
-**Status: Experimental.** This page documents the native Gaussian frequency/IR/Raman workflow on the vibrational-spectroscopy feature line. The implementation is source-faithful and reproducible, but the current committed fixtures and cross-interface tests are not an independent external scientific validation campaign. Do not relabel these analyses as Validated until such evidence is added with a stated scope and tolerance.
+Inspect normal modes, IR intensities and Raman activities from supported
+Gaussian frequency outputs. Draw broadened spectra while keeping the source
+values. These methods remain **Experimental**; the current tests do not
+establish independent validation across programs and methods.
 
 ## What openWFN reads
 
@@ -59,7 +62,9 @@ The `raman-spectrum` broadened y values remain broadened Raman activity. UI labe
 
 ## Normal-mode visualization
 
-When Cartesian vectors are present, the Workbench can display arrows for a selected mode. Its amplitude slider is explicitly display-only: it multiplies arrow length for visibility and does not modify the stored source displacement vectors, frequency, mass, force constant, IR intensity, or Raman activity.
+When displacement vectors are present, the workbench can display arrows for
+a selected mode. The amplitude slider changes only arrow length. It does not
+change source vectors, frequencies, masses, force constants or spectral strengths.
 
 If vectors are absent, mode/spectrum analysis can still be available while motion visualization is marked unavailable. openWFN does not synthesize normal-mode vectors.
 

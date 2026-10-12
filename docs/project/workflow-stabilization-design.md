@@ -1,8 +1,9 @@
 # Supported-workflow stabilization
 
-User goal: stable, scientifically defensible implemented workflows with real
-molecular tests and readable terminal/HTML results. Work autonomously, preserve
-shared scientific services and resource safeguards, and keep missing data explicit.
+Historical stabilization plan for testing real molecular workflows and improving
+terminal and HTML results. Its progress notes describe that development stage,
+not current installation instructions. See [validation evidence](../science/validation-status.md)
+for the supported scope and remaining gaps.
 
 ## Numerical design
 

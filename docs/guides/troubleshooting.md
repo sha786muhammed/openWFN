@@ -1,20 +1,28 @@
 # Troubleshooting
 
+Find the message that matches your problem below. Start with the version and
+file checks so you can tell an installation problem from missing input data.
+
 ## Start with diagnostics
 
 ```bash
 openwfn --version
-openwfn molecule.fchk doctor
-openwfn --debug molecule.fchk summary
+openwfn molecule.molden doctor
+openwfn --debug molecule.molden summary
 ```
 
 ## “Input file is required”
 
-The file normally precedes the command: `openwfn molecule.fchk summary`. The exception is `openwfn --version`, which needs no file.
+For a file analysis, put the path before the command:
+`openwfn molecule.molden summary`. Commands such as `openwfn chat`,
+`openwfn examples install DESTINATION`, `openwfn batch DIRECTORY` and
+`openwfn --version` do not need a preceding input file.
 
 ## A capability is unavailable
 
-The FCHK may not contain basis, orbital, or density records. Run `doctor`. Recreate the formatted checkpoint from a suitable calculation rather than inventing missing data.
+Your file may not contain the required basis, orbital, density or spectroscopy
+records. Run `openwfn FILE capabilities`. Export a suitable file from the
+calculation program; changing the filename cannot supply missing data.
 
 ## `formchk` was not found
 
@@ -22,11 +30,15 @@ Only Gaussian supplies `formchk`. Add the Gaussian utilities to `PATH`, run `for
 
 ## An output already exists
 
-Choose a new path or add `--overwrite` after confirming replacement is safe.
+Choose a new path, or put the global `--overwrite` option before the input
+path after confirming that replacement is safe.
 
 ## Density integration is slow or inaccurate
 
-Grid cost increases rapidly as spacing decreases or padding increases. Begin with defaults, then perform a convergence study. Very diffuse systems may require larger padding.
+Finer spacing and larger padding increase the work. Try a coarser grid for
+exploration, then test convergence before reporting values. Diffuse systems
+may need larger padding. If the grid exceeds the safety limit, increase
+spacing or reduce padding deliberately; reducing padding can omit density tails.
 
 ## The HTML workbench does not open
 
@@ -35,4 +47,3 @@ Generate it without `--open`, locate the reported file, and open that file in a 
 ## Getting help
 
 Capture the openWFN version, operating system, sanitized command, traceback from `--debug`, and a minimal non-confidential reproducer. Never post private checkpoint data or credentials publicly. See [Security](../project/security.md).
-

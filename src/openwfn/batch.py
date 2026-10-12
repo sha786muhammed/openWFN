@@ -62,7 +62,54 @@ class BatchManifest:
     attempted_count: int = 0
     stopped_early: bool = False
     status: Literal["success", "partial", "failed"] = "success"
+    requested_workers: int = 1
+    effective_workers: int = 1
+    resource_warnings: tuple[str, ...] = ()
     schema_version: str = field(default=BATCH_SCHEMA_VERSION, init=False)
+
+
+def _available_memory_bytes() -> int | None:
+    """Use available RAM, respecting common Linux container memory ceilings."""
+    available = None
+    try:
+        import psutil
+        available = int(psutil.virtual_memory().available)
+    except (ImportError, OSError):
+        pass
+    for limit_path, used_path in (
+        ("/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/memory.current"),
+        ("/sys/fs/cgroup/memory/memory.limit_in_bytes", "/sys/fs/cgroup/memory/memory.usage_in_bytes"),
+    ):
+        try:
+            limit, used = int(Path(limit_path).read_text()), int(Path(used_path).read_text())
+            if limit <= 0 or limit >= 1 << 60:
+                continue  # cgroup v1 uses huge integers for an unlimited ceiling.
+            remaining = max(0, limit - used)
+            available = remaining if available is None else min(available, remaining)
+        except (OSError, ValueError):
+            continue
+    return available
+
+
+def _bounded_workers(requested: int, paths: list[Path]) -> tuple[int, tuple[str, ...]]:
+    """Conservative scheduling estimate, not a hard per-worker memory quota."""
+    if requested == 1 or not paths:
+        return 1, ()
+    available = _available_memory_bytes()
+    if available is None:
+        return 1, ("Available memory could not be measured; batch uses one worker.",)
+    largest = 0
+    for path in paths:
+        try:
+            largest = max(largest, path.stat().st_size)
+        except OSError:
+            # The normal per-file runner records missing/unreadable inputs.
+            continue
+    per_worker = max(512 * 1024**2, 256 * 1024**2 + 32 * largest)
+    effective = min(requested, len(paths), max(1, (available * 3 // 4) // per_worker))
+    warnings = (() if effective == requested else (
+        f"Batch uses {effective} of {requested} requested workers under a conservative memory estimate; this is not a hard RAM limit.",))
+    return effective, warnings
 
 
 def _inside(path: Path, directory: Path | None) -> bool:
@@ -385,7 +432,7 @@ def run_batch(
     format_hint: str | None = None,
     format_hints: dict[Path, str] | None = None,
 ) -> BatchManifest:
-    if workers < 1:
+    if isinstance(workers, bool) or not isinstance(workers, int) or workers < 1:
         raise ValueError("workers must be at least one")
     if frontier_spin not in {"alpha", "beta", "all"}:
         raise ValueError("frontier spin must be 'alpha', 'beta', or 'all'")
@@ -480,12 +527,14 @@ def run_batch(
             else:
                 pending.append((index, (path, normalized, resolved_hints.get(path.resolve(), global_hint))))
 
-    if not fail_fast and workers == 1:
+    effective_workers, resource_warnings = ((1, ()) if fail_fast else
+        _bounded_workers(workers, [argument[0] for _, argument in pending]))
+    if not fail_fast and effective_workers == 1:
         for index, argument in pending:
             record = _run_one(argument)
             accept(index, argument[0], record, write=True)
     elif not fail_fast:
-        for index, path, record in _run_parallel(pending, workers):
+        for index, path, record in _run_parallel(pending, effective_workers):
             accept(index, path, record, write=True)
 
     records = [records_by_index[index] for index in sorted(records_by_index)]
@@ -508,6 +557,9 @@ def run_batch(
         attempted_count=len(records),
         stopped_early=stopped_early,
         status=aggregate_status,
+        requested_workers=workers,
+        effective_workers=effective_workers,
+        resource_warnings=resource_warnings,
     )
     payload = {
         "analyses": list(normalized),
@@ -530,6 +582,9 @@ def run_batch(
         "attempted_count": manifest.attempted_count,
         "stopped_early": manifest.stopped_early,
         "status": manifest.status,
+        "requested_workers": manifest.requested_workers,
+        "effective_workers": manifest.effective_workers,
+        "resource_warnings": list(manifest.resource_warnings),
     }
     _atomic_write_json(output_dir / "batch-manifest.json", payload)
     _write_csv_index(records, output_dir)

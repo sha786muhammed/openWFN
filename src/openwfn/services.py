@@ -1,13 +1,24 @@
 """Application services shared by direct, guided, and Python interfaces."""
 
+from math import prod
+from pathlib import Path
 from typing import Literal
 
 import numpy as np
 
 from .analysis.basis import ao_atom_indices, bounded_ao_chunk_size, overlap_matrix
-from .analysis.density import density_matrix_for_kind, evaluate_density, integrate_density
+from .analysis.density import (
+    density_matrix_for_kind,
+    evaluate_density,
+    integrate_density,
+    integrate_density_chunks,
+)
 from .analysis.electrostatics import electronic_esp_from_grid, nuclear_esp, point_charge_esp
-from .analysis.grids import iter_point_chunks, molecular_grid_points, scalar_grid
+from .analysis.grids import (
+    iter_molecular_grid_chunks,
+    molecular_grid_layout,
+    scalar_grid,
+)
 from .analysis.hirshfeld import HirshfeldSettings, hirshfeld_population
 from .analysis.orbitals import (
     HARTREE_TO_EV,
@@ -19,7 +30,7 @@ from .analysis.population import lowdin_population, mulliken_population
 from .constants import BOHR_TO_ANGSTROM
 from .data import StructureData
 from .errors import DataUnavailableError
-from .exporters.cube import write_cube
+from .exporters.cube import write_cube_chunks
 from .geometry import angle, center_of_mass, detect_bonds, dihedral, distance, molecular_formula
 from .graph import build_graph
 from .model import CalculationData, DensityMatrix, MolecularOrbitals, Molecule
@@ -521,14 +532,15 @@ def density_grid(
     if data.basis is None:
         raise DataUnavailableError("Density analysis requires Gaussian basis-set data.")
     matrix = density_matrix_for_kind(data, kind)
-    points, origin, shape = molecular_grid_points(
+    origin, shape = molecular_grid_layout(
         data.molecule, spacing_bohr=spacing_bohr, padding_bohr=padding_bohr
     )
-    values = np.empty(len(points), dtype=float)
+    values = np.empty(prod(shape), dtype=float)
     # Bound AO evaluation temporaries as well as the number of grid points.
     chunk_size = bounded_ao_chunk_size(data.basis, chunk_size)
     offset = 0
-    for chunk in iter_point_chunks(points, chunk_size):
+    for chunk in iter_molecular_grid_chunks(data.molecule, spacing_bohr=spacing_bohr,
+            padding_bohr=padding_bohr, chunk_size=chunk_size):
         chunk_values = evaluate_density(data.molecule, data.basis, matrix, chunk)
         stop = offset + len(chunk_values)
         values[offset:stop] = chunk_values
@@ -544,8 +556,16 @@ def density_integration(
 ) -> ResultRecord:
     matrix = density_matrix_for_kind(data, kind)
     expectation = expected_electron_count(data, kind)
-    grid = density_grid(data, kind, spacing_bohr, padding_bohr)
-    result = integrate_density(grid, expectation.value)
+    if data.basis is None:
+        raise DataUnavailableError("Density analysis requires Gaussian basis-set data.")
+    chunks = iter_molecular_grid_chunks(
+        data.molecule, spacing_bohr=spacing_bohr, padding_bohr=padding_bohr,
+        chunk_size=bounded_ao_chunk_size(data.basis, 65536),
+    )
+    values = (evaluate_density(data.molecule, data.basis, matrix, chunk) for chunk in chunks)
+    step = spacing_bohr * BOHR_TO_ANGSTROM
+    axes_bohr = np.diag([step, step, step]) / BOHR_TO_ANGSTROM
+    result = integrate_density_chunks(values, abs(float(np.linalg.det(axes_bohr))), expectation.value)
     warnings = [*expectation.warnings, *_density_source_warnings(data, matrix)]
     if not result.passed:
         warnings.append(_density_validation_warning(result))
@@ -586,11 +606,22 @@ def density_cube_export(
     output_path,
     overwrite: bool,
 ) -> ResultRecord:
+    output_path = Path(output_path)
+    if output_path.exists() and not overwrite:
+        raise FileExistsError(f"Output exists: {output_path}. Pass overwrite=True to replace it.")
     matrix = density_matrix_for_kind(data, kind)
     expectation = expected_electron_count(data, kind)
-    grid = density_grid(data, kind, spacing_bohr, padding_bohr)
-    result = integrate_density(grid, expectation.value)
-    write_cube(grid, data.molecule, output_path, overwrite=overwrite)
+    if data.basis is None:
+        raise DataUnavailableError("Density analysis requires Gaussian basis-set data.")
+    origin, shape = molecular_grid_layout(data.molecule, spacing_bohr=spacing_bohr, padding_bohr=padding_bohr)
+    chunks = iter_molecular_grid_chunks(data.molecule, spacing_bohr=spacing_bohr,
+        padding_bohr=padding_bohr, chunk_size=bounded_ao_chunk_size(data.basis, 65536))
+    values = (evaluate_density(data.molecule, data.basis, matrix, chunk) for chunk in chunks)
+    total = write_cube_chunks(data.molecule, output_path, origin_bohr=tuple(origin), shape=shape,
+        spacing_bohr=spacing_bohr, value_unit="electron/bohr^3", chunks=values, overwrite=overwrite)
+    step = spacing_bohr * BOHR_TO_ANGSTROM
+    volume = abs(float(np.linalg.det(np.diag([step, step, step]) / BOHR_TO_ANGSTROM)))
+    result = integrate_density_chunks((np.asarray([total]),), volume, expectation.value)
     warnings = [*expectation.warnings, *_density_source_warnings(data, matrix)]
     if not result.passed:
         warnings.append(_density_validation_warning(result))
@@ -599,7 +630,7 @@ def density_cube_export(
         data={
             "density_kind": kind,
             "output": str(output_path),
-            "grid_points": len(grid.values),
+            "grid_points": prod(shape),
             "electron_count": round(result.electron_count, 8),
             "expected_electrons": round(result.expected_electrons, 8),
             "absolute_error": round(result.absolute_error, 10),

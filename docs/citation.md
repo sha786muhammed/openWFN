@@ -1,7 +1,8 @@
 # Citation
 
-The citation below identifies version 0.12.0, dated October 7, 2026.
-For source-checkout work, also record the exact commit and input checksums.
+Cite the openWFN version you used. The example below is for version 0.12.0,
+dated October 7, 2026. For a source checkout, record the commit as well.
+Keep input checksums with your results.
 
 ## Cite the software release
 
@@ -37,9 +38,9 @@ A software citation alone is not enough to reproduce an analysis. Preserve:
 - the analysis command and relevant numerical controls;
 - machine-readable results, units, warnings, and validation status.
 
-## Future paper
+## Software citation
 
-A paper citation will be added only after an archival deposit or publication
-provides verified bibliographic metadata. Repository contribution is recorded in
-the project history and `CONTRIBUTORS.md`; contribution does not determine authorship
-of a future paper.
+Use the release citation above. A paper citation requires verified metadata
+from an archival deposit or publication. Contributions are recorded in the repository history
+and `CONTRIBUTORS.md`. Repository contribution does not determine authorship
+of a paper.

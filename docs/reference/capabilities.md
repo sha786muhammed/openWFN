@@ -1,21 +1,18 @@
 # Capability discovery
 
-The prepared release includes its readers in the base installation. Published
-0.11.0 uses the `interop` extra for IOData formats. See
-[installation](../installation.md) for the current release state.
+Check what your file contains before choosing an analysis. File readers are
+included in the normal installation; see [installation](../installation.md).
 
-Inspect the file before analysis:
+Run this first:
 
 ```bash
 openwfn molecule.molden capabilities
-openwfn molecule.wfx orbitals frontier
-openwfn calculation.out summary
-openwfn batch ./calculations --analyses summary,frontier --output-dir ./results
+openwfn --format json molecule.molden capabilities
 ```
 
-Run `capabilities` before a batch when input files may contain different
-records. It reports the detected format, backend and version, each component
-capability, and which registered analyses have their requirements met. Use
+Use `capabilities` for each input type, especially in a mixed-file batch.
+It shows the detected format, reader version, available data and analyses.
+Use
 `openwfn --format json FILE capabilities` for automation. In Python,
 `load(path).capabilities()` returns the same inferred component states.
 

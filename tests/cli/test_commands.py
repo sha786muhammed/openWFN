@@ -214,7 +214,10 @@ def test_molecular_analysis_commands_reject_other_input_kinds_cleanly(
     result = run_cli(str(source), *command)
 
     assert result.returncode == 4
-    assert "does not contain a molecular calculation" in result.stderr
+    if suffix == "log":
+        assert "Alpha orbitals are not available" in result.stderr
+    else:
+        assert "does not contain a molecular calculation" in result.stderr
     assert "Traceback" not in result.stderr
 
 

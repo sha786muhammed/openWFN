@@ -1,0 +1,15 @@
+{
+  "upstream_commit": "127b2229d584d54fb84a74e383edb18a271fc283",
+  "redistribution": "Download upstream files; they are not bundled here.",
+  "cases": [
+    {"name": "gaussian-ir", "path": "Gaussian/Gaussian09/dvb_ir_revA.02.out", "sha256": "cd81dddf9d92afa29c58d17832ed1fb63d4dda1f1d1d2e0482c05aa87fbaf77f"},
+    {"name": "gaussian-raman", "path": "Gaussian/Gaussian09/dvb_raman_revA.02.out", "sha256": "09a62c6fad6327e0b16d65b4ba629d459ecc05845756c488b1ccf389567d9025"},
+    {"name": "gaussian-td", "path": "Gaussian/Gaussian09/dvb_td_revA.02.out", "sha256": "3df74d9ffa7b4f1cd8c1475eb2c2fa0db4700b76f0e218d4f13aa220770d3378"},
+    {"name": "orca-ir", "path": "ORCA/ORCA4.2/dvb_ir.out", "sha256": "e053a2b3a24ac425f816263420782b542e8058b7ddd49aab443de21417c5ce4f"},
+    {"name": "orca-raman", "path": "ORCA/ORCA4.2/dvb_raman.out", "sha256": "4e59733c518b012884e911938a02f2c2200b73c286941ee9c092fcb4c5b4c938"},
+    {"name": "orca-td", "path": "ORCA/ORCA4.2/dvb_td.out", "sha256": "3ee24e0554b9d0c0ed21401caceaced65eb2b195f49ebdb783377c4467b885f5"},
+    {"name": "qchem-ir", "path": "QChem/QChem4.2/dvb_ir.out", "sha256": "175a959935c19af1e2c2153254fd941878c3adebbc47df5619b3d75fb996cc05"},
+    {"name": "qchem-raman", "path": "QChem/QChem4.2/dvb_raman.out", "sha256": "3d2a94636c86e957942f1497c01767e3615f13d9fda28ce4b657f73f3362e0a8"},
+    {"name": "qchem-td", "path": "QChem/QChem4.2/dvb_td.out", "sha256": "6b648ee883946dd060bb3666d95de5fae070a6b4453712f06ffddd78fa9ca010"}
+  ]
+}

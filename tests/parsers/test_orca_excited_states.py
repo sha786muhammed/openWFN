@@ -40,6 +40,68 @@ def test_orca_tddft_absorption_table_fidelity() -> None:
     assert second.oscillator_strength == 0.0
 
 
+def test_orca_standard_dotted_metadata_retains_charge_and_multiplicity():
+    from openwfn.parsers.excited.orca import parse_orca_excited_states
+    text = (FIXTURES / 'tddft_absorption.out').read_text()
+    text = text.replace('Total Charge : 0', ' Total Charge           Charge          ....    0')
+    text = text.replace('Multiplicity : 1', ' Multiplicity           Mult            ....    1')
+    job = parse_orca_excited_states(text).jobs[0]
+    assert job.charge == 0
+    assert job.multiplicity == 1
+
+
+def test_orca_numeric_absorption_uses_electric_table_and_preserves_forbidden_state():
+    from openwfn.parsers.excited.orca import parse_orca_excited_states
+    text = '''O   R   C   A
+TD-DFT/TDA EXCITATION SPECTRA
+Total Charge : 0
+Multiplicity : 1
+ABSORPTION SPECTRUM VIA TRANSITION ELECTRIC DIPOLE MOMENTS
+State Energy Wavelength fosc T2 TX TY TZ
+      (cm-1) (nm) (au**2) (au) (au) (au)
+ 1 40000.0 250.0 .02 .14 .1 .2 .3
+ 2 20000.0 500.0 spin forbidden (mult=3)
+
+ABSORPTION SPECTRUM VIA TRANSITION VELOCITY DIPOLE MOMENTS
+State Energy Wavelength fosc P2 PX PY PZ
+      (cm-1) (nm) (au**2) (au) (au) (au)
+ 1 40000.0 250.0 1.99 .14 .1 .2 .3
+'''
+    states = parse_orca_excited_states(text).jobs[0].states
+    assert len(states) == 2
+    assert states[0].energy_ev == pytest.approx(4.95936793732801)
+    assert states[0].oscillator_strength == .02
+    assert states[0].transition_dipole == (.1, .2, .3)
+    assert states[1].oscillator_strength is None
+    assert states[1].multiplicity == 3
+
+
+def test_orca_modern_absorption_does_not_duplicate_velocity_gauge_states():
+    from openwfn.parsers.excited.orca import parse_orca_excited_states
+    text = (FIXTURES / 'tddft_absorption.out').read_text()
+    text += '''
+ABSORPTION SPECTRUM VIA TRANSITION VELOCITY DIPOLE MOMENTS
+0-1A -> 1-1A 4.294795 34639.9 288.7 9.0 .03615 .19012 0.0 0.0
+'''
+    states = parse_orca_excited_states(text).jobs[0].states
+    assert len(states) == 2
+    assert states[0].oscillator_strength == pytest.approx(.003830922)
+
+
+def test_orca_malformed_first_numeric_state_cannot_be_silently_dropped():
+    from openwfn.parsers.excited.orca import parse_orca_excited_states
+    text = '''O   R   C   A
+TD-DFT/TDA EXCITATION SPECTRA
+ABSORPTION SPECTRUM VIA TRANSITION ELECTRIC DIPOLE MOMENTS
+State Energy Wavelength fosc T2 TX TY TZ
+      (cm-1) (nm) (au**2) (au) (au) (au)
+ 1 40000.0 250.0 BROKEN .14 .1 .2 .3
+ 2 20000.0 500.0 .01 .14 .1 .2 .3
+'''
+    with pytest.raises(ValueError, match='Malformed ORCA'):
+        parse_orca_excited_states(text)
+
+
 def test_orca_eom_states_remain_nonoptical_when_strength_not_reported() -> None:
     collection = _parse("eom_states.out")
 

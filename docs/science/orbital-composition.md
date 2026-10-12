@@ -1,5 +1,9 @@
 # Orbital composition
 
+See how basis functions on each atom contribute to a chosen orbital.
+Select Mulliken or Löwdin projection. Keep the method and basis with your
+result, because both affect the contributions.
+
 **Validation status: Validated for the documented everyday-QC reference scope.**
 
 Required data are an isolated molecule, a supported Gaussian AO basis, MO coefficients, and overlap. For real coefficients `c` and overlap `S`, openWFN exposes two named projection conventions:
@@ -9,19 +13,21 @@ Required data are an isolated molecule, a supported Gaussian AO basis, MO coeffi
 
 The symmetric Löwdin square root is obtained from the AO-overlap eigensystem. Fractions are dimensionless; atom percentages are 100 times the atom fraction. AO-to-center and shell maps follow the normalized basis ordering. SP shells are split into s and p for angular grouping. Ghost centers retain their AO weights because this is a basis projection, not a unique real-space partition of electrons.
 
-Mulliken contributions may be negative or exceed one. Do not clip them, treat them as probabilities, or reinterpret them as oxidation states. Löwdin contributions depend on the AO representation and therefore are not basis-representation invariant.
+Mulliken contributions can be negative or exceed one. Do not clip them or
+treat them as probabilities or oxidation states. Löwdin contributions also
+depend on the AO representation; they are not basis-independent quantities.
 
 ```bash
-openwfn molecule.fchk orbitals composition --mo homo --method lowdin
-openwfn molecule.fchk orbitals composition --mo 25 --spin beta --method mulliken
-openwfn molecule.fchk batch --analyses orbital-composition --output-dir results
-openwfn molecule.fchk report build report.html --analyses orbital-composition
+openwfn molecule.molden orbitals composition --mo homo --method lowdin
+openwfn molecule.molden orbitals composition --mo 25 --spin beta --method mulliken
+openwfn molecule.molden batch --analyses orbital-composition --output-dir results
+openwfn molecule.molden report build report.html --analyses orbital-composition
 ```
 
 ```python
 from openwfn import load
-record = load("molecule.fchk").orbital_composition(mo="lumo", spin="alpha")
-record = load("molecule.fchk").analyze(
+record = load("molecule.molden").orbital_composition(mo="lumo", spin="alpha")
+record = load("molecule.molden").analyze(
     "orbital-composition", mo=25, method="mulliken"
 )
 ```

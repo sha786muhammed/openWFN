@@ -10,6 +10,29 @@ pytestmark = pytest.mark.skipif(os.name == 'nt', reason='POSIX pseudo-terminal r
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def test_escape_from_method_choices_returns_without_empty_result_page(tmp_path):
+    pexpect = pytest.importorskip('pexpect')
+    from openwfn.guided import available_workflows, build_guided_session
+
+    source = ROOT / 'examples/water/water.fchk'
+    commands = [item.command for item in available_workflows(build_guided_session(source))]
+    child = pexpect.spawn(sys.executable, ['-m', 'openwfn.cli', str(source), 'open'],
+                          cwd=str(tmp_path), encoding='utf-8', timeout=12,
+                          env={**os.environ, 'PROMPT_TOOLKIT_NO_CPR': '1'})
+    try:
+        child.expect('Select a workflow')
+        child.send('\x1b[B' * commands.index('methods') + '\r')
+        child.expect('Choose a calculation')
+        child.send('\x1b')
+        child.expect('Select a workflow')
+        assert 'Result actions:' not in child.before
+        assert not (tmp_path / 'results').exists()
+        child.sendcontrol('c')
+        child.expect(pexpect.EOF)
+    finally:
+        child.close(force=True)
+
+
 def test_terminal_arrows_enter_escape_and_ctrl_c():
     pexpect = pytest.importorskip('pexpect')
     child = pexpect.spawn(sys.executable, ['-m', 'openwfn.cli',
@@ -64,5 +87,35 @@ def test_terminal_no_file_backspace_and_eof(tmp_path):
         child.close()
         assert child.exitstatus == 0
         assert not (tmp_path / 'results').exists()
+    finally:
+        child.close(force=True)
+
+
+def test_density_review_escape_cancels_before_calculation(tmp_path):
+    pexpect = pytest.importorskip('pexpect')
+    child = pexpect.spawn(sys.executable, ['-m', 'openwfn.cli',
+        str(ROOT / 'examples/water/water.fchk'), 'open'], cwd=str(tmp_path),
+        encoding='utf-8', timeout=15, dimensions=(32, 120), env={**os.environ,
+        'PROMPT_TOOLKIT_NO_CPR': '1'})
+    try:
+        child.expect('Select a workflow')
+        child.send('\x1b[B' * 6 + '\r')
+        child.expect('Density operation')
+        child.sendline('')
+        child.expect('Density component')
+        child.sendline('')
+        child.expect('Grid spacing in bohr')
+        child.sendline('0.4')
+        child.expect('Padding in bohr')
+        child.sendline('3')
+        child.expect('Review settings')
+        child.send('\x1b')
+        child.expect('Select a workflow')
+        assert 'Electron Count:' not in child.before
+        assert not (tmp_path / 'results').exists()
+        child.sendcontrol('c')
+        child.expect(pexpect.EOF)
+        child.close()
+        assert child.exitstatus == 0
     finally:
         child.close(force=True)

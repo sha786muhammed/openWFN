@@ -1,5 +1,9 @@
 # Molecular orbitals and electron density
 
+Inspect orbital energies and evaluate electron density when your file contains
+the required basis, coefficients and density records. Grid settings affect
+density integrals, so check convergence before reporting a value.
+
 ## Molecular orbitals
 
 An orbital is expanded in atom-centered basis functions:
@@ -8,7 +12,8 @@ $$
 \psi_p(\mathbf r)=\sum_\mu C_{\mu p}\phi_\mu(\mathbf r).
 $$
 
-Frontier analysis selects occupied and unoccupied orbital energies using the electron count and spin channel. HOMO–LUMO gaps are orbital-energy differences, not direct predictions of optical excitation energies.
+Frontier analysis uses the available orbital occupations, electron-count records
+and chosen spin channel to identify occupied and unoccupied orbitals. HOMO–LUMO gaps are orbital-energy differences, not direct predictions of optical excitation energies.
 
 ## Density
 
@@ -22,7 +27,10 @@ For spin-resolved data, alpha and beta matrices can be derived from compatible t
 
 ## Numerical grids
 
-openWFN evaluates density on a Cartesian bounding-box grid. `--spacing` controls point separation and `--padding` extends the box beyond the molecular coordinates, both in bohr. Finer spacing improves quadrature resolution but increases memory and runtime; larger padding captures diffuse tails.
+openWFN evaluates density on a rectangular grid around the molecule.
+`--spacing` sets the distance between points. `--padding` extends the box
+beyond the atoms. Both use bohr. Smaller spacing costs more time and memory;
+larger padding helps include diffuse density tails.
 
 Electron conservation is the principal numerical check:
 

@@ -21,6 +21,7 @@ from .analysis.registry import run_analysis
 from .app import CommandContext, execute
 from .batch import discover_inputs, run_batch
 from .compat import complete_implicit_command, translate_legacy_args
+from .data import OpenWFNData
 from .errors import DataUnavailableError
 from .export import export_molecule_viewer
 from .exporters.structures import write_structure
@@ -644,6 +645,22 @@ def main(argv: list[str] | None = None) -> int:
     if args.file is None and args.command != "chat":
         parser.error("an input file is required unless --version is used")
 
+    if args.command in {"dist", "angle", "dihedral", "geometry"}:
+        from .api import load
+
+        def geometry_operation() -> ResultRecord:
+            calculation = load(Path(args.file), format_hint=args.input_format)
+            command = args.geometry_command if args.command == "geometry" else args.command
+            operations = {
+                "dist": lambda: calculation.geometry_distance(args.i, args.j),
+                "distance": lambda: calculation.geometry_distance(args.i, args.j),
+                "angle": lambda: calculation.geometry_angle(args.i, args.j, args.k),
+                "dihedral": lambda: calculation.geometry_dihedral(args.i, args.j, args.k, args.l),
+            }
+            return operations[command]()
+
+        return execute(geometry_operation, _context(args))
+
     if args.command in {
         "formchk", "info", "dist", "angle", "dihedral", "bonds", "graph", "mo", "xyz", "view"
     } or (args.command == "interactive" and args.format == "json"):
@@ -654,6 +671,9 @@ def main(argv: list[str] | None = None) -> int:
 
     def require_calculation() -> CalculationData:
         return _require_calculation(Path(args.file), format_hint=args.input_format)
+
+    def analysis_input() -> OpenWFNData:
+        return load_input(Path(args.file), format_hint=args.input_format)
 
     if args.command == "analyze":
         from .guided import build_guided_session, build_overview
@@ -691,22 +711,6 @@ def main(argv: list[str] | None = None) -> int:
 
         return execute(summary_operation, _context(args))
 
-    if args.command == "geometry":
-        context = _context(args)
-
-        def geometry_operation() -> ResultRecord:
-            calculation = require_calculation()
-            operations = {
-                "distance": lambda: geometry_distance(calculation.molecule, args.i, args.j),
-                "angle": lambda: geometry_angle(calculation.molecule, args.i, args.j, args.k),
-                "dihedral": lambda: geometry_dihedral(
-                    calculation.molecule, args.i, args.j, args.k, args.l
-                ),
-            }
-            return operations[args.geometry_command]()
-
-        return execute(geometry_operation, context)
-
     if args.command == "population":
         if args.population_method == "hirshfeld":
             settings = HirshfeldSettings(
@@ -724,20 +728,20 @@ def main(argv: list[str] | None = None) -> int:
                 charge_closure_tolerance=args.charge_closure_tolerance,
             )
             return execute(
-                lambda: run_analysis(require_calculation(), "hirshfeld", settings=settings),
+                lambda: run_analysis(analysis_input(), "hirshfeld", settings=settings),
                 _context(args),
             )
         return execute(
-            lambda: run_analysis(require_calculation(), args.population_method),
+            lambda: run_analysis(analysis_input(), args.population_method),
             _context(args),
         )
 
     if args.command == "bondorder":
-        return execute(lambda: run_analysis(require_calculation(), "mayer", threshold=args.threshold), _context(args))
+        return execute(lambda: run_analysis(analysis_input(), "mayer", threshold=args.threshold), _context(args))
 
     if args.command == "excited":
         def excited_operation() -> ResultRecord:
-            calculation = require_calculation()
+            calculation = analysis_input()
             if args.excited_command == "state":
                 return run_analysis(calculation, "excited-state", state=args.state, job=args.job)
             analysis = "transition-dipoles" if args.excited_command == "dipoles" else "excited-states"
@@ -755,7 +759,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "vibrations":
         def vibrations_operation() -> ResultRecord:
-            calculation = require_calculation()
+            calculation = analysis_input()
             if args.vibration_command == "mode":
                 return run_analysis(calculation, "normal-mode", mode=args.mode)
             record = run_analysis(calculation, "vibrations")
@@ -775,7 +779,7 @@ def main(argv: list[str] | None = None) -> int:
 
             if args.vibrational_spectrum_kind == "uvvis":
                 record = run_analysis(
-                    require_calculation(),
+                    analysis_input(),
                     "uvvis-spectrum",
                     job=args.job,
                     fwhm_ev=args.fwhm_ev,
@@ -787,7 +791,7 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 analysis = f"{args.vibrational_spectrum_kind}-spectrum"
                 record = run_analysis(
-                    require_calculation(),
+                    analysis_input(),
                     analysis,
                     fwhm_cm1=args.fwhm_cm1,
                     frequency_min_cm1=args.frequency_min_cm1,
@@ -811,7 +815,7 @@ def main(argv: list[str] | None = None) -> int:
                 from .exporters.spectra import write_spectrum
 
                 parameters = {"group_by": args.group_by, "method": args.method} if args.orbital_command == "pdos" else {}
-                record = run_analysis(require_calculation(), args.orbital_command, **parameters, sigma_ev=args.sigma,
+                record = run_analysis(analysis_input(), args.orbital_command, **parameters, sigma_ev=args.sigma,
                     spin=args.spin, energy_min_ev=args.energy_min,
                     energy_max_ev=args.energy_max, points=args.points)
                 if args.spectrum_output is not None:
@@ -819,7 +823,7 @@ def main(argv: list[str] | None = None) -> int:
                 return record
             return execute(spectrum_operation, _context(args))
         if args.orbital_command == "composition":
-            return execute(lambda: run_analysis(require_calculation(), "orbital-composition",
+            return execute(lambda: run_analysis(analysis_input(), "orbital-composition",
                 mo=args.mo, spin=args.spin, method=args.method), _context(args))
         if args.orbital_command == "cube":
             from .api import load
@@ -834,7 +838,7 @@ def main(argv: list[str] | None = None) -> int:
             "all": "frontier-all",
         }[args.spin]
         return execute(
-            lambda: run_analysis(require_calculation(), analysis),
+            lambda: run_analysis(analysis_input(), analysis),
             _context(args),
         )
 
@@ -842,11 +846,12 @@ def main(argv: list[str] | None = None) -> int:
         context = _context(args)
 
         def density_operation() -> ResultRecord:
-            calculation = require_calculation()
             if args.density_command == "integrate":
-                return density_integration(
-                    calculation, args.kind, args.spacing, args.padding
-                )
+                from .api import load
+
+                return load(Path(args.file), format_hint=args.input_format).density(
+                    args.kind, spacing_bohr=args.spacing, padding_bohr=args.padding)
+            calculation = require_calculation()
             return density_cube_export(
                 calculation,
                 args.kind,
@@ -1013,6 +1018,8 @@ def main(argv: list[str] | None = None) -> int:
                         "partial": partial,
                         "errors": errors,
                         "skipped": skipped,
+                        "requested_workers": manifest.requested_workers,
+                        "effective_workers": manifest.effective_workers,
                         "configuration_fingerprint": manifest.configuration_fingerprint,
                         "unsupported": len(manifest.unsupported_inputs),
                         "unsupported_details": [
@@ -1025,6 +1032,7 @@ def main(argv: list[str] | None = None) -> int:
                         "csv_index": str(args.output_dir / "batch-summary.csv"),
                     },
                     status=manifest.status,
+                    warnings=manifest.resource_warnings,
                     error=(
                         ResultError(
                             "BatchError",
@@ -1065,7 +1073,7 @@ def main(argv: list[str] | None = None) -> int:
 
         if args.command == "export":
             def export_operation() -> ResultRecord:
-                calculation = require_calculation()
+                calculation = analysis_input()
                 result = run_analysis(calculation, args.analysis)
                 output_format = args.export_output.suffix.lstrip(".").lower()
                 write_result_table(

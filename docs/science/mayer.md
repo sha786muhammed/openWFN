@@ -1,12 +1,18 @@
 # Mayer bond orders
 
+Use the density and overlap matrices to calculate Mayer bond orders.
+The values depend on the wavefunction and basis. They are not automatic
+bond labels or formal oxidation states.
+
 **Validation status: Validated for the documented everyday-QC reference scope.**
 
 For total AO density `P`, spin density `Q = P_alpha - P_beta`, and overlap `S`, openWFN uses the spin-corrected Mayer definition
 
 `B_AB = sum_(mu in A,nu in B) [(PS)_mu,nu (PS)_nu,mu + (QS)_mu,nu (QS)_nu,mu]`.
 
-For a restricted closed shell the spin term vanishes. For unrestricted calculations the same expression is evaluated from the source total and spin densities. The convention is documented explicitly because Mayer indices depend on the density and AO representation used.
+For a restricted closed shell, the spin term is zero. Unrestricted calculations
+use the stored total and spin densities. Keep the convention and basis with
+the result, because different representations can give different indices.
 
 ## Requirements and safeguards
 
@@ -17,14 +23,14 @@ Post-HF inputs retain the density-source warning when the available matrix is th
 The full matrix is symmetric, dimensionless, and reported with a zero diagonal. Public atom indices are **one-based**. The compact pair table includes entries satisfying `abs(B_AB) >= threshold`; filtering never changes the full matrix or row sums. Negative values are retained. `bonded_valence` is the unfiltered row sum and should be treated as a diagnostic, not as a formal oxidation state or universally integral bond count.
 
 ```bash
-openwfn molecule.fchk bondorder mayer --threshold 0.1
-openwfn molecule.fchk batch --analyses mayer --output-dir results
-openwfn molecule.fchk report build report.html --analyses mayer
+openwfn molecule.molden bondorder mayer --threshold 0.1
+openwfn molecule.molden batch --analyses mayer --output-dir results
+openwfn molecule.molden report build report.html --analyses mayer
 ```
 
 ```python
 from openwfn import load
-record = load("molecule.fchk").mayer(threshold=0.1)
+record = load("molecule.molden").mayer(threshold=0.1)
 print(record.data["bond_order_matrix"])
 ```
 

@@ -34,6 +34,7 @@ from .reporting import build_report_record
 from .results import ResultRecord
 from .services import density_cube_export
 from .workbench.export import export_workbench_record
+from .workspace_display import print_workspace
 from .xyz import write_xyz
 
 OPENWFN_ASCII = [
@@ -49,6 +50,11 @@ PRODUCT_NAME = "openWFN"
 PRODUCT_EXPANSION = "Open WaveFunction Network"
 PRODUCT_TAGLINE = "Scientific geometry, orbitals, and density analysis for normalized molecular wavefunctions."
 AUTHOR_CREDIT = "Muhammed Shah Shaji"
+
+_CSV_RESULT_KINDS = {
+    'frontier_orbitals', 'mulliken_population', 'lowdin_population', 'hirshfeld_population',
+    'vibrational_modes', 'vibrational_spectrum', 'excited_states', 'uvvis_spectrum',
+}
 
 
 FEATURE_ALIASES = {
@@ -351,15 +357,18 @@ def run_interactive(lines, filename, *, format_hint=None):
     def show_result(result, arguments=()) -> None:
         nonlocal last_result, last_arguments
         last_result, last_arguments = result, arguments
-        print(render(result, CommandContext(input_path=Path(filename), format="plain")), end="")
+        print(render(result, CommandContext(input_path=Path(filename), format="plain", compact=True)), end="")
 
     def page(title, description, operation):
         nonlocal last_result, last_arguments
         while True:
             last_result, last_arguments = None, ()
-            print_feature_page(title, description)
+            print_workspace(Console(no_color=not utils.color_enabled()), session,
+                            selected=action, title=title, description=description)
             try:
-                operation()
+                navigation = operation()
+                if navigation in {'back', 'home', 'exit'}:
+                    return navigation
             except EOFError:
                 return 'exit'
             except (CancelledAction, KeyboardInterrupt):
@@ -374,7 +383,7 @@ def run_interactive(lines, filename, *, format_hint=None):
                     actions.extend(('save-json', 'details'))
                     if last_arguments:
                         actions.append('command')
-                    if last_result.kind in {'frontier_orbitals', 'mulliken_population', 'lowdin_population', 'hirshfeld_population'}:
+                    if last_result.kind in _CSV_RESULT_KINDS:
                         actions.append('save-csv')
                 print('Result actions: ' + ', '.join(actions))
                 if sys.stdin.isatty() and sys.stdout.isatty():
@@ -385,7 +394,7 @@ def run_interactive(lines, filename, *, format_hint=None):
                         options.extend((Workflow('Save JSON', 'save-json'), Workflow('Details and provenance', 'details')))
                         if last_arguments:
                             options.append(Workflow('Show reproducible command', 'command'))
-                        if last_result.kind in {'frontier_orbitals', 'mulliken_population', 'lowdin_population', 'hirshfeld_population'}:
+                        if last_result.kind in _CSV_RESULT_KINDS:
                             options.append(Workflow('Save CSV', 'save-csv'))
                     try:
                         choice = terminal_selection('Result actions', options)
@@ -403,12 +412,14 @@ def run_interactive(lines, filename, *, format_hint=None):
                     print('No structured result to save or inspect.')
                     continue
                 if choice == 'details':
+                    print(render(last_result, CommandContext(input_path=Path(filename),
+                                                            format='plain', verbose=True)))
                     print(json.dumps(last_result.provenance, indent=2, ensure_ascii=False))
                 elif choice == 'command':
                     print(reproducible_command(session, arguments=last_arguments) if last_arguments else
                           'No direct-command equivalent recorded for this action.')
                 elif choice in {'save-json', 'save-csv'}:
-                    if choice == 'save-csv' and last_result.kind not in {'frontier_orbitals', 'mulliken_population', 'lowdin_population', 'hirshfeld_population'}:
+                    if choice == 'save-csv' and last_result.kind not in _CSV_RESULT_KINDS:
                         print('CSV export is not available for this result; JSON preserves the complete record.')
                         continue
                     suffix = '.json' if choice == 'save-json' else '.csv'
@@ -541,6 +552,19 @@ def run_interactive(lines, filename, *, format_hint=None):
                     print("Edit spacing/padding or enter back to cancel.")
                     continue
                 print(f"Grid: {shape}, {prod(shape):,} points; spacing {spacing:g} bohr, padding {padding:g} bohr.")
+                if sys.stdin.isatty() and sys.stdout.isatty():
+                    print_workspace(Console(no_color=not utils.color_enabled()), session,
+                        selected='density', title=f'Density / {operation.capitalize()}',
+                        description='Check grid convergence before using the result.',
+                        settings=(('Density kind', kind), ('Grid spacing', f'{spacing:g} bohr'),
+                                  ('Padding', f'{padding:g} bohr'), ('Grid points', f'{prod(shape):,}')))
+                    decision = terminal_selection('Review settings', (
+                        Workflow('Run with these settings', 'run'), Workflow('Edit settings', 'edit'),
+                        Workflow('Back', 'back')))
+                    if decision == 'edit':
+                        continue
+                    if decision != 'run':
+                        raise CancelledAction
                 settings = ('--kind', kind, '--spacing', str(spacing), '--padding', str(padding))
                 if operation == 'integrate':
                     show_result(client.density(kind, spacing_bohr=spacing, padding_bohr=padding),
@@ -645,13 +669,34 @@ def run_interactive(lines, filename, *, format_hint=None):
                 method = prompt_choice(f"Population method [{'/'.join(methods)}]: ", methods, methods[0])
                 show_result(client.analyze(method), ('population', method))
             nav = page("Population analysis", "Charges depend on the selected partitioning convention.", show_population)
+        elif action == 'methods':
+            def show_method():
+                from .guided_methods import method_groups, run_guided_method
+                groups = method_groups(session)
+                if sys.stdin.isatty() and sys.stdout.isatty():
+                    family = terminal_selection('Choose a calculation family',
+                        [Workflow(title, str(index)) for index, (title, _) in enumerate(groups)], cancel='home')
+                    if family == 'home':
+                        return 'home'
+                    title, choices = groups[int(family)]
+                    selected = terminal_selection(title + ' — choose a method', choices, cancel='back')
+                    if selected == 'back':
+                        return 'back'
+                else:
+                    methods = tuple(item.command for _, choices in groups for item in choices)
+                    selected = prompt_choice('Calculation method [' + '/'.join(methods) + ']: ', methods, 'summary')
+                result = run_guided_method(session, selected, ask=input)
+                if result is None:
+                    return 'back'
+                show_result(result)
+            nav = page('Calculation methods', 'Choose a method, review its settings and inspect the result.', show_method)
         elif action == "excited":
             nav = page("Excited states", "Source-reported excited states.",
                         lambda: show_result(client.analyze("excited-states"), ('excited', 'states')))
         elif action == "file":
             try:
-                new_name = input("Input file (blank to cancel): ").strip()
-                if not new_name:
+                new_name = input("Input file (blank/back to cancel): ").strip()
+                if not new_name or new_name.casefold() in {'back', 'home'}:
                     continue
                 new_session = build_guided_session(Path(new_name))
             except (EOFError, KeyboardInterrupt):
@@ -709,8 +754,8 @@ def run_interactive(lines, filename, *, format_hint=None):
                        lambda: show_density('integrate', 'total'))
         elif action == "density":
             nav = page(
-                "Density Validation",
-                "Integrate total electron density and report conservation error.",
+                "Density and electrostatic potential",
+                "Choose a density check, cube export or electrostatic potential at a point.",
                 show_density,
             )
         elif action == "report":
@@ -727,5 +772,5 @@ def run_interactive(lines, filename, *, format_hint=None):
         if nav == "exit":
             print("\nExiting openWFN.")
             break
-        if nav == 'back' and action in {'orbitals', 'population', 'density', 'vibrations', 'geometry', 'bonds'}:
+        if nav == 'back' and action in {'orbitals', 'population', 'density', 'vibrations', 'geometry', 'bonds', 'methods'}:
             pending_workflow = action

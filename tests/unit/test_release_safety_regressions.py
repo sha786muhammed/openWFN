@@ -156,15 +156,16 @@ def test_workbench_visible_warning_and_ghost_hooks(water, tmp_path):
     export_workbench(water, path)
     text = path.read_text()
     surface = re.search(r"^function renderSurface\(\).*?$", text, re.MULTILINE).group()
+    clear_fields = re.search(r"^function clearFieldShapes\(\).*?$", text, re.MULTILINE).group()
     ghosts = re.search(r"^function markGhostCenters\(\).*?$", text, re.MULTILINE).group()
     script = """
 const nodes={};const document={getElementById:id=>nodes[id]||(nodes[id]={})};
-const labels=[];const viewer={render(){},setStyle(){},addLabel(text){labels.push(text)},removeAllSurfaces(){},addIsosurface(){}};
+const labels=[];let fieldShapes=[];const viewer={render(){},setStyle(){},addLabel(text){labels.push(text)},removeShape(){},addIsosurface(){return {}}};
 const $3Dmol={VolumeData:class{}};
 const atoms=[{is_ghost:true,coordinates:[0,0,0]},{is_ghost:false,coordinates:[0,0,1]}];
 const payload={fields:[{id:'density',cube:'',units:'electron/bohr^3',grid:{spacing_bohr:.3},validation_status:'Experimental',status:'partial',warnings:['Conservation failed']} ]};
 const fieldSelect={value:'density'},isovalue={value:'.02'};
-""" + surface + "\n" + ghosts + """
+""" + clear_fields + "\n" + surface + "\n" + ghosts + """
 renderSurface();markGhostCenters();
 if(!nodes['surface-metadata'].textContent.includes('Conservation failed'))throw Error('warning hidden');
 if(!nodes['surface-metadata'].textContent.includes('partial'))throw Error('status hidden');

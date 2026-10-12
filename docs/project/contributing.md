@@ -1,8 +1,9 @@
 # Contributing
 
-The repository [contribution guide](https://github.com/sha786muhammed/openWFN/blob/main/CONTRIBUTING.md)
-is the authoritative workflow for environment setup, tests, scientific evidence,
-fixture rights, documentation, and pull requests.
+Start with the repository [contribution guide](https://github.com/sha786muhammed/openWFN/blob/main/CONTRIBUTING.md).
+It explains environment setup, tests, documentation and pull requests.
+For scientific changes, include reference comparisons and use example data
+you have permission to share.
 
 Before starting, choose the matching GitHub issue form:
 

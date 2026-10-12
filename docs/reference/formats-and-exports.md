@@ -1,5 +1,8 @@
 # Formats, units, and exports
 
+Find the formats openWFN can read and write, and the units used in results.
+Run `openwfn FILE capabilities` to see what your particular file supports.
+
 ## Registered input suffixes
 
 The parser registry accepts these filename suffixes. Files without a suffix may
@@ -88,13 +91,24 @@ warn that the charges cannot survive the conversion. The direct Python
 retain effective nuclear charges.
 
 ```bash
-openwfn molecule.fchk convert --to sdf --output molecule.sdf
-openwfn molecule.fchk xyz molecule.xyz
+openwfn molecule.molden convert --to sdf --output molecule.sdf
+openwfn molecule.molden xyz molecule.xyz
 ```
 
 ## Scientific outputs
 
-Table and record output can be rendered as terminal tables, plain text, JSON, or CSV. JSON uses the versioned result envelope, including analysis identity, provenance, validation, warnings, timing, and structured failure fields. `export` writes frontier or population tables based on the destination extension. `plot frontier` writes a publication-oriented figure. `density cube` writes Gaussian cube volumetric data.
+Read results as terminal text, JSON or CSV. JSON keeps the complete result,
+including units, source information, warnings and diagnostics. `export` saves
+frontier-orbital or population tables. `plot frontier` makes a figure from the
+result, and `density cube` saves a volumetric field in cube format.
+
+Keep JSON beside CSV curves when you need complete units, settings, warnings and
+source information. CSV is a tabular view, not the complete result record.
+Frontier and general population table exports include result status, warnings
+and provenance columns. A failed analysis can be saved as an error record in
+JSON, but not as an empty scientific CSV table. Table and spectrum exports are
+published only after writing finishes; a failed write leaves an existing output
+unchanged. HTML reports embed complete result records, including failed analyses.
 
 Batch runs write detailed JSON result records plus `batch-summary.csv`, a compact
 index suitable for spreadsheets and dataframe ingestion.
@@ -117,8 +131,11 @@ They do not load the rendering library from a remote server.
 |---|---|
 | Molecular coordinates and distances | ångström |
 | Angles and dihedrals | degree |
-| Orbital and total energies | atomic units unless labeled otherwise |
+| Wavefunction orbital and total energies | hartree; gaps also reported in eV |
+| Source-output frontier energies and excitation energies | eV |
 | Density-grid spacing and padding | bohr |
-| Electrostatic potential | atomic units |
+| CLI/high-level API ESP point coordinates | ångström |
+| Electrostatic potential | hartree/e |
+| Density-derivative, ELF/LOL/NCI and QTAIM coordinates | bohr |
 
 Always follow the label in machine-readable output and the installed version's help. See [scientific methods](../science/geometry-topology.md) for definitions.

@@ -1,44 +1,38 @@
 # Start here
 
-openWFN post-processes supported quantum-chemistry files. Use the guided CLI,
-direct commands, Python, local MCP or a configured terminal assistant. The
-interfaces share the scientific engine. Reports and the offline workbench are
-optional exports, not requirements for an analysis.
+Open a supported quantum-chemistry file, check which analyses are available,
+and choose what to calculate.
+
+Choose the guided terminal if you are new, or use direct commands and Python
+for scripts. MCP and scientific chat use the same analysis engine.
 
 ## What openWFN is
 
-openWFN is a post-processing toolkit. It reads molecular and wavefunction records,
-constructs a typed representation of the calculation, and exposes geometry,
-topology, orbital, density, population, electrostatic-potential, export, and report
-operations when the required records are present.
+openWFN analyses data from an existing calculation. It can measure geometry,
+inspect orbitals, calculate charges and density, and read supported spectra.
+Available properties depend on the data in your file.
 
-It does not run electronic-structure calculations or replace the program that
-produced your input.
-For proprietary binary `.chk` files, openWFN calls Gaussian's external `formchk`
-utility when that program is installed. It reads formatted `.fchk` files directly.
+It does not run quantum-chemistry simulations or replace the program that
+produced your input. See [file support](../reference/formats-and-exports.md)
+for supported formats and conversion requirements.
 
 ## Choose your starting point
 
-- New to the software: complete [Your first analysis](first-analysis.md).
-- New to wavefunction analysis: keep [Core terminology](terminology.md) open while learning.
-- Working toward a specific goal: use the [Learning paths](learning-paths.md).
-- Looking up exact syntax: open the [CLI reference](../cli.md) or [Python API](../python-api.md).
-- Assessing research suitability: read [Validation](../validation.md) and [Limitations](../limitations.md).
+- First time here? Follow [Your first analysis](first-analysis.md).
+- Need a definition? Read [Core terminology](terminology.md).
+- Have a specific task? Choose a [Learning path](learning-paths.md).
+- Need exact syntax? Use the [CLI reference](../reference/cli.md) or [Python API](../reference/python-api.md).
+- Preparing research results? Check [Validation](../science/validation-status.md) and [Limitations](../limitations.md).
 
-## A single scientific core
+## Keep your results
 
-An input file is parsed once into a calculation model. Analysis services consume
-that model and return typed results. CLI presentation, Python code, and reports
-format those results without changing their scientific meaning. The optional
-workbench visualizes selected results but is not a numerical reference.
-
-This boundary matters for reproducibility: a distance calculated through Python and
-the same distance requested from the CLI use the same coordinates, unit conversion,
-indexing rules, and geometry service.
+Results include values, units and important warnings. Save JSON for scripts
+and a complete record of the input and settings. Reports and the offline
+workbench are optional ways to review or share results.
 
 ## What to install
 
-openWFN requires Python 3.10 or newer. Start with the [Installation guide](../installation.md),
-then run the first analysis below.
+Use Python 3.10–3.13. Follow the [Installation guide](../installation.md),
+then open your first file.
 
-[Continue to your first analysis](first-analysis.md)
+[Open your first file](first-analysis.md)

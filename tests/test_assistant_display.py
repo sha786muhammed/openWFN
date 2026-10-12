@@ -18,7 +18,7 @@ def test_homo_reply_selects_requested_value_preserving_warning():
     text = display().render_chat_answer(AssistantAnswer('full record', record),
                                          question='What is my HOMO?', source_label='ethanol.molden')
     assert '-0.331537655' in text and 'Hartree' in text and '13' in text
-    assert 'partial' in text and 'Experimental' in text and 'Example warning' in text
+    assert 'partial' in text and 'validation is incomplete' in text and 'Example warning' in text
     assert 'ethanol.molden' in text and '/record' in text
 
 

@@ -124,3 +124,15 @@ def test_gaussian_missing_vectors_are_unavailable_not_empty() -> None:
 def test_gaussian_malformed_displacement_atom_count_is_rejected() -> None:
     with pytest.raises(ValueError, match="displacement"):
         parse_gaussian_output(FIXTURES / "malformed_vectors.log")
+
+
+def test_adjacent_gaussian_mode_headers_are_not_displacement_rows():
+    from openwfn.parsers.gaussian.output import _parse_frequency_block
+    lines = [' Frequencies -- 100.0 200.0 300.0',
+             ' Atom AN X Y Z X Y Z X Y Z',
+             ' 1 6 .1 0 0 0 .2 0 0 0 .3',
+             ' 4 5 6', ' A1 B1 A2', ' Frequencies -- 400.0 500.0 600.0']
+    block = _parse_frequency_block(lines, 0)
+    assert block['frequencies'] == (100., 200., 300.)
+    assert len(block['displacements']) == 1
+    assert block['displacements'][0][2][2] == (0., 0., .3)

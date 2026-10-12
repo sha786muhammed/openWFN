@@ -2,6 +2,7 @@
 
 import json
 from dataclasses import asdict, dataclass
+from math import prod
 from typing import Any
 
 import numpy as np
@@ -9,14 +10,13 @@ import numpy as np
 from .. import __version__
 from ..analysis.density import integrate_density
 from ..analysis.electrostatics import point_charge_esp
-from ..analysis.grids import iter_point_chunks, molecular_grid_points, scalar_grid
-from ..analysis.orbitals import evaluate_orbital
+from ..analysis.grids import iter_molecular_grid_chunks, molecular_grid_layout, scalar_grid
 from ..analysis.registry import run_analysis_safe
 from ..constants import BOHR_TO_ANGSTROM, Z_TO_SYMBOL
 from ..exporters.cube import format_cube
 from ..model import CalculationData
 from ..scientific import expected_electron_count, is_ghost_atom
-from ..services import density_grid, orbital_frontier, population_analysis
+from ..services import density_grid, orbital_frontier, orbital_grid, population_analysis
 
 
 def _result_property(result) -> dict[str, Any]:
@@ -141,39 +141,35 @@ class WorkbenchPayload:
                     "warnings": density_warnings,
                     "grid": {"spacing_bohr": spacing, "padding_bohr": padding},
                 })
+                del density
             homo_number = properties["frontier"].get("homo_number")
             if data.alpha_orbitals is not None and homo_number is not None:
-                points, origin, shape = molecular_grid_points(
-                    data.molecule, spacing_bohr=spacing, padding_bohr=padding
-                )
-                values = np.concatenate([
-                    evaluate_orbital(data.molecule, data.basis, data.alpha_orbitals, homo_number - 1, chunk)
-                    for chunk in iter_point_chunks(points, min(65536, max(1, 8_000_000 // data.basis.n_functions)))
-                ])
-                orbital_grid = scalar_grid(
-                    data.molecule, values, origin, shape, spacing, "wavefunction"
-                )
+                orbital_field = orbital_grid(data, homo_number, "alpha", spacing, padding)
                 fields.append({
                     "id": "orbital-homo", "name": "HOMO", "workspace": "orbitals",
-                    "cube": format_cube(orbital_grid, data.molecule), "isovalue": 0.03,
+                    "cube": format_cube(orbital_field, data.molecule, comment="units: wavefunction"), "isovalue": 0.03,
                     "units": "wavefunction", "validation_status": "Stable", "signed": True,
                     "status": properties["frontier"]["status"],
                     "warnings": properties["frontier"]["warnings"],
                     "grid": {"spacing_bohr": spacing, "padding_bohr": padding},
                 })
+                del orbital_field
             if data.total_density is not None and "atomic_charges" in properties["mulliken"]:
                 population = properties["mulliken"]
-                points, origin, shape = molecular_grid_points(
+                origin, shape = molecular_grid_layout(
                     data.molecule, spacing_bohr=spacing, padding_bohr=padding
                 )
                 centers = np.asarray([atom.coordinates for atom in data.molecule.atoms]) / BOHR_TO_ANGSTROM
-                values = np.concatenate([
-                    point_charge_esp(
+                values = np.empty(prod(shape))
+                offset = 0
+                for chunk in iter_molecular_grid_chunks(data.molecule, spacing_bohr=spacing,
+                        padding_bohr=padding, chunk_size=min(65536, max(1, 1_000_000 // len(centers)))):
+                    block = point_charge_esp(
                         centers, np.asarray(population["atomic_charges"]), chunk,
                         singularity_value=0.0, singularity_tolerance=1e-8,
                     )
-                    for chunk in iter_point_chunks(points, min(65536, max(1, 1_000_000 // len(centers))))
-                ])
+                    values[offset:offset + len(block)] = block
+                    offset += len(block)
                 esp_grid = scalar_grid(data.molecule, values, origin, shape, spacing, "hartree/e")
                 fields.append({
                     "id": "esp-mulliken", "name": "Mulliken ESP", "workspace": "esp",
@@ -182,6 +178,7 @@ class WorkbenchPayload:
                     "status": population["status"], "warnings": population["warnings"],
                     "grid": {"spacing_bohr": spacing, "padding_bohr": padding},
                 })
+                del esp_grid, values
         return cls(
             schema_version="1.0",
             openwfn_version=__version__,

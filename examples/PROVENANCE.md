@@ -2,8 +2,9 @@
 
 This file is the authoritative provenance record for the example corpus. The
 files are project-owned fixtures distributed under the repository's MIT
-License. They are small test and demonstration inputs, not independent
-reference calculations.
+License. The legacy examples are small demonstration inputs, not independent
+reference calculations. The research-workflows example has a separate
+reproduction procedure and independent post-processing comparisons below.
 
 The formatted checkpoint files contain a Gaussian route and calculation
 metadata, but they do not identify the Gaussian release that wrote them. Git
@@ -67,6 +68,16 @@ repository FCHK and has the same checksum.
 | `examples/methane/methane.gjf` | `58a38b49ddd85f3d5672df3ce56c22c10a86ecb4df0bbcfeb9f01a059b807549` |
 | `examples/methane/methane.fchk` | `1c37731946a48c3b64abd2a6c6594322f15fa1a4d5081144ef3a53bc7337b343` |
 | `examples/methane/methane.xyz` | `940612e80e2395b795d1a94b3e12d2284aa2760d000cb414fcd73667bd701f5f` |
+
+## Biphenyl research workflow
+
+See [the biphenyl procedure](research-workflows/biphenyl/README.md) and
+`research-workflows/biphenyl/reference.json` for the constructed geometry,
+RHF/STO-3G calculation, dependency versions and independently compared values.
+The geometry is project-authored and not optimized. The generated data and
+procedure are distributed under MIT. This is a post-processing reference, not
+evidence of chemical accuracy. The exact input checksum is recorded in the
+reference report and checked by the example tests.
 
 ## Maintaining this record
 

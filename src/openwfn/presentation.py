@@ -3,6 +3,7 @@
 import csv
 import io
 import json
+from pathlib import Path
 from typing import Any
 
 from .app import CommandContext
@@ -107,17 +108,35 @@ def _csv_uvvis(result: ResultRecord) -> str:
     return stream.getvalue()
 
 
+def source_status_lines(result: ResultRecord, *, input_path: Path | None = None) -> list[str]:
+    """Source caveats shared by full and compact human views."""
+    lines = []
+    source_format = result.provenance.get("source_format")
+    if source_format == "fchk" or (
+        input_path is not None
+        and input_path.suffix.lower() in {".fchk", ".fch", ".chk"}
+    ):
+        lines.append("Source Calculation Status: Unknown from FCHK (convergence is not established)")
+    return lines
+
+
 def _status_lines(result: ResultRecord, context: CommandContext) -> list[str]:
+    if context.compact and not context.verbose:
+        lines = []
+        if result.status != 'success':
+            lines.append('Result Status: failed' if result.status == 'failed' else f'Result: {result.status}')
+        if result.validation_status == 'Experimental':
+            lines.append('Independent numerical validation is incomplete for this analysis.')
+        lines.extend(source_status_lines(result, input_path=context.input_path))
+        if result.error is not None:
+            lines.append(f'Error: {result.error.message}')
+        lines.extend(f'Warning: {warning}' for warning in result.warnings)
+        return lines
     lines = [
         f"Analysis Validation Status: {result.validation_status}",
         f"Result Status: {result.status}",
+        *source_status_lines(result, input_path=context.input_path),
     ]
-    source_format = result.provenance.get("source_format")
-    if source_format == "fchk" or (
-        context.input_path is not None
-        and context.input_path.suffix.lower() in {".fchk", ".fch", ".chk"}
-    ):
-        lines.append("Source Calculation Status: Unknown from FCHK (convergence is not established)")
     if result.error is not None:
         lines.append(f"Error: {result.error.message}")
     lines.extend(f"Warning: {warning}" for warning in result.warnings)
@@ -226,6 +245,16 @@ def render(result: ResultRecord, context: CommandContext) -> str:
         return json.dumps(result.as_dict(), indent=2, sort_keys=True) + "\n"
 
     if context.format == "csv":
+        if result.status == 'failed':
+            stream = io.StringIO()
+            writer = csv.writer(stream, lineterminator='\n')
+            writer.writerow(('analysis_name', 'status', 'error_category', 'error_message',
+                             'validation_status', 'warnings'))
+            writer.writerow((result.analysis_name, result.status,
+                             result.error.category if result.error else '',
+                             result.error.message if result.error else '',
+                             result.validation_status, json.dumps(result.warnings, ensure_ascii=False)))
+            return stream.getvalue()
         if result.kind == "vibrational_modes":
             return _csv_vibrational_modes(result)
         if result.kind == "vibrational_spectrum":
@@ -242,6 +271,17 @@ def render(result: ResultRecord, context: CommandContext) -> str:
         writer.writerow([*headings, "validation_status"])
         writer.writerow([*result.data.values(), result.validation_status])
         return stream.getvalue()
+
+    if result.status == 'failed':
+        title = (result.analysis_name or result.kind).replace('-', ' ').replace('_', ' ').title()
+        if (context.compact and not context.verbose and result.error is not None
+                and result.error.category == 'DataUnavailableError'):
+            lines = [title, '', 'Not available from this file.', result.error.message]
+            lines.extend(source_status_lines(result, input_path=context.input_path))
+            lines.extend(f'Warning: {warning}' for warning in result.warnings)
+        else:
+            lines = [title, '', *_status_lines(result, context)]
+        return '\n'.join(lines) + '\n'
 
     if result.kind == 'overview':
         sections = ['Input overview']
@@ -268,6 +308,114 @@ def render(result: ResultRecord, context: CommandContext) -> str:
         return _render_excited_states(result, context)
     if result.kind == "uvvis_spectrum" and not context.verbose:
         return _render_uvvis(result, context)
+
+    if context.compact and not context.verbose and result.status != 'failed':
+        if result.kind == 'qtaim_topology':
+            points = result.data.get('critical_points', [])
+            lines = ['QTAIM critical points', 'Coordinates: bohr', '',
+                     'Type  x  y  z  Density (electron/bohr^3)  Laplacian (electron/bohr^5)']
+            for point in points[:8]:
+                values = [str(point.get('label', 'Unknown')),
+                          *(f'{value:.8g}' for value in point['position_bohr']),
+                          f'{point["rho"]:.8g}', f'{point["laplacian"]:.8g}']
+                lines.append('  '.join(values))
+            if not points:
+                lines.append('No critical point converged in this search.')
+            if len(points) > 8:
+                lines.append(f'{len(points) - 8} more points; Details or JSON contains all values.')
+            lines.append('This bounded search is not an exhaustive topology or basin integration.')
+            lines.append('Details contains Hessians, path outcomes and search settings.')
+            lines.extend(_status_lines(result, context))
+            return '\n'.join(lines) + '\n'
+        if result.kind == 'natural_transition_orbitals':
+            lines = ['Natural transition orbitals',
+                     f'Job: {result.data.get("job", "Not available")} · State: {result.data.get("state", "Not available")}',
+                     f'Channel: {result.data.get("spin_block", "Not available")}', '',
+                     'Pair  Weight (%)  Cumulative (%)']
+            pairs = result.data.get('pairs', [])
+            for index, pair in enumerate(pairs[:8], 1):
+                lines.append(f'{pair.get("pair", index)}  {100 * pair["weight"]:.4f}  {100 * pair["cumulative_weight"]:.4f}')
+            if len(pairs) > 8:
+                lines.append(f'{len(pairs) - 8} more pairs; Details or JSON contains all values.')
+            lines.append('Weights describe the transition, not its excitation energy.')
+            lines.append('Details contains conventions and normalization diagnostics.')
+            lines.extend(_status_lines(result, context))
+            return '\n'.join(lines) + '\n'
+        field_columns = {
+            'density_derivatives': (('rho', 'Density'), ('laplacian', 'Laplacian')),
+            'kinetic_energy_density': (('tau', 'Kinetic energy density'),),
+            'electron_localization_function': (('values', 'ELF'),),
+            'localized_orbital_locator': (('values', 'LOL'),),
+            'nci_rdg': (('rdg', 'RDG'), ('signed_density', 'sign(lambda2) density')),
+        }
+        if result.kind in field_columns and result.data.get('points_bohr'):
+            columns = field_columns[result.kind]
+            points = result.data['points_bohr']
+            mask = result.data.get('valid_mask', result.data.get('field_valid_mask',
+                                   result.data.get('finite_mask', [True] * len(points))))
+            lines = [_display_name(result.kind), 'Coordinates: bohr']
+            if result.data.get('channel'):
+                lines.append(f'Channel: {result.data["channel"]}')
+            headings = ['Point', 'x', 'y', 'z'] + [
+                f'{label} ({result.units.get(key, "unit not recorded")})' for key, label in columns]
+            lines.extend(('', '  '.join(headings)))
+            for index, point in enumerate(points[:8]):
+                values = [str(index + 1), *(f'{coordinate:.8g}' for coordinate in point)]
+                for key, _ in columns:
+                    array = result.data.get(key, [])
+                    usable = index < len(mask) and mask[index] and index < len(array)
+                    values.append(f'{array[index]:.8g}' if usable else 'Not defined')
+                lines.append('  '.join(values))
+            if len(points) > 8:
+                lines.append(f'{len(points) - 8} more points; Details or JSON contains all values.')
+            lines.append('Details contains full fields, masks and diagnostics.')
+            lines.extend(_status_lines(result, context))
+            return '\n'.join(lines) + '\n'
+        if result.kind in {'mulliken_population', 'lowdin_population', 'hirshfeld_population'}:
+            populations = result.data.get('electron_populations', [])
+            charges = result.data.get('atomic_charges', [])
+            if populations and len(populations) == len(charges):
+                lines = [_display_name(result.kind), '',
+                         'Atom  Electron population (electron)  Charge (e)']
+                for index, (population, charge) in enumerate(zip(populations, charges, strict=True), 1):
+                    lines.append(f'{index:>4}  {population:>30.8f}  {charge:>12.8f}')
+                lines.append('')
+                for key in ('electron_count', 'total_charge', 'conservation_error'):
+                    if key in result.data:
+                        lines.append(f'{_display_name(key)}: {_plain_value(key, result.data[key], result.units)}')
+                lines.extend(_status_lines(result, context))
+                return '\n'.join(lines) + '\n'
+        if result.kind == 'frontier_orbitals':
+            lines = ['Frontier Orbitals', '']
+            channels = [(result.data.get('spin', 'orbital'), result.data)] if 'homo_hartree' in result.data else [
+                (name, result.data.get(name)) for name in ('alpha', 'beta')]
+            for name, channel in channels:
+                if not isinstance(channel, dict):
+                    continue
+                lines.append(str(channel.get('spin', name)).capitalize())
+                for orbital in ('homo', 'lumo'):
+                    value = channel.get(orbital + '_hartree')
+                    lines.append(f'{orbital.title()}: orbital {channel.get(orbital + "_number", "unavailable")} · '
+                                 + ('Unavailable' if value is None else f'{value} hartree'))
+                gap = channel.get('gap_ev')
+                lines.append('HOMO–LUMO gap: ' + ('Unavailable' if gap is None else f'{gap} eV'))
+                lines.append('')
+            lines.append('An orbital energy gap is not an optical excitation energy.')
+            lines.extend(_status_lines(result, context))
+            return '\n'.join(lines) + '\n'
+        if result.kind == 'density_integration':
+            keys = ('density_kind', 'electron_count', 'expected_electrons', 'absolute_error', 'spacing', 'padding')
+            lines = ['Density Integration', '']
+            for key in keys:
+                if key in result.data:
+                    lines.append(f'{_display_name(key)}: {_plain_value(key, result.data[key], result.units)}')
+            relative = result.data.get('relative_error')
+            if relative is not None:
+                lines.append(f'Integration error: {relative * 100:.4f}%')
+            elif 'error_metric' in result.data:
+                lines.append(f'Error metric: {result.data["error_metric"]}')
+            lines.extend(_status_lines(result, context))
+            return '\n'.join(lines) + '\n'
 
     lines = [_display_name(result.kind)]
     table_keys = set()

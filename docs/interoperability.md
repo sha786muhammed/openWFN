@@ -1,10 +1,9 @@
 # Interoperability
 
-Supported inputs are normalized into file-specific components. The prepared
-0.12.0 release includes the pinned `qc-iodata==1.0.1` reader in the base install;
-published 0.11.0 uses the `interop` extra. Native parsers remain preferred for
-formats with a native path. Binary `.chk` still requires external Gaussian
-`formchk`. See [installation](installation.md) for the current release state.
+Use supported wavefunction files, grids, structures and calculation outputs
+with the same analysis engine. openWFN uses built-in readers or the included
+`qc-iodata==1.0.1` reader. Binary Gaussian `.chk` conversion needs the separately
+installed `formchk` utility.
 
 ## Inspect before analyzing
 
@@ -22,11 +21,10 @@ data and analyses are available. A program output containing geometry and
 energy may have no complete wavefunction; openWFN then returns a structured
 unsupported result rather than manufacturing orbital data.
 
-The high-level Python `load(path)` API returns an `OpenWFNCalculation` whose
-`.data` is an `OpenWFNData` container. Its structure, complete isolated
-calculation, periodic cell, grids, integrals, and metadata are separate
-optional components. The [Python API reference](reference/python-api.md)
-explains migration from direct `.data` field access in older scripts.
+In Python, `load(path)` returns an `OpenWFNCalculation`. Its `.data` contains
+the records found in the file. Structure, wavefunction, periodic-cell, grid and
+integral data remain separate: having one does not imply the others are present.
+See the [Python API reference](reference/python-api.md) for field access.
 
 ## Evidence and boundaries
 

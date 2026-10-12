@@ -1,8 +1,8 @@
 # QTAIM critical-point search
 
-This interface is Experimental. It searches the total electron density for
-stationary points and can trace bounded bond paths from the returned bond
-critical points. It is not a complete QTAIM basin-integration implementation.
+Find critical points in the total electron density and optionally trace bond
+paths. The bounded search can miss points or paths, so it remains Experimental.
+It does not calculate QTAIM basin properties.
 
 The input needs an isolated molecular calculation, a supported basis and total
 density. Check capabilities first:

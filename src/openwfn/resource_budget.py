@@ -189,8 +189,17 @@ def run_resource_command(command: list[str], workspace: Path, *, timeout_seconds
                     terminate()
                     break
                 time.sleep(poll_seconds)
+        except (PermissionError, psutil.AccessDenied):
+            status, reason = 'measurement_unavailable', 'Process inspection was denied; command terminated without a resource guarantee.'
+            terminate()
+            process.wait()
         except BaseException:
-            remember_members()
+            # Cleanup must not retry a blocked process scan and leave the owned
+            # command alive while masking the original exception.
+            try:
+                remember_members()
+            except (PermissionError, psutil.AccessDenied):
+                pass
             terminate()
             process.wait()
             raise

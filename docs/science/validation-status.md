@@ -1,6 +1,8 @@
 # Validation status and evidence
 
-openWFN separates implementation availability from scientific confidence.
+Check which reference cases and tolerances support each method. A method
+can run successfully without being validated for every molecule, basis
+or file variant.
 
 - **Stable** — supported interface with tests for expected behavior.
 - **Validated** — compared against defined numerical invariants or reference expectations for the named validation set.
@@ -77,10 +79,10 @@ frontier and population metrics.
 
 Those comparisons validate only the named metrics and fixtures.
 
-## Native Hirshfeld validation — 0.11 development
+## Native Hirshfeld validation
 
 Native ordinary Hirshfeld populations and charges are independently validated
-for the named **H/C/N/O all-electron** scope on the 0.11 development branch.
+for the documented **H/C/N/O all-electron** reference scope.
 The method uses a versioned neutral spherical pro-atom library,
 `openwfn-hirshfeld-proatoms-v1`. Ordinary unrestricted cases use the total
 molecular density; this is not a spin-Hirshfeld definition.

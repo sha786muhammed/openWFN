@@ -116,11 +116,31 @@ def run_chat(session: AssistantSession | None, backend: LocalModel | None, *, qu
     def progress():
         active = controller.connection.active
         if active and not context.quiet:
-            print(f'Waiting for {safe_terminal_text(active.model)} (timeout {active.timeout:g}s). '
-                  'Ctrl+C cancels; no result has been saved.', file=context.error_stream, flush=True)
+            message = f'Waiting for {safe_terminal_text(active.model)}…'
+            if context.verbose:
+                message += f' Timeout {active.timeout:g}s; Ctrl+C cancels.'
+            print(message, file=context.error_stream, flush=True)
+
+    streamed = False
+
+    def emit_text(text):
+        nonlocal streamed
+        if not streamed:
+            print('\nModel explanation · No calculation was run\n', file=context.output_stream, flush=True)
+            streamed = True
+        print(safe_terminal_text(text), end='', file=context.output_stream, flush=True)
 
     def ask(text):
-        return controller.ask(text, confirm=confirmation, on_model_request=progress)
+        nonlocal streamed
+        streamed = False
+        stream_allowed = (question is None or session is None) and context.format not in {'json', 'csv'} \
+            and context.output_path is None and not context.quiet
+        answer = controller.ask(text, confirm=confirmation, on_model_request=progress,
+                                on_model_text=emit_text if stream_allowed else None)
+        if streamed:
+            print('\n\nModel-generated explanation; not independently verified.\n',
+                  file=context.output_stream, flush=True)
+        return answer
 
     if question is not None:
         from .app import execute
@@ -129,7 +149,9 @@ def run_chat(session: AssistantSession | None, backend: LocalModel | None, *, qu
                 return execute(lambda: (_ for _ in ()).throw(ValueError(
                     'General conversation is prose, not a scientific ResultRecord. Use plain output without an output file.')), context)
             try:
-                print(safe_terminal_text(ask(question).text), file=context.output_stream)
+                answer = ask(question)
+                if not streamed:
+                    print(safe_terminal_text(answer.text), file=context.output_stream)
                 return 0 if controller.connection.active else 2
             except (ValueError, RuntimeError, OSError) as exc:
                 print(safe_terminal_text(str(exc)), file=context.error_stream)
@@ -143,10 +165,10 @@ def run_chat(session: AssistantSession | None, backend: LocalModel | None, *, qu
 
     print_welcome(Console(no_color=True if not context.color else None),
                   mode='Scientific Assistant', plain=context.format == 'plain')
-    print(f'Model: {safe_terminal_text(backend.model)} · {"Remote" if backend.remote else "Local endpoint"}'
+    print(f'Model: {safe_terminal_text(backend.model)} · {"Remote" if backend.remote else "Local model connected"}'
           if backend else 'No model connected · /connect for scientific conversation')
-    print(f'File: {safe_terminal_text(str(session.source)) if session else "No file open"}')
-    print('Ask about your file or quantum chemistry. /help shows commands.')
+    print(f'File: {safe_terminal_text(session.source.name) if session else "No file open"}')
+    print('Ask about your file or quantum chemistry. /help shows commands.\n')
     if backend and backend.remote:
         print('Remote access approved: questions and capability metadata go to that endpoint. '
               'Raw files and scientific result arrays stay local.')
@@ -164,8 +186,8 @@ def run_chat(session: AssistantSession | None, backend: LocalModel | None, *, qu
                 print('File questions use openWFN results. General explanations use your model and '
                       'are not independently verified. /record preserves complete evidence. '
                       'Ctrl+C cancels; Ctrl+D exits. Connections and history are session-only.')
-            elif command in {'/connect', '/models'}:
-                _connect(controller, same_endpoint=command == '/models')
+            elif command in {'/connect', '/model', '/models'}:
+                _connect(controller, same_endpoint=command in {'/model', '/models'})
             elif command == '/disconnect':
                 controller.disconnect()
                 print('Disconnected. File and scientific records retained; runner was not stopped.')
@@ -176,8 +198,15 @@ def run_chat(session: AssistantSession | None, backend: LocalModel | None, *, qu
                 controller.close_file()
                 print('File closed. General conversation remains available; earlier records retain their source.')
             elif command == '/inspect':
-                print(render(build_overview(controller.file_session.refresh()), CommandContext(format='plain'))
+                print(render(build_overview(controller.file_session.refresh()), CommandContext(format='plain', compact=True))
                       if controller.file_session else 'No file open. Use /open PATH.')
+            elif command == '/details':
+                record = controller.last_record
+                if record is None:
+                    print('No scientific result yet. Ask about your file first.')
+                else:
+                    print(render(record, CommandContext(format='plain', verbose=True)))
+                    print('Provenance:\n' + json.dumps(record.provenance, indent=2, ensure_ascii=False))
             elif command == '/record':
                 print(json.dumps(controller.last_record.as_dict(), indent=2) if controller.last_record else 'No scientific result yet.')
             elif command == '/save':
@@ -202,11 +231,16 @@ def run_chat(session: AssistantSession | None, backend: LocalModel | None, *, qu
                 print('Unknown command. Use /help.')
             else:
                 answer = ask(text)
-                print(render_chat_answer(answer, question=text, source_label=(
-                    controller.file_session.source.name if controller.file_session else None)))
+                print()
+                if not streamed:
+                    print(render_chat_answer(answer, question=text, source_label=(
+                        controller.file_session.source.name if controller.file_session else None)))
+                print()
         except EOFError:
             return 0
         except KeyboardInterrupt:
+            if controller.file_session:
+                controller.file_session.pending_request = None
             print('\nCancelled. No partial result was saved. /quit exits.')
         except (ValueError, RuntimeError, OSError) as exc:
             print('Cannot complete this request: ' + safe_terminal_text(str(exc)))

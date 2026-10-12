@@ -103,6 +103,31 @@ def iter_point_chunks(points: np.ndarray, chunk_size: int) -> Iterator[np.ndarra
         yield points[start : start + chunk_size]
 
 
+def iter_molecular_grid_chunks(
+    molecule: Molecule,
+    *,
+    spacing_bohr: float,
+    padding_bohr: float,
+    chunk_size: int,
+    max_grid_points: int | None = None,
+) -> Iterator[np.ndarray]:
+    """Yield the regular grid in C order without allocating all coordinates."""
+    if isinstance(chunk_size, bool) or not isinstance(chunk_size, int) or chunk_size <= 0:
+        raise ValueError("chunk size must be a positive integer")
+    lower, shape = molecular_grid_layout(
+        molecule, spacing_bohr=spacing_bohr, padding_bohr=padding_bohr,
+        max_grid_points=max_grid_points,
+    )
+    count = prod(shape)
+    for start in range(0, count, chunk_size):
+        indices = np.arange(start, min(start + chunk_size, count), dtype=np.int64)
+        points = np.empty((len(indices), 3), dtype=float)
+        points[:, 0] = lower[0] + (indices // (shape[1] * shape[2])) * spacing_bohr
+        points[:, 1] = lower[1] + ((indices // shape[2]) % shape[1]) * spacing_bohr
+        points[:, 2] = lower[2] + (indices % shape[2]) * spacing_bohr
+        yield points
+
+
 def scalar_grid(
     molecule: Molecule,
     values: np.ndarray,

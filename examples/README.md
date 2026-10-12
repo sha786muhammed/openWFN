@@ -1,7 +1,8 @@
 # openWFN Examples
 
-The `examples/` directory contains small reference molecules you can use to test
-the CLI quickly without preparing your own Gaussian files first.
+The `examples/` directory contains molecular inputs and runnable analysis
+procedures. Start with small molecules, then use the larger reference example.
+Available analyses depend on the records in each input.
 
 If you installed `openwfn` from PyPI, clone the repository as well if you want
 to use these example files directly:
@@ -12,6 +13,9 @@ cd openWFN
 ```
 
 Available example sets:
+
+- [everyday-qc/](everyday-qc/README.md): Molden examples including ions, open-shell systems, diffuse bases and multiple fragments
+- [research-workflows/](research-workflows/README.md): complete property coverage procedure and a 22-atom biphenyl reference example
 
 - `water/` for a compact triatomic system that is ideal for distance and angle checks
 - `ammonia/` for trigonal-pyramidal geometry and fragment/bond validation

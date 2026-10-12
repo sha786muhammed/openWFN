@@ -1,8 +1,9 @@
 # Source-reported output properties
 
-This Experimental interface reads properties printed in QC text output.
-The prepared 0.12.0 release includes cclib in the base install; published
-0.11.0 uses the `outputs` extra. See [installation](installation.md).
+Read values printed in a supported Gaussian, ORCA or Q-Chem output file.
+The included cclib reader extracts the available fields; it does not run a new
+calculation. Extraction remains Experimental because coverage depends on the
+program, version and job type.
 
 ```bash
 python -m openwfn.cli --format json calculation.out properties
@@ -36,13 +37,14 @@ CSV results are not abbreviated.
 calculation's convergence. `Result Status` describes this extraction result;
 `Source Job Termination` separately reports normal, not normal, or unknown.
 
-This pathway uses cclib content detection; omit `--input-format`. It is separate
-from `load()` and does not add wavefunction capabilities to that object's model.
+The reader detects the source program from the file contents; omit
+`--input-format`. It is separate from `load()` and does not add missing
+wavefunction data to a loaded calculation.
 It is not yet registered as a batch analysis.
 Mulliken/Löwdin charges here are values reported by the source program, whereas
 the existing population commands recompute values from a complete wavefunction.
 Density, populations and ESP are not reconstructed from insufficient output.
-The preview is Experimental. Selected ORCA 5.0.3, Q-Chem, and Gaussian outputs
+Extraction remains Experimental. Selected ORCA 5.0.3, Q-Chem, and Gaussian outputs
 were compared with source values. A Gaussian CASSCF example correctly retained
 an unavailable SCF energy. These checks do not establish coverage for every
 program version or job type. Input contents and complete parser metadata are not embedded in

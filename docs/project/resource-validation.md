@@ -1,8 +1,9 @@
 # Runtime, RAM and output validation
 
-The resource implementation was verified before the 0.10.0rc1 version bump.
-It preserves model/result schema versions and scientific validation labels. Resource success does not imply density-grid
-convergence or validate an unimplemented scientific method.
+Use these checks to measure runtime, observed RAM use and output size.
+They do not establish density convergence or scientific accuracy.
+The initial implementation was checked before 0.10.0rc1 without changing
+model schemas, result schemas or scientific validation labels.
 
 ## Scope and controls
 
@@ -21,6 +22,11 @@ The supervisor is not exposed by MCP and is not an adversarial sandbox.
 | Grids | Existing two-million-point limit checked before coordinate allocation |
 | AO temporaries | Conservative 128 MiB point-array estimate accounts for Cartesian/pure expansion and long primitive contractions |
 
+If operating-system permissions prevent process inspection, the supervisor
+terminates the owned command and reports `measurement_unavailable`. It does
+not claim that memory monitoring succeeded. Use an environment that permits
+process inspection for the resource benchmark.
+
 RSS and disk budgets are sampled monitors, not OS hard quotas. Short-lived
 peaks, unobserved detached children and between-poll output growth can escape
 sampling. Other processes can consume free disk after preflight. Workspace
@@ -37,8 +43,8 @@ then run:
 python scripts/benchmark_resources.py --output resource-report.json
 ```
 
-Nine workflows run for each of the eleven existing real Molden wavefunctions:
-summary, Mayer, DOS, PDOS, density cube, HOMO cube, workbench, electronic point ESP,
+Ten workflows run for each of the eleven existing real Molden wavefunctions:
+summary, Mayer, Hirshfeld, DOS, PDOS, density cube, HOMO cube, workbench, electronic point ESP,
 and HTML report. Numerical-library threads are fixed to one. Each command has
 120 s, 1024 MiB observed-RSS and 128 MiB workspace-output budgets by default.
 CLI options control those budgets. Density/MO cubes deliberately use 0.5 bohr
@@ -52,6 +58,52 @@ GitHub Actions runs the safety regressions on Linux, macOS and Windows and
 uploads the Linux eleven-molecule resource report as an artifact.
 
 ## Preliminary local evidence
+
+### Density integration memory comparison
+
+Density integration evaluates regular-grid coordinates and density in bounded
+blocks. It retains the running integral, not a complete point grid or scalar
+field. The grid safety limit, numerical settings and conservation checks remain
+in effect. Density and molecular-orbital cube files also evaluate and serialize
+bounded blocks without retaining a complete field.
+NCI cube exports use the same streamed writer, retaining their original field
+diagnostics. APIs returning a grid and
+workbench previews still need stored field values, but generate coordinates in
+blocks. NCI grid generation uses bounded coordinate blocks as well. These paths
+are not all constant-memory: returned arrays and HTML field strings still
+occupy memory.
+
+Cube publication remains atomic. A failed evaluation, interrupted stream or
+write failure removes the temporary file and preserves an existing target.
+Point ordering, six-value cube rows, source coefficients and field settings
+are unchanged.
+
+Parallel batches use a conservative scheduling estimate: reserve one quarter
+of measured available RAM and estimate at least 512 MiB per worker, increasing
+that estimate for larger input files. Common Linux cgroup memory ceilings are
+respected. If memory cannot be measured, use one worker; installing the existing
+`resources` extra enables the optional psutil measurement. The manifest and CLI
+record requested/effective worker counts and any reduction warning. This is not
+a hard memory quota or proof that an arbitrary input fits in RAM. The default
+remains one worker, and resumed numerical records are unchanged.
+
+Run the comparison on the repository's water, ethanol and biphenyl inputs:
+
+```bash
+python scripts/benchmark_density_integration.py --output density-memory.json
+```
+
+Each input runs in fresh processes with one numerical-library thread, once
+through the materialized-grid reference path and once through streaming
+integration. The report preserves input checksums, settings, electron counts,
+statuses, runtime and peak process RSS. Only the JSON report is saved; no cubes
+or HTML are generated. Choose a new filename for each run.
+
+Peak RSS includes input loading and native libraries. The dependency-free
+benchmark reports memory on macOS and Linux; on Windows it reports memory as
+unavailable. Same-engine agreement checks the optimization, not independent
+scientific accuracy. The default grid is a performance comparison, not a
+convergence recommendation.
 
 Before the execution-service outage, the completed measurement checkpoint had
 99/99 commands within their resource budgets: largest observed RSS about

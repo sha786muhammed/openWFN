@@ -1,7 +1,9 @@
 # Python API reference
 
-This reference describes the current Python interfaces. Output extraction
-remains Experimental; a supported input format does not guarantee every analysis.
+Load a file, check its capabilities, and run an available analysis. This page
+lists the public Python functions, their parameters and the returned fields.
+Source-output extraction remains Experimental; reading a file does not make
+every analysis available.
 
 The stable import surface is declared by `openwfn.__all__`. Import from `openwfn` rather than internal modules when possible.
 
@@ -58,8 +60,7 @@ The stable import surface is declared by `openwfn.__all__`. Import from `openwfn
 
 ### `read_output(path) -> ResultRecord`
 
-This Experimental function uses `cclib==1.8.1`, included in the prepared base
-installation. Published 0.11.0 uses the `outputs` extra.
+This Experimental function uses `cclib==1.8.1`, included in the normal installation.
 It reads QC text output directly, independently of `load()` and the
 wavefunction-analysis registry:
 
@@ -78,7 +79,7 @@ SCF energy is not substituted for correlated or thermal energy, and normal
 termination does not establish optimization convergence. Unconfirmed
 termination, missing SCF energy, or diagnostic warnings return a partial result.
 
-The function raises `DataUnavailableError` when the optional reader is absent
+The function raises `DataUnavailableError` when the reader is unavailable
 or the output is unrecognized, `ValueError` for malformed/nonfinite selected
 properties, and filesystem exceptions for unreadable paths. Provenance records
 the input hash, parser/software versions and source path. See
@@ -117,16 +118,18 @@ fields before electronic analyses.
 | `geometry_angle(i, j, k)` | Angle in degrees; one-based atom numbers |
 | `geometry_dihedral(i, j, k, l)` | Signed torsion in degrees; one-based atom numbers |
 | `orbitals(spin)` | Frontier orbitals for `"alpha"`, `"beta"`, or spin-complete `"all"` |
-| `population(method)` | Populations for `"mulliken"` or `"lowdin"` |
+| `population(method)` | Populations for `"mulliken"`, `"lowdin"` or `"hirshfeld"` |
 | `density(kind, spacing_bohr=0.15, padding_bohr=6.0)` | Grid integration for `"total"`, `"alpha"`, `"beta"`, or `"spin"` |
 | `nci_cube(output, field="signed_density", ...)` | Experimental total-density NCI cube for `rho`, `lambda2`, `signed_density`, or bounded `rdg` |
 
-All these methods return `ResultRecord`. Specialized methods are convenience
+Analysis methods return `ResultRecord`. Specialized methods are convenience
 interfaces; use `analyze(name)` when analysis identity, registry version, and
 elapsed time are important to an automated workflow. Every high-level result
 includes available source provenance and parser warnings. Unsupported option
-values raise `ValueError`; requests requiring records absent from the input
-raise `DataUnavailableError`.
+values can raise `ValueError`. Registered analyses and methods such as
+`density()` and `esp()` return failed `ResultRecord` objects for missing data;
+check `.status` and `.error` before reading scientific values. Low-level
+evaluators and some geometry preconditions can raise `DataUnavailableError`.
 `analyze_geometry()` also reports known physical nuclei, ghosts, and unknown
 effective-charge centers. A structure-only `analyze("summary")` returns a
 partial result; missing electronic values remain `None`.
@@ -145,9 +148,9 @@ State and job selectors are one-based. Gaussian, ORCA, and Q-Chem source adapter
 
 ### Model schema
 
-`MODEL_SCHEMA_VERSION` is `"2.0"`. `Molecule.boundary_conditions` defaults
-to an immutable isolated-system record. Periodic construction is rejected in
-v0.8 and is reserved for a later periodic implementation.
+`MODEL_SCHEMA_VERSION` is `"2.0"`. `Molecule.boundary_conditions` accepts
+isolated systems only. Periodic structures can be loaded as separate data
+components, but do not enable periodic wavefunction analysis.
 
 `Provenance` records the source path, SHA-256 checksum, parser name, source
 format, parser version, warnings, and named transformations. These fields make
@@ -202,8 +205,8 @@ RDG validity is intentionally independent from Hessian validity. A point with a 
 ```python
 points = [[0.0, 0.0, 1.0], [0.0, 0.0, 2.0]]
 nci = calculation.analyze("nci", points_bohr=points)
-calc.nci_cube("signed.cube", field="signed_density")
-calc.nci_cube("rdg.cube", field="rdg", rdg_cap=2.0)
+calculation.nci_cube("signed.cube", field="signed_density")
+calculation.nci_cube("rdg.cube", field="rdg", rdg_cap=2.0)
 ```
 
 RDG cube export requires an explicit positive finite `rdg_cap`; only the declared low-density tail may be substituted by that cap, while other invalid/nonfinite fields abort export. See [NCI and reduced density gradient](../science/nci-rdg.md).
@@ -214,7 +217,7 @@ RDG cube export requires an explicit positive finite `rdg_cap`; only the declare
 |---|---|
 | `beta-frontier` | Beta-spin HOMO, LUMO, and gap |
 | `density-derivatives` | Experimental analytic density value, gradient, Hessian, and Laplacian at explicit bohr points |
-| `dos` | Experimental Gaussian orbital-energy DOS |
+| `dos` | Gaussian orbital-energy DOS; Validated for the documented reference scope |
 | `elf` | Experimental Becke-Edgecombe electron-localization function at explicit bohr points |
 | `excited-state` | Experimental inspection of one one-based source excited state |
 | `excited-states` | Experimental source excited-state job/state table |
@@ -225,13 +228,13 @@ RDG cube export requires an explicit positive finite `rdg_cap`; only the declare
 | `kinetic-energy-density` | Experimental positive-definite half-gradient-square kinetic-energy density at explicit bohr points |
 | `lol` | Experimental Schmider-Becke localized-orbital locator at explicit bohr points |
 | `lowdin` | Löwdin populations and charges |
-| `mayer` | Experimental spin-corrected Mayer bond orders |
+| `mayer` | Spin-corrected Mayer bond orders; Validated for the documented reference scope |
 | `mulliken` | Mulliken populations and charges |
 | `nci` | Experimental total-density RDG, ordered density-Hessian eigenvalues, lambda2, and sign(lambda2)*rho at explicit bohr points |
 | `normal-mode` | Experimental source normal-mode metadata and displacement vectors |
 | `nto` | Experimental Natural Transition Orbitals from complete explicitly supported occupied-to-virtual transition matrices |
-| `orbital-composition` | Experimental default HOMO/alpha/Lowdin AO projections |
-| `pdos` | Experimental atom-resolved Lowdin PDOS by default |
+| `orbital-composition` | Default HOMO/alpha/Löwdin AO projections; Validated for the documented reference scope |
+| `pdos` | Atom-resolved Löwdin PDOS by default; Validated for the documented reference scope |
 | `qtaim` | Experimental bounded QTAIM critical-point topology and optional bond-path diagnostics; search completeness is never implied |
 | `raman-spectrum` | Experimental source Raman activities plus Gaussian-broadened activity curve |
 | `summary` | Version 2: complete molecular summary or partial structure-only/periodic summary |
@@ -255,7 +258,8 @@ construction remains supported.
 
 `run_batch(...)` accepts the existing `inputs`, `operation`, `workers`, and `output_dir` arguments plus optional named analyses, resume/discovery controls, `format_hint`, `format_hints={Path(...): "format_id"}`, and `frontier_spin="alpha"|"beta"|"all"`. The spin selector applies when `frontier` is requested: alpha preserves the historical analysis, beta maps it to `beta-frontier`, and all maps it to the spin-complete `frontier-all` analysis.
 
-Batch records preserve usable `partial` analyses and their warnings/data. A record becomes `error` only when every requested analysis failed.
+Batch records keep usable `partial` results and their warnings. An input
+record is `error` if parsing fails or every requested analysis fails.
 `BatchManifest.status` is `success`, `partial`, or `failed`; unsupported paths
 have reasons and readable checksums in `unsupported_details`. The manifest
 also reports attempted count and whether fail-fast stopped early. Resume
@@ -274,11 +278,15 @@ These low-level functions are public for specialized workflows, but `load` is th
 
 ## Geometry and topology
 
-- `distance(a, b)` — Euclidean Cartesian distance.
-- `angle(a, b, c)` — angle centered at `b`.
-- `dihedral(a, b, c, d)` — signed torsion.
-- `detect_bonds(atomic_numbers, coordinates)` — covalent-radius heuristic.
-- `build_graph(...)` and `MolecularGraph` — connectivity and fragments.
+- `distance(i, j, coordinates)` — Euclidean distance between atoms `i` and `j`.
+- `angle(i, j, k, coordinates)` — angle centered at atom `j`, in degrees.
+- `dihedral(i, j, k, l, coordinates)` — signed torsion, in degrees.
+- `detect_bonds(atomic_numbers, coordinates, scale=1.2)` — covalent-radius heuristic.
+- `build_graph(num_atoms, bonds)` and `MolecularGraph(num_atoms)` — connectivity and fragments.
+
+Pass coordinates as a sequence of `(x, y, z)` values. The low-level distance
+function returns the same length unit as those coordinates; it does not
+convert units. The high-level calculation methods use ångströms.
 
 These public geometry and topology functions use one-based atom numbers,
 matching the CLI and `OpenWFNCalculation` geometry methods. Internal model
@@ -313,9 +321,12 @@ Outputs can disclose the underlying molecular data. Apply the same access contro
 
 The public import surface is versioned, but scientific behavior can be clarified between releases. Pin an exact openWFN version for reproducible work and review the [release history](../project/release-history.md).
 
-Development branch: `orbital_cube(output, mo="homo", spin="alpha", spacing_bohr=.15, padding_bohr=6.)` exports signed amplitudes. `orbital_composition(mo="homo", spin="alpha", method="lowdin")` returns AO fractions. See [MO cubes](../science/mo-cubes.md) and [composition](../science/orbital-composition.md).
+`orbital_cube(output, mo="homo", spin="alpha", spacing_bohr=.15, padding_bohr=6.)`
+saves signed amplitudes. `orbital_composition(mo="homo", spin="alpha", method="lowdin")`
+returns AO contributions. See [MO cubes](../science/mo-cubes.md) and
+[composition](../science/orbital-composition.md).
 
-Development registry calls accept keyword parameters: `calculation.analyze(name, **parameters)`.
+Pass analysis options with `calculation.analyze(name, **parameters)`.
 Unknown parameters are rejected, including structure-only summaries. The convenience
 methods `mayer(threshold=.05)`, `dos(sigma_ev=.3, spin="all", energy_min_ev=None,
 energy_max_ev=None, points=None)` and `pdos(group_by="atom", method="lowdin", ...)`

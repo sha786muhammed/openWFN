@@ -1,8 +1,8 @@
 # Releasing openWFN
 
-This guide targets the current stable release line. Release publication always
-requires explicit repository-owner approval; preparing a release branch or PR
-does not itself publish, tag, or upload anything.
+Use this guide to prepare and verify a release. Publication needs the
+repository owner's explicit approval. A branch or pull request does not
+create a tag or upload a package.
 
 The release version comes from `[project].version` in `pyproject.toml`. Current
 release notes must exist at `docs/releases/<version>.md`, and the dated changelog
@@ -51,6 +51,10 @@ and citation metadata must agree before publication.
 
 6. Build and validate both distributions:
 
+   Keep only the intended release artifacts in `dist/`. Move older build
+   artifacts aside before building so inspection and installation cannot
+   select a different version.
+
    ```bash
    python -m build
    python -m twine check dist/*
@@ -83,8 +87,9 @@ and citation metadata must agree before publication.
    water example, and the complete `example_data/everyday-qc/` corpus.
 
    ```bash
-   python -m zipfile -l dist/openwfn-*.whl
-   python -m tarfile -l dist/openwfn-*.tar.gz
+   python -m zipfile -l "$wheel_file"
+   sdist_file="$(find dist -name '*.tar.gz' -print -quit)"
+   python -m tarfile -l "$sdist_file"
    ```
 
 9. Commit the verified release state. Generated `dist/`, `build/`, local smoke

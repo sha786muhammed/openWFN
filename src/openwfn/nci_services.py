@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from math import isfinite
+from math import isfinite, prod
 from pathlib import Path
 from typing import Literal
 
@@ -10,10 +10,10 @@ import numpy as np
 
 from .analysis.basis import bounded_ao_chunk_size
 from .analysis.density import density_matrix_for_kind, evaluate_density
-from .analysis.grids import iter_point_chunks, molecular_grid_points, scalar_grid
+from .analysis.grids import iter_molecular_grid_chunks, molecular_grid_layout, scalar_grid
 from .analysis.nci import NCISettings, evaluate_nci
 from .errors import DataUnavailableError
-from .exporters.cube import write_cube
+from .exporters.cube import write_cube_chunks
 from .model import CalculationData, VolumetricGrid
 from .results import ResultRecord
 
@@ -144,19 +144,20 @@ def nci_scalar_grid(
         raise DataUnavailableError("NCI grid export requires a total AO density matrix.")
 
     active_settings = settings or NCISettings()
-    # molecular_grid_points checks MAX_GRID_POINTS before allocating the grid.
-    points, origin, shape = molecular_grid_points(
+    # Validate the point limit before allocating scalar values.
+    origin, shape = molecular_grid_layout(
         data.molecule,
         spacing_bohr=spacing_bohr,
         padding_bohr=padding_bohr,
     )
     requested_chunk = _DEFAULT_CHUNK_SIZE if chunk_size is None else chunk_size
     bounded_chunk = bounded_ao_chunk_size(data.basis, requested_chunk)
-    values = np.empty(len(points), dtype=float)
+    values = np.empty(prod(shape), dtype=float)
     clipped_finite_count = 0
     density_tail_substitution_count = 0
     offset = 0
-    for point_chunk in iter_point_chunks(points, bounded_chunk):
+    for point_chunk in iter_molecular_grid_chunks(data.molecule, spacing_bohr=spacing_bohr,
+            padding_bohr=padding_bohr, chunk_size=bounded_chunk):
         chunk_values, clipped_count, tail_count = _field_chunk(
             data,
             field,
@@ -181,9 +182,16 @@ def nci_scalar_grid(
         spacing_bohr,
         _NCI_FIELD_UNITS[field],
     )
-    diagnostics: dict[str, object] = {
+    diagnostics = _grid_diagnostics(data, field, prod(shape), spacing_bohr, padding_bohr,
+        bounded_chunk, active_settings, rdg_cap, clipped_finite_count, density_tail_substitution_count)
+    return grid, diagnostics
+
+
+def _grid_diagnostics(data, field, count, spacing_bohr, padding_bohr,
+        bounded_chunk, active_settings, rdg_cap, clipped_finite_count, density_tail_substitution_count):
+    return {
         "field": field,
-        "grid_points": len(values),
+        "grid_points": count,
         "spacing_bohr": spacing_bohr,
         "padding_bohr": padding_bohr,
         "chunk_size": bounded_chunk,
@@ -197,7 +205,6 @@ def nci_scalar_grid(
         "hessian_eigenvalue_order": "ascending algebraic",
         "signed_density_formula": "sign(lambda2)*rho",
     }
-    return grid, diagnostics
 
 
 def nci_cube_export(
@@ -215,25 +222,35 @@ def nci_cube_export(
     """Write a finite, bounded NCI scalar field as an atomic Gaussian cube."""
 
     output = Path(output_path)
-    grid, diagnostics = nci_scalar_grid(
-        data,
-        field,
-        spacing_bohr,
-        padding_bohr,
-        settings=settings,
-        rdg_cap=rdg_cap,
-        chunk_size=chunk_size,
-    )
-    # write_cube publishes atomically only after serialization succeeds.
-    write_cube(
-        grid,
-        data.molecule,
-        output,
+    _validate_export_inputs(field, rdg_cap=rdg_cap, chunk_size=chunk_size)
+    if data.basis is None:
+        raise DataUnavailableError("NCI grid export requires Gaussian basis-set data.")
+    if data.total_density is None:
+        raise DataUnavailableError("NCI grid export requires a total AO density matrix.")
+    origin, shape = molecular_grid_layout(data.molecule, spacing_bohr=spacing_bohr, padding_bohr=padding_bohr)
+    active_settings = settings or NCISettings()
+    bounded_chunk = bounded_ao_chunk_size(data.basis, _DEFAULT_CHUNK_SIZE if chunk_size is None else chunk_size)
+    clipped_count = tail_count = 0
+
+    def values():
+        nonlocal clipped_count, tail_count
+        for points in iter_molecular_grid_chunks(data.molecule, spacing_bohr=spacing_bohr,
+                padding_bohr=padding_bohr, chunk_size=bounded_chunk):
+            block, clipped, tails = _field_chunk(data, field, points, settings=active_settings, rdg_cap=rdg_cap)
+            clipped_count += clipped
+            tail_count += tails
+            yield block
+
+    write_cube_chunks(
+        data.molecule, output, origin_bohr=tuple(origin), shape=shape,
+        spacing_bohr=spacing_bohr, value_unit=_NCI_FIELD_UNITS[field], chunks=values(),
         overwrite=overwrite,
         comment=(
             f"openWFN Experimental NCI {field}; convention={_NCI_CONVENTION_VERSION}"
         ),
     )
+    diagnostics = _grid_diagnostics(data, field, prod(shape), spacing_bohr, padding_bohr,
+        bounded_chunk, active_settings, rdg_cap, clipped_count, tail_count)
     return ResultRecord(
         kind="nci_cube",
         data={

@@ -3,7 +3,8 @@
 import re
 
 from .assistant import AssistantAnswer
-from .presentation import CommandContext, render
+from .assistant_help import missing_spectrum_guidance
+from .presentation import CommandContext, render, source_status_lines
 
 
 def safe_terminal_text(text: str) -> str:
@@ -41,10 +42,16 @@ def render_chat_answer(answer: AssistantAnswer, *, question: str, source_label: 
         if data.get('reference_kind') == 'restricted_closed_shell':
             lines.append('Restricted closed-shell calculation.')
     if not lines:
-        lines.append(render(record, CommandContext(format='plain')).strip())
+        lines.append(render(record, CommandContext(format='plain', compact=True)).strip())
+        if record.status == 'failed' and missing_spectrum_guidance(record.analysis_name):
+            lines.append(missing_spectrum_guidance(record.analysis_name))
     else:
-        lines.append(f'Result: {record.status} · Analysis status: {record.validation_status}')
+        if record.status != 'success':
+            lines.append(f'Result: {record.status}')
+        if record.validation_status == 'Experimental':
+            lines.append('Independent numerical validation is incomplete for this analysis.')
+        lines.extend(source_status_lines(record))
         lines.extend('Warning: ' + warning for warning in record.warnings)
     source = source_label or record.provenance.get('source_path', 'source unavailable')
-    lines.append(f'Source: {source}\n/record for the complete result, units and provenance.')
+    lines.append(f'Source: {source}\n/details for diagnostics · /record for complete evidence · /save to export.')
     return safe_terminal_text('\n\n'.join(lines))

@@ -2,9 +2,10 @@
 
 import csv
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
+from ..guided_exports import OutputDestination, export_atomically
 from ..results import ResultRecord
 
 
@@ -152,19 +153,22 @@ def _write_transition_dipoles_csv(result: ResultRecord, request: ExportRequest) 
 
 
 def write_result_table(result: ResultRecord, request: ExportRequest) -> Path:
+    request.ensure_writable()
+    export_atomically(OutputDestination(request.path, request.overwrite),
+        lambda stage: _write_result_table(result, replace(request, path=stage)))
+    return request.path
+
+
+def _write_result_table(result: ResultRecord, request: ExportRequest) -> Path:
     normalized = request.format.lower().lstrip(".")
     if normalized not in {"json", "csv"}:
         raise ValueError("Result tables support JSON and CSV formats")
+    if normalized == "csv" and result.status == "failed":
+        raise ValueError("Cannot export a failed analysis as a scientific table; save JSON for the error record.")
     request.ensure_writable()
     if normalized == "json":
-        payload = {
-            "data": result.data,
-            "kind": result.kind,
-            "units": result.units,
-            "validation_status": result.validation_status,
-        }
         request.path.write_text(
-            json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            json.dumps(result.as_dict(), indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8"
         )
         return request.path
     if result.kind == "hirshfeld_population":
@@ -183,7 +187,7 @@ def write_result_table(result: ResultRecord, request: ExportRequest) -> Path:
                 f"{key} [{result.units[key]}]" if key in result.units else key
                 for key in result.data
             ]
-            + ["validation_status"]
+            + ["validation_status", "result_status", "warnings", "provenance"]
         )
         writer.writerow(
             [
@@ -192,6 +196,7 @@ def write_result_table(result: ResultRecord, request: ExportRequest) -> Path:
                 else value
                 for value in result.data.values()
             ]
-            + [result.validation_status]
+            + [result.validation_status, result.status, json.dumps(result.warnings),
+               json.dumps(result.provenance, sort_keys=True)]
         )
     return request.path

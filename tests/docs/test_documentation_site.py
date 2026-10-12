@@ -103,6 +103,17 @@ def test_mkdocs_navigation_references_existing_pages() -> None:
         assert (ROOT / "docs" / relative).is_file(), relative
 
 
+@pytest.mark.docs
+def test_home_workspace_preview_renders_html_without_escaped_layout():
+    import markdown
+
+    source = (ROOT / 'docs/index.md').read_text(encoding='utf-8')
+    rendered = markdown.markdown(source, extensions=['md_in_html', 'tables', 'fenced_code'])
+    assert '&lt;div class="ow-terminal-brand"' not in rendered
+    assert '&lt;pre&gt;' not in rendered
+    assert '<pre><code>openwfn molecule.molden open' in rendered
+
+
 def test_stable_interop_table_matches_pinned_inventory_and_validation_manifest() -> None:
     import json
 
@@ -121,7 +132,7 @@ def test_mkdocs_loads_scholarly_theme_and_mathjax() -> None:
     stylesheet = ROOT / "docs" / stylesheet_entry
 
     assert stylesheet_entry in config
-    assert '@import url("extra.css?v=20261006");' in stylesheet.read_text(
+    assert '@import url("extra.css?v=20261012");' in stylesheet.read_text(
         encoding="utf-8"
     )
     assert "javascripts/mathjax.js" in config
@@ -216,7 +227,7 @@ def test_homepage_uses_documentation_first_product_components() -> None:
 
     for component in (
         "ow-intro", "ow-intro__brand", "ow-intro__command",
-        "ow-capability-grid", "ow-proof-strip", "ow-support",
+        "ow-capability-grid", "ow-workspace-preview", "ow-support",
     ):
         assert component in home
         assert f".{component}" in styles
@@ -235,7 +246,7 @@ def test_material_icon_library_and_brand_identity_are_configured() -> None:
 def test_readme_opens_with_canonical_product_identity() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
-    assert '<p align="center">' in readme
+    assert '<div align="center">' in readme
     assert 'src="https://raw.githubusercontent.com/sha786muhammed/openWFN/main/docs/assets/images/openwfn-brand.svg"' in readme
     assert "bgcolor=" not in readme
     assert "Wavefunction analysis, made reproducible." in readme
@@ -276,12 +287,10 @@ def test_header_has_no_duplicate_plain_title_and_home_identifies_toolkit() -> No
 
     assert ".md-header__topic { display: none; }" in styles
     assert ".md-header__title { display: none; }" not in styles
-    product_description = (
-        "Wavefunction post-processing for quantum chemistry. Use the same scientific "
-        "engine from the CLI, Python, MCP or terminal chat."
-    )
-    assert product_description in home
-    assert product_description in readme
+    # General introductions describe the same multi-format engine across interfaces.
+    for text in (home, readme):
+        assert 'quantum-chemistry post-processing' in text
+        assert all(interface in text for interface in ('CLI', 'Python', 'MCP', 'chat'))
 
 
 def test_homepage_has_compact_responsive_branding() -> None:
@@ -310,7 +319,7 @@ def test_homepage_and_readme_use_generalized_scale_language() -> None:
         )
     ).lower()
 
-    assert "individual calculations and high-throughput collections" in public_copy
+    assert "individual" in public_copy and "collections" in public_copy
     assert not re.search(r"\b(?:1,?000|10,?000)\b", public_copy)
 
 
@@ -537,7 +546,7 @@ def test_workbench_has_scoped_stable_interface_and_preserves_field_evidence() ->
     metadata = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
 
     assert "optional exports" in readme or "export options" in readme
-    assert "Stable interface" in workbench
+    assert "Stable interface" in workbench and "Chromium" in workbench
     assert "conservation status independently" in workbench
     assert "browser-report.json" in workbench
     assert "not a numerical reference" in workbench

@@ -1,14 +1,20 @@
 # Tutorial: build a reproducible analysis package
 
-The goal is not merely a pretty report. It is an evidence package another
-researcher can inspect and rerun. Run these commands from the repository root.
+Save a report with your input checksum, commands and numerical results so
+another researcher can repeat the analysis. Start with the packaged examples:
+
+```bash
+openwfn examples install ./openwfn-examples
+```
+
+No source checkout is needed. Keep reports alongside complete JSON results.
 
 ## 1. Record identity
 
 ```bash
 openwfn --version
-shasum -a 256 examples/water/water.fchk
-openwfn examples/water/water.fchk doctor
+shasum -a 256 ./openwfn-examples/water.fchk
+openwfn ./openwfn-examples/water.fchk doctor
 ```
 
 Also record the electronic-structure program, method, basis set, charge, multiplicity, and source.
@@ -17,15 +23,15 @@ Also record the electronic-structure program, method, basis set, charge, multipl
 
 ```bash
 openwfn --format json --output water-summary.json \
-  examples/water/water.fchk summary
-openwfn examples/water/water.fchk export frontier water-frontier.csv
-openwfn examples/water/water.fchk export mulliken water-mulliken.csv
+  ./openwfn-examples/water.fchk summary
+openwfn ./openwfn-examples/water.fchk export frontier water-frontier.csv
+openwfn ./openwfn-examples/water.fchk export mulliken water-mulliken.csv
 ```
 
 ## 3. Build the narrative report
 
 ```bash
-openwfn examples/water/water.fchk report build water-report.html \
+openwfn ./openwfn-examples/water.fchk report build water-report.html \
   --analyses summary,frontier,mulliken,lowdin
 ```
 
@@ -34,8 +40,8 @@ Use `--report-format markdown` and a `.md` path for version-controlled text.
 ## 4. Add visuals when useful
 
 ```bash
-openwfn examples/water/water.fchk workbench water-workbench.html
-openwfn examples/water/water.fchk plot frontier water-frontier.png --dpi 300
+openwfn ./openwfn-examples/water.fchk workbench water-workbench.html
+openwfn ./openwfn-examples/water.fchk plot frontier water-frontier.png --dpi 300
 ```
 
 The workbench interface is Stable for the tested Chromium scope and intended for optional visual inspection. Review formula, state, ordering, status, and supported analyses. Inspect artifacts for confidential data and machine-specific metadata. Keep CSV/JSON records: neither a workbench nor screenshot should be the only numerical evidence.

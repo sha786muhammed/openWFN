@@ -1,11 +1,12 @@
 # Your first analysis
 
-This walkthrough installs openWFN, checks the version, analyzes a water calculation,
-and creates machine-readable and portable research records.
+Install openWFN, open a packaged example, and save your first result.
+This walkthrough uses water. The same steps apply to other supported files
+when they contain the data needed for the analysis.
 
 ## Prerequisites
 
-- Python 3.10 or newer
+- Python 3.10–3.13
 - A terminal
 
 ## 1. Install openWFN
@@ -18,10 +19,10 @@ openwfn --version
 Use `python -m pip` so installation and execution refer to the same Python
 environment. Record the installed version when reproducing an analysis.
 
-## 2. Install the maintained example
+## 2. Copy the packaged examples
 
-The wheel includes a redistributable water formatted-checkpoint fixture. Copy it
-into the current directory without cloning the repository:
+The package includes a water example and an eleven-molecule Molden collection.
+Copy them into the current directory; no repository download is needed:
 
 ```bash
 openwfn examples install ./openwfn-examples
@@ -36,7 +37,18 @@ The command refuses to replace an existing fixture unless you pass
 openwfn ./openwfn-examples/water.fchk summary
 ```
 
-The public water fixture produces a molecular summary including the formula, atom count, charge, multiplicity, center of mass, energy, bond count, fragments, and status. Field presentation can vary by output mode; use `--format json` for machine-readable results.
+Check the formula, atom count, charge and multiplicity in the summary.
+Energy and other fields appear when the file contains them. Use `--format json`
+to read the complete result in a script.
+
+To try a different format, open the packaged ethanol example:
+
+```bash
+openwfn ./openwfn-examples/everyday-qc/ethanol.molden summary
+```
+
+For guided mode in an interactive terminal, use the same file with `open`
+instead of `summary`. Scripts should use direct commands or `analyze`.
 
 The center of mass is reported in ångströms and energy in hartree. Bond count comes from openWFN's covalent-radius perception; it is not a bond-order assignment.
 
@@ -59,13 +71,13 @@ openwfn --format json --output water-summary.json \
   ./openwfn-examples/water.fchk summary
 ```
 
-The JSON result includes the analysis identity, units, validation status, warnings,
-and provenance fields needed by downstream programs.
+JSON keeps the complete result: values, units, warnings, validation status
+and source information. Use it in scripts or keep it with your research notes.
 
 ## 6. Record reproducibility information
 
-Record the input-file checksum, openWFN version, command, parameters, and capability
-status. The supported report workflow creates a portable human-readable record:
+Keep the input checksum, openWFN version, command and settings with your results.
+You can also create a report to read or share:
 
 ```bash
 openwfn ./openwfn-examples/water.fchk report build water-report.html
@@ -84,4 +96,4 @@ openwfn ./openwfn-examples/water.fchk report build water-report.html
 
 - Choose a [learning path](learning-paths.md).
 - Learn the [core terminology](terminology.md).
-- Review [validation evidence](../validation.md) before research use.
+- Review [validation evidence](../science/validation-status.md) before research use.

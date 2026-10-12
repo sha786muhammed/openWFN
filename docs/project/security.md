@@ -1,14 +1,14 @@
 # Security and data privacy
 
-The repository [security policy](https://github.com/sha786muhammed/openWFN/blob/main/SECURITY.md)
-is the authoritative source for supported versions and private vulnerability
-reporting. Do not disclose a suspected vulnerability in a public issue.
+Read the [security policy](https://github.com/sha786muhammed/openWFN/blob/main/SECURITY.md)
+for supported versions and private vulnerability reporting. Send suspected
+vulnerabilities through the private reporting route rather than a public issue.
 
 ## Local processing
 
 openWFN analysis commands read files on your computer. They do not require an
-openWFN cloud account or upload service. The generated viewer and Experimental
-workbench run from standalone HTML files.
+openWFN cloud account or upload service. Viewer and workbench exports open
+from local HTML files. Chat and external clients have separate privacy settings.
 
 Checkpoint files, reports, cube files, tables, screenshots, and HTML workbenches
 may reveal unpublished geometries, energies, methods, or molecular identities.

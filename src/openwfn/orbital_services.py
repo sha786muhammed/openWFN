@@ -1,13 +1,18 @@
 """Shared orbital-field services; no interface-specific scientific implementations."""
+from math import prod
 from pathlib import Path
 
 import numpy as np
 
 from .analysis.basis import bounded_ao_chunk_size, overlap_matrix
-from .analysis.grids import iter_point_chunks, molecular_grid_points, scalar_grid
+from .analysis.grids import (
+    iter_molecular_grid_chunks,
+    molecular_grid_layout,
+    scalar_grid,
+)
 from .analysis.orbitals import OCCUPATION_THRESHOLD, evaluate_orbital
 from .errors import DataUnavailableError
-from .exporters.cube import write_cube
+from .exporters.cube import write_cube_chunks
 from .model import CalculationData, MolecularOrbitals
 from .results import ResultRecord
 
@@ -50,12 +55,13 @@ def orbital_grid(data: CalculationData, mo: int | str, spin: str, spacing_bohr: 
     orbitals, index = select_orbital(data, mo, spin)
     if chunk_size <= 0:
         raise ValueError('chunk size must be positive')
-    points, origin, shape = molecular_grid_points(data.molecule, spacing_bohr=spacing_bohr,
+    origin, shape = molecular_grid_layout(data.molecule, spacing_bohr=spacing_bohr,
                                                  padding_bohr=padding_bohr)
-    values = np.empty(len(points))
+    values = np.empty(prod(shape))
     chunk_size = bounded_ao_chunk_size(data.basis, chunk_size)
     offset = 0
-    for chunk in iter_point_chunks(points, chunk_size):
+    for chunk in iter_molecular_grid_chunks(data.molecule, spacing_bohr=spacing_bohr,
+            padding_bohr=padding_bohr, chunk_size=chunk_size):
         stop = offset + len(chunk)
         values[offset:stop] = evaluate_orbital(data.molecule, data.basis, orbitals, index, chunk)
         offset = stop
@@ -68,23 +74,29 @@ def orbital_cube_export(data: CalculationData, mo: int | str, spin: str, spacing
     if output_path.exists() and not overwrite:
         raise FileExistsError(f'Output exists: {output_path}. Pass overwrite=True to replace it.')
     orbitals, index = select_orbital(data, mo, spin)
-    grid = orbital_grid(data, mo, spin, spacing_bohr, padding_bohr)
+    if data.basis is None:
+        raise DataUnavailableError('Orbital cube requires Gaussian basis data.')
+    origin, shape = molecular_grid_layout(data.molecule, spacing_bohr=spacing_bohr, padding_bohr=padding_bohr)
     coefficients = np.asarray(orbitals.coefficients)[:, index]
     norm = float(coefficients @ overlap_matrix(data.basis, data.molecule) @ coefficients)
-    integral = float(np.sum(np.square(grid.values)) * spacing_bohr**3)
+    source = data.molecule.provenance
+    metadata = f'units: bohr^-3/2; mo={index+1}; spin={orbitals.spin}; spacing_bohr={spacing_bohr}; padding_bohr={padding_bohr}; sha256={source.sha256 if source else "unavailable"}'
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    chunks = iter_molecular_grid_chunks(data.molecule, spacing_bohr=spacing_bohr,
+        padding_bohr=padding_bohr, chunk_size=bounded_ao_chunk_size(data.basis, 65536))
+    values = (evaluate_orbital(data.molecule, data.basis, orbitals, index, chunk) for chunk in chunks)
+    integral = write_cube_chunks(data.molecule, output_path, origin_bohr=tuple(origin), shape=shape,
+        spacing_bohr=spacing_bohr, value_unit='bohr^-3/2', chunks=values,
+        overwrite=overwrite, comment=metadata, squared=True) * spacing_bohr**3
     warnings = []
     if abs(norm - 1.) > 1e-6:
         warnings.append('MO AO-metric norm differs from one by more than 1e-6; coefficients were not renormalized.')
     if abs(integral - norm) > .005 * max(abs(norm), 1e-12):
         warnings.append('Squared-amplitude grid integral failed 0.5% tolerance against AO-metric norm; refine spacing/padding.')
-    source = data.molecule.provenance
-    metadata = f'units: bohr^-3/2; mo={index+1}; spin={orbitals.spin}; spacing_bohr={spacing_bohr}; padding_bohr={padding_bohr}; sha256={source.sha256 if source else "unavailable"}'
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    write_cube(grid, data.molecule, output_path, overwrite=overwrite, comment=metadata)
     return ResultRecord(kind='orbital_cube', data={
         'mo_number': index+1, 'spin': orbitals.spin, 'energy_hartree': orbitals.energies[index],
         'occupation': orbitals.occupations[index], 'occupation_source': orbitals.occupation_source,
-        'output': str(output_path), 'grid_points': len(grid.values), 'grid_shape': list(grid.shape),
+        'output': str(output_path), 'grid_points': prod(shape), 'grid_shape': list(shape),
         'spacing': spacing_bohr, 'padding': padding_bohr, 'ao_metric_norm': norm,
         'squared_amplitude_integral': integral, 'grid_norm_error': abs(integral-norm),
         }, units={'amplitude': 'bohr^-3/2', 'spacing': 'bohr', 'padding': 'bohr', 'energy_hartree': 'hartree'},

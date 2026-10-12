@@ -1,5 +1,9 @@
 # Molecular-orbital cubes
 
+Export the signed amplitude of an orbital as a cube file. View it in a
+compatible molecular viewer. Check the source and grid normalization
+diagnostics before using the values quantitatively.
+
 **Status: independently checked orbital fields; each generated cube retains its own grid-convergence status.**
 
 For a real Gaussian AO basis, the signed field is
@@ -11,22 +15,25 @@ in `bohr^-3/2`. It is an orbital amplitude; its square is an orbital density. Ov
 Required data are isolated geometry, a supported Gaussian basis, and coefficients for the selected spin channel. Public orbital numbers are **one-based**. `alpha` uses the restricted channel on restricted inputs; requesting an unavailable beta channel fails explicitly. HOMO/LUMO selection follows the normalized occupations used by frontier analysis and HOMO selection remains usable when no virtual orbitals are present.
 
 ```bash
-openwfn molecule.fchk orbitals cube --mo homo --output homo.cube
-openwfn molecule.fchk orbitals cube --mo lumo --spin beta --output lumo-beta.cube --spacing 0.2 --padding 6
-openwfn molecule.fchk orbitals cube --mo 25 --output mo25.cube
+openwfn molecule.molden orbitals cube --mo homo --output homo.cube
+openwfn molecule.molden orbitals cube --mo lumo --spin beta --output lumo-beta.cube --spacing 0.2 --padding 6
+openwfn molecule.molden orbitals cube --mo 25 --output mo25.cube
 ```
 
 Spacing and padding are in **bohr**, matching density commands. The molecular grid is bounded before allocation and AO evaluation uses bounded chunks. Cube comments record MO selection, spin, spacing, padding, and input hash. Structured results retain parser provenance, orbital energy and occupation, grid shape, raw `ao_metric_norm = c^T S c`, and `squared_amplitude_integral`.
 
 ```python
 from openwfn import load
-result = load("molecule.fchk").orbital_cube(
+result = load("molecule.molden").orbital_cube(
     "homo.cube", mo="homo", spacing_bohr=0.2
 )
 print(result.as_dict())
 ```
 
-Coefficients are never silently renormalized. A raw metric-norm error or a requested real-space grid that does not reproduce the expected squared-amplitude norm within the documented tolerance produces a warning and a partial result. Refine spacing and padding for quantitative use. A command successfully writing a cube does **not** imply that its chosen grid passed the convergence diagnostic.
+openWFN does not silently renormalize coefficients. If the source orbital norm
+or grid integral fails its tolerance, the result is partial and includes a
+warning. Refine spacing and padding for quantitative use. Writing a cube
+successfully does not mean its grid is converged.
 
 ## Validation evidence
 

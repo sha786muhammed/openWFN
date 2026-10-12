@@ -1,12 +1,14 @@
 # Reproducible research with openWFN
 
-A reproducible result preserves the input identity, software version, command, numerical controls, and output. openWFN provides machine-readable output and self-contained reports, but the researcher remains responsible for calculation provenance and interpretation.
+Keep the input, software version, command, settings and output together.
+openWFN can save JSON results and reports. You still need to record how the
+original calculation was produced and explain what the results mean.
 
 ## Minimum research record
 
 Record:
 
-- the source and checksum of the input FCHK;
+- the source and checksum of the input file;
 - electronic-structure method, basis set, charge, multiplicity, and job type;
 - `openwfn --version` and the complete command;
 - grid spacing and padding for numerical density or ESP work;
@@ -15,16 +17,16 @@ Record:
 
 ```bash
 openwfn --version
-shasum -a 256 molecule.fchk
-openwfn --format json --output summary.json molecule.fchk summary
+shasum -a 256 molecule.molden
+openwfn --format json --output summary.json molecule.molden summary
 ```
 
-## Prefer explicit, immutable artifacts
+## Save results without replacing earlier work
 
 Use JSON or CSV for subsequent computation and preserve terminal tables only for reading. Do not silently overwrite results: openWFN requires `--overwrite` when an output already exists. Reports capture the invoked command and can combine selected analyses.
 
 ```bash
-openwfn molecule.fchk report build analysis.html \
+openwfn molecule.molden report build analysis.html \
   --analyses summary,frontier,mulliken,lowdin
 ```
 
@@ -34,4 +36,5 @@ Density integrations and grid-derived ESP depend on spacing and padding. Repeat 
 
 ## Citation
 
-Cite the exact openWFN release and repository, along with the electronic-structure software and method used to generate the checkpoint. Copy the current metadata from the [citation guide](../citation.md).
+Cite the openWFN version used, along with the program and method that produced
+your input. Use the [citation guide](../citation.md) for the software citation.
