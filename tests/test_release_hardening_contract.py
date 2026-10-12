@@ -21,7 +21,7 @@ def test_validation_manifest_declares_current_and_historical_evidence() -> None:
     manifest_path = ROOT / "validation/manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     assert manifest["schema_version"] == "1.0"
-    assert manifest["current_release"] == "0.11.0"
+    assert manifest["current_release"] == "0.12.0"
     assert manifest["resource_benchmark"]["establishes_scientific_validation"] is False
     assert manifest["resource_benchmark"]["molecules"] == 11
     assert manifest["resource_benchmark"]["workflows_per_molecule"] == 10

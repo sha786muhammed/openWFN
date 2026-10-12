@@ -2,6 +2,19 @@
 
 All notable changes to openWFN are documented in this file.
 
+## [0.13.0] - Unreleased
+
+- Fix guided navigation, file selection, parameter validation and save handling. Improve readable scientific results while preserving complete JSON records.
+- Fix chat intent routing, follow-up clarification, cancellation and streamed responses. Short supported file questions use scientific tools directly; general model answers remain unverified explanations.
+- Stream density integration and density, orbital and NCI cube exports in bounded chunks. Keep grid safety limits, conservation checks and atomic output handling.
+- Limit batch workers using available-memory estimates. Report reduced worker counts and measurement failures explicitly.
+- Clear previous fields and measurements when switching offline workbench views.
+- Correct reader edge cases and add regression tests, larger molecular examples and source-property reference checks. Test completion does not establish universal scientific accuracy.
+- Simplify README and documentation, correct API examples and links, and fix narrow-screen spacing and homepage preview wrapping.
+
+No new scientific validation status is assigned by this release. Model weights
+and external Gaussian utilities are not bundled. Publication is still pending.
+
 ## [0.12.0] - 2026-10-07
 
 - Use the selected pixel wordmark across interactive terminal screens, README, documentation, browser icon and offline HTML exports. The browser icon uses the matching W initial.
