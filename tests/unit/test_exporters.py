@@ -26,7 +26,8 @@ def test_json_table_export_is_deterministic_and_contains_units(tmp_path: Path) -
     write_result_table(_result(), ExportRequest(output, "json"))
 
     payload = json.loads(output.read_text(encoding="utf-8"))
-    assert list(payload) == ["data", "kind", "units", "validation_status"]
+    assert list(payload) == sorted(payload)
+    assert payload == _result().as_dict()
     assert payload["units"]["charge"] == "e"
 
 
@@ -36,7 +37,7 @@ def test_csv_table_export_places_units_in_headers(tmp_path: Path) -> None:
     write_result_table(_result(), ExportRequest(output, "csv"))
 
     rows = list(csv.reader(output.read_text(encoding="utf-8").splitlines()))
-    assert rows[0] == ["atom", "charge [e]", "validation_status"]
+    assert rows[0] == ["atom", "charge [e]", "validation_status", "result_status", "warnings", "provenance"]
     assert json.loads(rows[1][0]) == [1, 2]
 
 

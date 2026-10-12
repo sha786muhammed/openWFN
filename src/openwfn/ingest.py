@@ -11,8 +11,8 @@ from typing import Any
 
 import numpy as np
 
-from .data import OpenWFNData, SourceMetadata, wrap_calculation
-from .errors import MissingOptionalDependencyError, ParseError
+from .data import OpenWFNData, SourceMetadata, StructureData, wrap_calculation
+from .errors import MissingOptionalDependencyError, OpenWFNError, ParseError
 from .formats import IODATA_READABLE_FORMATS, FormatDefinition
 from .model import (
     Atom,
@@ -318,6 +318,40 @@ def _augment_cclib_vibrations(data: OpenWFNData, path: Path) -> OpenWFNData:
     return replace(data, calculation=replace(calculation, records=records))
 
 
+def _cclib_reported_structure(path: Path, *, format_id: str) -> OpenWFNData:
+    """Recover reported molecular structure, never AO data, from a QC output."""
+    from .output_properties import read_output
+
+    result = read_output(path)
+    values = result.data
+    expected = {'orcalog': 'orca', 'qchemlog': 'qchem'}[format_id]
+    program = str(values.get('source_program') or '').casefold().replace('-', '')
+    if program != expected or not values.get('atomic_numbers') or not values.get('coordinates_angstrom'):
+        raise ParseError('The alternate output reader did not supply a matching complete structure.')
+    numbers = tuple(_integer_like(number) for number in values['atomic_numbers'])
+    if any(number is None or number < 1 for number in numbers):
+        raise ParseError('The alternate output reader supplied invalid atomic numbers.')
+    warning = (f'Primary IOData {format_id} reader could not parse this layout; '
+               'cclib supplied source-reported structure and metadata only. No wavefunction was reconstructed.')
+    provenance = replace(_generated_provenance(path, parser='cclib-output-structure', source_format=format_id),
+                         warnings=(*result.warnings, warning),
+                         transformations=(f'Coordinates read in angstrom from cclib '
+                                          f'{result.provenance.get("parser_version", "version unavailable")}; '
+                                          'no AO data imported.',))
+    return OpenWFNData(
+        calculation=None, periodic=None, grids=(), integrals=None,
+        structure=StructureData(
+            atomic_numbers=numbers,
+            coordinates=tuple(tuple(row) for row in values['coordinates_angstrom']),
+            charge=_integer_like(values.get('charge')),
+            multiplicity=_integer_like(values.get('multiplicity')),
+            effective_nuclear_charges=tuple(None for _ in numbers)),
+        metadata=SourceMetadata(source_program=values.get('source_program'),
+                                source_program_version=values.get('source_program_version'),
+                                energy_hartree=values.get('scf_energy_hartree')),
+        provenance=provenance)
+
+
 def _load_iodata(path: Path, *, format_id: str) -> OpenWFNData:
     try:
         import_module("iodata")
@@ -331,15 +365,23 @@ def _load_iodata(path: Path, *, format_id: str) -> OpenWFNData:
         adapter = import_module("openwfn.adapters.iodata")
     except ModuleNotFoundError as exc:
         raise ParseError("The openWFN IOData adapter is unavailable in this build.") from exc
-    data = adapter.load_iodata(path, format_id=format_id)
+    try:
+        data = adapter.load_iodata(path, format_id=format_id)
+    except ParseError as primary_error:
+        if format_id not in {'orcalog', 'qchemlog'}:
+            raise
+        try:
+            data = _cclib_reported_structure(path, format_id=format_id)
+        except (OpenWFNError, ValueError, OSError):
+            raise primary_error
     return _augment_excited_states(data, path, format_id=format_id)
 
 
 def _load_native(path: Path, *, source_format: str) -> OpenWFNData:
     if path.suffix.casefold() == ".xyz" and _has_multiple_xyz_records(path):
         raise ParseError(
-            "XYZ contains multiple records; sequence/trajectory ingestion is not part of the "
-            "0.9 load() API."
+            "XYZ contains multiple records. This input route reads one structure; "
+            "provide a single trajectory frame."
         )
     return _normalize_native(DEFAULT_REGISTRY.load(path), path, source_format=source_format)
 

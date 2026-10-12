@@ -1,7 +1,8 @@
 # Everyday QC expansion: assessment and design
 
-Baseline: openWFN 0.9.2, main commit 0991406. This document records the staged
-project requested on 2026-10-02; it is not a claim that the roadmap is complete.
+Historical design based on openWFN 0.9.2, commit 0991406, from October 2, 2026.
+It describes the code and planned work at that time, not today's feature list.
+See [validation evidence](everyday-qc-validation.md) for the implemented scope.
 
 ## Repository assessment
 

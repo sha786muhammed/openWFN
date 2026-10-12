@@ -203,7 +203,7 @@ def test_readme_documents_binary_checkpoint_requirement() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     assert "proprietary binary" in readme
     assert "formchk" in readme
-    assert "openwfn molecule.fchk summary" in readme
+    assert "openwfn molecule.molden summary" in readme
 
 
 def test_changelog_contains_current_release() -> None:

@@ -1,13 +1,12 @@
 # Experimental functionality: evidence and real examples
 
-This is a coverage audit, not a blanket promotion to Validated. Eleven actual
-converged PySCF single-point wavefunctions are committed in
+See which examples have been tested and which gaps remain. Tests alone do
+not give every method a Validated label. Eleven converged PySCF single-point wavefunctions are in
 [`examples/everyday-qc`](https://github.com/sha786muhammed/openWFN/tree/main/examples/everyday-qc/).
 The corpus includes restricted, doublet/triplet unrestricted, charged, pure
 spherical, Cartesian, diffuse, aromatic and intermolecular examples.
-Generated geometries are demonstrations, not optimized reference structures.
-Methods, coordinates, energies, source hashes, dependencies and acceptance
-tolerances are retained with each case in the captured reference report.
+The geometries are examples, not optimized reference structures. Each reference
+report records the method, coordinates, energy, input hash, dependencies and tolerances.
 
 ## Every Experimental or conditional pathway
 

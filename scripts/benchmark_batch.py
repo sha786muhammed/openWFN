@@ -60,6 +60,8 @@ def run_benchmark(count: int, workers: int, workspace: Path) -> dict[str, object
         "python_version": platform.python_version(),
         "successes": successes,
         "workers": workers,
+        "effective_workers": manifest.effective_workers,
+        "resource_warnings": list(manifest.resource_warnings),
     }
 
 

@@ -1,14 +1,14 @@
 # Learning paths
 
-The handbook offers three routes through the same scientific core. Move between
-them whenever your work changes.
+Choose a path for your task. You can switch between the CLI and Python
+without changing the underlying calculations.
 
 ## Researcher path
 
 1. Complete [Your first analysis](first-analysis.md).
-2. Read [File formats](../formats.md) and confirm required records are available.
+2. Read [File formats](../reference/formats-and-exports.md) and confirm required records are available.
 3. Study [Scientific methods](../methods.md), including units and assumptions.
-4. Check the [Validation](../validation.md) status for the intended analysis.
+4. Check the [Validation](../science/validation-status.md) status for the intended analysis.
 5. Read [Limitations](../limitations.md), especially Experimental boundaries.
 6. Build a [reproducible report](../tutorials/reports.md).
 7. Record the exact version using [Citation](../citation.md).
@@ -25,14 +25,13 @@ them whenever your work changes.
 ## Developer path
 
 1. Install a development checkout with the test dependency group.
-2. Review the [Python API](../python-api.md) and typed result model.
-3. Read [File formats](../formats.md) before extending a parser.
+2. Review the [Python API](../reference/python-api.md) and typed result model.
+3. Read [File formats](../reference/formats-and-exports.md) before extending a parser.
 4. Run the complete tests and active validation suite.
 5. Keep scientific analysis separate from CLI, report, and optional workbench presentation.
 6. Document new interfaces, assumptions, errors, validation, and capability status.
 
 ## Shared principle
 
-Being able to run a command is not the same as knowing that its result is appropriate
-for a scientific claim. Every path reconnects implementation, method, evidence, and
-limitations.
+Before using a result in research, check its method, units, warnings and
+validation evidence. A completed command alone does not prove scientific accuracy.

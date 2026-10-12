@@ -1,5 +1,8 @@
 # Scientific methods
 
+Use this overview to understand the main calculations. Each linked method
+page explains the required data, equations, units and validation limits.
+
 ## Geometry
 
 Distances use Euclidean Cartesian separation. Angles use the normalized dot product. Dihedrals use a signed `atan2` convention. Coordinates are converted to ångströms at the parser boundary.
@@ -20,4 +23,8 @@ Mulliken AO populations are the diagonal elements of \(PS\). Symmetric Löwdin p
 
 ## ESP
 
-Nuclear ESP is \(\sum_A Z_A/|\mathbf r-\mathbf R_A|\). Mulliken and Löwdin point-charge ESPs are Stable. Electronic and total ESP currently use density-grid Coulomb quadrature and remain Experimental.
+Nuclear ESP is \(\sum_A Z_A/|\mathbf r-\mathbf R_A|\). Mulliken and Löwdin
+point-charge potentials use their respective atomic charges. Electronic and
+total point ESP use Gaussian Coulomb integrals by default, with validation for
+the documented reference cases. The optional spatial-grid method remains
+Experimental. See [Population and ESP](science/population-esp.md).

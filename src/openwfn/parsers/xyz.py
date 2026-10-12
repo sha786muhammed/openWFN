@@ -3,7 +3,7 @@
 from hashlib import sha256
 from pathlib import Path
 
-from ..constants import SYMBOL_TO_Z
+from ..constants import SYMBOL_TO_Z, Z_TO_SYMBOL
 from ..errors import ParseError
 from ..model import Atom, CalculationData, CalculationMetadata, Molecule, Provenance
 
@@ -28,7 +28,8 @@ def parse_xyz(path: Path) -> CalculationData:
         if len(fields) < 4:
             raise ParseError(f"Malformed XYZ atom record at line {line_number}.")
         symbol = fields[0][0].upper() + fields[0][1:].lower()
-        atomic_number = SYMBOL_TO_Z.get(symbol)
+        numeric_label = int(fields[0]) if fields[0].isascii() and fields[0].isdigit() else None
+        atomic_number = numeric_label if numeric_label in Z_TO_SYMBOL else SYMBOL_TO_Z.get(symbol)
         if atomic_number is None:
             raise ParseError(f"Unknown element symbol {fields[0]!r} at XYZ line {line_number}.")
         try:

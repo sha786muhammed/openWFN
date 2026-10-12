@@ -1,10 +1,19 @@
 # Batch analysis and reports
 
+Batch runs default to one worker. When you request more, openWFN may reduce
+parallelism using a conservative available-memory estimate. The CLI and batch
+manifest show requested and effective worker counts and explain reductions.
+If memory information is unavailable, it uses one worker. This scheduling
+check is not a hard RAM limit; individual calculations still need suitable
+settings and sufficient memory.
+
+Use batch mode to analyse a collection of files. Save the complete results as
+JSON, use the CSV summary to find problems, and create reports when needed.
+
 ## Batch analyses
 
-Batch mode applies one or more registered analyses to multiple inputs and writes
-a versioned manifest. Each input record contains its SHA-256 checksum, overall
-status, and complete result envelopes in the requested order.
+Batch mode runs your chosen analyses on each file. It saves a manifest listing
+each input checksum, status and complete results in the requested order.
 
 ```bash
 openwfn first.fchk batch second.fchk third.fchk \
@@ -61,12 +70,22 @@ batch failed. An all-unsupported directory still writes a manifest. Inspect
 subset from all discovered files. Successful per-file analyses remain in the
 manifest even when another input fails.
 
+Keep notes and manifests outside the input folder, or select input files
+explicitly. For example, the packaged Molden collection also contains a README
+and a manifest; scanning that whole folder reports those as unsupported files.
+To analyse only its wavefunctions:
+
+```bash
+openwfn batch ./openwfn-examples/everyday-qc/*.molden \
+  --analyses summary,frontier-all --output-dir ./results
+```
+
 Each completed run also writes `batch-summary.csv`, a compact one-row-per-input
 index containing checksums, status, skip state, analysis counts, elapsed time,
 and errors. Progress is written to stderr so JSON stdout stays machine-readable;
 use global `--quiet` to suppress progress.
 
-Multi-worker runs keep at most twice the requested worker count submitted at a
+Multi-worker runs keep at most twice the effective worker count submitted at a
 time. Results are written as workers finish, so a slow early input does not delay
 persistence of later completed inputs. The final manifest and CSV index still
 use deterministic input order.
@@ -87,22 +106,24 @@ python scripts/benchmark_batch.py \
 
 The output records counts, elapsed time, files per second, parent-process peak
 Python memory, and software versions. Compare timing only on equivalent hardware
-and load. Scientific FCHK accuracy remains covered by the validation suite, not
-this structure-only orchestration benchmark.
+and load. Scientific accuracy is checked by the method-specific reference suites, not
+this structure-only throughput benchmark.
 
 ## Research reports
 
 ```bash
-openwfn molecule.fchk report build report.html \
+openwfn molecule.molden report build report.html \
   --analyses summary,frontier,mulliken,lowdin
 ```
 
-Set `--report-format markdown` for a Markdown artifact. Requested analyses require their underlying FCHK records; run `doctor` first if the file's contents are unknown.
+Use `--report-format markdown` to save Markdown instead of HTML. Each requested
+analysis needs the relevant records, regardless of file format. Check
+`capabilities` first if you do not know what the file contains.
 
 ## Optional offline workbench
 
 ```bash
-openwfn molecule.fchk workbench molecule-workbench.html --open
+openwfn molecule.molden workbench molecule-workbench.html --open
 ```
 
 The output is a standalone local HTML file for visualization and teaching. It is not

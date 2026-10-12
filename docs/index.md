@@ -6,7 +6,7 @@ hide:
 ---
 
 <div class="ow-home" markdown="1">
-<section class="ow-intro">
+<section class="ow-intro ow-intro--workspace">
   <div class="ow-intro__brand" markdown="1">
 
 <div class="ow-brand-panel">
@@ -17,30 +17,57 @@ hide:
 
 <h1>Wavefunction analysis, made reproducible.</h1>
 
-<p class="ow-lede">Wavefunction post-processing for quantum chemistry. Use the same scientific engine from the CLI, Python, MCP or terminal chat.</p>
+<p class="ow-lede">One scientific engine. From quantum-chemistry files to meaningful results.<br>Use the CLI, Python, MCP or chat.</p>
 
-<p class="ow-context">Analyze individual calculations and high-throughput collections. The available properties depend on the records in each file.</p>
+<p class="ow-context">Wavefunctions · Grids · QC outputs · Structures</p>
 
 <div class="ow-actions">
-  <a class="ow-button ow-button--primary" href="start/first-analysis/">Start an analysis</a>
-  <a class="ow-button" href="reference/formats-and-exports/">Check file support</a>
+  <a class="ow-button ow-button--primary" href="start/first-analysis/">Get started</a>
 </div>
 
 <p class="ow-meta">Python 3.10–3.13 · MIT project code · local analysis</p>
 
   </div>
-  <div class="ow-intro__command">
-    <div class="ow-command-label"><span>Guided CLI</span><span>Terminal</span></div>
-    <pre><code>python -m pip install --upgrade openwfn
-
-openwfn molecule.molden open
-openwfn molecule.molden capabilities
-
-# A script-friendly result
-openwfn --format json molecule.molden summary</code></pre>
-    <a href="installation/">Installation and model setup →</a>
-  </div>
 </section>
+
+<div class="ow-workspace-preview" markdown="0">
+<section class="ow-intro__command ow-workspace-preview__cli" aria-label="Guided CLI example">
+<div class="ow-command-label"><span>Guided CLI</span><span>Example workflow</span></div>
+<div class="ow-terminal-brand"><img src="assets/images/openwfn-brand.svg" alt="openWFN" width="168" height="36"><span>Quantum-chemistry post-processing</span></div>
+<pre><code>openwfn molecule.molden open
+
+Choose → Configure → Run → Review → Save
+
+Density / Integrate
+Check the electron count before exporting density.
+
+Density kind     Total
+Grid spacing     0.15 bohr
+Padding          6 bohr
+Save folder      results/
+
+Review grid convergence before using the result.</code></pre>
+<a href="guides/cli-workflows/">Explore the guided workflow →</a>
+</section>
+<section class="ow-intro__command" aria-label="Scientific assistant example">
+<div class="ow-command-label"><span>Scientific assistant</span><span>Example conversation</span></div>
+<pre><code>openwfn molecule.molden chat
+
+› Can I get an IR spectrum?
+
+If the file has no frequencies or IR intensities,
+the assistant explains what is missing.
+
+Open a frequency-calculation output to check
+for IR data. No spectrum is invented.
+
+/open  /model  /save  /details</code></pre>
+<a href="assistant/">Connect a model or ask about your file →</a>
+</section>
+</div>
+
+Analyse one calculation or a collection of files. Start with
+`openwfn FILE capabilities` to see which analyses your file supports.
 
 ## Choose how you work
 
@@ -49,14 +76,14 @@ openwfn --format json molecule.molden summary</code></pre>
 <div class="ow-capability" markdown="1">
 <span class="ow-capability__number">CLI</span>
 ### Guided or direct
-Open a file, choose an eligible workflow and adjust its settings. Use explicit commands for scripts.
+Open a file, choose an available analysis and adjust its settings. Use direct commands in scripts.
 [CLI reference](reference/cli.md)
 </div>
 
 <div class="ow-capability" markdown="1">
 <span class="ow-capability__number">Python</span>
 ### Use the API
-Load supported files and obtain versioned results with units, warnings and source provenance.
+Load a supported file and get results with units, warnings and a record of the source.
 [Python API](reference/python-api.md)
 </div>
 
@@ -89,21 +116,15 @@ Ask file questions backed by openWFN results, or connect a model for general sci
 
 Binary Gaussian `.chk` needs the separately installed Gaussian `formchk`
 utility. A successful parse does not make every analysis available.
-[Formats and exports](reference/formats-and-exports.md) explain the tested contract.
+[Formats and exports](reference/formats-and-exports.md) lists supported files and their limits.
 
 </section>
 
 ## Check the result before using it
 
-<div class="ow-proof-strip">
-  <div class="ow-proof ow-proof--stable"><strong>Stable</strong><span>Documented, regression-tested interface</span></div>
-  <div class="ow-proof ow-proof--validated"><strong>Validated</strong><span>Numerical evidence for a named scope</span></div>
-  <div class="ow-proof ow-proof--experimental"><strong>Experimental</strong><span>Independent validation is incomplete</span></div>
-  <div class="ow-proof ow-proof--unsupported"><strong>Unsupported</strong><span>The required data or method is unavailable</span></div>
-</div>
-
-Execution status and scientific validation are separate. A `partial` result
-keeps its warnings. Unknown charge, spin or convergence is not guessed.
+Results show values and units first. Important warnings remain visible;
+Details and JSON preserve diagnostics, validation status and provenance.
+Unknown charge, spin or convergence is not guessed.
 Density settings must be converged for the property and system being studied.
 
 [Methods](methods.md) · [Validation evidence](science/validation-status.md) ·

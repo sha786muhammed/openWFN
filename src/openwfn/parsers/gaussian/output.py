@@ -175,6 +175,10 @@ def _parse_frequency_block(lines: list[str], start: int) -> dict[str, Any]:
                 tokens = lines[index].split()
                 if len(tokens) < 2:
                     break
+                if (len(tokens) <= 3 and all(token.isdigit() for token in tokens) and
+                        any(lines[next_index].strip().startswith('Frequencies --')
+                            for next_index in range(index + 1, min(index + 3, len(lines))))):
+                    break  # The next mode-number header is not an atom/vector row.
                 try:
                     atom_index = int(tokens[0])
                     atomic_number = int(tokens[1])

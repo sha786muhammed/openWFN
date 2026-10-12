@@ -1,11 +1,15 @@
 # Core Product Boundary and Independent Benchmarking
 
+Historical design note. This page records an earlier benchmarking plan,
+including status proposals that are not current labels. Use
+[validation evidence](../science/validation-status.md) and
+[workbench guidance](../workbench.md) for current support.
+
 ## Purpose
 
-openWFN should earn trust through reproducible numerical evidence. The command-line
-interface, Python API, structured outputs, scientific analyses, and validation tools
-form the supported core. Presentation features must not imply stronger scientific
-validation than the data behind them.
+The plan focused on repeatable numerical checks for the scientific engine.
+CLI, Python and saved results should use the same calculations. Displaying
+a result must not imply more validation than its evidence supports.
 
 ## Product boundary
 

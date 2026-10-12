@@ -14,7 +14,8 @@ def test_molden_guided_orbitals(name, monkeypatch, capsys):
     workflows = iter(['orbitals', 'exit'])
     monkeypatch.setattr('builtins.input', lambda _: '')
     monkeypatch.setattr(interactive, 'prompt_workflow', lambda _: next(workflows))
-    monkeypatch.setattr(interactive, 'prompt_page_navigation', lambda _: 'home')
+    navigation = iter(['details', 'home'])
+    monkeypatch.setattr(interactive, 'prompt_page_navigation', lambda _: next(navigation))
     interactive.run_interactive(None, ROOT/f'examples/everyday-qc/{name}.molden')
     output = capsys.readouterr().out
     assert 'Homo' in output
@@ -36,7 +37,8 @@ def test_guided_shared_real_analysis(workflow, answers, expected, monkeypatch, c
     workflows = iter([workflow, 'exit'])
     inputs = iter(answers)
     monkeypatch.setattr(interactive, 'prompt_workflow', lambda _: next(workflows))
-    monkeypatch.setattr(interactive, 'prompt_page_navigation', lambda _: 'home')
+    navigation = iter(['details', 'home'])
+    monkeypatch.setattr(interactive, 'prompt_page_navigation', lambda _: next(navigation))
     monkeypatch.setattr('builtins.input', lambda _: next(inputs))
     interactive.run_interactive(None, ROOT/'examples/everyday-qc/oh_diffuse_uhf.molden')
     output = capsys.readouterr().out

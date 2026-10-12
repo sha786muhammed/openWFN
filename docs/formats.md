@@ -1,5 +1,5 @@
 # File formats
 
-This compatibility page preserves an older documentation URL. See
-[formats, units, and exports](reference/formats-and-exports.md) for the
-authoritative input registry, capability boundaries, and output formats.
+See [formats, units, and exports](reference/formats-and-exports.md) for
+supported files, required data and saved results. That is the authoritative
+format guide; this older URL still works.

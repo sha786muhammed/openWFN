@@ -1,10 +1,8 @@
 # ELF and LOL localization descriptors
 
-openWFN provides Experimental pointwise evaluation of the electron localization
-function (ELF) and localized orbital locator (LOL). These descriptors are
-intended for analysis of an existing wavefunction. They do not change the
-underlying electronic-structure method and they are not substitutes for QTAIM
-critical-point or basin analysis.
+Evaluate electron localization using ELF or LOL at selected points.
+These descriptors require a compatible wavefunction and remain Experimental.
+They do not provide QTAIM critical points or basin properties.
 
 ## Shared kinetic-energy convention
 

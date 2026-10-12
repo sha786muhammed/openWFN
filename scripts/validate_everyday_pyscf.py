@@ -37,6 +37,7 @@ def validate_case(case, directory: Path) -> dict:
     from scipy.linalg import sqrtm
 
     from openwfn.analysis.basis import overlap_matrix
+    from openwfn.analysis.density import evaluate_density
     from openwfn.analysis.gaussian_coulomb import electronic_potential
     from openwfn.analysis.grids import molecular_grid_points
     from openwfn.analysis.orbitals import evaluate_orbital
@@ -84,6 +85,32 @@ def validate_case(case, directory: Path) -> dict:
     reference_dm = mf.make_rdm1()
     if spin:
         reference_dm = reference_dm.sum(axis=0)
+    reference_ao = mol.eval_gto('GTOval', esp_points)
+    reference_rho = np.einsum('pi,ij,pj->p', reference_ao, reference_dm, reference_ao)
+    observed_rho = evaluate_density(data.molecule, data.basis, data.total_density, esp_points)
+    density_error = float(np.max(np.abs(reference_rho - observed_rho)))
+    assert density_error < 2e-7, (name, 'point density', density_error)
+    _, reference_charges = scf.hf.mulliken_pop(mol, reference_dm, s=s, verbose=0)
+    population = calc.population('mulliken')
+    assert population.status in {'success', 'partial'}, (name, population.error)
+    charge_error = float(np.max(np.abs(np.array(population.data['atomic_charges']) - reference_charges)))
+    assert charge_error < 2e-7, (name, 'Mulliken charges', charge_error)
+    results.update(density_point_max_error=density_error,
+                   reference_density_points_bohr=esp_points.tolist(),
+                   reference_density_electron_per_bohr3=reference_rho.tolist(),
+                   mulliken_charge_max_error=charge_error,
+                   reference_mulliken_charges=reference_charges.tolist(),
+                   lowdin_charges_compared=not cartesian)
+    if not cartesian:
+        root_s = np.asarray(sqrtm(s), dtype=float)
+        _, reference_lowdin_charges = scf.hf.mulliken_pop(
+            mol, root_s @ reference_dm @ root_s, s=np.eye(mol.nao_nr()), verbose=0)
+        lowdin = calc.population('lowdin')
+        assert lowdin.status in {'success', 'partial'}, (name, lowdin.error)
+        lowdin_error = float(np.max(np.abs(np.array(lowdin.data['atomic_charges']) - reference_lowdin_charges)))
+        assert lowdin_error < 2e-7, (name, 'Lowdin charges', lowdin_error)
+        results.update(lowdin_charge_max_error=lowdin_error,
+                       reference_lowdin_charges=reference_lowdin_charges.tolist())
     reference_esp = []
     for point in esp_points:
         with mol.with_rinv_origin(point):

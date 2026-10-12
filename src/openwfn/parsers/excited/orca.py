@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 
-from ...constants import SYMBOL_TO_Z
+from ...constants import HC_EV_NM, SYMBOL_TO_Z
 from ...excited_states import (
     MAX_EXCITED_STATES_PER_JOB,
     ExcitedState,
@@ -15,8 +15,8 @@ from ...excited_states import (
 _FLOAT = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[EeDd][-+]?\d+)?"
 _JOB_RE = re.compile(r"(?m)^\s*JOB\s+NUMBER\s+(\d+)\s*$", re.IGNORECASE)
 _ROUTE_RE = re.compile(r"(?m)^\s*!\s*(.+?)\s*$")
-_CHARGE_RE = re.compile(r"Total\s+Charge\s*:\s*(-?\d+)", re.IGNORECASE)
-_MULT_RE = re.compile(r"Multiplicity\s*:\s*(\d+)", re.IGNORECASE)
+_CHARGE_RE = re.compile(r"Total\s+Charge(?:\s+Charge\s+\.{2,}|\s*:)\s*([+-]?\d+)", re.IGNORECASE)
+_MULT_RE = re.compile(r"Multiplicity(?:\s+Mult\s+\.{2,}|\s*:)\s*(\d+)", re.IGNORECASE)
 _ENERGY_RE = re.compile(rf"FINAL\s+SINGLE\s+POINT\s+ENERGY\s+({_FLOAT})", re.IGNORECASE)
 _GENERIC_STATE_RE = re.compile(
     rf"(?m)^\s*STATE\s+(\d+)\s*:\s*E\s*=\s*{_FLOAT}\s+au\s+({_FLOAT})\s+eV\b",
@@ -96,11 +96,52 @@ def _parse_geometry(segment: str) -> tuple[tuple[int, ...], tuple[tuple[float, f
     return tuple(atomic_numbers), tuple(coordinates)
 
 
+def _electric_absorption_region(segment: str) -> str:
+    marker = 'ABSORPTION SPECTRUM VIA TRANSITION ELECTRIC DIPOLE MOMENTS'
+    if marker not in segment:
+        return segment
+    tail = segment.split(marker, 1)[1]
+    following = re.search(r'\b(?:ABSORPTION|CD)\s+SPECTRUM\b', tail)
+    return tail[:following.start()] if following else tail
+
+
 def _candidate_count(segment: str) -> int:
-    optical = len(_OPTICAL_RE.findall(segment))
+    optical = len(_OPTICAL_RE.findall(_electric_absorption_region(segment)))
     casscf = len(_CASSCF_RE.findall(segment)) if "CASSCF" in segment.upper() else 0
     generic = len(_GENERIC_STATE_RE.findall(segment))
     return max(optical, casscf, generic)
+
+
+def _numeric_electric_states(segment: str) -> tuple[ExcitedState, ...]:
+    marker = 'ABSORPTION SPECTRUM VIA TRANSITION ELECTRIC DIPOLE MOMENTS'
+    if marker not in segment:
+        return ()
+    body = _electric_absorption_region(segment).splitlines()
+    if not any('(cm-1)' in line or '(cm**-1)' in line for line in body[:8]):
+        return ()
+    numeric = re.compile(r'^\s*(\d+)\s+' + r'\s+'.join([rf'({_FLOAT})'] * 7) + r'\s*$')
+    forbidden = re.compile(rf'^\s*(\d+)\s+({_FLOAT})\s+{_FLOAT}\s+'
+                           r'spin forbidden\s*\(mult=(\d+)\)\s*$', re.IGNORECASE)
+    states = []
+    for line in body:
+        optical_match, forbidden_match = numeric.match(line), forbidden.match(line)
+        if optical_match is None and forbidden_match is None:
+            if line.strip() and line.split()[0].isdigit():
+                raise ValueError('Malformed ORCA numeric electric absorption row')
+            if states:
+                break
+            continue
+        if len(states) >= MAX_EXCITED_STATES_PER_JOB:
+            raise ValueError('ORCA electric absorption state limit exceeded')
+        match = optical_match or forbidden_match
+        states.append(ExcitedState(
+            index=len(states) + 1, source_state=match.group(1),
+            energy_ev=_as_float(match.group(2)) * HC_EV_NM / 1e7,
+            oscillator_strength=_as_float(match.group(4)) if optical_match else None,
+            transition_dipole=tuple(_as_float(match.group(i)) for i in (6, 7, 8)) if optical_match else None,
+            transition_dipole_unit='au' if optical_match else None,
+            multiplicity=int(match.group(3)) if forbidden_match else None))
+    return tuple(states)
 
 
 def _parse_states(segment: str) -> tuple[ExcitedState, ...]:
@@ -109,7 +150,7 @@ def _parse_states(segment: str) -> tuple[ExcitedState, ...]:
             f"state limit exceeded: at most {MAX_EXCITED_STATES_PER_JOB} states per job"
         )
 
-    optical_matches = list(_OPTICAL_RE.finditer(segment))
+    optical_matches = list(_OPTICAL_RE.finditer(_electric_absorption_region(segment)))
     if optical_matches:
         return tuple(
             ExcitedState(
@@ -126,6 +167,10 @@ def _parse_states(segment: str) -> tuple[ExcitedState, ...]:
             )
             for index, match in enumerate(optical_matches, start=1)
         )
+
+    numeric_states = _numeric_electric_states(segment)
+    if numeric_states:
+        return numeric_states
 
     if "CASSCF" in segment.upper():
         casscf_matches = list(_CASSCF_RE.finditer(segment))

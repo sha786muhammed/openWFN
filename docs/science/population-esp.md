@@ -1,5 +1,9 @@
 # Population analysis and electrostatic potential
 
+Population methods assign electrons to atoms and report atomic charges.
+ESP gives the electrostatic potential at a chosen point. Check which method
+was used before comparing results.
+
 ## Mulliken populations
 
 Mulliken analysis partitions the AO density using the overlap matrix. Atomic electron populations are accumulated from basis functions assigned to each atom, and charge is nuclear charge minus assigned electrons. Results can be strongly basis-set dependent.
@@ -16,13 +20,20 @@ $$
 V_\mathrm{nuc}(\mathbf r)=\sum_A\frac{Z_A}{\lVert\mathbf r-\mathbf R_A\rVert}.
 $$
 
-Charge-model potentials use Mulliken or Löwdin point charges. Grid-derived electronic potential approximates the Coulomb integral of the electron density, and total potential combines electronic and nuclear terms.
+Charge-model potentials use Mulliken or Löwdin point charges. Electronic ESP
+uses the AO density and Gaussian Coulomb integrals by default; a spatial-grid
+approximation is available explicitly. Total ESP combines the electronic and
+nuclear terms.
 
-Never evaluate exactly at a nucleus, where the point-nuclear expression is singular. Coordinates and potential are interpreted in atomic units for this command.
+Nuclear and total ESP are singular at a charged nucleus; choose a point away
+from it. Purely electronic ESP can be evaluated there. The high-level CLI/API
+point coordinates use ångströms, and the potential uses hartree/e. Grid spacing
+and padding use bohr.
 
 ## Interpretation and status
 
 - Nuclear and Mulliken/Löwdin point-charge ESP: **Stable** implementation, subject to model limitations.
+- Gaussian-integral electronic and total point ESP: **Validated** for the documented reference scope below.
 - Grid-derived electronic and total ESP: **Experimental**. Numerical Coulomb quadrature is sensitive to grid coverage and near-singular behavior.
 
 Do not present different population schemes as experimentally observable charges. Use them as model-dependent descriptors and test whether conclusions survive reasonable methodological choices.
@@ -30,7 +41,7 @@ Do not present different population schemes as experimentally observable charges
 
 ## Gaussian-integral point ESP
 
-The development branch defaults electronic/total point ESP to `--method integrals`.
+Electronic and total point ESP default to `--method integrals`.
 The shared Python entry point is `load(path).esp((x, y, z), component="total")`.
 Coordinates are angstrom and the returned potential is hartree/e. The electronic
 term is `-sum(P_mu,nu * V_mu,nu)`, using the total spin-summed AO density;

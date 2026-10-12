@@ -96,6 +96,23 @@ def test_population_result_can_be_saved_as_csv(tmp_path, monkeypatch, capsys):
     assert 'atomic_charges' in output.read_text()
 
 
+def test_guided_spectrum_can_save_csv_with_selected_curve_settings(tmp_path, monkeypatch):
+    import csv
+    workflows = iter(['methods', 'exit'])
+    navigation = iter(['save-csv', 'home'])
+    output = tmp_path / 'IR curve β.csv'
+    answers = iter(['ir-spectrum', '12', '1000', '4500', '321', 'run', str(output), 'yes'])
+    monkeypatch.setattr(interactive, 'prompt_workflow', lambda _: next(workflows))
+    monkeypatch.setattr(interactive, 'prompt_page_navigation', lambda _: next(navigation))
+    monkeypatch.setattr('builtins.input', lambda _: next(answers))
+    interactive.run_interactive(None, ROOT / 'tests/fixtures/gaussian/vibrations/water_freq.log')
+    with output.open() as handle:
+        rows = list(csv.DictReader(handle))
+    assert len(rows) == 321
+    assert float(rows[0]['frequency_cm1']) == 1000
+    assert float(rows[-1]['frequency_cm1']) == 4500
+
+
 def test_atomic_overwrite_preserves_private_output_permissions(tmp_path):
     import os
     import stat

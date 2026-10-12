@@ -13,7 +13,7 @@ def parse_sdf(path: Path) -> CalculationData:
     records = text.split("$$$$")
     nonempty = [record.strip("\r\n") for record in records if record.strip()]
     if len(nonempty) != 1:
-        raise ParseError("Version 0.7.0 accepts one structure per SDF input.")
+        raise ParseError("SDF contains multiple or no structures. Provide exactly one structure per input.")
     return parse_mol_text(
         nonempty[0] + "\n", path, parser_name="sdf", provenance_bytes=raw
     )

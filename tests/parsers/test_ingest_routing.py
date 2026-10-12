@@ -198,7 +198,7 @@ def test_two_record_xyz_is_not_silently_concatenated(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    with pytest.raises(ParseError, match=r"sequence/trajectory ingestion is not part of the 0.9 load\(\) API"):
+    with pytest.raises(ParseError, match=r"multiple records.*single trajectory frame"):
         load_input(source)
 
 

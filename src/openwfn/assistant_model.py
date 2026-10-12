@@ -1,6 +1,7 @@
 """Bounded structured requests to a configured model; no model installation."""
 
 import json
+from collections.abc import Callable
 from math import isfinite
 from urllib.parse import urlsplit
 
@@ -133,7 +134,8 @@ class LocalModel:
         except (KeyError, IndexError, TypeError, UnicodeError) as exc:
             raise ValueError('The model did not return a valid scientific tool plan; no analysis ran.') from exc
 
-    def explain(self, question: str, history: list[dict]) -> str:
+    def explain(self, question: str, history: list[dict], *,
+                on_text: Callable[[str], None] | None = None) -> str:
         """General model-generated explanation, never a scientific ResultRecord."""
         if not isinstance(question, str) or not question.strip() or len(question) > 4000:
             raise ValueError('Ask a non-blank question of at most 4000 characters.')
@@ -154,7 +156,7 @@ class LocalModel:
             'ask the user to run openWFN analysis. You have no tools, shell or file access. '
             'You may discuss equations and general examples, clearly marked as examples.'
         )
-        payload = {'model': self.model, 'stream': False, 'temperature': 0,
+        payload = {'model': self.model, 'stream': on_text is not None, 'temperature': 0,
                    'max_tokens': 2048, 'messages': [{'role': 'system', 'content': instruction},
                    *history, {'role': 'user', 'content': question}]}
         if self.model.lower().startswith('qwen3'):
@@ -167,14 +169,21 @@ class LocalModel:
                                    json=payload, headers=headers) as response:
                     if response.status_code != 200:
                         raise RuntimeError(f'Model endpoint returned HTTP {response.status_code}.')
+                    if on_text is not None and 'text/event-stream' in response.headers.get('content-type', ''):
+                        return _stream_explanation(response, on_text)
                     body = bytearray()
                     for chunk in response.iter_bytes():
                         body.extend(chunk)
                         if len(body) > 65536:
                             raise ValueError('Model explanation exceeds the response limit.')
-            content = json.loads(body)['choices'][0]['message']['content']
+            choice = json.loads(body)['choices'][0]
+            if on_text is not None and choice.get('finish_reason') not in {None, 'stop'}:
+                raise ValueError('Model explanation ended incomplete; text was not retained. Try a shorter question.')
+            content = choice['message']['content']
             if not isinstance(content, str) or not content.strip():
                 raise ValueError('The model returned an empty explanation.')
+            if on_text is not None:
+                on_text(content)
             return content.strip()
         except httpx.TimeoutException as exc:
             raise RuntimeError(f'Model explanation timed out after {self.timeout:g} seconds.') from exc
@@ -182,3 +191,65 @@ class LocalModel:
             raise RuntimeError('Could not reach the configured model endpoint.') from exc
         except (KeyError, IndexError, TypeError, UnicodeError) as exc:
             raise ValueError('Invalid model explanation response.') from exc
+
+
+def _stream_explanation(response: httpx.Response, on_text: Callable[[str], None]) -> str:
+    """Bound streamed prose and require a complete response before retaining it."""
+    pending = bytearray()
+    parts = []
+    size = 0
+    text_size = 0
+    finished = False
+    done = False
+    for chunk in response.iter_bytes():
+        size += len(chunk)
+        if size > 1048576:
+            raise ValueError('Model explanation exceeds the response limit; incomplete text was not retained.')
+        pending.extend(chunk)
+        while b'\n' in pending:
+            line, _, rest = pending.partition(b'\n')
+            pending = bytearray(rest)
+            if len(line) > 65536:
+                raise ValueError('Model stream event exceeds the size limit.')
+            line = line.rstrip(b'\r')
+            if not line.startswith(b'data:'):
+                continue
+            value = line[5:].strip()
+            if value == b'[DONE]':
+                done = True
+                break
+            data = json.loads(value)
+            if not isinstance(data, dict):
+                raise ValueError('Invalid model explanation response.')
+            if data.get('error'):
+                raise ValueError('Model stream reported an error; incomplete text was not retained.')
+            choices = data.get('choices', [])
+            if not isinstance(choices, list):
+                raise ValueError('Invalid model explanation response.')
+            if not choices:
+                continue
+            choice = choices[0]
+            if not isinstance(choice, dict) or not isinstance(choice.get('delta', {}), dict):
+                raise ValueError('Invalid model explanation response.')
+            reason = choice.get('finish_reason')
+            if reason not in {None, 'stop'}:
+                raise ValueError('Model explanation ended incomplete; text was not retained. Try a shorter question.')
+            finished = finished or reason == 'stop'
+            text = choice.get('delta', {}).get('content')
+            if text is not None:
+                if not isinstance(text, str):
+                    raise ValueError('Invalid model explanation response.')
+                if text:
+                    text_size += len(text.encode('utf-8'))
+                    if text_size > 65536:
+                        raise ValueError('Model explanation exceeds the text limit; incomplete text was not retained.')
+                    parts.append(text)
+                    on_text(text)
+        if done:
+            break
+        if len(pending) > 65536:
+            raise ValueError('Model stream event exceeds the size limit.')
+    content = ''.join(parts).strip()
+    if not content or not (done or finished):
+        raise ValueError('Model explanation stream was incomplete; text was not retained.')
+    return content

@@ -103,6 +103,23 @@ def test_existing_logs_are_preserved(tmp_path):
     assert (tmp_path/'stdout.log').read_text() == 'previous record'
 
 
+def test_denied_process_inspection_terminates_command_without_claiming_success(tmp_path, monkeypatch):
+    import time
+
+    psutil = pytest.importorskip('psutil')
+
+    def denied(*args, **kwargs):
+        raise PermissionError('process inspection blocked')
+
+    monkeypatch.setattr(psutil.Process, 'children', denied)
+    result = run(tmp_path, "import time; from pathlib import Path; time.sleep(.7); Path('escaped').touch()")
+    assert result['status'] == 'measurement_unavailable'
+    assert 'inspection' in result['reason']
+    assert result['returncode'] != 0
+    time.sleep(.8)
+    assert not (tmp_path/'escaped').exists()
+
+
 def test_short_commands_preserve_results_without_inventing_rss(tmp_path):
     result = run(tmp_path, "print('short result')")
     assert result['returncode'] == 0

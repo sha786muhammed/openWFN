@@ -41,7 +41,7 @@ class ConversationSession:
         self.connection.disconnect()
         self.clear_context()
 
-    def ask(self, question, *, confirm=None, on_model_request=None):
+    def ask(self, question, *, confirm=None, on_model_request=None, on_model_text=None):
         if not isinstance(question, str) or not question.strip() or len(question) > 4000:
             raise ValueError('Ask a non-blank question of at most 4000 characters.')
         help_text = local_help(question)
@@ -71,7 +71,8 @@ class ConversationSession:
         if on_model_request:
             on_model_request()
         # No file state, values or scientific records enter the conceptual request.
-        text = self.connection.active.explain(question, self.history)
+        text = (self.connection.active.explain(question, self.history, on_text=on_model_text)
+                if on_model_text is not None else self.connection.active.explain(question, self.history))
         self.history.extend(({'role': 'user', 'content': question}, {'role': 'assistant', 'content': text}))
         self.history = self.history[-12:]
         while len(json.dumps(self.history, ensure_ascii=False).encode()) > 32768:

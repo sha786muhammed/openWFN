@@ -1,6 +1,8 @@
 """Electron and spin-density evaluation and integration."""
 
+from collections.abc import Iterable
 from dataclasses import dataclass
+from math import fsum
 from typing import Literal
 
 import numpy as np
@@ -101,7 +103,14 @@ def integrate_density(grid: VolumetricGrid, expected_electrons: float) -> Integr
 
     axes_bohr = np.asarray(grid.axes, dtype=float) / BOHR_TO_ANGSTROM
     voxel_volume = abs(float(np.linalg.det(axes_bohr)))
-    electron_count = float(np.sum(grid.values) * voxel_volume)
+    return integrate_density_chunks((np.asarray(grid.values),), voxel_volume, expected_electrons)
+
+
+def integrate_density_chunks(
+    chunks: Iterable[np.ndarray], voxel_volume_bohr3: float, expected_electrons: float,
+) -> IntegrationResult:
+    """Sum float64 density blocks using the existing conservation criteria."""
+    electron_count = fsum(float(np.sum(chunk, dtype=np.float64)) for chunk in chunks) * voxel_volume_bohr3
     absolute_error = abs(electron_count - expected_electrons)
     if abs(expected_electrons) <= DENSITY_ZERO_TARGET_EPSILON:
         return IntegrationResult(

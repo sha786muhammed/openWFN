@@ -1,8 +1,13 @@
 # The offline molecular workbench
 
-The workbench packages a calculation, selected derived data, interface code, and the molecular renderer into one HTML file. It is designed for inspection, teaching, and sharing when a hosted service is unnecessary or inappropriate.
+Save a molecule and selected results in one HTML file, then open it in a
+browser. You can inspect the structure, available fields and spectra offline;
+no hosted service is needed.
 
-**Status: Stable interface for the documented desktop Chromium scope.** The workbench is an optional visualization and teaching surface, **not a numerical reference**. Preserve the corresponding machine-readable JSON, CSV, or report output as the scientific record. A newly displayed analysis keeps its own scientific validation status; adding it to a Stable interface does not promote its scientific status.
+Stable interface support covers the tested desktop Chromium scope.
+Keep JSON or CSV results alongside it.
+The workbench is a visual aid, not a numerical reference.
+Displaying an analysis does not change its validation status.
 
 ```bash
 openwfn ./openwfn-examples/water.fchk workbench water-workbench.html --open
@@ -30,6 +35,10 @@ Molecular rendering is provided by [3Dmol.js](https://github.com/3dmol/3Dmol.js)
 
 ## Workspace tour
 
+Switching workspaces clears the previous field surfaces and measurement selections.
+Changing a field or its isovalue replaces the displayed surface rather than stacking
+another copy. The molecule and ghost-center labels remain visible.
+
 ### Structure
 
 Rotate, zoom, and recenter the molecule and inspect atom identity. Bond display follows openWFN's geometry-based connectivity model and should not be interpreted as a calculated bond order.
@@ -40,7 +49,9 @@ Inspect available frontier information and, when the calculation contains compat
 
 ### Vibrations
 
-When the input contains native vibrational records, the Workbench adds a **Vibrations** workspace. It embeds the same registered `vibrations`, `ir-spectrum`, `raman-spectrum`, and `normal-mode` results used by the Python API.
+When the file contains supported normal-mode data, a **Vibrations** workspace
+appears. It uses the same `vibrations`, `ir-spectrum`, `raman-spectrum` and
+`normal-mode` results as the Python API.
 
 The workspace provides:
 
@@ -57,7 +68,9 @@ The spectroscopy calculations remain **Experimental** even though the Workbench 
 
 ### Excited States
 
-When the input contains typed excited-state records, the Workbench adds an **Excited States** workspace. Its payload comes from the same registered `excited-states`, `transition-dipoles`, and `uvvis-spectrum` analyses used by Python, CLI, report, and MCP surfaces.
+When the file contains supported excited-state data, an **Excited States**
+workspace appears. It uses the same `excited-states`, `transition-dipoles`
+and `uvvis-spectrum` results as Python, CLI, reports and MCP.
 
 The workspace provides:
 
@@ -96,6 +109,9 @@ For vibrational work, the Workbench is particularly useful for connecting a sele
 
 ## Troubleshooting
 
+- If an older HTML file keeps previous surfaces visible, regenerate it with the
+  updated openWFN installation. Exported HTML files contain their own viewer code
+  and do not update when you upgrade the package.
 - If the browser does not open, omit `--open` and open the reported HTML path manually.
 - If a panel has no data, run `doctor`; the source file may lack required records.
 - If the Vibrations workspace is absent, the parsed input contains no typed vibrational record.

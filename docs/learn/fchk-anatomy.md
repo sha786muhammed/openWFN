@@ -1,6 +1,9 @@
 # Anatomy of a formatted checkpoint file
 
-Gaussian checkpoint (`.chk`) files are proprietary binary files. A formatted checkpoint (`.fchk`) is a text representation produced by Gaussian's `formchk` utility. openWFN reads `.fchk` directly; for `.chk`, it can call an installed `formchk` executable but does not decode the binary format itself.
+Use this page when your calculation program produces Gaussian checkpoint
+files. They are one of several input families supported by openWFN. A `.chk` file is binary. Gaussian's `formchk` converts it
+to a text `.fchk` file that openWFN can read directly. openWFN can call an
+installed `formchk`, but cannot decode the binary format itself.
 
 ## Record structure
 

@@ -1,15 +1,24 @@
 # Tutorial: orbitals and density with convergence checks
 
-Electronic analyses require more FCHK records than geometry. Run these commands
-from the repository root and begin by asking the file what it contains.
+Inspect orbitals and charges, then test density convergence. You need
+wavefunction records, not just coordinates. Copy the packaged examples first:
+
+```bash
+openwfn examples install ./openwfn-examples
+```
+
+The commands below use water. You can also try
+`./openwfn-examples/everyday-qc/ethanol.molden` or
+`./openwfn-examples/everyday-qc/biphenyl.molden`. Choose grid settings for each
+molecule rather than assuming the water settings will converge.
 
 ## 1. Inspect and analyze
 
 ```bash
-openwfn examples/water/water.fchk doctor
-openwfn examples/water/water.fchk orbitals frontier
-openwfn examples/water/water.fchk population mulliken
-openwfn examples/water/water.fchk population lowdin
+openwfn ./openwfn-examples/water.fchk doctor
+openwfn ./openwfn-examples/water.fchk orbitals frontier
+openwfn ./openwfn-examples/water.fchk population mulliken
+openwfn ./openwfn-examples/water.fchk population lowdin
 ```
 
 Record the spin channel, orbital indices, energies, and gap. The orbital-energy gap is not automatically an excitation energy. Differences between population schemes are expected because atomic charges are model-dependent partitions.
@@ -17,11 +26,11 @@ Record the spin channel, orbital indices, energies, and gap. The orbital-energy 
 ## 2. Converge total density
 
 ```bash
-openwfn examples/water/water.fchk density integrate \
+openwfn ./openwfn-examples/water.fchk density integrate \
   --kind total --spacing 0.20 --padding 6.0
-openwfn examples/water/water.fchk density integrate \
+openwfn ./openwfn-examples/water.fchk density integrate \
   --kind total --spacing 0.15 --padding 6.0
-openwfn examples/water/water.fchk density integrate \
+openwfn ./openwfn-examples/water.fchk density integrate \
   --kind total --spacing 0.15 --padding 7.0
 ```
 
@@ -30,7 +39,7 @@ The integral should approach the molecular electron count. Choose settings based
 ## 3. Export a cube
 
 ```bash
-openwfn examples/water/water.fchk density cube water-density.cube \
+openwfn ./openwfn-examples/water.fchk density cube water-density.cube \
   --kind total --spacing 0.15 --padding 6.0
 ```
 

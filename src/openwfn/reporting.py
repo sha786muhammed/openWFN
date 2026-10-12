@@ -45,6 +45,7 @@ def _sections(results: Iterable[ResultRecord], atom_labels: list[str]) -> list[d
                     "atom_labels": atom_labels,
                 }
             )
+        sections[-1]['record'] = result.as_dict()
     return sections
 
 

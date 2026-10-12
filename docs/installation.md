@@ -1,6 +1,7 @@
 # Installation
 
-openWFN supports Python 3.10–3.13.
+Use Python 3.10–3.13 and a separate environment. This keeps openWFN's
+dependencies separate from your other projects.
 
 ## Use a separate environment
 
@@ -12,8 +13,12 @@ python -m pip install --upgrade openwfn
 openwfn --version
 ```
 
-On Windows, activate with `.venv\Scripts\activate`. With Conda, create an
-environment with a supported Python version, then use its `python -m pip`.
+On Windows PowerShell, activate with `.venv\Scripts\Activate.ps1`; in Command
+Prompt, use `.venv\Scripts\activate.bat`. With Conda, create an environment
+with a supported Python version, activate it, then use its `python -m pip`.
+
+If Linux reports that `ensurepip` is unavailable, install your distribution's
+matching Python venv package or use a Conda environment.
 
 For development from source, replace the package-install command with:
 
@@ -21,9 +26,9 @@ For development from source, replace the package-install command with:
 python -m pip install -e .
 ```
 
-The normal installation includes format readers, output extraction, local MCP and
-terminal chat in the base installation. Existing `interop`, `outputs` and
-`mcp` extra names remain accepted for compatibility.
+The normal installation includes file readers, output-property extraction,
+local MCP and terminal chat. You do not need separate extras for these features.
+Older `interop`, `outputs` and `mcp` install commands still work.
 
 ## What installation does not supply
 

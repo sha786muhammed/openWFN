@@ -1,10 +1,9 @@
 # NCI and reduced density gradient
 
-openWFN provides an **Experimental** total-density noncovalent-interaction (NCI)
-analysis based on the reduced density gradient (RDG) and the second eigenvalue
-of the electron-density Hessian. The implementation is designed to expose the
-raw numerical fields and their validity diagnostics without inventing automatic
-interaction labels, scientific cutoffs, or basin properties.
+Use total electron density to calculate the reduced density gradient (RDG)
+and density-Hessian fields for NCI analysis. The method remains **Experimental**.
+You get numerical fields and validity checks, not automatic interaction
+labels or basin properties.
 
 ## Definitions
 

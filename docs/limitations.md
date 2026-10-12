@@ -1,14 +1,18 @@
 # Limitations
 
-- Native FCHK remains the preferred source for full quantitative wavefunction
-  analysis. The optional IOData 1.0.1 adapter can ingest the 25 listed
-  formats, but the available analyses depend on the records in each file.
+Before choosing an analysis, check what your file contains and what the
+method supports. Reading a format, running a method and validating its
+numerical results are different checks. Keep the warnings with your results.
+
+- Wavefunction analysis needs the required basis, orbital and density records,
+  regardless of format. The included IOData 1.0.1 adapter reads the 25 listed
+  formats; available analyses depend on the records in each file.
   Ingestion validation is fixture-scoped, not a claim of universal coverage
   across program versions or every job type.
 - The cross-format water checks compare files derived from one originating
   FCHK calculation. They test conversion consistency, not independent
   scientific agreement with external calculations or experiment.
-- ORCA, Q-Chem, and GAMESS output fixtures used in this branch are constructed
+- Some ORCA, Q-Chem and GAMESS interoperability fixtures are constructed
   program-output examples with geometry/energy fields; incomplete orbitals
   are not interpreted as a wavefunction. Broader native program coverage and
   independent reference corpora remain open work.
@@ -22,7 +26,7 @@
 - ECP and ghost centers are handled with effective nuclear charges from the FCHK `Nuclear charges` record when present, and regression tests cover those semantics. This is source-faithful handling, not broad independent validation of every ECP family, basis set, or ghost-center workflow.
 - For post-HF calculations, openWFN currently warns when an analysis is using the available SCF density. A warning naming the SCF density does not mean a correlated/post-SCF density was parsed or selected; post-SCF density support should not be assumed.
 - Density integration and cube validation depend on the numerical grid. The default **0.15 bohr** spacing is an accuracy/performance tradeoff and may be insufficient for tightly localized core density, heavy atoms, diffuse tails, or unusually demanding quantitative targets. Converge spacing and padding for the system being reported.
-- Density-grid AO evaluation is chunked to limit peak memory, but the Cartesian point grid and final scalar values still occupy memory. Extremely large boxes or very fine grids can therefore remain expensive.
+- Density integration and density/MO/NCI cube exports evaluate coordinates and fields in bounded chunks. APIs that return a complete scalar grid still retain that field in memory. Fine spacing, large boxes and large bases can remain expensive; the default molecular-grid safety limit is two million points.
 - Molecular-summary bonds and fragments are inferred with a covalent-radius heuristic. This may not represent unusual coordination, transition states, stretched bonds, metals, or other nonstandard bonding situations.
 - Gaussian-integral electronic and total point ESP is Validated for the documented
   eleven-case reference set. The explicit grid-based electronic/total ESP
@@ -50,7 +54,10 @@
 - Excited-state source jobs remain distinct. Repeated root numbers in separate Link1/jobs/blocks are not globally flattened. Analyses that require one job need an explicit one-based `job` selector when more than one excited-state job is present.
 - Missing oscillator strength or transition dipole remains unavailable; openWFN does not infer it. A negative source oscillator strength is preserved and excluded from the simulated optical curve rather than clamped. Dark `f=0` states remain valid source data.
 - The UV–Vis profile is a deterministic Gaussian oscillator-strength visualization in energy space, with a default 0.20 eV FWHM. It is not absorbance, molar extinction coefficient, solvent/instrument broadening, or an experimental line-shape model. The wavelength-domain array uses the energy-to-wavelength Jacobian rather than simply relabelling the x axis.
-- Method-specific amplitudes remain convention-labelled. TDDFT X/Y vectors, EOM left/right vectors, ADC/CI quantities, printed percentages, and multireference coefficients are not treated as interchangeable. General NTO construction is not implemented; only future convention-approved transition objects may become NTO-ready.
+- NTO analysis requires a complete transition matrix with a supported convention
+  and compatible orbital mappings. It is implemented for that restricted input
+  scope, not for arbitrary printed amplitudes. TDDFT X/Y vectors, EOM left/right
+  vectors, ADC/CI quantities and percentages are not interchangeable.
 - The current excited-state fixtures, analytic UV–Vis/Jacobian tests, and CLI/Python/MCP/report/Workbench parity tests establish implementation consistency but not independent scientific validation across all programs, methods, molecules, or versions. Excited states and UV–Vis remain **Experimental**.
 
 Always record the openWFN version, source-file checksum, grid spacing, padding, units, warnings, execution status, and validation status in research outputs.
@@ -66,10 +73,12 @@ diagnostics, and correlated improved Mayer definitions are absent. DOS is
 finite-molecule orbital-energy broadening with one count per supplied spatial
 orbital/channel, without occupancy weighting or periodic bands. Failed source,
 conditioning, normalization or convergence diagnostics remain failed or
-partial/Experimental. Native Hirshfeld remains gated separately. Native typed
+partial/Experimental. Hirshfeld is validated for its separate H/C/N/O scope. Native typed
 Gaussian vibrational/IR/Raman workflows and Gaussian/ORCA/Q-Chem excited-state/UV–Vis workflows are implemented but remain
-**Experimental** pending independent validation corpora. NTO and real-space
-topology/basins are not implemented.
+**Experimental** pending broader independent validation. NTO, density
+derivatives, QTAIM critical-point searches, ELF/LOL and NCI are implemented
+with their documented restrictions and remain Experimental. QTAIM basin
+integration is not implemented.
 See the [completion and gate record](project/everyday-qc-validation.md),
 [vibrational spectroscopy semantics](science/vibrational-spectroscopy.md), and
 [excited-state/UV–Vis semantics](science/excited-states-uvvis.md).

@@ -1,9 +1,12 @@
 # Core terminology
 
+Look up terms you see in commands and results. Each definition explains
+how openWFN uses the term.
+
 ## Calculation
 
-The typed openWFN representation of one parsed input, including molecular structure,
-metadata, wavefunction records, provenance, and capability availability.
+The data openWFN reads from one input file: structure, calculation details,
+available wavefunction records and information about the source.
 
 ## Formatted checkpoint (`.fchk`)
 
@@ -51,5 +54,6 @@ parameters, method, and capability status.
 
 ## Capability status
 
-One of Stable, Validated, Experimental, or Unsupported. Status describes both
-implementation and evidence boundaries; see [Validation](../validation.md).
+File capabilities show which data and analyses are available. The separate
+validation labels Stable, Validated, Experimental and Unsupported describe
+interface support and scientific evidence. See [Validation](../science/validation-status.md).

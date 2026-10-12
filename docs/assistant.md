@@ -1,15 +1,17 @@
 # Scientific assistant
 
-openWFN includes terminal chat and MCP in the normal installation.
-Chat can discuss quantum chemistry without a file, or use an existing model to
-choose an openWFN tool for an open file. File-backed values, units, warnings and
-provenance come from the engine. General explanations are model-generated,
-clearly labelled, and not independently verified.
-No model is trained or downloaded by openWFN.
+Ask about an open file, or connect a model for a general scientific conversation.
+File-backed values come from openWFN, with units and warnings. General
+explanations come from your model and may contain mistakes.
 
-Short requests for HOMO/LUMO energy, the HOMO–LUMO gap, charge, multiplicity or
-formula use a small explicit local routing vocabulary. They call the scientific
-engine without waiting for a model response. The common `HUMO` typo is recognized
+Terminal chat and MCP are included in the normal installation. openWFN does
+not train or download a model for you.
+
+## Questions about a file
+
+Ask short questions such as “What is the HOMO energy?”, “What is the charge?”
+or “What is the HOMO–LUMO gap?”. These supported questions call openWFN
+locally without waiting for a model. The common `HUMO` typo is recognized
 in these short requests. Orbital energies use the all-channel record: restricted
 files need no alpha/beta clarification, while unrestricted files retain both channels.
 This routing does not guess offset orbitals such as HOMO−1 or interpret arbitrary prose.
@@ -21,10 +23,9 @@ missing records produce a specific explanation rather than a request for a
 population method. IR requires frequencies and IR intensities, while Raman
 requires frequencies and Raman activities.
 
-Population-method and density-operation questions retain an explicit pending
-choice. Follow-up replies fill that choice rather than starting an unrelated
-analysis. Invalid replies are bounded; a new explicit request replaces the old
-task. Ctrl+C, file/model switches and `/clear` discard pending choices while
+If asked to choose a population method or density operation, reply with that
+choice. A new explicit request replaces the pending question. Invalid replies
+do not start unrelated calculations. Ctrl+C, file/model switches and `/clear` discard pending choices while
 keeping earlier scientific records. Model plans that contradict a selected
 channel, method, orbital or point are rejected before calculation.
 
@@ -33,9 +34,24 @@ separate from general, unverified scientific explanations. Compact orbital
 answers retain the FCHK convergence caveat; successful analysis does not establish
 source convergence.
 
-Other questions use the configured model. A waiting message goes to stderr, not
+Use `/details` for the last result's diagnostic fields and source provenance,
+or `/record` for its complete JSON record. Routine status labels are kept out of
+short answers, but partial results, source caveats and warnings remain visible.
+
+Other questions use the configured model. A short waiting message goes to stderr, not
 machine-readable stdout. Response timeouts are reported as timeouts, separately
 from connection failures; no scientific result is fabricated when planning fails.
+
+General model explanations appear as text arrives, with a label stating that no
+calculation was run. Ctrl+C stops the request. Interrupted, truncated or failed
+explanations are not added to conversation history. Scientific tool plans and
+JSON result records are still validated completely before use; they are not
+displayed as a stream of provisional values.
+
+Common file questions bypass the model. General chat speed depends on your
+model, hardware and whether the runner has already loaded the model. A smaller
+model may respond faster but give less reliable explanations. Use `/model` to
+choose an installed model; openWFN does not change your selection automatically.
 
 ## Start a local conversation
 
@@ -57,11 +73,10 @@ With a file open, start conceptual questions with “Explain”, “Define”, �
 Use `/close` for a general conversation without file context. This does not
 make the model a validated scientific reference.
 
-Install this checkout in an environment, and configure a model already available
-on your machine. For a local Ollama server with an installed Qwen model:
+With openWFN installed and your runner started, select a model already
+available on your machine. For example, with a local Ollama server:
 
 ```bash
-python -m pip install -e .
 openwfn molecule.molden chat --model qwen3:8b
 ```
 
@@ -86,11 +101,13 @@ Commands within a conversation:
 
 - `/inspect`: inspect the current file and available analyses.
 - `/record`: show the complete last scientific result as JSON.
+- `/details`: show diagnostic fields, validation status and provenance.
 - `/save`: confirm the destination for a JSON export.
 - `/open PATH`: inspect and select another file; reset file-specific context.
 - `/close`: close the selected file and continue general conversation.
 - `/connect`: choose a connection; the old connection is retained if a switch fails.
 - `/models`: search and select an available model on the current connection.
+- `/model`: the short form of `/models`; connect if no model is active.
 - `/disconnect`: drop the model connection without stopping its runner or deleting files.
 - `/clear`: clear conversation context, keeping the file, connection and scientific records.
 - `/help` or `/quit`: show help or leave the conversation.
@@ -98,7 +115,7 @@ Commands within a conversation:
 You can also ask one question and obtain a machine-readable record:
 
 ```bash
-openwfn --format json molecule.fchk chat --model qwen3:8b \
+openwfn --format json molecule.molden chat --model qwen3:8b \
   --question "What is the HOMO-LUMO gap?"
 ```
 
@@ -116,7 +133,7 @@ require a chat model. General single-question prose is available with
 `openwfn chat --model MODEL --question "Explain basis sets"`. General prose has
 no ResultRecord schema and is not offered as JSON/CSV or scientific file export.
 
-## Numerical controls and privacy
+## Density settings, resource limits and privacy
 
 Capabilities are inspected before a model request. File changes invalidate the
 session's cached data. Model requests contain the question, bounded clarification
@@ -148,8 +165,8 @@ openWFN makes no paid calls or public deployment automatically.
 Malformed plans and network failures stop the request. The assistant does not
 retry indefinitely or execute model-supplied shell commands. Missing facts stay
 missing, partial results stay partial, and Experimental analyses stay Experimental.
-These safeguards apply to scientific tool execution. General model prose is
-untrusted and can contain mistakes. An orbital gap is not an optical excitation energy; successful execution is not
+These checks protect scientific tool execution. General model explanations
+can still contain mistakes. An orbital gap is not an optical excitation energy; successful execution is not
 proof of source convergence or independent scientific validation.
 
 External chat hosts can use the [MCP interface](mcp.md). They control their own

@@ -4,6 +4,7 @@ import csv
 import json
 from pathlib import Path
 
+from ..guided_exports import OutputDestination, export_atomically
 from ..results import ResultRecord
 from .tables import ExportRequest
 
@@ -117,6 +118,21 @@ def _write_uvvis_spectrum(result: ResultRecord, path: Path, dpi: int) -> Path:
 
 
 def write_spectrum(
+    result: ResultRecord,
+    path: str | Path,
+    *,
+    overwrite: bool = False,
+    dpi: int = 300,
+) -> Path:
+    path = Path(path)
+    request = ExportRequest(path, path.suffix.lstrip("."), overwrite, dpi)
+    request.ensure_writable()
+    export_atomically(OutputDestination(path, overwrite),
+        lambda stage: _write_spectrum(result, stage, dpi=dpi))
+    return path
+
+
+def _write_spectrum(
     result: ResultRecord,
     path: str | Path,
     *,

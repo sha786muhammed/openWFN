@@ -1,17 +1,19 @@
 # Python workflows
 
-The Python API is useful when an analysis must be composed with notebooks, testing, or custom data processing.
+Use Python to analyse files in a notebook or script. Load your file, check
+which analyses are available, then read the result and its warnings.
 
 ```python
 from openwfn import load
 
-calculation = load("molecule.fchk")
+calculation = load("molecule.molden")
 print(len(calculation.molecule.atoms))
 print(calculation.molecule.charge)
 print(calculation.molecule.metadata.energy_hartree)
 ```
 
-The typed `OpenWFNCalculation` model groups the molecule, basis, orbitals, and density matrices. Optional data remain optional: inspect fields before requesting analyses that require them.
+`OpenWFNCalculation` gives access to the structure and available electronic
+data. Missing basis, orbital or density records remain missing.
 
 For reproducible automation, prefer the registered interface:
 
@@ -78,11 +80,13 @@ population = calculation.population("mulliken")
 integral = calculation.density("total", spacing_bohr=0.20, padding_bohr=6.0)
 ```
 
-`orbitals()` accepts only `"alpha"` or `"beta"`. `population()` accepts only
-`"mulliken"` or `"lowdin"`. `density()` accepts `"total"`, `"alpha"`,
+`orbitals()` accepts `"alpha"`, `"beta"` or `"all"`. `population()` accepts
+`"mulliken"`, `"lowdin"` or `"hirshfeld"`. `density()` accepts `"total"`, `"alpha"`,
 `"beta"`, or `"spin"`; it integrates that density on a generated grid rather
-than returning the grid itself. Unsupported values raise `ValueError`. Missing
-basis, orbital, or density records raise `DataUnavailableError`.
+than returning the grid itself. Invalid option values raise `ValueError`.
+High-level analyses report missing records as failed `ResultRecord` objects;
+check `.status` and `.error` before using `.data`. Low-level evaluators may
+raise `DataUnavailableError` directly.
 
 The public package exports low-level evaluators including `compute_density`, `evaluate_mo`, and `make_bounding_box_grid`. These require compatible basis, coefficient, and density data. Prefer the typed model as the source and validate numerical settings before treating a grid result as converged.
 

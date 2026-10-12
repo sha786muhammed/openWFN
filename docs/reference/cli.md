@@ -1,11 +1,19 @@
 # Command-line reference
 
+Look up commands and options here. If you are new to openWFN, start with
+[CLI workflows](../guides/cli-workflows.md).
+
 ```text
 openwfn [GLOBAL OPTIONS] FILE COMMAND [COMMAND OPTIONS]
 openwfn examples install DESTINATION [--overwrite]
 ```
 
-Run `openwfn --help` or `openwfn FILE COMMAND --help` for the installed release's authoritative syntax. Global options such as `--format json` and `--input-format FORMAT_ID` go before the input path.
+Run `openwfn --help` or `openwfn FILE COMMAND --help` to check the syntax of
+your installed version. Put global options such as `--format json` and
+`--input-format FORMAT_ID` before the file path.
+
+Replace example file names with your own paths. Wavefunction examples need
+the relevant electronic records; a structure file cannot supply them.
 
 Inspect capabilities before requesting analyses that may not be present in the
 source file. openWFN includes its readers in the normal install:
@@ -22,9 +30,9 @@ A parser being able to read a file does not mean every analysis is available. Mi
 
 ```bash
 openwfn                              # Ask for an input file in a terminal
-openwfn molecule.fchk                 # Open guided mode in a terminal
+openwfn molecule.molden                 # Open guided mode in a terminal
 openwfn molecule.molden open          # Explicit guided mode
-openwfn --format json molecule.fchk analyze
+openwfn --format json molecule.molden analyze
 ```
 
 `analyze` returns a bounded overview: molecular summary, frontier orbital energies when available, and supported next actions. It does not integrate density, calculate populations, or create exports. A file-only invocation outside an interactive terminal also returns this overview. Use the explicit `summary` command to keep the summary-only result schema.
@@ -39,11 +47,12 @@ Configure an existing model; no weights are downloaded automatically:
 ```bash
 openwfn molecule.molden chat --model qwen3:8b
 openwfn chat
-openwfn --format json molecule.fchk chat --model qwen3:8b \
+openwfn --format json molecule.molden chat --model qwen3:8b \
   --question "What is the HOMO-LUMO gap?"
 ```
 
-The model selects a tool, and openWFN renders the scientific answer. See
+Common short file questions call openWFN directly. Other requests use your
+configured model to choose a tool; openWFN supplies the scientific values. See
 [Scientific assistant](../assistant.md) for configuration, privacy, confirmation
 and resource limits. A missing model does not prevent ordinary CLI/API analysis.
 
@@ -189,7 +198,7 @@ The wavelength-domain curve is derived from the energy-domain profile with the e
 
 ## Vibrational spectroscopy
 
-Vibrational spectroscopy is **Experimental** on this feature line. The native Gaussian text-output path preserves source values and does not infer unavailable observables.
+Vibrational spectroscopy remains **Experimental**. The native Gaussian text-output path preserves source values and does not infer unavailable observables.
 
 ```bash
 openwfn frequency.log vibrations
@@ -217,10 +226,9 @@ Gaussian `Raman Activ` values are **Raman activities**, not laser- and temperatu
 
 ## Source-reported output properties
 
-The optional `properties` reader is separate from the wavefunction-analysis registry:
+The included `properties` reader extracts printed values from calculation outputs:
 
 ```bash
-python -m pip install "openwfn[outputs]"
 python -m openwfn.cli --format json calculation.out properties
 ```
 
@@ -249,7 +257,11 @@ Vibrational CSV is row-per-mode; excited-state CSV is row-per-state; spectrum CS
 
 `batch` accepts files/directories, comma-separated `--analyses`, worker and output controls, deterministic manifests, resume fingerprints, format hints, and fail-fast behavior. The spin selector applies to a requested frontier analysis. Machine-readable records preserve `success`, `partial`, or failed status instead of discarding usable partial results.
 
-`interactive` launches the guided terminal. With a file but no command, a terminal session enters guided mode; redirected input or `--non-interactive` defaults to `summary`. The guided interface includes **Analyze vibrations and spectra** for supported vibrational sources and routes to the same registered analyses as the CLI/Python/MCP surfaces.
+`interactive` launches the guided terminal. With a file but no command, an
+interactive terminal opens guided mode. A file-only non-interactive invocation
+returns the bounded overview described above. Use `summary` explicitly when
+you need only a molecular summary. Guided spectroscopy uses the same analyses
+as CLI, Python and MCP, when the file contains the required records.
 
 With `--format json`, successful parsed commands emit one result envelope on stdout. Runtime/input failures use structured failure records where applicable and return a nonzero exit code. Help and argument-syntax errors remain ordinary text.
 

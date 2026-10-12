@@ -1,12 +1,16 @@
 # Release history
 
+Look up changes and support limits for older versions here. To install or
+use openWFN today, start with [Installation](../installation.md) or
+[Start here](../start/index.md).
+
 ## 0.12.0 — guided workflows and scientific assistant
 
-Guided workflows, built-in format readers and local MCP, a grounded terminal
-assistant, and output/parser hardening. The release is not published yet;
-scientific validation boundaries are unchanged.
+Adds guided workflows, included file readers, local MCP and a scientific
+terminal assistant. It also improves input and output handling.
+Each scientific method keeps its own validation limits.
 
-[Read the preparation notes](../releases/0.12.0.md)
+[Read the 0.12.0 release notes](../releases/0.12.0.md)
 
 ## 0.11.0 — Hirshfeld, spectroscopy, and excited states
 

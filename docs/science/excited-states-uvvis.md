@@ -1,6 +1,8 @@
 # Excited states and UV–Vis
 
-openWFN treats excited-state output as **source-reported scientific data first** and derived spectrum visualization second. The current feature is **Experimental**.
+Read excited states reported by your calculation program. When oscillator
+strengths are available, draw a broadened UV–Vis profile. These parsing and
+post-processing methods remain **Experimental**.
 
 ## Supported source model
 
@@ -47,7 +49,7 @@ For UV–Vis, each source state remains in the stick/state table even when it ca
 - negative `f`: preserved exactly, never clamped to zero, and excluded from the simulated curve with a warning.
 - nonpositive excitation energy: preserved in state data but excluded from the simulated optical curve.
 
-This distinction keeps source parsing auditable.
+The result keeps the original states, including those excluded from the curve.
 
 ## Gaussian broadening
 
@@ -129,4 +131,8 @@ Promotion above Experimental requires broader, independently generated reference
 
 ## NTO boundary
 
-This feature prepares the data model for future natural transition orbitals but does not claim general NTO support. Only mathematically defined, convention-approved dense transition objects can be considered NTO-ready. Printed percentages, generic configuration summaries, or method-specific vectors with insufficient semantics are not converted into NTOs.
+The registered `nto` analysis calculates Natural Transition Orbitals only from
+complete occupied-to-virtual transition matrices with supported conventions
+and compatible orbital mappings. It remains Experimental. Printed percentages,
+incomplete configuration lists and unsupported amplitude conventions cannot
+be converted into NTOs. Check `capabilities` before requesting the analysis.

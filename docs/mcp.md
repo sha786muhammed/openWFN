@@ -1,8 +1,12 @@
 # Local MCP interface
 
-openWFN provides a local, read-only MCP interface for registered analyses. The MCP adapter is an interface layer over the same analysis registry used by Python and the CLI; it does not maintain a separate scientific implementation. Individual results retain their own validation status and limitations.
+Connect a compatible MCP client to run openWFN analyses on local files.
+The results use the same engine as the CLI and Python and include values,
+units, warnings and source information.
 
-It runs locally over stdio and reads files inside one configured directory. It does not provide a public HTTP/REST service, upload endpoint, or authentication layer.
+The server runs locally over standard input/output and reads files inside
+your chosen directory. It is read-only, not a public HTTP or REST service.
+Each analysis keeps its own validation limits.
 
 ## Install
 
@@ -51,7 +55,9 @@ ELF/LOL/NCI or derivative calculation, pass `x_bohr`, `y_bohr`, and `z_bohr`.
 `run_analysis` also accepts `stored-grid` for bounded stored-field inspection;
 it does not infer that a scalar grid is an electron density.
 
-`parameters` is a JSON object whose values are simple scalars accepted by the selected registered analysis. Nested objects/lists and non-finite numeric values are rejected rather than forwarded ambiguously. For example, an agent may request:
+Pass analysis options in the `parameters` JSON object. Use scalar values:
+strings, numbers or booleans. Nested objects, lists and non-finite numbers
+are rejected. For example:
 
 ```json
 {
@@ -80,7 +86,8 @@ Paths can be relative to the data root. Absolute paths must also remain inside i
 
 ## Registered spectroscopy analyses
 
-The same registry now exposes these **Experimental** vibrational analyses when the input contains the necessary typed records:
+These **Experimental** analyses are available when the file contains the
+required vibrational records:
 
 | Analysis | MCP data |
 |---|---|
