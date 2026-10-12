@@ -103,6 +103,7 @@ def test_mkdocs_navigation_references_existing_pages() -> None:
         assert (ROOT / "docs" / relative).is_file(), relative
 
 
+@pytest.mark.docs
 def test_home_workspace_preview_renders_html_without_escaped_layout():
     import markdown
 
