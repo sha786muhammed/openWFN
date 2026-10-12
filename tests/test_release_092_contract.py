@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from openwfn import __version__
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -26,8 +28,9 @@ def test_historical_092_install_and_current_dynamic_pypi_badge() -> None:
     assert "https://img.shields.io/pypi/v/openwfn?label=PyPI" in readme
 
 
-def test_security_supports_092() -> None:
+def test_security_supports_current_release_not_historical_092() -> None:
     security = (ROOT / "SECURITY.md").read_text(encoding="utf-8")
-    assert "| `0.9.2` | Supported |" in security
+    assert f"| `{__version__}` | Supported |" in security
+    assert "| `0.9.2` | Not supported |" in security
     assert "| `0.8.2` | Not supported |" in security
     assert "| `0.8.1` | Not supported |" in security
