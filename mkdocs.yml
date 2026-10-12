@@ -128,3 +128,4 @@ nav:
       - Runtime and resource validation: project/resource-validation.md
       - Releasing: releasing.md
       - Current release: releases/0.12.0.md
+      - Next release: releases/0.13.0.md
