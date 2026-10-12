@@ -2,7 +2,7 @@
 
 All notable changes to openWFN are documented in this file.
 
-## [0.13.0] - Unreleased
+## [0.13.0] - 2026-10-12
 
 - Fix guided navigation, file selection, parameter validation and save handling. Improve readable scientific results while preserving complete JSON records.
 - Fix chat intent routing, follow-up clarification, cancellation and streamed responses. Short supported file questions use scientific tools directly; general model answers remain unverified explanations.
@@ -13,7 +13,7 @@ All notable changes to openWFN are documented in this file.
 - Simplify README and documentation, correct API examples and links, and fix narrow-screen spacing and homepage preview wrapping.
 
 No new scientific validation status is assigned by this release. Model weights
-and external Gaussian utilities are not bundled. Publication is still pending.
+and external Gaussian utilities are not bundled.
 
 ## [0.12.0] - 2026-10-07
 

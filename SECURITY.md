@@ -4,12 +4,13 @@
 
 | Version | Security fixes |
 |---|---|
-| `0.12.0` | Supported |
+| `0.13.0` | Supported |
+| `0.12.0` | Superseded by 0.13.0 |
 | `0.11.0` | Superseded by 0.12.0 |
 | `0.10.1` | Superseded by 0.11.0 |
 | `0.10.0` | Superseded by 0.10.1 |
 | `0.10.0rc1` | Superseded by 0.10.0 |
-| `0.9.2` | Supported |
+| `0.9.2` | Not supported |
 | `0.9.1` | Not supported |
 | `0.9.0` | Not supported |
 | `0.8.2` | Not supported |

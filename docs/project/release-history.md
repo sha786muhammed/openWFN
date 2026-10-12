@@ -4,6 +4,14 @@ Look up changes and support limits for older versions here. To install or
 use openWFN today, start with [Installation](../installation.md) or
 [Start here](../start/index.md).
 
+## 0.13.0 — workflow and resource fixes
+
+Improves guided navigation, assistant responses, reader edge cases, exports and
+workbench reset behavior. Grid processing uses bounded chunks and batch workers
+respect available-memory estimates. Scientific validation limits remain unchanged.
+
+[Read the 0.13.0 release notes](../releases/0.13.0.md)
+
 ## 0.12.0 — guided workflows and scientific assistant
 
 Adds guided workflows, included file readers, local MCP and a scientific
