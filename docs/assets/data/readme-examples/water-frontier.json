@@ -1,0 +1,44 @@
+{
+  "analysis_name": "frontier-all",
+  "analysis_version": "1",
+  "data": {
+    "alpha": {
+      "gap_ev": 20.09080139,
+      "gap_hartree": 0.738323333,
+      "homo_hartree": -0.477228505,
+      "homo_number": 5,
+      "lumo_hartree": 0.261094828,
+      "lumo_number": 6,
+      "spin": "restricted"
+    },
+    "beta": null,
+    "occupation_source": "electron-count filling",
+    "overall_homo_hartree": -0.477228505,
+    "overall_homo_number": 5,
+    "overall_homo_spin": "restricted",
+    "reference_kind": "restricted_closed_shell",
+    "spin": "all"
+  },
+  "elapsed_seconds": 0.00014065699997445336,
+  "error": null,
+  "kind": "frontier_orbitals",
+  "provenance": {
+    "input_sha256": "f3c6cb5e1f9f205e49b439339bb0833160f56be68f40e1c1097db3f30f52dcf2",
+    "interop_schema_version": "1.0",
+    "model_schema_version": "2.0",
+    "parser": "gaussian-fchk",
+    "parser_version": "1",
+    "source_format": "fchk",
+    "source_path": "openwfn-examples/water.fchk",
+    "source_program": "Gaussian",
+    "source_program_version": null,
+    "transformations": []
+  },
+  "schema_version": "1.0",
+  "status": "success",
+  "units": {
+    "overall_homo_hartree": "hartree"
+  },
+  "validation_status": "Stable",
+  "warnings": []
+}

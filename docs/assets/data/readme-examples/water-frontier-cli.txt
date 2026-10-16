@@ -1,0 +1,14 @@
+$ openwfn ./openwfn-examples/water.fchk orbitals frontier --spin all
+
+Frontier Orbitals
+Spin: all
+Reference Kind: restricted_closed_shell
+Occupation Source: electron-count filling
+Alpha: {'spin': 'restricted', 'homo_number': 5, 'lumo_number': 6, 'homo_hartree': -0.477228505, 'lumo_hartree': 0.261094828, 'gap_hartree': 0.738323333, 'gap_ev': 20.09080139}
+Beta: Unavailable
+Overall Homo Number: 5
+Overall Homo Hartree: -0.477228505 hartree
+Overall Homo Spin: restricted
+Analysis Validation Status: Stable
+Result Status: success
+Source Calculation Status: Unknown from FCHK (convergence is not established)

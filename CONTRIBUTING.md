@@ -4,6 +4,24 @@ openWFN welcomes focused fixes, tests, documentation, parsers, and scientific
 methods that stay within the project's stated capability boundaries. By
 participating, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
+## Find a useful first contribution
+
+You do not need to implement a new scientific method to help. Start with a
+small, reproducible improvement:
+
+| Your background | A useful starting point |
+| --- | --- |
+| New user | Follow the [first-analysis tutorial](docs/start/first-analysis.md) and report an unclear step or unexpected result. |
+| Computational chemist | Compare a documented analysis with an independent reference; include the input provenance, conventions and tolerances. |
+| Python developer | Reproduce a parser or interface issue with a minimal fixture, then propose a focused fix. |
+| Documentation contributor | Improve an example, clarify a limitation or check a command against the current release. |
+
+[Browse issues](https://github.com/sha786muhammed/openWFN/issues) or
+[propose a contribution](https://github.com/sha786muhammed/openWFN/issues/new/choose).
+For a substantial method, parser or interface change, describe the scientific
+problem and proposed scope in an issue before beginning implementation. Share
+only inputs you have permission to redistribute.
+
 ## Set up a clean environment
 
 ```bash

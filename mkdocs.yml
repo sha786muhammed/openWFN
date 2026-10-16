@@ -91,6 +91,7 @@ nav:
       - Offline workbench: workbench.md
       - Troubleshooting: guides/troubleshooting.md
       - Tutorials:
+          - Example outputs: guides/readme-examples.md
           - Geometry: tutorials/geometry.md
           - Orbitals and density: tutorials/orbitals-density.md
           - Reports: tutorials/reports.md

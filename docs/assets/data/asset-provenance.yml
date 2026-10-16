@@ -34,3 +34,17 @@ assets:
     license: MIT project asset
     transformation: Archived wordmark; the compact header-derived mark is the current public logo
     alt: openWFN — Wavefunction Analysis
+  water-cli-example.png:
+    source: project-created
+    generation_record: python scripts/render_readme_examples.py using openWFN 0.13.0 and its packaged water.fchk; see docs/guides/readme-examples.md
+    sha256: c237b1efe48be850a1f732602864dce687984e860d5bf17a482e2974e57bcfb2
+    license: MIT project asset; input provenance is recorded in examples/PROVENANCE.md
+    transformation: Captured plain CLI stdout, line-wrapped and typeset with Pillow; no scientific values changed
+    alt: Frontier-orbital CLI output for the packaged water example
+  water-frontier-example.png:
+    source: project-created
+    generation_record: python scripts/render_readme_examples.py using openWFN 0.13.0 and its packaged water.fchk; see docs/guides/readme-examples.md
+    sha256: c177c579ef69cc86c6e9e0a13e01912f66cf00bc0b1d5344fae7116444a2d6d1
+    license: MIT project asset; input provenance is recorded in examples/PROVENANCE.md
+    transformation: Unmodified PNG written by openwfn plot frontier
+    alt: Frontier-orbital plot for the packaged water example
